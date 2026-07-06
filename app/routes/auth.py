@@ -20,8 +20,6 @@ def register(user: RegisterUser):
         "email": user.email
     })
 
-    # print(existing, ": existing")
-
     if(existing):
         raise HTTPException(status_code=400, detail="Email already exist")
     else:
@@ -34,7 +32,6 @@ def register(user: RegisterUser):
             "isActive": True 
         }
         users.insert_one(payload)
-        # print(payload)
         return {
             'message':'Regestraion Successful',
             'statusCode':200
@@ -47,13 +44,11 @@ def login(user:LoginUser):
         "email": user.email
     })
     if(not existing):
-        # print('Invalid Credentials email')
         raise HTTPException(
                 status_code=401,
                 detail="Invalid Credentials"
             )
     if(existing and (not verify_password(user.password, existing['password']))):
-        # print('Invalid Credentials password')
 
         raise HTTPException(
                 status_code=401,

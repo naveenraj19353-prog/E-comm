@@ -6,7 +6,6 @@ def hash_password(password:str):
         bcrypt.gensalt()
     ).decode()
 
-    # print(hashed_password)
     return hashed_password
 
 def verify_password(password: str, hashed: str):

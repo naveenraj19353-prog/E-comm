@@ -12,7 +12,13 @@ print(DATABASE_NAME, MONGO_URI)
 client = MongoClient(MONGO_URI)
 db = client[DATABASE_NAME]
 
-print(client)
+
+try:
+    client.admin.command("ping")
+    print("✅ Connected to MongoDB Atlas")
+except Exception as e:
+    print("❌ Connection failed:", e)
+
 
 users = db["users"]
 products = db["products"]

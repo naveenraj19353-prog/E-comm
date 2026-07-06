@@ -20,13 +20,10 @@ def get_users():
 
 @router.get('/id')
 def get_user(id):
-    print(id, "//////")
     user = users.find_one({
         '_id': ObjectId(id)
     }, {"password": 0})
 
-    # print('useronly', user)
-    
     if(user):
         user["_id"] = str(user["_id"])
         return user
@@ -38,5 +35,4 @@ def delete_user(id):
     user = users.delete_one({
         '_id': ObjectId(id)
     })
-    print("deletedUser ", user)
     return {'message':'User Deleted Successfully'}
