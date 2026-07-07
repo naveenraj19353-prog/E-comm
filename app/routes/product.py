@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException
-from app.models.product import CreateProduct, ProductSearchRequest
+from app.models.product import CreateProduct
 from datetime import datetime
 from bson import ObjectId
 from app.database.mongo import products
@@ -9,18 +9,26 @@ router = APIRouter(
 )
 
 @router.post('/create-product')
-def  product_create(product: CreateProduct):
+def create_product(product: CreateProduct):
 
-    existingProduct = products.find_one({
-        'name' : product.name,
-        'categoryId' : product.categoryId
+    existing = products.find_one({
+        "tenantId": product.tenantId,
+        "name": product.name,
+        "categoryId": product.categoryId
     })
 
-    if(existingProduct):
-        raise HTTPException(status_code=400, detail="Product already exist")
-    else:
-        final_price = product.price - (product.price * product.discountPercentage / 100)
-        product_data = {
+    if existing:
+        raise HTTPException(
+            status_code=400,
+            detail="Product already exists."
+        )
+
+    final_price = product.price - (
+        product.price * product.discountPercentage / 100
+    )
+
+    payload = {
+        "tenantId": product.tenantId,
         "name": product.name,
         "description": product.description,
         "categoryId": product.categoryId,
@@ -36,73 +44,124 @@ def  product_create(product: CreateProduct):
         "updatedAt": datetime.utcnow()
     }
 
-        products.insert_one(product_data)
-        return {
-            'message': 'Product Added Successfully',
-            'statusCode':200
-        }
-    
-@router.get('/get-all-products')
-def get_all_products():
-
-    products_data =[]
-
-    for product in products.find():
-        product['_id'] = str(product['_id'])
-        products_data.append(product)
-
-    return products_data
-
-@router.post('/get-product/id')
-def get_product(id):
-
-    product_data =[]
-
-    for product in products.find({'_id':ObjectId(id)}):
-        product['_id'] = str(product['_id'])
-        product_data.append(product)
-
-    return product_data
-
-@router.put('/update-product/id')
-def update_product(id:str, product: CreateProduct):
-    update_data = product.model_dump(exclude_unset=True)
-    if "price" in update_data and "discountPercentage" in update_data:
-        update_data["finalPrice"] = (update_data["price"] - (update_data["price"] * update_data["discountPercentage"] / 100))
-
-    update_data["updatedAt"] = datetime.utcnow()
-    result = products.update_one(
-        {"_id": ObjectId(id)},
-        {"$set": update_data}
-    )
-    if result.matched_count == 0:
-        raise HTTPException(status_code=404, detail="Product not found")
+    result = products.insert_one(payload)
 
     return {
         "success": True,
-        "message": "Product updated successfully"
+        "productId": str(result.inserted_id),
+        "message": "Product created successfully."
     }
 
-@router.delete('/delete-product/id')
-def delete_product(id: str):
-    result = products.delete_one(
-        {"_id": ObjectId(id)}
-    )
+@router.get("/get-all-products")
+def get_all_products(tenantId: str):
 
-    if result.deleted_count == 0:
+    data = []
+
+    cursor = products.find({
+        "tenantId": tenantId,
+        "isActive": True
+    })
+
+    for product in cursor:
+        product["_id"] = str(product["_id"])
+        data.append(product)
+
+    return {
+        "success": True,
+        "count": len(data),
+        "data": data
+    }
+
+@router.post('/{id}')
+def get_product(id: str, tenantId: str):
+
+    product = products.find_one({
+        "_id": ObjectId(id),
+        "tenantId": tenantId,
+        "isActive": True
+    })
+
+    if not product:
         raise HTTPException(
             status_code=404,
-            detail="Product not found"
+            detail="Product not found."
+        )
+
+    product["_id"] = str(product["_id"])
+
+    return {
+        "success": True,
+        "data": product
+    }
+
+@router.put('/update-product/id')
+def update_product(id: str, product: CreateProduct):
+
+    update_data = product.model_dump(exclude_unset=True)
+
+    if "price" in update_data or "discountPercentage" in update_data:
+
+        db_product = products.find_one({
+            "_id": ObjectId(id),
+            "tenantId": product.tenantId
+        })
+
+        price = update_data.get("price", db_product["price"])
+        discount = update_data.get(
+            "discountPercentage",
+            db_product["discountPercentage"]
+        )
+
+        update_data["finalPrice"] = (
+            price - (price * discount / 100)
+        )
+
+    update_data["updatedAt"] = datetime.utcnow()
+
+    result = products.update_one(
+        {
+            "_id": ObjectId(id),
+            "tenantId": product.tenantId
+        },
+        {
+            "$set": update_data
+        }
+    )
+
+    if result.matched_count == 0:
+        raise HTTPException(
+            status_code=404,
+            detail="Product not found."
         )
 
     return {
         "success": True,
-        "message": "Product deleted permanently"
+        "message": "Product updated successfully."
+    }
+
+@router.delete('/delete-product/id')
+def delete_product(id: str, tenantId: str):
+
+    result = products.delete_one({
+        "_id": ObjectId(id),
+        "tenantId": tenantId
+    })
+
+    if result.deleted_count == 0:
+        raise HTTPException(
+            status_code=404,
+            detail="Product not found."
+        )
+
+    return {
+        "success": True,
+        "message": "Product deleted successfully."
     }
 
 @router.post('/search')
-def search_product(request:ProductSearchRequest):
+def search_product(request:CreateProduct):
     query={
+        "tenantId": request.tenantId,
         'isActive': True
     }
 
@@ -122,8 +181,8 @@ def search_product(request:ProductSearchRequest):
             }
     ]
     if(request.categoryIds):
-        query['categoryIds'] = {
-            '$in': [ObjectId(id) for id in request.categoryIds]
+        query["categoryId"] = {
+            "$in": request.categoryIds
         }
 
     if(request.minPrice is not None or request.maxPrice is not None):
@@ -171,10 +230,13 @@ def search_product(request:ProductSearchRequest):
     }
 
 @router.get("/new-arrivals")
-def get_new_arrivals(limit: int = 10):
+def get_new_arrivals(tenantId: str, limit: int = 10):
 
     cursor = (
-        products.find({"isActive": True})
+        products.find({
+            "tenantId": tenantId,
+            "isActive": True
+        })
         .sort("createdAt", -1)
         .limit(limit)
     )
@@ -187,7 +249,6 @@ def get_new_arrivals(limit: int = 10):
 
     return {
         "success": True,
-        "message": "New arrivals fetched successfully.",
         "count": len(data),
         "data": data
     }

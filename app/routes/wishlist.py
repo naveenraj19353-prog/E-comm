@@ -1,26 +1,36 @@
 from fastapi import APIRouter, HTTPException
 from bson import ObjectId
 from datetime import datetime
-from app.models.wishlist import WishList
-from app.database.mongo import products, wishlists
 
-router= APIRouter(
-    prefix='/wishlsit',
-    tags=['Wishlist']
+from app.database.mongo import products, wishlists
+from app.models.wishlist import WishList
+
+router = APIRouter(
+    prefix="/wishlist",
+    tags=["Wishlist"]
 )
 
-@router.post('')
-def add_t0_wishlist(request: WishList):
+
+# --------------------------------------------------
+# Add Product to Wishlist
+# --------------------------------------------------
+@router.post("/")
+def add_to_wishlist(request: WishList):
+
     product = products.find_one({
         "_id": ObjectId(request.productId),
+        "tenantId": request.tenantId,
         "isActive": True
     })
+
     if not product:
         raise HTTPException(
             status_code=404,
             detail="Product not found."
         )
+
     existing = wishlists.find_one({
+        "tenantId": request.tenantId,
         "userId": ObjectId(request.userId),
         "productId": ObjectId(request.productId)
     })
@@ -28,10 +38,11 @@ def add_t0_wishlist(request: WishList):
     if existing:
         raise HTTPException(
             status_code=409,
-            detail="Product already exists in wishlists."
+            detail="Product already exists in wishlist."
         )
 
     wishlists.insert_one({
+        "tenantId": request.tenantId,
         "userId": ObjectId(request.userId),
         "productId": ObjectId(request.productId),
         "createdAt": datetime.utcnow()
@@ -39,27 +50,40 @@ def add_t0_wishlist(request: WishList):
 
     return {
         "success": True,
-        "message": "Product added to wishlists successfully."
+        "message": "Product added to wishlist successfully."
     }
 
-@router.get('/get-wishlist/{userId}')
-def get_wishlist(userId:str, ):
 
-    wishlist_data= wishlists.find({'userId':ObjectId(userId)})
+# --------------------------------------------------
+# Get Wishlist
+# --------------------------------------------------
+@router.get("/{userId}")
+def get_wishlist(userId: str, tenantId: str):
+
+    wishlist_items = wishlists.find({
+        "tenantId": tenantId,
+        "userId": ObjectId(userId)
+    })
+
     data = []
 
-    for item in wishlist_data:
+    for item in wishlist_items:
 
         product = products.find_one({
             "_id": item["productId"],
+            "tenantId": tenantId,
             "isActive": True
         })
+
         if product:
-            product["_id"] = str(product["_id"])
 
             data.append({
                 "wishlistId": str(item["_id"]),
-                "product": product,
+                "productId": str(product["_id"]),
+                "name": product["name"],
+                "price": product["finalPrice"],
+                "image": product["images"][0],
+                "stock": product["stock"],
                 "addedAt": item["createdAt"]
             })
 
@@ -69,11 +93,21 @@ def get_wishlist(userId:str, ):
         "data": data
     }
 
-@router.delete('/delete-wishlist}')
-def delete_wishlist(request:WishList):
+
+# --------------------------------------------------
+# Remove Single Product
+# --------------------------------------------------
+@router.delete("/{productId}")
+def remove_from_wishlist(
+    productId: str,
+    userId: str,
+    tenantId: str
+):
+
     result = wishlists.delete_one({
-        "userId": ObjectId(request.userId),
-        "productId": ObjectId(request.productId)
+        "tenantId": tenantId,
+        "userId": ObjectId(userId),
+        "productId": ObjectId(productId)
     })
 
     if result.deleted_count == 0:
@@ -84,13 +118,18 @@ def delete_wishlist(request:WishList):
 
     return {
         "success": True,
-        "message": "Product removed successfully."
+        "message": "Product removed from wishlist successfully."
     }
 
-@router.delete("/user/{userId}")
-def clear_wishlist(userId: str):
+
+# --------------------------------------------------
+# Clear Wishlist
+# --------------------------------------------------
+@router.delete("/")
+def clear_wishlist(userId: str, tenantId: str):
 
     result = wishlists.delete_many({
+        "tenantId": tenantId,
         "userId": ObjectId(userId)
     })
 

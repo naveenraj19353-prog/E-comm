@@ -3,18 +3,23 @@ from bson import ObjectId
 from datetime import datetime
 
 from app.database.mongo import carts, products
-from app.models.cart import AddCart
+from app.models.cart import AddCart, UpdateCart
 
 router = APIRouter(
     prefix="/cart",
     tags=["Cart"]
 )
 
-@router.post("/add-to-cart")
+
+# --------------------------------------------------
+# Add to Cart
+# --------------------------------------------------
+@router.post("/")
 def add_to_cart(request: AddCart):
 
     product = products.find_one({
         "_id": ObjectId(request.productId),
+        "tenantId": request.tenantId,
         "isActive": True
     })
 
@@ -31,6 +36,7 @@ def add_to_cart(request: AddCart):
         )
 
     existing = carts.find_one({
+        "tenantId": request.tenantId,
         "userId": ObjectId(request.userId),
         "productId": ObjectId(request.productId)
     })
@@ -46,7 +52,9 @@ def add_to_cart(request: AddCart):
             )
 
         carts.update_one(
-            {"_id": existing["_id"]},
+            {
+                "_id": existing["_id"]
+            },
             {
                 "$set": {
                     "quantity": new_quantity,
@@ -61,6 +69,7 @@ def add_to_cart(request: AddCart):
         }
 
     carts.insert_one({
+        "tenantId": request.tenantId,
         "userId": ObjectId(request.userId),
         "productId": ObjectId(request.productId),
         "quantity": request.quantity,
@@ -73,12 +82,16 @@ def add_to_cart(request: AddCart):
         "message": "Product added to cart successfully."
     }
 
-@router.put("/update/{productId}")
-def update_cart(productId: str, request: AddCart):
 
-    # Check if product exists
+# --------------------------------------------------
+# Update Cart Quantity
+# --------------------------------------------------
+@router.put("/{productId}")
+def update_cart(productId: str, request: UpdateCart):
+
     product = products.find_one({
         "_id": ObjectId(productId),
+        "tenantId": request.tenantId,
         "isActive": True
     })
 
@@ -88,15 +101,14 @@ def update_cart(productId: str, request: AddCart):
             detail="Product not found."
         )
 
-    # Check stock
     if request.quantity > product["stock"]:
         raise HTTPException(
             status_code=400,
             detail="Requested quantity exceeds available stock."
         )
 
-    # Check if product exists in cart
     cart = carts.find_one({
+        "tenantId": request.tenantId,
         "userId": ObjectId(request.userId),
         "productId": ObjectId(productId)
     })
@@ -106,6 +118,18 @@ def update_cart(productId: str, request: AddCart):
             status_code=404,
             detail="Product not found in cart."
         )
+
+    # Remove if quantity is zero
+    if request.quantity == 0:
+
+        carts.delete_one({
+            "_id": cart["_id"]
+        })
+
+        return {
+            "success": True,
+            "message": "Product removed from cart."
+        }
 
     carts.update_one(
         {
@@ -124,31 +148,65 @@ def update_cart(productId: str, request: AddCart):
         "message": "Cart updated successfully."
     }
 
-@router.get("/get-cart/{userId}")
-def get_cart(userId: str):
+
+# --------------------------------------------------
+# Get Cart
+# --------------------------------------------------
+@router.get("/{userId}")
+def get_cart(userId: str, tenantId: str):
 
     cursor = carts.find({
+        "tenantId": tenantId,
         "userId": ObjectId(userId)
     })
 
     data = []
+    grand_total = 0
 
     for item in cursor:
-        item["_id"] = str(item["_id"])
-        item["userId"] = str(item["userId"])
-        item["productId"] = str(item["productId"])
-        data.append(item)
+
+        product = products.find_one({
+            "_id": item["productId"],
+            "tenantId": tenantId,
+            "isActive": True
+        })
+
+        if product:
+
+            subtotal = product["finalPrice"] * item["quantity"]
+
+            grand_total += subtotal
+
+            data.append({
+                "cartId": str(item["_id"]),
+                "productId": str(product["_id"]),
+                "name": product["name"],
+                "price": product["finalPrice"],
+                "quantity": item["quantity"],
+                "subtotal": subtotal,
+                "image": product["images"][0]
+            })
 
     return {
         "success": True,
         "count": len(data),
+        "grandTotal": grand_total,
         "data": data
     }
 
-@router.delete("/delete{productId}")
-def remove_from_cart(productId: str, userId: str):
+
+# --------------------------------------------------
+# Remove Product From Cart
+# --------------------------------------------------
+@router.delete("/{productId}")
+def remove_from_cart(
+    productId: str,
+    userId: str,
+    tenantId: str
+):
 
     result = carts.delete_one({
+        "tenantId": tenantId,
         "userId": ObjectId(userId),
         "productId": ObjectId(productId)
     })
@@ -161,23 +219,23 @@ def remove_from_cart(productId: str, userId: str):
 
     return {
         "success": True,
-        "message": "Product removed from cart successfully."
+        "message": "Product removed successfully."
     }
 
-@router.delete("/clear-cart")
-def remove_from_cart( userId: str):
+
+# --------------------------------------------------
+# Clear Cart
+# --------------------------------------------------
+@router.delete("/")
+def clear_cart(userId: str, tenantId: str):
 
     result = carts.delete_many({
-        "userId": ObjectId(userId),
+        "tenantId": tenantId,
+        "userId": ObjectId(userId)
     })
-
-    if result.deleted_count == 0:
-        raise HTTPException(
-            status_code=404,
-            detail="Product not found in cart."
-        )
 
     return {
         "success": True,
-        "message": "All product removed from cart successfully."
+        "message": "Cart cleared successfully.",
+        "deletedItems": result.deleted_count
     }

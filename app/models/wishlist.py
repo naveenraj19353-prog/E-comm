@@ -1,5 +1,7 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, StrictStr
+
 
 class WishList(BaseModel):
-    userId:str
-    productId:str
+    tenantId: StrictStr
+    userId: str
+    productId: str

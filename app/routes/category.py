@@ -1,72 +1,105 @@
 from fastapi import APIRouter, HTTPException
-from app.models.category import CreateCategory, UpdateCategory
-from datetime import datetime
-from app.database.mongo import categories
 from bson import ObjectId
+from datetime import datetime
+
+from app.database.mongo import categories
+from app.models.category import CreateCategory, UpdateCategory
 
 router = APIRouter(
-    prefix='/category',
-    tags=['Category']
+    prefix="/categories",
+    tags=["Categories"]
 )
 
-@router.post('/create-category')
+
+# --------------------------------------------------
+# Create Category
+# --------------------------------------------------
+@router.post("/")
 def create_category(category: CreateCategory):
 
-    existingCategory= categories.find_one({
-        'name' : category.name,
+    existing = categories.find_one({
+        "tenantId": category.tenantId,
+        "name": category.name
     })
-        
-    if(existingCategory):
-        raise HTTPException(status_code=400, detail="Category already exist")
-    else:
 
-        category_data = {
-            "name": category.name,
-            "description": category.description,
-            "image": category.image,
-            "isActive": True,
-            "createdAt": datetime.utcnow(),
-            "updatedAt": datetime.utcnow()
-        }
+    if existing:
+        raise HTTPException(
+            status_code=400,
+            detail="Category already exists."
+        )
 
-        result = categories.insert_one(category_data)
-
-        return str(result.inserted_id)
-    
-@router.get("/get-all-categories")
-def get_all_categories():
-
-    category_list = []
-
-    for category in categories.find({"isActive": True}):
-        category["_id"] = str(category["_id"])
-        category_list.append(category)
-    return {
-        "success": True,
-        'statusCode':200,
-        "count": len(category_list),
-        "data": category_list
+    payload = {
+        "tenantId": category.tenantId,
+        "name": category.name,
+        "description": category.description,
+        "image": category.image,
+        "isActive": True,
+        "createdAt": datetime.utcnow(),
+        "updatedAt": datetime.utcnow()
     }
 
-@router.get('/id')
-def get_category_by_id(id):
+    result = categories.insert_one(payload)
 
-    category = []
+    return {
+        "success": True,
+        "message": "Category created successfully.",
+        "categoryId": str(result.inserted_id)
+    }
 
-    for category in categories.find({"name": id}):
+
+# --------------------------------------------------
+# Get All Categories
+# --------------------------------------------------
+@router.get("/")
+def get_all_categories(tenantId: str):
+
+    data = []
+
+    cursor = categories.find({
+        "tenantId": tenantId,
+        "isActive": True
+    })
+
+    for category in cursor:
         category["_id"] = str(category["_id"])
+        data.append(category)
 
-    if(len(category)):
-        return {
-            "success": True,
-            'statusCode':200,
-            "data": category
-        }
-    else:
-         return {
-            'statusCode':400,
-            'message':'Category does not exist'
-        } 
+    return {
+        "success": True,
+        "count": len(data),
+        "data": data
+    }
+
+
+# --------------------------------------------------
+# Get Category By Id
+# --------------------------------------------------
+@router.get("/{id}")
+def get_category_by_id(id: str, tenantId: str):
+
+    category = categories.find_one({
+        "_id": ObjectId(id),
+        "tenantId": tenantId,
+        "isActive": True
+    })
+
+    if not category:
+        raise HTTPException(
+            status_code=404,
+            detail="Category not found."
+        )
+
+    category["_id"] = str(category["_id"])
+
+    return {
+        "success": True,
+        "data": category
+    }
+
+
+# --------------------------------------------------
+# Update Category
+# --------------------------------------------------
 @router.put("/{id}")
 def update_category(id: str, category: UpdateCategory):
 
@@ -81,7 +114,10 @@ def update_category(id: str, category: UpdateCategory):
     update_data["updatedAt"] = datetime.utcnow()
 
     result = categories.update_one(
-        {"_id": ObjectId(id)},
+        {
+            "_id": ObjectId(id),
+            "tenantId": category.tenantId
+        },
         {
             "$set": update_data
         }
@@ -93,19 +129,30 @@ def update_category(id: str, category: UpdateCategory):
             detail="Category not found."
         )
 
-    updated_category = categories.find_one({"_id": ObjectId(id)})
-    updated_category["_id"] = str(updated_category["_id"])
+    updated = categories.find_one({
+        "_id": ObjectId(id),
+        "tenantId": category.tenantId
+    })
+
+    updated["_id"] = str(updated["_id"])
 
     return {
         "success": True,
         "message": "Category updated successfully.",
-        "data": updated_category
+        "data": updated
     }
 
-@router.delete("/{id}")
-def delete_category(id: str):
 
-    result = categories.delete_one({"_id": ObjectId(id)})
+# --------------------------------------------------
+# Delete Category
+# --------------------------------------------------
+@router.delete("/{id}")
+def delete_category(id: str, tenantId: str):
+
+    result = categories.delete_one({
+        "_id": ObjectId(id),
+        "tenantId": tenantId
+    })
 
     if result.deleted_count == 0:
         raise HTTPException(

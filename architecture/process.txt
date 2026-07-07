@@ -1,0 +1,15 @@
+✅ Authentication
+✅ Users
+✅ Categories
+✅ Products
+✅ Wishlist
+✅ Cart
+✅ Addresses
+⏭️ Orders
+⏭️ Payment Integration (e.g., Razorpay or Stripe)
+⏭️ Order Tracking
+⏭️ Coupons
+⏭️ Reviews & Ratings
+⏭️ Admin Dashboard
+⏭️ Audit Logs
+⏭️ Notifications (Email/SMS)

@@ -1,14 +1,23 @@
 from pydantic import BaseModel, EmailStr, StrictStr
+from typing import Optional
 
 class RegisterUser(BaseModel):
-    name:StrictStr
-    email:EmailStr
-    phone:str
-    password:str
+    tenantId: StrictStr
+    name: StrictStr
+    email: EmailStr
+    phone: str
+    password: str
 
 class LoginUser(BaseModel):
+    tenantId: StrictStr
     email:EmailStr
     password:str
+
+class UpdateUser(BaseModel):
+    name: Optional[str] = None
+    phone: Optional[str] = None
+    email: Optional[EmailStr] = None
+    isActive: Optional[bool] = None
 
 class ForgotPasswordRequest(BaseModel):
     email: EmailStr
