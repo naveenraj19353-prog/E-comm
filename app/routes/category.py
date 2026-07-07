@@ -1,7 +1,8 @@
 from fastapi import APIRouter, HTTPException
-from app.models.category import CreateCategory
+from app.models.category import CreateCategory, UpdateCategory
 from datetime import datetime
 from app.database.mongo import categories
+from bson import ObjectId
 
 router = APIRouter(
     prefix='/category',
@@ -66,3 +67,53 @@ def get_category_by_id(id):
             'statusCode':400,
             'message':'Category does not exist'
         } 
+@router.put("/{id}")
+def update_category(id: str, category: UpdateCategory):
+
+    update_data = category.model_dump(exclude_unset=True)
+
+    if not update_data:
+        raise HTTPException(
+            status_code=400,
+            detail="No fields provided for update."
+        )
+
+    update_data["updatedAt"] = datetime.utcnow()
+
+    result = categories.update_one(
+        {"_id": ObjectId(id)},
+        {
+            "$set": update_data
+        }
+    )
+
+    if result.matched_count == 0:
+        raise HTTPException(
+            status_code=404,
+            detail="Category not found."
+        )
+
+    updated_category = categories.find_one({"_id": ObjectId(id)})
+    updated_category["_id"] = str(updated_category["_id"])
+
+    return {
+        "success": True,
+        "message": "Category updated successfully.",
+        "data": updated_category
+    }
+
+@router.delete("/{id}")
+def delete_category(id: str):
+
+    result = categories.delete_one({"_id": ObjectId(id)})
+
+    if result.deleted_count == 0:
+        raise HTTPException(
+            status_code=404,
+            detail="Category not found."
+        )
+
+    return {
+        "success": True,
+        "message": "Category deleted successfully."
+    }

@@ -1,0 +1,45 @@
+JWT Authentication Flow - Women's Clothing E-Commerce
+Overview
+The application uses JSON Web Tokens (JWT) for stateless authentication. After a successful login, the backend issues a signed JWT that the frontend includes in the Authorization header for protected API requests.
+Authentication Flow
+    1. 1. User registers using POST /auth/register.
+    2. 2. Password is hashed (e.g., bcrypt) and stored in MongoDB.
+    3. 3. User logs in using POST /auth/login.
+    4. 4. Backend validates email and password.
+    5. 5. Backend generates a JWT containing userId, email and expiration time.
+    6. 6. JWT is returned to the frontend.
+    7. 7. Frontend stores the token (preferably in an HttpOnly cookie or securely according to your design).
+    8. 8. Frontend sends 'Authorization: Bearer <JWT>' with every protected request.
+    9. 9. FastAPI middleware/dependency validates the JWT signature and expiration.
+    10. 10. If valid, the request proceeds and the authenticated user is available in the request context.
+    11. 11. If invalid or expired, the API returns HTTP 401 Unauthorized.
+Sequence
+Client
+  │
+  ├── POST /auth/register ─────────────► FastAPI
+  │                                      │
+  │◄──────── User Created ───────────────┘
+  │
+  ├── POST /auth/login ─────────────────► FastAPI
+  │                                      │
+  │                                      ├── Verify Password
+  │                                      ├── Generate JWT
+  │◄──────── JWT Token ──────────────────┘
+  │
+  ├── GET /products
+  │   Authorization: Bearer <JWT> ─────► FastAPI
+  │                                      │
+  │                                      ├── Validate JWT
+  │                                      ├── Load User
+  │◄──────── Product List ───────────────┘
+JWT Payload Example
+{"sub":"6867d5d3...","email":"naveen@gmail.com","exp":1780000000}
+Protected APIs
+    • /cart
+    • /wishlist
+    • /orders
+    • /addresses
+    • /profile
+    • POST /reviews
+    • POST /products (Admin)
+    • POST /categories (Admin)

@@ -1,0 +1,370 @@
+MongoDB Collection Structure (Women's Clothing E-Commerce)
+
+For your project, you'll use 1 MongoDB database with 8 collections.
+
+Database Name: women_clothing_db
+1. Users Collection
+
+Collection Name:
+
+users
+
+Document Structure
+
+{
+    "_id": ObjectId,
+
+    "name": "Naveen Kumar",
+
+    "email": "naveen@gmail.com",
+
+    "phone": "9876543210",
+
+    "password": "$2b$12$hashedPassword",
+
+    "role": "customer",
+
+    "isVerified": false,
+
+    "resetToken": null,
+
+    "resetTokenExpiry": null,
+
+    "isActive": true,
+
+    "createdAt": ISODate(),
+
+    "updatedAt": ISODate()
+}
+
+Purpose
+
+User Registration
+Login
+Authentication
+Forgot Password
+Profile
+2. Categories Collection
+
+Collection Name
+
+categories
+
+Document
+
+{
+    "_id": ObjectId,
+
+    "name": "Dresses",
+
+    "description": "Women's Dresses",
+
+    "image": "https://cdn/images/dresses.jpg",
+
+    "isActive": true,
+
+    "createdAt": ISODate(),
+
+    "updatedAt": ISODate()
+}
+
+Purpose
+
+Home Page Categories
+Product Classification
+Product Filters
+3. Products Collection
+
+Collection Name
+
+products
+
+Document
+
+{
+    "_id": ObjectId,
+
+    "name": "Floral Maxi Dress",
+
+    "description": "Comfortable floral cotton dress",
+
+    "categoryId": ObjectId("6861abc123"),
+
+    "price": 1999,
+
+    "discountPercentage": 20,
+
+    "finalPrice": 1599.2,
+
+    "stock": 100,
+
+    "sizes": [
+        "S",
+        "M",
+        "L"
+    ],
+
+    "colors": [
+        "Red",
+        "Blue"
+    ],
+
+    "images": [
+        "https://cdn/images/product1.jpg",
+        "https://cdn/images/product2.jpg"
+    ],
+
+    "isActive": true,
+
+    "createdAt": ISODate(),
+
+    "updatedAt": ISODate()
+}
+
+Purpose
+
+Product Listing
+Product Details
+Search
+Filters
+Inventory
+4. Wishlist Collection
+
+Collection Name
+
+wishlists
+
+Document
+
+{
+    "_id": ObjectId,
+
+    "userId": ObjectId("userId"),
+
+    "productIds": [
+        ObjectId("product1"),
+        ObjectId("product2")
+    ],
+
+    "createdAt": ISODate()
+}
+
+Purpose
+
+Store users' favorite products
+5. Cart Collection
+
+Collection Name
+
+carts
+
+Document
+
+{
+    "_id": ObjectId,
+
+    "userId": ObjectId("userId"),
+
+    "items": [
+        {
+            "productId": ObjectId("productId"),
+
+            "quantity": 2,
+
+            "size": "M",
+
+            "color": "Red",
+
+            "price": 1599.2
+        }
+    ],
+
+    "grandTotal": 3198.4,
+
+    "updatedAt": ISODate()
+}
+
+Purpose
+
+Shopping Cart
+Checkout Preparation
+6. Addresses Collection
+
+Collection Name
+
+addresses
+
+Document
+
+{
+    "_id": ObjectId,
+
+    "userId": ObjectId("userId"),
+
+    "fullName": "Naveen Kumar",
+
+    "phone": "9876543210",
+
+    "addressLine1": "123 MG Road",
+
+    "addressLine2": "Near Metro Station",
+
+    "city": "Bengaluru",
+
+    "state": "Karnataka",
+
+    "postalCode": "560001",
+
+    "country": "India",
+
+    "isDefault": true,
+
+    "createdAt": ISODate(),
+
+    "updatedAt": ISODate()
+}
+
+Purpose
+
+Shipping Address
+Billing Address
+7. Orders Collection
+
+Collection Name
+
+orders
+
+Document
+
+{
+    "_id": ObjectId,
+
+    "orderNumber": "ORD100245",
+
+    "userId": ObjectId("userId"),
+
+    "addressId": ObjectId("addressId"),
+
+    "items": [
+        {
+            "productId": ObjectId("productId"),
+
+            "quantity": 2,
+
+            "size": "M",
+
+            "color": "Red",
+
+            "price": 1599.2
+        }
+    ],
+
+    "subTotal": 3198.4,
+
+    "discount": 200,
+
+    "shipping": 0,
+
+    "tax": 0,
+
+    "grandTotal": 2998.4,
+
+    "paymentMethod": "ONLINE",
+
+    "paymentStatus": "SUCCESS",
+
+    "orderStatus": "PLACED",
+
+    "createdAt": ISODate(),
+
+    "updatedAt": ISODate()
+}
+
+Purpose
+
+Order History
+Order Tracking
+Payment Status
+8. Reviews Collection
+
+Collection Name
+
+reviews
+
+Document
+
+{
+    "_id": ObjectId,
+
+    "userId": ObjectId("userId"),
+
+    "productId": ObjectId("productId"),
+
+    "rating": 5,
+
+    "comment": "Excellent quality and fitting.",
+
+    "createdAt": ISODate(),
+
+    "updatedAt": ISODate()
+}
+
+Purpose
+
+Product Ratings
+Customer Reviews
+Database Relationships
+                    USERS
+                      │
+        ┌─────────────┼─────────────┐
+        │             │             │
+        ▼             ▼             ▼
+   ADDRESSES      WISHLISTS      CARTS
+        │                           │
+        │                           │
+        ▼                           ▼
+      ORDERS ◄────────────────── PRODUCTS
+        │                           ▲
+        │                           │
+        └──────────────┐            │
+                       ▼            │
+                    REVIEWS ────────┘
+                       ▲
+                       │
+                  CATEGORIES
+                       │
+                       ▼
+                   PRODUCTS
+Collection Relationships
+Parent Collection	Child Collection	Relationship
+Users	Addresses	One User → Many Addresses
+Users	Wishlist	One User → One Wishlist
+Users	Cart	One User → One Cart
+Users	Orders	One User → Many Orders
+Users	Reviews	One User → Many Reviews
+Categories	Products	One Category → Many Products
+Products	Reviews	One Product → Many Reviews
+Orders	Products	One Order → Many Products (stored in items)
+Final Database Structure
+women_clothing_db
+│
+├── users
+├── categories
+├── products
+├── wishlists
+├── carts
+├── addresses
+├── orders
+└── reviews
+
+This structure supports all the core features you've planned:
+
+User registration and login
+Home page and category browsing
+Product listing and details
+Search and filters
+Wishlist
+Shopping cart
+Address management
+Checkout and orders
+Product reviews

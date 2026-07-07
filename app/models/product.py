@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 from pydantic import BaseModel, Field, field_validator, ConfigDict
 
 
@@ -81,3 +81,15 @@ class CreateProduct(BaseModel):
                 raise ValueError("Image must be a valid URL")
         return value
     
+class ProductSearchRequest(BaseModel):
+    search: Optional[str] = None
+    categoryIds: Optional[List[str]] = None
+    sizes: Optional[List[str]] = None
+    colors: Optional[List[str]] = None
+    minPrice: Optional[float] = None
+    maxPrice: Optional[float] = None
+    inStock: Optional[bool] = None
+    sortBy: Optional[str] = "createdAt"
+    sortOrder: Optional[str] = "desc"
+    page: Optional[int] = 1
+    limit: Optional[int] = 10
