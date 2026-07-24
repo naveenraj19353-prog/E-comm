@@ -1,7 +1,7 @@
 from pymongo import MongoClient
 from dotenv import load_dotenv
 import os
-
+import json
 load_dotenv()
 
 MONGO_URI = os.getenv('MONGO_URI')
@@ -12,6 +12,11 @@ print(DATABASE_NAME, MONGO_URI)
 client = MongoClient(MONGO_URI)
 db = client[DATABASE_NAME]
 
+with open("output/products.json", encoding="utf-8") as f:
+    products = json.load(f)
+
+db.products.delete_many({})  # Optional: clear existing data
+db.products.insert_many(products)
 
 try:
     client.admin.command("ping")
