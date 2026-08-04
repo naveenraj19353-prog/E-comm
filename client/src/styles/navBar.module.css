@@ -1,0 +1,383 @@
+/* ===== Tokens ===== */
+.navbar {
+    --nt-green: #2f6b52;
+    --nt-green-light: #4c8a6d;
+    --nt-text: #1f2a26;
+    --nt-text-muted: #5b6a63;
+    --nt-border: #e7e9e8;
+    --nt-bg: #ffffff;
+    --nt-radius: 10px;
+  
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: var(--nt-bg);
+    border-bottom: 1px solid var(--nt-border);
+    font-family: 'Segoe UI', Roboto, -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+  
+  .container {
+    max-width: 1280px;
+    margin: 0 auto;
+    height: 64px;
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    gap: 24px;
+  }
+  
+  /* ===== Logo ===== */
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+    flex-shrink: 0;
+  }
+  
+  .logoIcon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, var(--nt-green), var(--nt-green-light));
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .logoText {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--nt-text);
+    letter-spacing: -0.01em;
+  }
+  
+  /* ===== Desktop nav links ===== */
+  .navLinks {
+    display: flex;
+    align-items: center;
+    gap: 28px;
+    flex: 1;
+  }
+  
+  .navLink {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--nt-text-muted);
+    text-decoration: none;
+    white-space: nowrap;
+    transition: color 0.15s ease;
+  }
+  
+  .navLink:hover {
+    color: var(--nt-green);
+  }
+  
+  /* ===== Right section ===== */
+  .rightSection {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-left: auto;
+  }
+  
+  /* Full search bar (desktop) */
+  .searchWrapper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 260px;
+    padding: 9px 14px;
+    border: 1px solid var(--nt-border);
+    border-radius: 999px;
+    background: #fafbfa;
+    color: var(--nt-text-muted);
+  }
+  
+  .searchWrapper .searchIcon {
+    flex-shrink: 0;
+  }
+  
+  .searchInput {
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 14px;
+    color: var(--nt-text);
+    width: 100%;
+  }
+  
+  .searchInput::placeholder {
+    color: #9aa5a0;
+  }
+  
+  .searchIcon {
+    color: #9aa5a0;
+  }
+  
+  /* Icon buttons */
+  .iconButton {
+    position: relative;
+    display: none; /* toggled per breakpoint below */
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border: none;
+    background: transparent;
+    color: var(--nt-text);
+    cursor: pointer;
+    border-radius: 999px;
+    transition: background 0.15s ease;
+  }
+  
+  .iconButton:hover {
+    background: #f1f3f2;
+  }
+  
+  .badge {
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    min-width: 16px;
+    height: 16px;
+    padding: 0 3px;
+    border-radius: 999px;
+    background: var(--nt-green);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+  }
+  
+  .avatar {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--nt-green-light), var(--nt-green));
+    flex-shrink: 0;
+    cursor: pointer;
+  }
+  
+  /* Wishlist + cart icons are visible at every breakpoint */
+  .rightSection .iconButton {
+    display: flex;
+  }
+  
+  /* Search icon-only trigger hidden on desktop (full bar shown instead) */
+  .rightSection > .iconButton:first-of-type {
+    display: none;
+  }
+  
+  /* ===== Hamburger menu button ===== */
+  .menuButton {
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 5px;
+    width: 36px;
+    height: 36px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    padding: 0;
+  }
+  
+  .menuButton span {
+    display: block;
+    width: 20px;
+    height: 2px;
+    border-radius: 2px;
+    background: var(--nt-text);
+    transition: transform 0.3s ease, opacity 0.2s ease;
+  }
+  
+  .menuButtonOpen span:nth-child(1) {
+    transform: translateY(7px) rotate(45deg);
+  }
+  .menuButtonOpen span:nth-child(2) {
+    opacity: 0;
+  }
+  .menuButtonOpen span:nth-child(3) {
+    transform: translateY(-7px) rotate(-45deg);
+  }
+  
+  /* ===== Collapsible search row (tablet/mobile) ===== */
+  .searchRow {
+    display: none;
+    align-items: center;
+    gap: 8px;
+    max-height: 0;
+    overflow: hidden;
+    padding: 0 24px;
+    border-top: 1px solid transparent;
+    transition: max-height 0.28s ease, padding 0.28s ease, border-color 0.28s ease;
+  }
+  
+  .searchRowOpen {
+    max-height: 56px;
+    padding: 10px 24px;
+    border-top-color: var(--nt-border);
+  }
+  
+  .searchRow .searchInput {
+    padding: 8px 0;
+  }
+  
+  /* ===== Overlay ===== */
+  .overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 20, 0.4);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+    z-index: 90;
+  }
+  
+  .overlayVisible {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  
+  /* ===== Slide-in mobile menu ===== */
+  .mobileMenu {
+    position: fixed;
+    top: 0;
+    right: 0;
+    height: 100vh;
+    width: min(320px, 85vw);
+    background: var(--nt-bg);
+    box-shadow: -8px 0 24px rgba(0, 0, 0, 0.08);
+    transform: translateX(100%);
+    transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+    z-index: 95;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .mobileMenuOpen {
+    transform: translateX(0);
+  }
+  
+  .mobileMenuHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 64px;
+    padding: 0 20px;
+    border-bottom: 1px solid var(--nt-border);
+    flex-shrink: 0;
+  }
+  
+  .closeButton {
+    width: 32px;
+    height: 32px;
+    border: none;
+    background: #f1f3f2;
+    border-radius: 50%;
+    color: var(--nt-text);
+    cursor: pointer;
+    font-size: 14px;
+  }
+  
+  .mobileNavLinks {
+    display: flex;
+    flex-direction: column;
+    padding: 12px 8px;
+  }
+  
+  .mobileNavLink {
+    padding: 14px 16px;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--nt-text);
+    text-decoration: none;
+    border-radius: 8px;
+    opacity: 0;
+    transform: translateX(16px);
+    transition: opacity 0.3s ease, transform 0.3s ease, background 0.15s ease;
+  }
+  
+  .mobileMenuOpen .mobileNavLink {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  
+  .mobileNavLink:hover {
+    background: #f1f3f2;
+    color: var(--nt-green);
+  }
+  
+  /* ============================================================
+     Breakpoints
+     Desktop:  > 1024px  — full nav links + full search bar, no hamburger
+     Tablet:   641px–1024px — logo, search icon, wishlist/cart, hamburger
+     Mobile:   <= 640px  — logo, search icon, wishlist/cart, hamburger
+     ============================================================ */
+  
+  @media (max-width: 1024px) {
+    .navLinks {
+      display: none;
+    }
+  
+    .searchWrapper {
+      display: none;
+    }
+  
+    .rightSection > .iconButton:first-of-type {
+      display: flex; /* search icon trigger */
+    }
+  
+    .menuButton {
+      display: flex;
+    }
+  
+    .searchRow {
+      display: flex;
+    }
+  }
+  
+  @media (max-width: 640px) {
+    .container {
+      padding: 0 16px;
+      gap: 12px;
+      height: 58px;
+    }
+  
+    .logoText {
+      font-size: 15px;
+    }
+  
+    .rightSection {
+      gap: 8px;
+    }
+  
+    .avatar {
+      display: none; /* keep header compact on small phones */
+    }
+  
+    .searchRow {
+      padding: 0 16px;
+    }
+  
+    .searchRowOpen {
+      padding: 10px 16px;
+    }
+  }
+  
+  /* Respect reduced motion preference */
+  @media (prefers-reduced-motion: reduce) {
+    .mobileMenu,
+    .menuButton span,
+    .mobileNavLink,
+    .overlay,
+    .searchRow {
+      transition-duration: 0.01ms !important;
+    }
+  }

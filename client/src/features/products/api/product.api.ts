@@ -1,5 +1,7 @@
 import apiClient from "../../../api/client";
+import type { ProductSearchRequest } from "../types";
 
+// Get All Products
 export const getProducts = async (tenantId: string) => {
   const response = await apiClient.get("/product/get-all-products", {
     params: {
@@ -10,8 +12,21 @@ export const getProducts = async (tenantId: string) => {
   return response.data;
 };
 
+// Search Products
+export const searchProducts = async (
+  payload: ProductSearchRequest
+) => {
+  const response = await apiClient.post(
+    "/product/search",
+    payload
+  );
+
+  return response.data;
+};
+
+// Categories
 export const getCategory = async (tenantId: string) => {
-  const response = await apiClient.get("/categories/", {
+  const response = await apiClient.get("/categories", {
     params: {
       tenantId,
     },

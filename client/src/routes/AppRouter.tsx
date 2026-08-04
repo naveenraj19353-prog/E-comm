@@ -3,7 +3,7 @@ import { createBrowserRouter } from "react-router-dom";
 import MainLayout from "../layouts/MainLayout";
 
 import Home from "../pages/Home";
-import Products from "../pages/Products";
+import Products from "../pages/Products/ProductsPage";
 // import ProductDetails from "../pages/ProductDetails";
 import Cart from "../pages/Cart";
 // import Wishlist from "../pages/Wishlist";

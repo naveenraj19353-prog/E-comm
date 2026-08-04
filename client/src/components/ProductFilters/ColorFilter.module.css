@@ -1,0 +1,40 @@
+.wrapper {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  
+  .colorItem {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  
+    padding: 8px 12px;
+  
+    border: 1px solid #e5e7eb;
+    border-radius: 999px;
+  
+    background: white;
+  
+    cursor: pointer;
+  
+    transition: .2s;
+  }
+  
+  .colorItem:hover {
+    border-color: #16a34a;
+  }
+  
+  .active {
+    border-color: #16a34a;
+    background: #f0fdf4;
+  }
+  
+  .dot {
+    width: 16px;
+    height: 16px;
+  
+    border-radius: 50%;
+  
+    border: 1px solid #d1d5db;
+  }

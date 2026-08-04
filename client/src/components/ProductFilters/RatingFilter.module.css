@@ -1,0 +1,43 @@
+.wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  
+    width: 100%;
+  
+    border: 1px solid #eee;
+    border-radius: 10px;
+  
+    background: white;
+  
+    padding: 10px 14px;
+  
+    cursor: pointer;
+  
+    transition: .2s;
+  }
+  
+  .item:hover {
+    border-color: #16a34a;
+  }
+  
+  .active {
+    border-color: #16a34a;
+    background: #f0fdf4;
+  }
+  
+  .stars {
+    display: flex;
+    gap: 2px;
+  }
+  
+  .item span {
+    font-size: 13px;
+    color: #666;
+  }

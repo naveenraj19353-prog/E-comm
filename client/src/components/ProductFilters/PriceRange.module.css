@@ -1,0 +1,40 @@
+.wrapper {
+    padding: 10px 0;
+  }
+  
+  .track {
+    height: 6px;
+    width: 100%;
+    background: #e5e7eb;
+    border-radius: 999px;
+  }
+  
+  .thumb {
+    height: 18px;
+    width: 18px;
+  
+    border-radius: 50%;
+  
+    background: #16a34a;
+  
+    cursor: grab;
+  
+    outline: none;
+  
+    border: 3px solid white;
+  
+    box-shadow: 0 0 8px rgba(0, 0, 0, .15);
+  }
+  
+  .values {
+    display: flex;
+  
+    justify-content: space-between;
+  
+    margin-top: 16px;
+  
+    font-weight: 600;
+  
+    color: #16a34a;
+  }
+  

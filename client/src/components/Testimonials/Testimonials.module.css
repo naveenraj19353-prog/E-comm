@@ -1,0 +1,30 @@
+.section{
+    padding:80px 0;
+}
+
+.header{
+    text-align:center;
+    margin-bottom:50px;
+}
+
+.header h2{
+    font-size:38px;
+    margin-bottom:10px;
+}
+
+.header p{
+    color:#666;
+}
+
+:global(.swiper){
+    padding-bottom:60px;
+}
+
+:global(.swiper-button-next),
+:global(.swiper-button-prev){
+    color:#111;
+}
+
+:global(.swiper-pagination-bullet-active){
+    background:#16a34a;
+}

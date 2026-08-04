@@ -1,0 +1,139 @@
+.card {
+    background: #fff;
+    border-radius: 18px;
+    overflow: hidden;
+    position: relative;
+    transition: .35s;
+    cursor: pointer;
+    border: 1px solid #ececec;
+  }
+  
+  .card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 15px 40px rgba(0,0,0,.08);
+  }
+  
+  .discount {
+    position: absolute;
+    left: 16px;
+    top: 16px;
+    background: #ef4444;
+    color: white;
+    padding: 6px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    z-index: 2;
+  }
+  
+  .wishlist {
+    position: absolute;
+    right: 16px;
+    top: 16px;
+  
+    width: 38px;
+    height: 38px;
+  
+    border-radius: 50%;
+    border: none;
+  
+    background: white;
+  
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  
+    cursor: pointer;
+  
+    box-shadow: 0 5px 15px rgba(0,0,0,.08);
+  
+    transition: .3s;
+  
+    z-index: 2;
+  }
+  
+  .wishlist:hover {
+    background: #ef4444;
+    color: white;
+  }
+  
+  .imageWrapper {
+    background: #f7f7f7;
+    aspect-ratio: 1;
+    overflow: hidden;
+  }
+  
+  .image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: .4s;
+  }
+  
+  .card:hover .image {
+    transform: scale(1.08);
+  }
+  
+  .content {
+    padding: 18px;
+  }
+  
+  .content h3 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    height: 48px;
+  }
+  
+  .rating {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 12px 0;
+    color: #666;
+    font-size: 14px;
+  }
+  
+  .price {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 18px;
+  }
+  
+  .current {
+    font-size: 20px;
+    font-weight: bold;
+  }
+  
+  .old {
+    color: #999;
+    text-decoration: line-through;
+  }
+  
+  .cartBtn {
+    width: 100%;
+    height: 46px;
+  
+    border-radius: 999px;
+    border: none;
+  
+    background: #16a34a;
+    color: white;
+  
+    font-size: 15px;
+    font-weight: 600;
+  
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+  
+    cursor: pointer;
+  
+    transition: .3s;
+  }
+  
+  .cartBtn:hover {
+    background: #15803d;
+  }
