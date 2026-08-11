@@ -1,4 +1,5 @@
 import { Star } from "lucide-react";
+
 import styles from "./RatingFilter.module.css";
 
 interface RatingFilterProps {
@@ -8,36 +9,42 @@ interface RatingFilterProps {
 
 const ratings = [5, 4, 3, 2, 1];
 
-const RatingFilter = ({
-  value,
-  onChange,
-}: RatingFilterProps) => {
+const RatingFilter = ({ value, onChange }: RatingFilterProps) => {
   return (
     <div className={styles.wrapper}>
-      {ratings.map((rating) => (
-        <button
-          key={rating}
-          className={`${styles.item} ${
-            value === rating ? styles.active : ""
-          }`}
-          onClick={() =>
-            onChange(value === rating ? null : rating)
-          }
-        >
-          <div className={styles.stars}>
-            {Array.from({ length: 5 }).map((_, index) => (
-              <Star
-                key={index}
-                size={16}
-                fill={index < rating ? "#fbbf24" : "none"}
-                stroke="#fbbf24"
-              />
-            ))}
-          </div>
+      {ratings.map((rating) => {
+        const isActive = value === rating;
 
-          <span>& Up</span>
-        </button>
-      ))}
+        return (
+          <button
+            key={rating}
+            type="button"
+            className={`${styles.item} ${isActive ? styles.active : ""}`}
+            onClick={() => onChange(isActive ? null : rating)}
+          >
+            <div className={styles.ratingContent}>
+              <div className={styles.stars}>
+                {Array.from({
+                  length: 5,
+                }).map((_, index) => (
+                  <Star
+                    key={index}
+                    size={15}
+                    fill={index < rating ? "currentColor" : "none"}
+                    strokeWidth={2}
+                  />
+                ))}
+              </div>
+
+              <span className={styles.label}>{rating} & Up</span>
+            </div>
+
+            <span className={styles.radio}>
+              {isActive && <span className={styles.radioInner} />}
+            </span>
+          </button>
+        );
+      })}
     </div>
   );
 };

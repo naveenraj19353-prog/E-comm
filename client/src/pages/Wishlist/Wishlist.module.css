@@ -1,0 +1,483 @@
+.container {
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 38px 28px 60px;
+  box-sizing: border-box;
+}
+
+/* =========================================================
+     HEADER
+  ========================================================= */
+
+.header {
+  margin-bottom: 28px;
+}
+
+.eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+
+  margin-bottom: 8px;
+
+  color: #2f6b52;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.header h1 {
+  margin: 0;
+
+  color: #17211d;
+  font-size: 32px;
+  line-height: 1.15;
+  font-weight: 750;
+  letter-spacing: -0.03em;
+}
+
+.header p {
+  margin: 8px 0 0;
+
+  color: #78827d;
+  font-size: 14px;
+}
+
+/* =========================================================
+     GRID
+  ========================================================= */
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 20px;
+}
+
+/* =========================================================
+     CARD
+  ========================================================= */
+
+.card {
+  overflow: hidden;
+
+  background: #ffffff;
+
+  border: 1px solid #e7ebe8;
+  border-radius: 18px;
+
+  transition: transform 0.25s ease, box-shadow 0.25s ease,
+    border-color 0.25s ease;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+
+  border-color: #dce3df;
+
+  box-shadow: 0 16px 35px rgba(26, 42, 34, 0.08);
+}
+
+/* =========================================================
+     IMAGE
+  ========================================================= */
+
+.imageWrapper {
+  position: relative;
+
+  width: 100%;
+  height: 260px;
+
+  overflow: hidden;
+
+  background: #f5f7f5;
+}
+
+.image {
+  width: 100%;
+  height: 100%;
+
+  display: block;
+
+  object-fit: cover;
+
+  transition: transform 0.45s ease;
+}
+
+.card:hover .image {
+  transform: scale(1.05);
+}
+
+/* =========================================================
+     HEART
+  ========================================================= */
+
+.removeIcon {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+
+  width: 38px;
+  height: 38px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: none;
+  border-radius: 50%;
+
+  background: rgba(255, 255, 255, 0.94);
+
+  color: #d94a51;
+
+  cursor: pointer;
+
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.removeIcon:hover {
+  transform: scale(1.08);
+  background: #ffffff;
+}
+
+.removeIcon:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* =========================================================
+     STOCK BADGE
+  ========================================================= */
+
+.inStock,
+.outOfStock {
+  position: absolute;
+  left: 12px;
+  bottom: 12px;
+
+  padding: 6px 10px;
+
+  border-radius: 999px;
+
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.inStock {
+  background: #e5f4eb;
+  color: #27714d;
+}
+
+.outOfStock {
+  background: #fbe8e8;
+  color: #b33d3d;
+}
+
+/* =========================================================
+     CONTENT
+  ========================================================= */
+
+.content {
+  padding: 17px;
+}
+
+.content h2 {
+  min-height: 44px;
+
+  margin: 0 0 9px;
+
+  color: #202a25;
+
+  font-size: 15px;
+  line-height: 1.45;
+  font-weight: 650;
+
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+
+/* =========================================================
+     PRICE
+  ========================================================= */
+
+.priceRow {
+  display: flex;
+  align-items: center;
+
+  margin-bottom: 10px;
+}
+
+.priceRow strong {
+  color: #2f6b52;
+
+  font-size: 18px;
+  font-weight: 750;
+}
+
+/* =========================================================
+     STOCK INFO
+  ========================================================= */
+
+.stockInfo {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  margin-bottom: 15px;
+
+  color: #89938e;
+
+  font-size: 11px;
+}
+
+/* =========================================================
+     ACTIONS
+  ========================================================= */
+
+.actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 42px;
+  gap: 8px;
+}
+
+/* =========================================================
+     ADD TO CART
+  ========================================================= */
+
+.cartButton {
+  height: 42px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+
+  border: none;
+  border-radius: 10px;
+
+  background: #2f6b52;
+  color: #ffffff;
+
+  font-size: 12px;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.cartButton:hover:not(:disabled) {
+  background: #285d47;
+}
+
+.cartButton:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.cartButton:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* =========================================================
+     DELETE
+  ========================================================= */
+
+.deleteButton {
+  height: 42px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 1px solid #eadfdf;
+  border-radius: 10px;
+
+  background: #fff8f8;
+
+  color: #c24a45;
+
+  cursor: pointer;
+
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.deleteButton:hover:not(:disabled) {
+  background: #fff0f0;
+  border-color: #e7cccc;
+}
+
+.deleteButton:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* =========================================================
+     EMPTY STATE
+  ========================================================= */
+
+.empty {
+  min-height: 65vh;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  padding: 50px 20px;
+
+  text-align: center;
+}
+
+.emptyIcon {
+  width: 84px;
+  height: 84px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  margin-bottom: 22px;
+
+  border-radius: 50%;
+
+  background: #fff0f2;
+
+  color: #d94a51;
+}
+
+.empty h1 {
+  margin: 0;
+
+  color: #1d2823;
+
+  font-size: 25px;
+  font-weight: 750;
+}
+
+.empty p {
+  max-width: 380px;
+
+  margin: 9px 0 22px;
+
+  color: #77827c;
+
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+/* =========================================================
+     SHOP BUTTON
+  ========================================================= */
+
+.shopButton {
+  height: 44px;
+
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  padding: 0 20px;
+
+  border: none;
+  border-radius: 10px;
+
+  background: #2f6b52;
+  color: #ffffff;
+
+  font-size: 13px;
+  font-weight: 650;
+
+  cursor: pointer;
+
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.shopButton:hover {
+  background: #285d47;
+}
+
+.shopButton:active {
+  transform: translateY(1px);
+}
+
+/* =========================================================
+     LOADING
+  ========================================================= */
+
+.loading {
+  min-height: 60vh;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+
+  color: #75817b;
+
+  font-size: 13px;
+}
+
+.loading svg {
+  color: #d94a51;
+}
+
+/* =========================================================
+     TABLET
+  ========================================================= */
+
+@media (max-width: 1100px) {
+  .grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 800px) {
+  .container {
+    padding: 28px 20px 45px;
+  }
+
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* =========================================================
+     MOBILE
+  ========================================================= */
+
+@media (max-width: 520px) {
+  .container {
+    padding: 24px 16px 40px;
+  }
+
+  .header h1 {
+    font-size: 26px;
+  }
+
+  .grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .imageWrapper {
+    height: 280px;
+  }
+}
+
+@media (max-width: 360px) {
+  .imageWrapper {
+    height: 240px;
+  }
+
+  .content {
+    padding: 14px;
+  }
+}

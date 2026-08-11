@@ -1,6 +1,5 @@
 import { useAppSelector } from "../app/hooks";
 import { useCategory } from "../features/products/hooks/useCategory";
-import { useProducts } from "../features/products/hooks/useProducts";
 import HeroSlider from "../components/HeroSlider/HeroSlider";
 import ProductCardSlider from "../components/card/Productcardslider";
 import ProductSlider from "../components/sliders/ProductSlider";
@@ -9,6 +8,7 @@ import type { Brand } from "../components/sliders/BrandSlider";
 import BrandSlider from "../components/sliders/BrandSlider";
 import Testimonials from "../components/Testimonials";
 import { testimonials } from "../components/Testimonials/dummyTestimonials";
+import { useProducts } from "../features/products/hooks/useProducts";
 
 const Home = () => {
   const tenantSlug = useAppSelector(

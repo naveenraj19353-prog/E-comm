@@ -1,4 +1,3 @@
-import { Range } from "react-range";
 import styles from "./PriceRange.module.css";
 
 interface PriceRangeProps {
@@ -8,40 +7,90 @@ interface PriceRangeProps {
   onChange: (values: number[]) => void;
 }
 
-const PriceRange = ({
-  values,
-  min,
-  max,
-  onChange,
-}: PriceRangeProps) => {
+const PriceRange = ({ values, min, max, onChange }: PriceRangeProps) => {
+  const minValue = values[0];
+  const maxValue = values[1];
+
+  const minPercent = ((minValue - min) / (max - min)) * 100;
+
+  const maxPercent = ((maxValue - min) / (max - min)) * 100;
+
+  const handleMinChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = Number(e.target.value);
+
+    if (value >= maxValue) {
+      return;
+    }
+
+    onChange([value, maxValue]);
+  };
+
+  const handleMaxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = Number(e.target.value);
+
+    if (value <= minValue) {
+      return;
+    }
+
+    onChange([minValue, value]);
+  };
+
   return (
-    <div className={styles.wrapper}>
-      <Range
-        step={100}
-        min={min}
-        max={max}
-        values={values}
-        onChange={onChange}
-        renderTrack={({ props, children }) => (
-          <div
-            {...props}
-            className={styles.track}
-          >
-            {children}
-          </div>
-        )}
-        renderThumb={({ props }) => (
-          <div
-            {...props}
-            className={styles.thumb}
-          />
-        )}
-      />
+    <div className={styles.container}>
+      {/* Price values */}
 
       <div className={styles.values}>
-        <span>₹{values[0].toLocaleString()}</span>
+        <span>₹{minValue.toLocaleString("en-IN")}</span>
 
-        <span>₹{values[1].toLocaleString()}</span>
+        <span>₹{maxValue.toLocaleString("en-IN")}</span>
+      </div>
+
+      {/* Slider */}
+
+      <div className={styles.slider}>
+        {/* Background */}
+
+        <div className={styles.track} />
+
+        {/* Selected range */}
+
+        <div
+          className={styles.range}
+          style={{
+            left: `${minPercent}%`,
+            right: `${100 - maxPercent}%`,
+          }}
+        />
+
+        {/* Minimum handle */}
+
+        <input
+          type="range"
+          min={min}
+          max={max}
+          value={minValue}
+          onChange={handleMinChange}
+          className={`${styles.input} ${styles.minInput}`}
+        />
+
+        {/* Maximum handle */}
+
+        <input
+          type="range"
+          min={min}
+          max={max}
+          value={maxValue}
+          onChange={handleMaxChange}
+          className={`${styles.input} ${styles.maxInput}`}
+        />
+      </div>
+
+      {/* Min / Max labels */}
+
+      <div className={styles.labels}>
+        <span>₹{min.toLocaleString("en-IN")}</span>
+
+        <span>₹{max.toLocaleString("en-IN")}</span>
       </div>
     </div>
   );

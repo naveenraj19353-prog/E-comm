@@ -64,7 +64,7 @@ const Navbar = () => {
 
                 {/* Center */}
                 <div className={styles.searchContainer}>
-                    <SearchBar />
+                    {/* <SearchBar /> */}
                 </div>
 
                 {/* Right */}

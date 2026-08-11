@@ -137,3 +137,12 @@
   .cartBtn:hover {
     background: #15803d;
   }
+  .wishlisted {
+    color: #ef4444;
+    background: #fff1f2;
+  }
+  
+  .wishlisted:hover {
+    background: #ef4444;
+    color: #ffffff;
+  }

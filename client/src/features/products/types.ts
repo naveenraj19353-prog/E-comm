@@ -31,3 +31,29 @@ export interface ProductSearchRequest {
   limit?: number;
   sort?: string;
 }
+
+export interface ProductQueryParams {
+  tenantId: string;
+  page?: number;
+  limit?: number;
+  categoryIds?: string[];
+  colors?: string[];
+  sizes?: string[];
+  minPrice?: number;
+  maxPrice?: number;
+  rating?: number;
+  search?: string;
+  sortBy?: string;
+  sortOrder?: "asc" | "desc";
+}
+export interface ProductsResponse {
+  success: boolean;
+  count: number;
+  totalCount: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
+  data: Product[];
+}

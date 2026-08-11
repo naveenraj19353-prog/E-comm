@@ -6,10 +6,20 @@ import {
 
 import styles from "./ProductCard.module.css";
 
-import type { Product } from "../../../features/products/types";
+export interface ProductCardData {
+  _id: string;
+  name: string;
+  price: number;
+  finalPrice: number;
+  discountPercentage: number;
+  images: string[];
+  stock: number;
+  averageRating: number;
+  reviewCount: number;
+}
 
 interface ProductCardProps {
-  product: Product;
+  product: ProductCardData;
   isWishlisted?: boolean;
   onWishlist?: (id: string) => void;
   onAddToCart?: (id: string) => void;
@@ -73,7 +83,7 @@ const ProductCard = ({
         />
       </button>
 
-      {/* Product Image */}
+      {/* Image */}
       <div className={styles.imageWrapper}>
         <img
           src={product.images[0]}
@@ -82,12 +92,12 @@ const ProductCard = ({
         />
       </div>
 
-      {/* Product Content */}
+      {/* Content */}
       <div className={styles.content}>
         <h3>{product.name}</h3>
 
         {/* Rating */}
-        <div className={styles.rating}>
+        {product.averageRating ? <div className={styles.rating}>
           <Star
             size={14}
             fill="#fbbf24"
@@ -98,13 +108,12 @@ const ProductCard = ({
             {product.averageRating} (
             {product.reviewCount})
           </span>
-        </div>
+        </div>:""}
 
         {/* Price */}
-        <div className={styles.price}>
+        { product.finalPrice && <div className={styles.price}>
           <span className={styles.current}>
-            ₹
-            {product.finalPrice.toLocaleString()}
+            ₹  {product.finalPrice.toLocaleString()}
           </span>
 
           {product.price >
@@ -113,9 +122,9 @@ const ProductCard = ({
               ₹{product.price.toLocaleString()}
             </span>
           )}
-        </div>
+        </div>}
 
-        {/* Add To Cart */}
+        {/* Cart */}
         <button
           type="button"
           className={styles.cartBtn}

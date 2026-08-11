@@ -2,11 +2,13 @@ import { configureStore } from "@reduxjs/toolkit";
 
 import tenantReducer from "../features/tenant/tenantSlice";
 import productReducer from "../features/products/productSlice";
+import cartReducer from "../features/cart/cartSlice";
 
 export const store = configureStore({
   reducer: {
     tenant: tenantReducer,
     products: productReducer,
+    cart: cartReducer,
   },
 });
 

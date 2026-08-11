@@ -1,9 +1,8 @@
+import { useMemo } from "react";
+
 import { useAppDispatch, useAppSelector } from "../../app/hooks";
 
-import {
-  setFilters,
-  clearFilters,
-} from "../../features/products/productSlice";
+import { setFilters, clearFilters } from "../../features/products/productSlice";
 
 import { useCategory } from "../../features/products/hooks/useCategory";
 
@@ -14,54 +13,56 @@ import ColorFilter from "./ColorFilter";
 import SizeFilter from "./SizeFilter";
 
 import styles from "./ProductFilters.module.css";
-import { store } from "../../app/store";
 
 const ProductFilters = () => {
   const dispatch = useAppDispatch();
 
   const tenantId =
-    useAppSelector(
-      (state) => state.tenant.currentTenant?.id
-    ) ?? "";
+    useAppSelector((state) => state.tenant.currentTenant?.id) ?? "";
 
-  const filters = useAppSelector(
-    (state) => state.products.filters
-  );
-console.log(store.getState().products.filters);
+  const filters = useAppSelector((state) => state.products.filters);
+
   const {
     data: categories,
-    isLoading ,
+    isLoading,
     isError,
     error,
-  } = useCategory("TENANT001");
+  } = useCategory(tenantId || "TENANT001");
 
-  // Temporary Data
-  // Later these will come from API
+  const colors = ["Black", "White", "Grey", "Green", "Red"];
 
-  const colors = [
-    "Black",
-    "White",
-    "Grey",
-    "Green",
-    "Red",
-  ];
+  const sizes = ["XS", "S", "M", "L", "XL", "XXL"];
 
-  const sizes = [
-    "XS",
-    "S",
-    "M",
-    "L",
-    "XL",
-    "XXL",
-  ];
+  const activeFilterCount = useMemo(() => {
+    let count = 0;
+
+    count += filters.categories.length;
+    count += filters.colors.length;
+    count += filters.sizes.length;
+
+    if (filters.rating !== null) {
+      count += 1;
+    }
+
+    const isDefaultPrice =
+      filters.priceRange[0] === 0 && filters.priceRange[1] === 100000;
+
+    if (!isDefaultPrice) {
+      count += 1;
+    }
+
+    if (filters.search.trim()) {
+      count += 1;
+    }
+
+    return count;
+  }, [filters]);
 
   const toggleCategory = (id: string) => {
     dispatch(
       setFilters({
         categories: filters.categories.includes(id)
-          ? filters.categories.filter(
-              (categoryId) => categoryId !== id
-            )
+          ? filters.categories.filter((categoryId) => categoryId !== id)
           : [...filters.categories, id],
       })
     );
@@ -69,42 +70,54 @@ console.log(store.getState().products.filters);
 
   return (
     <div className={styles.wrapper}>
-      <div className={styles.title}>
-        <h2>Filters</h2>
+      {/* ================================
+          HEADER
+      ================================= */}
 
-        <button
-          onClick={() => dispatch(clearFilters())}
-        >
-          Clear
-        </button>
+      <div className={styles.title}>
+        <div className={styles.titleLeft}>
+          <h2>Filters</h2>
+
+          {activeFilterCount > 0 && (
+            <span className={styles.activeCount}>{activeFilterCount}</span>
+          )}
+        </div>
+
+        {activeFilterCount > 0 && (
+          <button
+            type="button"
+            className={styles.clearButton}
+            onClick={() => dispatch(clearFilters())}
+          >
+            Clear all
+          </button>
+        )}
       </div>
 
-      {/* Category */}
+      {/* ================================
+          CATEGORY
+      ================================= */}
 
       <FilterSection title="Category">
         {isLoading ? (
-          <p>Loading Categories...</p>
+          <div className={styles.loadingState}>
+            <span className={styles.loadingDot} />
+            <span>Loading categories...</span>
+          </div>
         ) : isError ? (
-          <p className={styles.error}>
-            {(error as Error).message}
-          </p>
+          <div className={styles.error}>
+            {(error as Error)?.message || "Unable to load categories."}
+          </div>
         ) : categories?.data?.length === 0 ? (
-          <p>No Categories Found</p>
+          <p className={styles.emptyText}>No categories found</p>
         ) : (
           <div className={styles.list}>
             {categories?.data?.map((category) => (
-              <label
-                key={category._id}
-                className={styles.checkbox}
-              >
+              <label key={category._id} className={styles.checkbox}>
                 <input
                   type="checkbox"
-                  checked={filters.categories.includes(
-                    category._id
-                  )}
-                  onChange={() =>
-                    toggleCategory(category._id)
-                  }
+                  checked={filters.categories.includes(category.name)}
+                  onChange={() => toggleCategory(category.name)}
                 />
 
                 <span>{category.name}</span>
@@ -114,7 +127,9 @@ console.log(store.getState().products.filters);
         )}
       </FilterSection>
 
-      {/* Price */}
+      {/* ================================
+          PRICE
+      ================================= */}
 
       <FilterSection title="Price">
         <PriceRange
@@ -131,7 +146,9 @@ console.log(store.getState().products.filters);
         />
       </FilterSection>
 
-      {/* Rating */}
+      {/* ================================
+          RATING
+      ================================= */}
 
       <FilterSection title="Rating">
         <RatingFilter
@@ -146,7 +163,9 @@ console.log(store.getState().products.filters);
         />
       </FilterSection>
 
-      {/* Colors */}
+      {/* ================================
+          COLORS
+      ================================= */}
 
       <FilterSection title="Colors">
         <ColorFilter
@@ -162,7 +181,9 @@ console.log(store.getState().products.filters);
         />
       </FilterSection>
 
-      {/* Sizes */}
+      {/* ================================
+          SIZES
+      ================================= */}
 
       <FilterSection title="Sizes">
         <SizeFilter

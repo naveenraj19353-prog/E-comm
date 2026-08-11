@@ -14,26 +14,27 @@ interface ProductState {
   filters: ProductFilters;
 }
 
+const getInitialFilters = (): ProductFilters => ({
+  categories: [],
+  colors: [],
+  sizes: [],
+  priceRange: [0, 100000],
+  rating: null,
+  sort: "newest",
+  search: "",
+});
+
 const initialState: ProductState = {
-  filters: {
-    categories: [],
-    colors: [],
-    sizes: [],
-    priceRange: [0, 100000],
-    rating: null,
-    sort: "newest",
-    search: "",
-  },
+  filters: getInitialFilters(),
 };
 
 const productSlice = createSlice({
   name: "products",
+
   initialState,
+
   reducers: {
-    setFilters(
-      state,
-      action: PayloadAction<Partial<ProductFilters>>
-    ) {
+    setFilters(state, action: PayloadAction<Partial<ProductFilters>>) {
       state.filters = {
         ...state.filters,
         ...action.payload,
@@ -41,7 +42,15 @@ const productSlice = createSlice({
     },
 
     clearFilters(state) {
-      state.filters = initialState.filters;
+      state.filters = getInitialFilters();
+    },
+
+    clearCategoryFilter(state) {
+      state.filters.categories = [];
+    },
+
+    clearSearchFilter(state) {
+      state.filters.search = "";
     },
   },
 });
@@ -49,6 +58,8 @@ const productSlice = createSlice({
 export const {
   setFilters,
   clearFilters,
+  clearCategoryFilter,
+  clearSearchFilter,
 } = productSlice.actions;
 
 export default productSlice.reducer;
