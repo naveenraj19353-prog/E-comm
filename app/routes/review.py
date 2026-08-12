@@ -40,6 +40,7 @@ def add_review(request: ReviewCreate):
     review = {
         "tenantId": request.tenantId,
         "userId": ObjectId(request.userId),
+        "userName": request.userName,
         "productId": ObjectId(request.productId),
         "rating": request.rating,
         "title": request.title,
