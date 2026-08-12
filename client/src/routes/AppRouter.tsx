@@ -4,7 +4,7 @@ import MainLayout from "../layouts/MainLayout";
 
 import Home from "../pages/Home";
 import Products from "../pages/Products/ProductsPage";
-import Login from "../pages/Login";
+import Login from "../pages/Login/Login";
 import NotFound from "../pages/NotFound";
 
 import TenantLoader from "../features/tenant/TenantLoader";
@@ -12,6 +12,7 @@ import TenantLoader from "../features/tenant/TenantLoader";
 import Wishlist from "../pages/Wishlist/Wishlist";
 import Cart from "../pages/Cart/Cart";
 import ProductDetails from "../pages/ProductDetails/ProductDetails";
+import Checkout from "../pages/Checkout/Checkout";
 
 export const router = createBrowserRouter([
   {
@@ -46,6 +47,11 @@ export const router = createBrowserRouter([
           {
             path: "cart",
             element: <Cart />,
+          },
+
+          {
+            path: "checkout",
+            element: <Checkout />,
           },
         ],
       },

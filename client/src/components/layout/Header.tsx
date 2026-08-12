@@ -5,6 +5,7 @@ import styles from "../../styles/navBar.module.css";
 import { ShoppingCart } from "lucide-react";
 import { useCart } from "../../features/cart/hooks/useCart";
 import { useWishlist } from "../../features/wishlist/hooks/useWishlist";
+import { useAuth } from "../../features/auth/hooks/useAuth";
 
 const NAV_LINKS = [
   {
@@ -25,12 +26,25 @@ const NAV_LINKS = [
   },
 ];
 
+const getInitials = (name?: string) => {
+  if (!name?.trim()) return "NA";
+  const parts = name.trim().split(/\s+/);
+  return (
+    (parts[0]?.[0] || "N") +
+    (parts[1]?.[0] || "A")
+  ).toUpperCase();
+};
+
+
 export default function Navbar() {
   const userId = "6a4c664aad39d00258ffc0ba";
   const tenantId = "TENANT001";
 
   const { cartCount } = useCart(userId, tenantId);
   const { wishlistCount } = useWishlist(userId, tenantId);
+
+  const user = useAuth().user;
+  console.log("User in Navbar:", user);
   console.log("Cart Count in Navbar:", cartCount);
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -241,7 +255,9 @@ export default function Navbar() {
             onClick={() => {
               navigate(`/${tenantSlug}/profile`);
             }}
-          />
+          >
+            {getInitials(user?.name || "User")}
+          </button>
 
           {/* =================================================
               HAMBURGER
@@ -249,9 +265,8 @@ export default function Navbar() {
 
           <button
             type="button"
-            className={`${styles.menuButton} ${
-              menuOpen ? styles.menuButtonOpen : ""
-            }`}
+            className={`${styles.menuButton} ${menuOpen ? styles.menuButtonOpen : ""
+              }`}
             onClick={() => setMenuOpen((open) => !open)}
             aria-label={menuOpen ? "Close menu" : "Open menu"}
             aria-expanded={menuOpen}
@@ -268,9 +283,8 @@ export default function Navbar() {
       ====================================================== */}
 
       <div
-        className={`${styles.searchRow} ${
-          searchOpen ? styles.searchRowOpen : ""
-        }`}
+        className={`${styles.searchRow} ${searchOpen ? styles.searchRowOpen : ""
+          }`}
       >
         <SearchIcon className={styles.searchIcon} />
 
@@ -314,9 +328,8 @@ export default function Navbar() {
 
       <aside
         ref={menuRef}
-        className={`${styles.mobileMenu} ${
-          menuOpen ? styles.mobileMenuOpen : ""
-        }`}
+        className={`${styles.mobileMenu} ${menuOpen ? styles.mobileMenuOpen : ""
+          }`}
         aria-label="Mobile menu"
         aria-hidden={!menuOpen}
       >

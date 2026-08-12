@@ -386,7 +386,7 @@
 .avatar {
   width: 34px;
   height: 34px;
-
+color: #ffffff;
   padding: 0;
 
   border: none;
@@ -1066,3 +1066,4 @@
     transition-duration: 0.01ms !important;
   }
 }
+

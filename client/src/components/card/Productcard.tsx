@@ -5,23 +5,6 @@ import 'swiper/css';
 import 'swiper/css/pagination';
 import styles from './ProductCard.module.css';
 
-/**
- * Generic product card. Pass a `product` object:
- * {
- *   id: 'sku-123',
- *   images: ['https://...', 'https://...'],        // multiple images = swipeable image gallery
- *   image: 'https://...',                            // or a single image (shorthand for images: [image])
- *   brand: 'Sangria',
- *   title: 'Saree With Blouse Piece',
- *   price: 657,
- *   originalPrice: 2496,
- *   currency: 'Rs.',
- *   badge: { label: 'NEW', variant: 'new' },       // variant: 'new' | 'ad' | 'discount'
- *   rating: { value: 4, count: '3k' },              // count can be a number or short string like '3k'
- *   sizes: 'Onesize',                                // optional
- *   wishlisted: false,
- * }
- */
 export default function ProductCard({ product, onToggleWishlist, onQuickAdd }) {
   const {
     id,
@@ -43,11 +26,6 @@ export default function ProductCard({ product, onToggleWishlist, onQuickAdd }) {
 
   const [isWishlisted, setIsWishlisted] = useState(wishlisted);
 
-  // Per-card DOM nodes for the nav arrows / dots. CSS Module class names are shared
-  // across every instance of this component, so a class-selector target would bind
-  // to the wrong card. Using state (set via callback refs) instead of a plain ref +
-  // onBeforeInit avoids a timing issue where Swiper can read the ref before it's
-  // attached — state guarantees Swiper only gets these once they truly exist in the DOM.
   const [prevEl, setPrevEl] = useState(null);
   const [nextEl, setNextEl] = useState(null);
   const [paginationEl, setPaginationEl] = useState(null);

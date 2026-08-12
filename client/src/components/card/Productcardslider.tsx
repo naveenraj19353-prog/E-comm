@@ -3,7 +3,7 @@ import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, FreeMode, Autoplay } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/navigation';
-import ProductCard from './ProductCard';
+import ProductCard from './Productcard';
 import styles from './ProductCardSlider.module.css';
 
 /**

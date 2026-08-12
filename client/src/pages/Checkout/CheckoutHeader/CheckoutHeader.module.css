@@ -1,0 +1,30 @@
+.header {
+    margin-bottom: 32px;
+  }
+  
+  .eyebrow {
+    color: #64748b;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+  }
+  
+  .header h1 {
+    margin: 8px 0 6px;
+    color: #111827;
+    font-size: 32px;
+    line-height: 1.2;
+  }
+  
+  .header p {
+    margin: 0;
+    color: #64748b;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+  
+  @media (max-width: 800px) {
+    .header h1 {
+      font-size: 26px;
+    }
+  }
