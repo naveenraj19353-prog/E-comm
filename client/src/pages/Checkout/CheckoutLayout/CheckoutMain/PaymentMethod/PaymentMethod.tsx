@@ -2,8 +2,10 @@ import { Banknote, Check, CreditCard, Landmark, Wallet } from "lucide-react";
 
 import styles from "./PaymentMethod.module.css";
 
+export type PaymentMethodType = "card" | "upi" | "netbanking" | "cod";
+
 type PaymentOption = {
-  id: string;
+  id: PaymentMethodType;
   title: string;
   description: string;
   icon: typeof CreditCard;
@@ -37,8 +39,8 @@ const PAYMENT_OPTIONS: PaymentOption[] = [
 ];
 
 interface PaymentMethodProps {
-  selectedMethod?: string;
-  onMethodChange?: (method: string) => void;
+  selectedMethod?: PaymentMethodType;
+  onMethodChange?: (method: PaymentMethodType) => void;
 }
 
 const PaymentMethod = ({
@@ -60,6 +62,7 @@ const PaymentMethod = ({
       <div className={styles.options}>
         {PAYMENT_OPTIONS.map((option) => {
           const Icon = option.icon;
+
           const isSelected = selectedMethod === option.id;
 
           return (

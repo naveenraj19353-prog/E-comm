@@ -1,0 +1,118 @@
+/* ============================================================
+   HOME
+============================================================ */
+
+.home {
+    width: 100%;
+    min-height: 100vh;
+    background: #ffffff;
+    color: #1f2a26;
+    padding-bottom: 60px;
+  }
+  
+  
+  /* ============================================================
+     LOADING
+  ============================================================ */
+  
+  .loading {
+    min-height: 60vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  
+    font-size: 16px;
+    font-weight: 500;
+    color: #5b6a63;
+  }
+  
+  
+  /* ============================================================
+     ERROR
+  ============================================================ */
+  
+  .error {
+    min-height: 60vh;
+  
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  
+    gap: 16px;
+    text-align: center;
+    padding: 30px;
+  }
+  
+  .error h2 {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 600;
+    color: #1f2a26;
+  }
+  
+  .error button {
+    border: none;
+    border-radius: 8px;
+  
+    padding: 10px 20px;
+  
+    background: #2f6b52;
+    color: #ffffff;
+  
+    font-size: 14px;
+    font-weight: 600;
+  
+    cursor: pointer;
+  
+    transition:
+      background 0.2s ease,
+      transform 0.2s ease;
+  }
+  
+  .error button:hover {
+    background: #255841;
+    transform: translateY(-1px);
+  }
+  
+  
+  /* ============================================================
+     RESPONSIVE
+  ============================================================ */
+  
+  @media (max-width: 1200px) {
+    .home {
+      padding-bottom: 50px;
+    }
+  }
+  
+  
+  @media (max-width: 768px) {
+    .home {
+      padding-bottom: 40px;
+    }
+  
+    .error h2 {
+      font-size: 20px;
+    }
+  }
+  
+  
+  @media (max-width: 480px) {
+    .home {
+      padding-bottom: 30px;
+    }
+  
+    .loading {
+      min-height: 50vh;
+      font-size: 14px;
+    }
+  
+    .error {
+      min-height: 50vh;
+    }
+  
+    .error h2 {
+      font-size: 18px;
+    }
+  }

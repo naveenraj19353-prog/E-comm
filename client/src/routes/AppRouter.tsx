@@ -13,6 +13,7 @@ import Wishlist from "../pages/Wishlist/Wishlist";
 import Cart from "../pages/Cart/Cart";
 import ProductDetails from "../pages/ProductDetails/ProductDetails";
 import Checkout from "../pages/Checkout/Checkout";
+import Profile from "../pages/Profile/Profile";
 
 export const router = createBrowserRouter([
   {
@@ -53,6 +54,10 @@ export const router = createBrowserRouter([
             path: "checkout",
             element: <Checkout />,
           },
+          {
+            path: "profile",
+            element: <Profile />,
+          }
         ],
       },
     ],

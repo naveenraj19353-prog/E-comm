@@ -58,10 +58,7 @@ const Cart = () => {
           ))}
         </div>
 
-        <CartSummary
-          cartCount={cartCount}
-          grandTotal={grandTotal}
-        />
+        <CartSummary cartCount={cartCount} grandTotal={grandTotal} />
       </div>
     </div>
   );

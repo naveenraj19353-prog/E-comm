@@ -57,3 +57,14 @@ export interface ProductsResponse {
   hasPreviousPage: boolean;
   data: Product[];
 }
+
+export interface Category {
+  _id: string;
+  tenantId: string;
+  name: string;
+  description?: string;
+  image?: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}

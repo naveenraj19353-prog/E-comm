@@ -1,59 +1,59 @@
-import { Check, Truck, Zap } from "lucide-react";
+import { useState } from "react";
+import { Check, Clock, Truck } from "lucide-react";
 
 import styles from "./DeliveryMethod.module.css";
 
-type DeliveryOption = {
+export interface DeliveryOption {
   id: string;
-  title: string;
+  name: string;
   description: string;
   estimatedTime: string;
   price: number;
-  icon: typeof Truck;
-};
+}
 
 const DELIVERY_OPTIONS: DeliveryOption[] = [
   {
     id: "standard",
-    title: "Standard Delivery",
-    description: "Reliable delivery to your doorstep",
+    name: "Standard Delivery",
+    description: "Reliable delivery at no extra cost.",
     estimatedTime: "3–5 business days",
     price: 0,
-    icon: Truck,
   },
   {
     id: "express",
-    title: "Express Delivery",
-    description: "Get your order delivered faster",
+    name: "Express Delivery",
+    description: "Get your order delivered faster.",
     estimatedTime: "1–2 business days",
     price: 99,
-    icon: Zap,
   },
 ];
 
 interface DeliveryMethodProps {
-  selectedMethod?: string;
-  onMethodChange?: (method: string) => void;
+  onDeliveryChange?: (option: DeliveryOption) => void;
 }
 
-const DeliveryMethod = ({
-  selectedMethod = "standard",
-  onMethodChange,
-}: DeliveryMethodProps) => {
+const DeliveryMethod = ({ onDeliveryChange }: DeliveryMethodProps) => {
+  const [selectedMethod, setSelectedMethod] = useState("standard");
+
+  const handleSelect = (option: DeliveryOption) => {
+    setSelectedMethod(option.id);
+    onDeliveryChange?.(option);
+  };
+
   return (
     <section className={styles.section}>
       <div className={styles.header}>
         <div>
           <span className={styles.eyebrow}>DELIVERY</span>
 
-          <h2>Delivery Method</h2>
+          <h2>Choose delivery method</h2>
 
-          <p>Choose how you want your order delivered.</p>
+          <p>Select how you would like to receive your order.</p>
         </div>
       </div>
 
       <div className={styles.options}>
         {DELIVERY_OPTIONS.map((option) => {
-          const Icon = option.icon;
           const isSelected = selectedMethod === option.id;
 
           return (
@@ -61,41 +61,42 @@ const DeliveryMethod = ({
               key={option.id}
               type="button"
               className={`${styles.option} ${
-                isSelected ? styles.selected : ""
+                isSelected ? styles.optionSelected : ""
               }`}
-              onClick={() => onMethodChange?.(option.id)}
+              onClick={() => handleSelect(option)}
             >
               <div className={styles.icon}>
-                <Icon size={19} />
+                {option.id === "express" ? (
+                  <Truck size={20} />
+                ) : (
+                  <Clock size={20} />
+                )}
               </div>
 
               <div className={styles.content}>
                 <div className={styles.titleRow}>
-                  <strong>{option.title}</strong>
+                  <strong>{option.name}</strong>
 
-                  {option.price === 0 ? (
-                    <span className={styles.free}>FREE</span>
-                  ) : (
-                    <span className={styles.price}>
-                      ₹{option.price}
-                    </span>
-                  )}
+                  <span className={styles.price}>
+                    {option.price === 0 ? "FREE" : `₹${option.price}`}
+                  </span>
                 </div>
 
                 <p>{option.description}</p>
 
-                <span className={styles.time}>
+                <span className={styles.estimated}>
+                  <Clock size={14} />
                   {option.estimatedTime}
                 </span>
               </div>
 
-              <span
+              <div
                 className={`${styles.radio} ${
                   isSelected ? styles.radioSelected : ""
                 }`}
               >
                 {isSelected && <Check size={13} />}
-              </span>
+              </div>
             </button>
           );
         })}

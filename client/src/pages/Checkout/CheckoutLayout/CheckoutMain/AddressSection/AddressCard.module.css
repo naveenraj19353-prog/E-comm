@@ -1,0 +1,161 @@
+.card {
+  position: relative;
+  display: flex;
+  gap: 14px;
+  padding: 18px;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  background: #ffffff;
+  cursor: pointer;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.card:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 5px 16px rgba(15, 23, 42, 0.06);
+}
+
+.selected {
+  border-color: #111827;
+  background: #fafafa;
+  box-shadow: 0 0 0 1px #111827;
+}
+
+.selection {
+  flex-shrink: 0;
+  padding-top: 2px;
+}
+
+.radio {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 50%;
+  color: #ffffff;
+  transition: 0.2s ease;
+}
+
+.selected .radio {
+  border-color: #111827;
+  background: #111827;
+}
+
+.content {
+  flex: 1;
+  min-width: 0;
+}
+
+.header {
+  margin-bottom: 12px;
+}
+
+.nameRow {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.nameRow strong {
+  color: #111827;
+  font-size: 15px;
+}
+
+.type {
+  padding: 3px 7px;
+  border-radius: 6px;
+  background: #f1f5f9;
+  color: #64748b;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.default {
+  padding: 3px 7px;
+  border-radius: 6px;
+  background: #111827;
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.address {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  color: #475569;
+}
+
+.address svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.address p {
+  margin: 0 0 3px;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.phone {
+  margin-top: 10px;
+  color: #475569;
+  font-size: 12px;
+}
+
+.phone span {
+  font-weight: 600;
+  color: #334155;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 15px;
+  padding-top: 12px;
+  border-top: 1px solid #f1f5f9;
+}
+
+.actions button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 8px;
+  border: 0;
+  background: transparent;
+  color: #475569;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.actions button:hover {
+  color: #111827;
+}
+
+.actions .deleteButton {
+  color: #b91c1c;
+}
+
+.actions .deleteButton:hover {
+  color: #991b1b;
+}
+
+.actions button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@media (max-width: 480px) {
+  .card {
+    padding: 15px;
+  }
+
+  .nameRow {
+    gap: 5px;
+  }
+}
