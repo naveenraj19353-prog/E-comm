@@ -14,6 +14,9 @@ from app.routes.review import router as review_router
 from app.routes.profile import router as profile_router
 from app.routes.orders import router as orders_router
 from app.routes.home import router as home_router
+from app.routes.banner import router as banner_router
+from app.routes.tenant import router as tenant_router
+from app.routes.super_admin import router as super_admin_router
 
 from fastapi.middleware.cors import CORSMiddleware
 import json
@@ -48,13 +51,10 @@ app.include_router(review_router)
 app.include_router(profile_router)
 app.include_router(orders_router)
 app.include_router(home_router)
+app.include_router(banner_router)
+app.include_router(tenant_router)
+app.include_router(super_admin_router)
 
-
-
-
-@app.get('/')
+@app.get("/")
 def health():
-    return {
-         "status": "UP",
-        "database": "MongoDB Connected"
-    }
+    return {"status": "UP", "database": "MongoDB Connected"}

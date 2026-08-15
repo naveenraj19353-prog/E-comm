@@ -1,31 +1,25 @@
 .breadcrumb {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 8px;
-  
-    margin-bottom: 24px;
-  
-    font-size: 14px;
-  }
-  
-  .item {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-  
-  .item a {
-    color: #6b7280;
-    text-decoration: none;
-    transition: .2s;
-  }
-  
-  .item a:hover {
-    color: #16a34a;
-  }
-  
-  .current {
-    color: #111827;
-    font-weight: 600;
-  }
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 24px;
+  font-size: 14px;
+}
+.item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.item a {
+  color: #6b7280;
+  text-decoration: none;
+  transition: 0.2s;
+}
+.item a:hover {
+  color: #16a34a;
+}
+.current {
+  color: #111827;
+  font-weight: 600;
+}

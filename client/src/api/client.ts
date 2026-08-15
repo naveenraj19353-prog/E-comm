@@ -1,12 +1,10 @@
 import axios from "axios";
-
 const apiClient = axios.create({
   baseURL: "http://127.0.0.1:8000",
   headers: {
     "Content-Type": "application/json",
   },
 });
-
 apiClient.interceptors.request.use((config) => {
   const stored = localStorage.getItem("ecommerce_auth");
   if (stored) {
@@ -21,5 +19,4 @@ apiClient.interceptors.request.use((config) => {
   }
   return config;
 });
-
 export default apiClient;

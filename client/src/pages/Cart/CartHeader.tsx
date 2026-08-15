@@ -1,13 +1,10 @@
 import { ShoppingBag } from "lucide-react";
-
 import styles from "./Cart.module.css";
-
 interface CartHeaderProps {
   cartCount: number;
   isClearing: boolean;
   onClearCart: () => void;
 }
-
 const CartHeader = ({
   cartCount,
   isClearing,
@@ -20,15 +17,11 @@ const CartHeader = ({
           <ShoppingBag size={15} />
           Your Bag
         </div>
-
         <h1>Shopping Cart</h1>
-
         <p>
-          {cartCount}{" "}
-          {cartCount === 1 ? "item" : "items"} in your cart
+          {cartCount} {cartCount === 1 ? "item" : "items"} in your cart
         </p>
       </div>
-
       <button
         type="button"
         className={styles.clearCart}
@@ -40,5 +33,4 @@ const CartHeader = ({
     </div>
   );
 };
-
 export default CartHeader;

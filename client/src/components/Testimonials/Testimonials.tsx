@@ -1,29 +1,21 @@
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Pagination, Autoplay } from "swiper/modules";
-
 import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
-
 import TestimonialCard from "./TestimonialCard";
 import type { Testimonial } from "./types";
-
 import styles from "./Testimonials.module.css";
-
 interface Props {
   testimonials: Testimonial[];
 }
-
 const Testimonials = ({ testimonials }: Props) => {
   return (
     <section className={styles.section}>
       <div className={styles.header}>
         <h2>What Our Customers Say</h2>
-        <p>
-          Thousands of happy customers trust our fashion store.
-        </p>
+        <p>Thousands of happy customers trust our fashion store.</p>
       </div>
-
       <Swiper
         modules={[Navigation, Pagination, Autoplay]}
         navigation
@@ -55,5 +47,4 @@ const Testimonials = ({ testimonials }: Props) => {
     </section>
   );
 };
-
 export default Testimonials;

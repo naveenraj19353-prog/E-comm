@@ -1,16 +1,10 @@
 import styles from "./SizeFilter.module.css";
-
 interface SizeFilterProps {
   sizes: string[];
   selectedSizes: string[];
   onChange: (sizes: string[]) => void;
 }
-
-const SizeFilter = ({
-  sizes,
-  selectedSizes,
-  onChange,
-}: SizeFilterProps) => {
+const SizeFilter = ({ sizes, selectedSizes, onChange }: SizeFilterProps) => {
   const toggleSize = (size: string) => {
     if (selectedSizes.includes(size)) {
       onChange(selectedSizes.filter((s) => s !== size));
@@ -18,7 +12,6 @@ const SizeFilter = ({
       onChange([...selectedSizes, size]);
     }
   };
-
   return (
     <div className={styles.wrapper}>
       {sizes.map((size) => (
@@ -26,9 +19,7 @@ const SizeFilter = ({
           key={size}
           type="button"
           className={`${styles.size} ${
-            selectedSizes.includes(size)
-              ? styles.active
-              : ""
+            selectedSizes.includes(size) ? styles.active : ""
           }`}
           onClick={() => toggleSize(size)}
         >
@@ -38,5 +29,4 @@ const SizeFilter = ({
     </div>
   );
 };
-
 export default SizeFilter;

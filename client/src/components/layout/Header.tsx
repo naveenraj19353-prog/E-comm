@@ -1,12 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-
 import styles from "../../styles/navBar.module.css";
 import { ShoppingCart } from "lucide-react";
 import { useCart } from "../../features/cart/hooks/useCart";
 import { useWishlist } from "../../features/wishlist/hooks/useWishlist";
 import { useAuth } from "../../features/auth/hooks/useAuth";
-
 const NAV_LINKS = [
   {
     label: "Electronics",
@@ -25,52 +23,29 @@ const NAV_LINKS = [
     categoryId: "LIGHTING",
   },
 ];
-
 const getInitials = (name?: string) => {
   if (!name?.trim()) return "NA";
   const parts = name.trim().split(/\s+/);
-  return (
-    (parts[0]?.[0] || "N") +
-    (parts[1]?.[0] || "A")
-  ).toUpperCase();
+  return ((parts[0]?.[0] || "N") + (parts[1]?.[0] || "A")).toUpperCase();
 };
-
-
 export default function Navbar() {
-  const userId = "6a4c664aad39d00258ffc0ba";
-  const tenantId = "TENANT001";
-
-  const { cartCount } = useCart(userId, tenantId);
-  const { wishlistCount } = useWishlist(userId, tenantId);
-
   const user = useAuth().user;
+  const { cartCount } = useCart(user?._id, user?.tenantId);
+  const { wishlistCount } = useWishlist(user?._id, user?.tenantId);
   console.log("User in Navbar:", user);
   console.log("Cart Count in Navbar:", cartCount);
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchValue, setSearchValue] = useState("");
-
   const menuRef = useRef<HTMLElement | null>(null);
-
   const navigate = useNavigate();
   const { tenantSlug } = useParams();
-
-  /* ============================================================
-     BODY SCROLL
-  ============================================================ */
-
   useEffect(() => {
     document.body.style.overflow = menuOpen ? "hidden" : "";
-
     return () => {
       document.body.style.overflow = "";
     };
   }, [menuOpen]);
-
-  /* ============================================================
-     ESCAPE KEY
-  ============================================================ */
-
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
@@ -78,66 +53,36 @@ export default function Navbar() {
         setSearchOpen(false);
       }
     };
-
     window.addEventListener("keydown", onKeyDown);
-
     return () => {
       window.removeEventListener("keydown", onKeyDown);
     };
   }, []);
-
-  /* ============================================================
-     SEARCH
-  ============================================================ */
-
   const handleSearch = () => {
     const search = searchValue.trim();
-
     if (!search) {
       return;
     }
-
     navigate(`/${tenantSlug}/products?search=${encodeURIComponent(search)}`);
-
     setSearchOpen(false);
     setMenuOpen(false);
   };
-
-  /* ============================================================
-     CATEGORY NAVIGATION
-  ============================================================ */
-
   const handleCategoryClick = (categoryId: string) => {
     navigate(
-      `/${tenantSlug}/products?category=${encodeURIComponent(categoryId)}`
+      `/${tenantSlug}/products?category=${encodeURIComponent(categoryId)}`,
     );
-
     setMenuOpen(false);
     setSearchOpen(false);
   };
-
-  /* ============================================================
-     HOME
-  ============================================================ */
-
   const handleHome = () => {
     navigate(`/${tenantSlug}`);
-
     setMenuOpen(false);
     setSearchOpen(false);
   };
-
-  /* ============================================================
-     RENDER
-  ============================================================ */
-
   return (
     <header className={styles.navbar}>
       <div className={styles.container}>
-        {/* =====================================================
-            LOGO
-        ===================================================== */}
-
+       
         <button
           type="button"
           className={styles.logo}
@@ -145,14 +90,9 @@ export default function Navbar() {
           aria-label="Go to home"
         >
           <span className={styles.logoIcon}>LT</span>
-
           <span className={styles.logoText}>Lunar Tech</span>
         </button>
-
-        {/* =====================================================
-            DESKTOP NAVIGATION
-        ===================================================== */}
-
+       
         <nav className={styles.navLinks} aria-label="Primary navigation">
           {NAV_LINKS.map((link) => (
             <button
@@ -165,19 +105,11 @@ export default function Navbar() {
             </button>
           ))}
         </nav>
-
-        {/* =====================================================
-            RIGHT SECTION
-        ===================================================== */}
-
+       
         <div className={styles.rightSection}>
-          {/* =================================================
-              DESKTOP SEARCH
-          ================================================= */}
-
+         
           <div className={styles.searchWrapper}>
             <SearchIcon className={styles.searchIcon} />
-
             <input
               type="text"
               value={searchValue}
@@ -191,7 +123,6 @@ export default function Navbar() {
               className={styles.searchInput}
               aria-label="Search products, brands"
             />
-
             <button
               type="button"
               className={styles.searchButton}
@@ -201,11 +132,7 @@ export default function Navbar() {
               <SearchIcon />
             </button>
           </div>
-
-          {/* =================================================
-              TABLET / MOBILE SEARCH ICON
-          ================================================= */}
-
+         
           <button
             type="button"
             className={styles.iconButton}
@@ -215,11 +142,7 @@ export default function Navbar() {
           >
             <SearchIcon />
           </button>
-
-          {/* =================================================
-              WISHLIST
-          ================================================= */}
-
+         
           <button
             type="button"
             className={styles.iconButton}
@@ -229,25 +152,16 @@ export default function Navbar() {
             }}
           >
             <HeartIcon />
-
             {wishlistCount > 0 && (
               <span className={styles.badge}>{wishlistCount}</span>
             )}
           </button>
-
-          {/* =================================================
-              CART
-          ================================================= */}
+         
           <button type="button" className={styles.iconButton} aria-label="Cart">
             <ShoppingCart size={20} />
-
             {cartCount > 0 && <span className={styles.badge}>{cartCount}</span>}
           </button>
-
-          {/* =================================================
-              AVATAR
-          ================================================= */}
-
+         
           <button
             type="button"
             className={styles.avatar}
@@ -258,15 +172,12 @@ export default function Navbar() {
           >
             {getInitials(user?.name || "User")}
           </button>
-
-          {/* =================================================
-              HAMBURGER
-          ================================================= */}
-
+         
           <button
             type="button"
-            className={`${styles.menuButton} ${menuOpen ? styles.menuButtonOpen : ""
-              }`}
+            className={`${styles.menuButton} ${
+              menuOpen ? styles.menuButtonOpen : ""
+            }`}
             onClick={() => setMenuOpen((open) => !open)}
             aria-label={menuOpen ? "Close menu" : "Open menu"}
             aria-expanded={menuOpen}
@@ -277,17 +188,13 @@ export default function Navbar() {
           </button>
         </div>
       </div>
-
-      {/* ======================================================
-          TABLET / MOBILE SEARCH
-      ====================================================== */}
-
+     
       <div
-        className={`${styles.searchRow} ${searchOpen ? styles.searchRowOpen : ""
-          }`}
+        className={`${styles.searchRow} ${
+          searchOpen ? styles.searchRowOpen : ""
+        }`}
       >
         <SearchIcon className={styles.searchIcon} />
-
         <input
           type="text"
           value={searchValue}
@@ -301,7 +208,6 @@ export default function Navbar() {
           className={styles.searchInput}
           aria-label="Search products, brands"
         />
-
         <button
           type="button"
           className={styles.searchButton}
@@ -311,39 +217,27 @@ export default function Navbar() {
           <SearchIcon />
         </button>
       </div>
-
-      {/* ======================================================
-          OVERLAY
-      ====================================================== */}
-
+     
       <div
         className={`${styles.overlay} ${menuOpen ? styles.overlayVisible : ""}`}
         onClick={() => setMenuOpen(false)}
         aria-hidden="true"
       />
-
-      {/* ======================================================
-          MOBILE MENU
-      ====================================================== */}
-
+     
       <aside
         ref={menuRef}
-        className={`${styles.mobileMenu} ${menuOpen ? styles.mobileMenuOpen : ""
-          }`}
+        className={`${styles.mobileMenu} ${
+          menuOpen ? styles.mobileMenuOpen : ""
+        }`}
         aria-label="Mobile menu"
         aria-hidden={!menuOpen}
       >
-        {/* ==================================================
-            MENU HEADER
-        ================================================== */}
-
+       
         <div className={styles.mobileMenuHeader}>
           <div className={styles.mobileMenuTitle}>
             <span className={styles.mobileMenuLogo}>LT</span>
-
             <span className={styles.mobileMenuText}>Menu</span>
           </div>
-
           <button
             type="button"
             className={styles.closeButton}
@@ -353,11 +247,7 @@ export default function Navbar() {
             <XIcon />
           </button>
         </div>
-
-        {/* ==================================================
-            MENU LINKS
-        ================================================== */}
-
+       
         <nav className={styles.mobileNavLinks} aria-label="Mobile navigation">
           {NAV_LINKS.map((link, index) => (
             <button
@@ -370,16 +260,11 @@ export default function Navbar() {
               onClick={() => handleCategoryClick(link.categoryId)}
             >
               <span>{link.label}</span>
-
               <ChevronIcon />
             </button>
           ))}
         </nav>
-
-        {/* ==================================================
-            MOBILE MENU FOOTER
-        ================================================== */}
-
+       
         <div className={styles.mobileMenuFooter}>
           <button
             type="button"
@@ -390,7 +275,6 @@ export default function Navbar() {
           >
             Wishlist
           </button>
-
           <button
             type="button"
             onClick={() => {
@@ -400,7 +284,6 @@ export default function Navbar() {
           >
             Cart
           </button>
-
           <button
             type="button"
             onClick={() => {
@@ -415,11 +298,6 @@ export default function Navbar() {
     </header>
   );
 }
-
-/* ============================================================
-   SEARCH ICON
-============================================================ */
-
 function SearchIcon({ className = "" }: { className?: string }) {
   return (
     <svg
@@ -439,11 +317,6 @@ function SearchIcon({ className = "" }: { className?: string }) {
     </svg>
   );
 }
-
-/* ============================================================
-   HEART ICON
-============================================================ */
-
 function HeartIcon() {
   return (
     <svg
@@ -461,11 +334,6 @@ function HeartIcon() {
     </svg>
   );
 }
-
-/* ============================================================
-   CLOSE ICON
-============================================================ */
-
 function XIcon() {
   return (
     <svg
@@ -484,11 +352,6 @@ function XIcon() {
     </svg>
   );
 }
-
-/* ============================================================
-   CHEVRON ICON
-============================================================ */
-
 function ChevronIcon() {
   return (
     <svg

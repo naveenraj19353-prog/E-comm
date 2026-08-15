@@ -1,16 +1,12 @@
 import { Banknote, Check, CreditCard, Landmark, Wallet } from "lucide-react";
-
 import styles from "./PaymentMethod.module.css";
-
 export type PaymentMethodType = "card" | "upi" | "netbanking" | "cod";
-
 type PaymentOption = {
   id: PaymentMethodType;
   title: string;
   description: string;
   icon: typeof CreditCard;
 };
-
 const PAYMENT_OPTIONS: PaymentOption[] = [
   {
     id: "card",
@@ -37,12 +33,10 @@ const PAYMENT_OPTIONS: PaymentOption[] = [
     icon: Banknote,
   },
 ];
-
 interface PaymentMethodProps {
   selectedMethod?: PaymentMethodType;
   onMethodChange?: (method: PaymentMethodType) => void;
 }
-
 const PaymentMethod = ({
   selectedMethod = "upi",
   onMethodChange,
@@ -52,19 +46,14 @@ const PaymentMethod = ({
       <div className={styles.header}>
         <div>
           <span className={styles.eyebrow}>PAYMENT</span>
-
           <h2>Payment Method</h2>
-
           <p>Select a secure payment method for your order.</p>
         </div>
       </div>
-
       <div className={styles.options}>
         {PAYMENT_OPTIONS.map((option) => {
           const Icon = option.icon;
-
           const isSelected = selectedMethod === option.id;
-
           return (
             <button
               key={option.id}
@@ -77,13 +66,10 @@ const PaymentMethod = ({
               <div className={styles.icon}>
                 <Icon size={19} />
               </div>
-
               <div className={styles.content}>
                 <strong>{option.title}</strong>
-
                 <p>{option.description}</p>
               </div>
-
               <span
                 className={`${styles.radio} ${
                   isSelected ? styles.radioSelected : ""
@@ -95,14 +81,11 @@ const PaymentMethod = ({
           );
         })}
       </div>
-
       <div className={styles.securityNote}>
         <span className={styles.securityDot} />
-
         <span>Your payment information is securely protected.</span>
       </div>
     </section>
   );
 };
-
 export default PaymentMethod;

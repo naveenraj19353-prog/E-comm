@@ -3,14 +3,6 @@ from typing import Optional
 
 
 class UpdateProfile(BaseModel):
-    name: Optional[str] = Field(
-        default=None,
-        min_length=2,
-        max_length=100
-    )
+    name: Optional[str] = Field(default=None, min_length=2, max_length=100)
 
-    phone: Optional[str] = Field(
-        default=None,
-        min_length=10,
-        max_length=15
-    )
+    phone: Optional[str] = Field(default=None, min_length=10, max_length=15)

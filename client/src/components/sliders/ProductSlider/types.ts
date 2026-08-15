@@ -1,20 +1,18 @@
 export interface Product {
-    id: string;
-    productName: string;
-    image: string;
-    price: number;
-    originalPrice: number;
-    rating: number;
-    reviews: number;
-    discount: number;
-  }
-
-
+  id: string;
+  productName: string;
+  image: string;
+  price: number;
+  originalPrice: number;
+  rating: number;
+  reviews: number;
+  discount: number;
+}
 export const products: Product[] = [
   {
     id: "1",
     productName: "Women's Cotton Dress",
-    image: "https://picsum.photos/400?1",
+    image: "https:
     price: 1499,
     originalPrice: 2499,
     rating: 4.8,
@@ -24,7 +22,7 @@ export const products: Product[] = [
   {
     id: "2",
     productName: "Floral Kurti",
-    image: "https://picsum.photos/400?2",
+    image: "https:
     price: 999,
     originalPrice: 1699,
     rating: 4.6,
@@ -34,7 +32,7 @@ export const products: Product[] = [
   {
     id: "3",
     productName: "Silk Saree",
-    image: "https://picsum.photos/400?3",
+    image: "https:
     price: 3299,
     originalPrice: 4599,
     rating: 4.9,
@@ -44,7 +42,7 @@ export const products: Product[] = [
   {
     id: "4",
     productName: "Party Wear Gown",
-    image: "https://picsum.photos/400?4",
+    image: "https:
     price: 2599,
     originalPrice: 3599,
     rating: 4.7,
@@ -54,7 +52,7 @@ export const products: Product[] = [
   {
     id: "5",
     productName: "Denim Jacket",
-    image: "https://picsum.photos/400?5",
+    image: "https:
     price: 1999,
     originalPrice: 2899,
     rating: 4.5,

@@ -1,33 +1,62 @@
-from fastapi import APIRouter, HTTPException, Query
-from app.models.product import CreateProduct
-from app.database.mongo import products
 from datetime import datetime
+
 from bson import ObjectId
+from fastapi import APIRouter, HTTPException, Query
+
+from app.database.mongo import products
+from app.models.product import CreateProduct, UpdateProduct
+
 
 router = APIRouter(
     prefix="/product",
-    tags=["Product"]
+    tags=["Product"],
 )
+
+
+# =========================================================
+# CREATE PRODUCT
+# =========================================================
 
 @router.post("/create-product")
 def create_product(product: CreateProduct):
 
-    existing = products.find_one({
-        "tenantId": product.tenantId,
-        "name": product.name,
-        "categoryId": product.categoryId
-    })
+    existing = products.find_one(
+        {
+            "tenantId": product.tenantId,
+            "name": product.name,
+            "categoryId": product.categoryId,
+        }
+    )
 
     if existing:
         raise HTTPException(
             status_code=400,
-            detail="Product already exists."
+            detail="Product already exists.",
+        )
+
+    if product.price < 0:
+        raise HTTPException(
+            status_code=400,
+            detail="Price cannot be negative.",
+        )
+
+    if product.discountPercentage < 0 or product.discountPercentage > 100:
+        raise HTTPException(
+            status_code=400,
+            detail="Discount must be between 0 and 100.",
+        )
+
+    if product.stock < 0:
+        raise HTTPException(
+            status_code=400,
+            detail="Stock cannot be negative.",
         )
 
     final_price = product.price - (
-        product.price *
-        product.discountPercentage / 100
+        product.price * product.discountPercentage / 100
     )
+
+    now = datetime.utcnow()
 
     payload = {
         "tenantId": product.tenantId,
@@ -38,19 +67,14 @@ def create_product(product: CreateProduct):
         "discountPercentage": product.discountPercentage,
         "finalPrice": final_price,
         "stock": product.stock,
-
         "sizes": product.sizes,
         "colors": product.colors,
         "images": product.images,
-
         "isActive": True,
-
-        "createdAt": datetime.utcnow(),
-        "updatedAt": datetime.utcnow(),
-
-        # Default review values
+        "createdAt": now,
+        "updatedAt": now,
         "averageRating": 0,
-        "reviewCount": 0
+        "reviewCount": 0,
     }
 
     result = products.insert_one(payload)
@@ -58,89 +82,39 @@ def create_product(product: CreateProduct):
     return {
         "success": True,
         "productId": str(result.inserted_id),
-        "message": "Product created successfully."
+        "message": "Product created successfully.",
     }
 
 
 # =========================================================
 # GET ALL PRODUCTS
-# Filters + Search + Sorting + Infinite Scroll
+# ADMIN + STOREFRONT
 # =========================================================
 
 @router.get("/get-all-products")
 def get_all_products(
     tenantId: str,
-
-    # -----------------------------------------------------
-    # Pagination
-    # -----------------------------------------------------
-
     page: int = 1,
     limit: int = 20,
 
-    # -----------------------------------------------------
-    # Category
-    # Example:
-    # categoryIds=BOOKS&categoryIds=SPORTS
-    # -----------------------------------------------------
-
-    categoryIds: list[str] | None = Query(
-        default=None
-    ),
-
-    # -----------------------------------------------------
-    # Price
-    # -----------------------------------------------------
+    categoryIds: list[str] | None = Query(default=None),
 
     minPrice: float | None = None,
     maxPrice: float | None = None,
 
-    # -----------------------------------------------------
-    # Sizes
-    # Example:
-    # sizes=M&sizes=L
-    # -----------------------------------------------------
+    sizes: list[str] | None = Query(default=None),
 
-    sizes: list[str] | None = Query(
-        default=None
-    ),
-
-    # -----------------------------------------------------
-    # Colors
-    # Example:
-    # colors=Black&colors=Blue
-    # -----------------------------------------------------
-
-    colors: list[str] | None = Query(
-        default=None
-    ),
-
-    # -----------------------------------------------------
-    # Rating
-    # Example:
-    # rating=4
-    # means 4 and above
-    # -----------------------------------------------------
+    colors: list[str] | None = Query(default=None),
 
     rating: float | None = None,
 
-    # -----------------------------------------------------
-    # Search
-    # -----------------------------------------------------
-
     search: str | None = None,
-
-    # -----------------------------------------------------
-    # Sorting
-    # -----------------------------------------------------
 
     sortBy: str = "createdAt",
     sortOrder: str = "desc",
-):
-    # =====================================================
-    # VALIDATE PAGINATION
-    # =====================================================
 
+    includeInactive: bool = False,
+):
     if page < 1:
         page = 1
 
@@ -152,45 +126,31 @@ def get_all_products(
 
     skip = (page - 1) * limit
 
-    # =====================================================
-    # CLEAN SEARCH
-    # =====================================================
-
     search = search.strip() if search else None
-
-    # =====================================================
-    # BASE QUERY
-    # =====================================================
 
     query = {
         "tenantId": tenantId,
-        "isActive": True,
     }
 
-    # =====================================================
-    # CATEGORY FILTER
-    #
-    # IMPORTANT:
-    #
-    # If SEARCH exists, don't apply category.
-    #
-    # Example:
-    #
-    # categoryIds=ELECTRONICS
-    # search=mobile
-    #
-    # category will be ignored.
-    # =====================================================
+    # -----------------------------------------------------
+    # ACTIVE / INACTIVE
+    # -----------------------------------------------------
 
-    if categoryIds and not search:
+    if not includeInactive:
+        query["isActive"] = True
 
+    # -----------------------------------------------------
+    # CATEGORY
+    # -----------------------------------------------------
+
+    if categoryIds:
         query["categoryId"] = {
             "$in": categoryIds
         }
 
-    # =====================================================
-    # PRICE FILTER
-    # =====================================================
+    # -----------------------------------------------------
+    # PRICE
+    # -----------------------------------------------------
 
     if minPrice is not None or maxPrice is not None:
 
@@ -202,39 +162,36 @@ def get_all_products(
         if maxPrice is not None:
             query["finalPrice"]["$lte"] = maxPrice
 
-    # =====================================================
-    # SIZE FILTER
-    # =====================================================
+    # -----------------------------------------------------
+    # SIZE
+    # -----------------------------------------------------
 
     if sizes:
-
         query["sizes"] = {
             "$in": sizes
         }
 
-    # =====================================================
-    # COLOR FILTER
-    # =====================================================
+    # -----------------------------------------------------
+    # COLOR
+    # -----------------------------------------------------
 
     if colors:
-
         query["colors"] = {
             "$in": colors
         }
 
-    # =====================================================
-    # RATING FILTER
-    # =====================================================
+    # -----------------------------------------------------
+    # RATING
+    # -----------------------------------------------------
 
     if rating is not None:
-
         query["averageRating"] = {
             "$gte": rating
         }
 
-    # =====================================================
+    # -----------------------------------------------------
     # SEARCH
-    # =====================================================
+    # -----------------------------------------------------
 
     if search:
 
@@ -253,9 +210,9 @@ def get_all_products(
             },
         ]
 
-    # =====================================================
-    # SORTING
-    # =====================================================
+    # -----------------------------------------------------
+    # SORT
+    # -----------------------------------------------------
 
     allowed_sort_fields = {
         "createdAt": "createdAt",
@@ -276,21 +233,18 @@ def get_all_products(
         else 1
     )
 
-    # =====================================================
-    # TOTAL FILTERED COUNT
-    # =====================================================
+    # -----------------------------------------------------
+    # COUNT
+    # -----------------------------------------------------
 
-    total_count = products.count_documents(
-        query
-    )
+    total_count = products.count_documents(query)
 
-    # =====================================================
-    # GET CURRENT PAGE
-    # =====================================================
+    # -----------------------------------------------------
+    # FETCH
+    # -----------------------------------------------------
 
     cursor = (
-        products
-        .find(query)
+        products.find(query)
         .sort(
             sort_field,
             sort_order,
@@ -309,9 +263,9 @@ def get_all_products(
 
         data.append(product)
 
-    # =====================================================
-    # TOTAL PAGES
-    # =====================================================
+    # -----------------------------------------------------
+    # PAGES
+    # -----------------------------------------------------
 
     total_pages = (
         (total_count + limit - 1) // limit
@@ -319,29 +273,18 @@ def get_all_products(
         else 0
     )
 
-    # =====================================================
-    # RESPONSE
-    # =====================================================
-
     return {
         "success": True,
-
         "count": len(data),
-
         "totalCount": total_count,
-
         "page": page,
-
         "limit": limit,
-
         "totalPages": total_pages,
-
         "hasNextPage": page < total_pages,
-
         "hasPreviousPage": page > 1,
-
         "data": data,
     }
+
 
 # =========================================================
 # GET SINGLE PRODUCT
@@ -350,31 +293,32 @@ def get_all_products(
 @router.get("/{id}")
 def get_product(
     id: str,
-    tenantId: str
+    tenantId: str,
+    includeInactive: bool = False,
 ):
 
-    # Validate ObjectId
     if not ObjectId.is_valid(id):
 
         raise HTTPException(
             status_code=400,
-            detail="Invalid product ID."
+            detail="Invalid product ID.",
         )
 
-    product = products.find_one({
-
+    query = {
         "_id": ObjectId(id),
-
         "tenantId": tenantId,
+    }
 
-        "isActive": True
-    })
+    if not includeInactive:
+        query["isActive"] = True
+
+    product = products.find_one(query)
 
     if not product:
 
         raise HTTPException(
             status_code=404,
-            detail="Product not found."
+            detail="Product not found.",
         )
 
     product["_id"] = str(
@@ -382,10 +326,8 @@ def get_product(
     )
 
     return {
-
         "success": True,
-
-        "data": product
+        "data": product,
     }
 
 
@@ -396,110 +338,161 @@ def get_product(
 @router.put("/{id}")
 def update_product(
     id: str,
-    product: CreateProduct
+    product: UpdateProduct,
 ):
 
-    # Validate ObjectId
     if not ObjectId.is_valid(id):
 
         raise HTTPException(
             status_code=400,
-            detail="Invalid product ID."
+            detail="Invalid product ID.",
         )
 
-    # -----------------------------------------------------
-    # Find existing product
-    # -----------------------------------------------------
-
-    db_product = products.find_one({
-
-        "_id": ObjectId(id),
-
-        "tenantId": product.tenantId
-    })
+    db_product = products.find_one(
+        {
+            "_id": ObjectId(id),
+            "tenantId": product.tenantId,
+        }
+    )
 
     if not db_product:
 
         raise HTTPException(
             status_code=404,
-            detail="Product not found."
+            detail="Product not found.",
         )
 
-    # -----------------------------------------------------
-    # Convert request to dictionary
-    # -----------------------------------------------------
-
     update_data = product.model_dump(
-        exclude_unset=True
+        exclude_unset=True,
+        exclude_none=True,
+    )
+
+    update_data.pop(
+        "tenantId",
+        None,
     )
 
     # -----------------------------------------------------
-    # Recalculate final price
+    # VALIDATE NAME
+    # -----------------------------------------------------
+
+    if "name" in update_data:
+
+        name = update_data["name"].strip()
+
+        if not name:
+
+            raise HTTPException(
+                status_code=400,
+                detail="Product name cannot be empty.",
+            )
+
+        update_data["name"] = name
+
+    # -----------------------------------------------------
+    # VALIDATE PRICE
+    # -----------------------------------------------------
+
+    if "price" in update_data:
+
+        if update_data["price"] < 0:
+
+            raise HTTPException(
+                status_code=400,
+                detail="Price cannot be negative.",
+            )
+
+    # -----------------------------------------------------
+    # VALIDATE DISCOUNT
+    # -----------------------------------------------------
+
+    if "discountPercentage" in update_data:
+
+        discount = update_data[
+            "discountPercentage"
+        ]
+
+        if discount < 0 or discount > 100:
+
+            raise HTTPException(
+                status_code=400,
+                detail="Discount must be between 0 and 100.",
+            )
+
+    # -----------------------------------------------------
+    # VALIDATE STOCK
+    # -----------------------------------------------------
+
+    if "stock" in update_data:
+
+        if update_data["stock"] < 0:
+
+            raise HTTPException(
+                status_code=400,
+                detail="Stock cannot be negative.",
+            )
+
+    # -----------------------------------------------------
+    # FINAL PRICE
     # -----------------------------------------------------
 
     if (
         "price" in update_data
-        or
-        "discountPercentage" in update_data
+        or "discountPercentage" in update_data
     ):
 
         price = update_data.get(
             "price",
-            db_product["price"]
+            db_product.get("price", 0),
         )
 
         discount = update_data.get(
             "discountPercentage",
-            db_product["discountPercentage"]
+            db_product.get(
+                "discountPercentage",
+                0,
+            ),
         )
 
         update_data["finalPrice"] = (
-            price -
-            (
-                price *
-                discount /
-                100
+            price
+            - (
+                price
+                * discount
+                / 100
             )
         )
 
     # -----------------------------------------------------
-    # Updated time
+    # UPDATED TIME
     # -----------------------------------------------------
 
-    update_data["updatedAt"] = (
-        datetime.utcnow()
-    )
+    update_data["updatedAt"] = datetime.utcnow()
 
     # -----------------------------------------------------
-    # Update MongoDB
+    # UPDATE
     # -----------------------------------------------------
 
     result = products.update_one(
-
         {
             "_id": ObjectId(id),
-
-            "tenantId": product.tenantId
+            "tenantId": product.tenantId,
         },
-
         {
             "$set": update_data
-        }
+        },
     )
 
     if result.matched_count == 0:
 
         raise HTTPException(
             status_code=404,
-            detail="Product not found."
+            detail="Product not found.",
         )
 
     return {
-
         "success": True,
-
-        "message":
-            "Product updated successfully."
+        "message": "Product updated successfully.",
     }
 
 
@@ -510,211 +503,180 @@ def update_product(
 @router.delete("/{id}")
 def delete_product(
     id: str,
-    tenantId: str
+    tenantId: str,
 ):
 
-    # Validate ObjectId
     if not ObjectId.is_valid(id):
 
         raise HTTPException(
             status_code=400,
-            detail="Invalid product ID."
+            detail="Invalid product ID.",
         )
 
-    result = products.delete_one({
-
-        "_id": ObjectId(id),
-
-        "tenantId": tenantId
-    })
+    result = products.delete_one(
+        {
+            "_id": ObjectId(id),
+            "tenantId": tenantId,
+        }
+    )
 
     if result.deleted_count == 0:
 
         raise HTTPException(
             status_code=404,
-            detail="Product not found."
+            detail="Product not found.",
         )
 
     return {
-
         "success": True,
-
-        "message":
-            "Product deleted successfully."
+        "message": "Product deleted successfully.",
     }
 
 
 # =========================================================
 # SEARCH PRODUCTS
-#
-# Optional.
-#
-# Your frontend PLP can use get-all-products with
-# search instead, so this endpoint is not required
-# for the PLP.
 # =========================================================
 
 @router.post("/search")
 def search_product(
-    request: CreateProduct
+    request: CreateProduct,
 ):
 
     query = {
-
-        "tenantId":
-            request.tenantId,
-
-        "isActive": True
+        "tenantId": request.tenantId,
+        "isActive": True,
     }
 
     # -----------------------------------------------------
-    # Search text
+    # SEARCH
     # -----------------------------------------------------
 
     if request.search:
 
         query["$or"] = [
-
             {
                 "name": {
-                    "$regex":
-                        request.search,
-
-                    "$options": "i"
+                    "$regex": request.search,
+                    "$options": "i",
                 }
             },
-
             {
                 "description": {
-                    "$regex":
-                        request.search,
-
-                    "$options": "i"
+                    "$regex": request.search,
+                    "$options": "i",
                 }
-            }
+            },
         ]
 
     # -----------------------------------------------------
-    # Categories
+    # CATEGORY
     # -----------------------------------------------------
 
     if request.categoryIds:
 
         query["categoryId"] = {
-
-            "$in":
-                request.categoryIds
+            "$in": request.categoryIds
         }
 
     # -----------------------------------------------------
-    # Price
+    # PRICE
     # -----------------------------------------------------
 
     if (
         request.minPrice is not None
-        or
-        request.maxPrice is not None
+        or request.maxPrice is not None
     ):
 
         query["finalPrice"] = {}
 
         if request.minPrice is not None:
-
             query["finalPrice"]["$gte"] = (
                 request.minPrice
             )
 
         if request.maxPrice is not None:
-
             query["finalPrice"]["$lte"] = (
                 request.maxPrice
             )
 
     # -----------------------------------------------------
-    # Sizes
+    # SIZE
     # -----------------------------------------------------
 
     if request.sizes:
 
         query["sizes"] = {
-
-            "$in":
-                request.sizes
+            "$in": request.sizes
         }
 
     # -----------------------------------------------------
-    # Colors
+    # COLOR
     # -----------------------------------------------------
 
     if request.colors:
 
         query["colors"] = {
-
-            "$in":
-                request.colors
+            "$in": request.colors
         }
 
     # -----------------------------------------------------
-    # Stock
+    # STOCK
     # -----------------------------------------------------
 
     if request.inStock:
 
         query["stock"] = {
-
             "$gt": 0
         }
 
     # -----------------------------------------------------
-    # Rating
+    # RATING
     # -----------------------------------------------------
 
     if request.rating is not None:
 
         query["averageRating"] = {
-
-            "$gte":
-                request.rating
+            "$gte": request.rating
         }
 
     # -----------------------------------------------------
-    # Sort
+    # SORT
     # -----------------------------------------------------
 
-    allowed_sort_fields = { 
-    "createdAt": "createdAt",
-    "price": "finalPrice",
-    "rating": "averageRating",
-    "discount": "discountPercentage",
-    "name": "name"
+    allowed_sort_fields = {
+        "createdAt": "createdAt",
+        "price": "finalPrice",
+        "rating": "averageRating",
+        "discount": "discountPercentage",
+        "name": "name",
     }
 
     sort_field = allowed_sort_fields.get(
-
         request.sortBy,
-
-        "createdAt"
+        "createdAt",
     )
 
     sort_direction = (
-
         1
         if request.sortOrder == "asc"
         else -1
     )
 
     # -----------------------------------------------------
-    # Pagination
+    # PAGINATION
     # -----------------------------------------------------
 
     page = max(
         request.page,
-        1
+        1,
     )
 
     limit = min(
-        max(request.limit, 1),
-        100
+        max(
+            request.limit,
+            1,
+        ),
+        100,
     )
 
     skip = (
@@ -722,7 +684,7 @@ def search_product(
     ) * limit
 
     # -----------------------------------------------------
-    # Total filtered count
+    # COUNT
     # -----------------------------------------------------
 
     total_count = products.count_documents(
@@ -730,16 +692,14 @@ def search_product(
     )
 
     # -----------------------------------------------------
-    # Products
+    # PRODUCTS
     # -----------------------------------------------------
 
     cursor = (
-
-        products
-        .find(query)
+        products.find(query)
         .sort(
             sort_field,
-            sort_direction
+            sort_direction,
         )
         .skip(skip)
         .limit(limit)
@@ -756,44 +716,26 @@ def search_product(
         data.append(product)
 
     # -----------------------------------------------------
-    # Total pages
+    # TOTAL PAGES
     # -----------------------------------------------------
 
     total_pages = (
-
         (total_count + limit - 1)
         // limit
-
         if total_count > 0
         else 0
     )
 
     return {
-
         "success": True,
-
         "count": len(data),
-
-        "totalCount":
-            total_count,
-
-        "page":
-            page,
-
-        "limit":
-            limit,
-
-        "totalPages":
-            total_pages,
-
-        "hasNextPage":
-            page < total_pages,
-
-        "hasPreviousPage":
-            page > 1,
-
-        "data":
-            data
+        "totalCount": total_count,
+        "page": page,
+        "limit": limit,
+        "totalPages": total_pages,
+        "hasNextPage": page < total_pages,
+        "hasPreviousPage": page > 1,
+        "data": data,
     }
 
 
@@ -804,7 +746,7 @@ def search_product(
 @router.get("/new-arrivals")
 def get_new_arrivals(
     tenantId: str,
-    limit: int = 10
+    limit: int = 10,
 ):
 
     if limit < 1:
@@ -814,22 +756,16 @@ def get_new_arrivals(
         limit = 100
 
     cursor = (
-
-        products
-        .find({
-
-            "tenantId":
-                tenantId,
-
-            "isActive":
-                True
-        })
-
+        products.find(
+            {
+                "tenantId": tenantId,
+                "isActive": True,
+            }
+        )
         .sort(
             "createdAt",
-            -1
+            -1,
         )
-
         .limit(limit)
     )
 
@@ -844,12 +780,7 @@ def get_new_arrivals(
         data.append(product)
 
     return {
-
         "success": True,
-
-        "count":
-            len(data),
-
-        "data":
-            data
+        "count": len(data),
+        "data": data,
     }

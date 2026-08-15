@@ -1,8 +1,6 @@
 import { useState } from "react";
 import { Check, Clock, Truck } from "lucide-react";
-
 import styles from "./DeliveryMethod.module.css";
-
 export interface DeliveryOption {
   id: string;
   name: string;
@@ -10,7 +8,6 @@ export interface DeliveryOption {
   estimatedTime: string;
   price: number;
 }
-
 const DELIVERY_OPTIONS: DeliveryOption[] = [
   {
     id: "standard",
@@ -27,35 +24,27 @@ const DELIVERY_OPTIONS: DeliveryOption[] = [
     price: 99,
   },
 ];
-
 interface DeliveryMethodProps {
   onDeliveryChange?: (option: DeliveryOption) => void;
 }
-
 const DeliveryMethod = ({ onDeliveryChange }: DeliveryMethodProps) => {
   const [selectedMethod, setSelectedMethod] = useState("standard");
-
   const handleSelect = (option: DeliveryOption) => {
     setSelectedMethod(option.id);
     onDeliveryChange?.(option);
   };
-
   return (
     <section className={styles.section}>
       <div className={styles.header}>
         <div>
           <span className={styles.eyebrow}>DELIVERY</span>
-
           <h2>Choose delivery method</h2>
-
           <p>Select how you would like to receive your order.</p>
         </div>
       </div>
-
       <div className={styles.options}>
         {DELIVERY_OPTIONS.map((option) => {
           const isSelected = selectedMethod === option.id;
-
           return (
             <button
               key={option.id}
@@ -72,24 +61,19 @@ const DeliveryMethod = ({ onDeliveryChange }: DeliveryMethodProps) => {
                   <Clock size={20} />
                 )}
               </div>
-
               <div className={styles.content}>
                 <div className={styles.titleRow}>
                   <strong>{option.name}</strong>
-
                   <span className={styles.price}>
                     {option.price === 0 ? "FREE" : `₹${option.price}`}
                   </span>
                 </div>
-
                 <p>{option.description}</p>
-
                 <span className={styles.estimated}>
                   <Clock size={14} />
                   {option.estimatedTime}
                 </span>
               </div>
-
               <div
                 className={`${styles.radio} ${
                   isSelected ? styles.radioSelected : ""
@@ -104,5 +88,4 @@ const DeliveryMethod = ({ onDeliveryChange }: DeliveryMethodProps) => {
     </section>
   );
 };
-
 export default DeliveryMethod;

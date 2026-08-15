@@ -1,0 +1,271 @@
+.page {
+  width: 100%;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.header {
+  margin-bottom: 24px;
+}
+
+.backButton {
+  display: block;
+  margin-bottom: 18px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #64736b;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.backButton:hover {
+  color: #2f6b52;
+}
+
+.eyebrow {
+  display: block;
+  margin-bottom: 6px;
+  color: #2f6b52;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
+.header h1 {
+  margin: 0;
+  color: #1f2a26;
+  font-size: 30px;
+}
+
+.header p {
+  margin: 7px 0 0;
+  color: #748078;
+  font-size: 14px;
+}
+
+.formCard {
+  overflow: hidden;
+  border: 1px solid #e5ebe7;
+  border-radius: 15px;
+  background: #ffffff;
+  box-shadow: 0 4px 18px rgba(31, 42, 38, 0.04);
+}
+
+.formHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 22px 24px;
+  border-bottom: 1px solid #edf0ee;
+}
+
+.formHeader h2 {
+  margin: 0;
+  color: #26332e;
+  font-size: 17px;
+}
+
+.formHeader p {
+  margin: 5px 0 0;
+  color: #7b8781;
+  font-size: 12px;
+}
+
+.newBadge {
+  padding: 7px 11px;
+  border-radius: 20px;
+  background: #edf7f0;
+  color: #2f6b52;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.formBody {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 22px;
+  padding: 25px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+}
+
+.field label {
+  margin-bottom: 8px;
+  color: #35433d;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.field label span {
+  margin-left: 3px;
+  color: #c44949;
+}
+
+.field input,
+.field select {
+  width: 100%;
+  height: 43px;
+  box-sizing: border-box;
+  padding: 0 12px;
+  border: 1px solid #dfe5e1;
+  border-radius: 8px;
+  outline: none;
+  background: #ffffff;
+  color: #26332e;
+  font-size: 13px;
+}
+
+.field input:focus,
+.field select:focus {
+  border-color: #2f6b52;
+  box-shadow: 0 0 0 3px rgba(47, 107, 82, 0.08);
+}
+
+.field small {
+  margin-top: 6px;
+  color: #89948e;
+  font-size: 11px;
+}
+
+.preview {
+  grid-column: 1 / -1;
+  overflow: hidden;
+  border: 1px solid #e7ebe8;
+  border-radius: 11px;
+  background: #fafcfb;
+}
+
+.previewHeader {
+  padding: 12px 16px;
+  border-bottom: 1px solid #e7ebe8;
+  color: #59675f;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.previewBody {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px;
+}
+
+.previewLogo {
+  width: 58px;
+  height: 58px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: 10px;
+  background: #e6f0ea;
+  color: #2f6b52;
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.previewLogo img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.previewBody div:last-child {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.previewBody strong {
+  color: #26332e;
+  font-size: 14px;
+}
+
+.previewBody span {
+  color: #7b8781;
+  font-size: 12px;
+}
+
+.error {
+  grid-column: 1 / -1;
+  padding: 12px 14px;
+  border: 1px solid #f1d0d0;
+  border-radius: 8px;
+  background: #fff6f6;
+  color: #b23f3f;
+  font-size: 13px;
+}
+
+.formFooter {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 18px 25px;
+  border-top: 1px solid #edf0ee;
+  background: #fafcfb;
+}
+
+.cancelButton,
+.saveButton {
+  height: 40px;
+  padding: 0 18px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.cancelButton {
+  border: 1px solid #dfe5e1;
+  background: #ffffff;
+  color: #536159;
+}
+
+.cancelButton:hover {
+  background: #f5f7f6;
+}
+
+.saveButton {
+  border: 0;
+  background: #2f6b52;
+  color: #ffffff;
+}
+
+.saveButton:hover {
+  background: #255841;
+}
+
+.cancelButton:disabled,
+.saveButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+@media (max-width: 700px) {
+  .formBody {
+    grid-template-columns: 1fr;
+  }
+
+  .preview {
+    grid-column: auto;
+  }
+
+  .formHeader {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .formFooter {
+    flex-direction: column-reverse;
+  }
+
+  .cancelButton,
+  .saveButton {
+    width: 100%;
+  }
+}

@@ -3,7 +3,6 @@ from fastapi import APIRouter, HTTPException
 from app.models.checkout import CheckoutRequest
 from app.services.checkout_service import calculate_checkout
 
-
 router = APIRouter(
     prefix="/checkout",
     tags=["Checkout"],
@@ -13,6 +12,7 @@ router = APIRouter(
 # ============================================================
 # CHECKOUT SUMMARY
 # ============================================================
+
 
 @router.post("/")
 def checkout(request: CheckoutRequest):
@@ -27,9 +27,7 @@ def checkout(request: CheckoutRequest):
 
         return {
             "success": True,
-            "message": (
-                "Checkout summary generated successfully."
-            ),
+            "message": ("Checkout summary generated successfully."),
             "data": checkout_data,
         }
 

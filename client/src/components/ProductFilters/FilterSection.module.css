@@ -1,31 +1,24 @@
-.section{
-    border-bottom:1px solid #eee;
-    padding:18px 0;
+.section {
+  border-bottom: 1px solid #eee;
+  padding: 18px 0;
 }
-
-.header{
-    width:100%;
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-
-    background:none;
-    border:none;
-
-    cursor:pointer;
-
-    font-size:15px;
-    font-weight:600;
+.header {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 600;
 }
-
-.icon{
-    transition:.25s;
+.icon {
+  transition: 0.25s;
 }
-
-.rotate{
-    transform:rotate(180deg);
+.rotate {
+  transform: rotate(180deg);
 }
-
-.content{
-    margin-top:16px;
+.content {
+  margin-top: 16px;
 }

@@ -1,20 +1,15 @@
 import { Star } from "lucide-react";
-
 import styles from "./RatingFilter.module.css";
-
 interface RatingFilterProps {
   value: number | null;
   onChange: (rating: number | null) => void;
 }
-
 const ratings = [5, 4, 3, 2, 1];
-
 const RatingFilter = ({ value, onChange }: RatingFilterProps) => {
   return (
     <div className={styles.wrapper}>
       {ratings.map((rating) => {
         const isActive = value === rating;
-
         return (
           <button
             key={rating}
@@ -35,10 +30,8 @@ const RatingFilter = ({ value, onChange }: RatingFilterProps) => {
                   />
                 ))}
               </div>
-
               <span className={styles.label}>{rating} & Up</span>
             </div>
-
             <span className={styles.radio}>
               {isActive && <span className={styles.radioInner} />}
             </span>
@@ -48,5 +41,4 @@ const RatingFilter = ({ value, onChange }: RatingFilterProps) => {
     </div>
   );
 };
-
 export default RatingFilter;

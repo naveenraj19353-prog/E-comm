@@ -20,7 +20,6 @@ from app.services.checkout_service import (
 
 from app.utils.razorpay_client import client
 
-
 router = APIRouter(
     prefix="/payments",
     tags=["Payments"],
@@ -30,6 +29,7 @@ router = APIRouter(
 # ============================================================
 # TEST RAZORPAY CONNECTION
 # ============================================================
+
 
 @router.get("/test-razorpay")
 def test_razorpay():
@@ -72,6 +72,7 @@ def test_razorpay():
 # CREATE RAZORPAY ORDER
 # ============================================================
 
+
 @router.post("/create-order")
 def create_order(
     request: CreatePaymentOrder,
@@ -95,9 +96,7 @@ def create_order(
         # Convert INR to paise
         # ----------------------------------------------------
 
-        amount_in_paise = int(
-            round(grand_total * 100)
-        )
+        amount_in_paise = int(round(grand_total * 100))
 
         print("================================")
         print("TENANT:", request.tenantId)
@@ -165,6 +164,7 @@ def create_order(
 # VERIFY PAYMENT
 # ============================================================
 
+
 @router.post("/verify")
 def verify_payment(
     request: VerifyPayment,
@@ -178,14 +178,9 @@ def verify_payment(
 
         client.utility.verify_payment_signature(
             {
-                "razorpay_order_id":
-                    request.razorpayOrderId,
-
-                "razorpay_payment_id":
-                    request.razorpayPaymentId,
-
-                "razorpay_signature":
-                    request.razorpaySignature,
+                "razorpay_order_id": request.razorpayOrderId,
+                "razorpay_payment_id": request.razorpayPaymentId,
+                "razorpay_signature": request.razorpaySignature,
             }
         )
 
@@ -193,14 +188,9 @@ def verify_payment(
         # 2. Fetch Razorpay order
         # ----------------------------------------------------
 
-        razorpay_order = client.order.fetch(
-            request.razorpayOrderId
-        )
+        razorpay_order = client.order.fetch(request.razorpayOrderId)
 
-        notes = razorpay_order.get(
-            "notes",
-            {}
-        )
+        notes = razorpay_order.get("notes", {})
 
         # ----------------------------------------------------
         # 3. Verify tenant
@@ -228,9 +218,7 @@ def verify_payment(
         # 5. Fetch Razorpay payment
         # ----------------------------------------------------
 
-        payment = client.payment.fetch(
-            request.razorpayPaymentId
-        )
+        payment = client.payment.fetch(request.razorpayPaymentId)
 
         # ----------------------------------------------------
         # 6. Verify payment belongs to order
@@ -261,8 +249,7 @@ def verify_payment(
         existing_order = orders.find_one(
             {
                 "tenantId": request.tenantId,
-                "razorpayOrderId":
-                    request.razorpayOrderId,
+                "razorpayOrderId": request.razorpayOrderId,
             }
         )
 
@@ -271,11 +258,8 @@ def verify_payment(
             return {
                 "success": True,
                 "message": "Order already processed.",
-                "orderId": str(
-                    existing_order["_id"]
-                ),
-                "paymentId":
-                    request.razorpayPaymentId,
+                "orderId": str(existing_order["_id"]),
+                "paymentId": request.razorpayPaymentId,
             }
 
         # ----------------------------------------------------
@@ -295,32 +279,22 @@ def verify_payment(
             coupon_code=None,
         )
 
-        calculated_amount = (
-            checkout_data["grandTotal"]
-        )
+        calculated_amount = checkout_data["grandTotal"]
 
         # ----------------------------------------------------
         # 10. Verify Razorpay amount
         # ----------------------------------------------------
 
-        razorpay_amount = (
-            razorpay_order["amount"] / 100
-        )
+        razorpay_amount = razorpay_order["amount"] / 100
 
-        if round(
-            razorpay_amount,
-            2
-        ) != round(
+        if round(razorpay_amount, 2) != round(
             calculated_amount,
             2,
         ):
 
             raise HTTPException(
                 status_code=400,
-                detail=(
-                    "Payment amount does not "
-                    "match checkout amount."
-                ),
+                detail=("Payment amount does not " "match checkout amount."),
             )
 
         # ----------------------------------------------------
@@ -329,9 +303,7 @@ def verify_payment(
 
         try:
 
-            user_object_id = ObjectId(
-                request.userId
-            )
+            user_object_id = ObjectId(request.userId)
 
         except Exception:
 
@@ -350,39 +322,23 @@ def verify_payment(
 
             try:
 
-                product_object_id = ObjectId(
-                    item["productId"]
-                )
+                product_object_id = ObjectId(item["productId"])
 
             except Exception:
 
                 raise HTTPException(
                     status_code=400,
-                    detail=(
-                        "Invalid product ID: "
-                        f"{item['productId']}"
-                    ),
+                    detail=("Invalid product ID: " f"{item['productId']}"),
                 )
 
             order_items.append(
                 {
-                    "productId":
-                        product_object_id,
-
-                    "name":
-                        item["name"],
-
-                    "price":
-                        item["price"],
-
-                    "quantity":
-                        item["quantity"],
-
-                    "subtotal":
-                        item["subtotal"],
-
-                    "image":
-                        item.get("image"),
+                    "productId": product_object_id,
+                    "name": item["name"],
+                    "price": item["price"],
+                    "quantity": item["quantity"],
+                    "subtotal": item["subtotal"],
+                    "image": item.get("image"),
                 }
             )
 
@@ -393,63 +349,29 @@ def verify_payment(
         # ----------------------------------------------------
 
         order_document = {
-
-            "tenantId":
-                request.tenantId,
-
-            "userId":
-                user_object_id,
-
-            "razorpayOrderId":
-                request.razorpayOrderId,
-
-            "razorpayPaymentId":
-                request.razorpayPaymentId,
-
-            "items":
-                order_items,
-
-            "subtotal":
-                checkout_data["subtotal"],
-
-            "discount":
-                checkout_data["discount"],
-
-            "shipping":
-                checkout_data["shipping"],
-
-            "tax":
-                checkout_data["tax"],
-
-            "totalAmount":
-                checkout_data["grandTotal"],
-
-            "couponCode":
-                checkout_data["couponCode"],
-
-            "address":
-                checkout_data["address"],
-
-            "paymentStatus":
-                "paid",
-
-            "orderStatus":
-                "confirmed",
-
-            "createdAt":
-                now,
-
-            "updatedAt":
-                now,
+            "tenantId": request.tenantId,
+            "userId": user_object_id,
+            "razorpayOrderId": request.razorpayOrderId,
+            "razorpayPaymentId": request.razorpayPaymentId,
+            "items": order_items,
+            "subtotal": checkout_data["subtotal"],
+            "discount": checkout_data["discount"],
+            "shipping": checkout_data["shipping"],
+            "tax": checkout_data["tax"],
+            "totalAmount": checkout_data["grandTotal"],
+            "couponCode": checkout_data["couponCode"],
+            "address": checkout_data["address"],
+            "paymentStatus": "paid",
+            "orderStatus": "confirmed",
+            "createdAt": now,
+            "updatedAt": now,
         }
 
         # ----------------------------------------------------
         # 14. Insert order
         # ----------------------------------------------------
 
-        result = orders.insert_one(
-            order_document
-        )
+        result = orders.insert_one(order_document)
 
         # ----------------------------------------------------
         # 15. Reduce product stock
@@ -459,27 +381,13 @@ def verify_payment(
 
             stock_result = products.update_one(
                 {
-                    "_id":
-                        item["productId"],
-
-                    "tenantId":
-                        request.tenantId,
-
-                    "stock": {
-                        "$gte":
-                            item["quantity"]
-                    },
+                    "_id": item["productId"],
+                    "tenantId": request.tenantId,
+                    "stock": {"$gte": item["quantity"]},
                 },
                 {
-                    "$inc": {
-                        "stock":
-                            -item["quantity"]
-                    },
-
-                    "$set": {
-                        "updatedAt":
-                            now
-                    },
+                    "$inc": {"stock": -item["quantity"]},
+                    "$set": {"updatedAt": now},
                 },
             )
 
@@ -487,59 +395,37 @@ def verify_payment(
             if stock_result.modified_count == 0:
 
                 orders.update_one(
-                    {
-                        "_id":
-                            result.inserted_id
-                    },
+                    {"_id": result.inserted_id},
                     {
                         "$set": {
-                            "orderStatus":
-                                "stock_issue",
-
-                            "updatedAt":
-                                datetime.utcnow(),
+                            "orderStatus": "stock_issue",
+                            "updatedAt": datetime.utcnow(),
                         }
                     },
                 )
 
                 raise HTTPException(
                     status_code=409,
-                    detail=(
-                        "Stock changed while "
-                        "processing the order."
-                    ),
+                    detail=("Stock changed while " "processing the order."),
                 )
 
         # ----------------------------------------------------
         # 16. Update coupon usage
         # ----------------------------------------------------
 
-        coupon_code = (
-            checkout_data["couponCode"]
-        )
+        coupon_code = checkout_data["couponCode"]
 
         if coupon_code:
 
             coupons.update_one(
                 {
-                    "tenantId":
-                        request.tenantId,
-
-                    "code":
-                        coupon_code,
-
-                    "isActive":
-                        True,
+                    "tenantId": request.tenantId,
+                    "code": coupon_code,
+                    "isActive": True,
                 },
                 {
-                    "$inc": {
-                        "usedCount": 1
-                    },
-
-                    "$set": {
-                        "updatedAt":
-                            now
-                    },
+                    "$inc": {"usedCount": 1},
+                    "$set": {"updatedAt": now},
                 },
             )
 
@@ -549,11 +435,8 @@ def verify_payment(
 
         carts.delete_many(
             {
-                "tenantId":
-                    request.tenantId,
-
-                "userId":
-                    user_object_id,
+                "tenantId": request.tenantId,
+                "userId": user_object_id,
             }
         )
 
@@ -562,30 +445,14 @@ def verify_payment(
         # ----------------------------------------------------
 
         return {
-
-            "success":
-                True,
-
-            "message":
-                "Payment verified and order created successfully.",
-
-            "orderId":
-                str(result.inserted_id),
-
-            "razorpayOrderId":
-                request.razorpayOrderId,
-
-            "paymentId":
-                request.razorpayPaymentId,
-
-            "amount":
-                checkout_data["grandTotal"],
-
-            "paymentStatus":
-                "paid",
-
-            "orderStatus":
-                "confirmed",
+            "success": True,
+            "message": "Payment verified and order created successfully.",
+            "orderId": str(result.inserted_id),
+            "razorpayOrderId": request.razorpayOrderId,
+            "paymentId": request.razorpayPaymentId,
+            "amount": checkout_data["grandTotal"],
+            "paymentStatus": "paid",
+            "orderStatus": "confirmed",
         }
 
     except HTTPException:
@@ -609,6 +476,7 @@ def verify_payment(
 # GET PAYMENTS FOR RAZORPAY ORDER
 # ============================================================
 
+
 @router.get("/order/{order_id}")
 def get_payment_status(
     order_id: str,
@@ -616,14 +484,9 @@ def get_payment_status(
 
     try:
 
-        payments = client.order.fetch_payments(
-            order_id
-        )
+        payments = client.order.fetch_payments(order_id)
 
-        items = payments.get(
-            "items",
-            []
-        )
+        items = payments.get("items", [])
 
         # ----------------------------------------------------
         # No payment
@@ -647,37 +510,18 @@ def get_payment_status(
         return {
             "success": True,
             "orderId": order_id,
-            "paymentId":
-                payment.get("id"),
-
-            "status":
-                payment.get("status"),
-
-            "amount":
-                payment.get(
-                    "amount",
-                    0
-                ) / 100,
-
-            "method":
-                payment.get("method"),
-
-            "email":
-                payment.get("email"),
-
-            "contact":
-                payment.get("contact"),
-
-            "createdAt":
-                payment.get("created_at"),
+            "paymentId": payment.get("id"),
+            "status": payment.get("status"),
+            "amount": payment.get("amount", 0) / 100,
+            "method": payment.get("method"),
+            "email": payment.get("email"),
+            "contact": payment.get("contact"),
+            "createdAt": payment.get("created_at"),
         }
 
     except Exception as e:
 
-        print(
-            "Get payment status error:",
-            str(e)
-        )
+        print("Get payment status error:", str(e))
 
         raise HTTPException(
             status_code=400,
@@ -689,6 +533,7 @@ def get_payment_status(
 # GET PAYMENT DETAILS
 # ============================================================
 
+
 @router.get("/payment/{payment_id}")
 def get_payment(
     payment_id: str,
@@ -696,9 +541,7 @@ def get_payment(
 
     try:
 
-        payment_data = client.payment.fetch(
-            payment_id
-        )
+        payment_data = client.payment.fetch(payment_id)
 
         return {
             "success": True,
@@ -707,10 +550,7 @@ def get_payment(
 
     except Exception as e:
 
-        print(
-            "Get payment error:",
-            str(e)
-        )
+        print("Get payment error:", str(e))
 
         raise HTTPException(
             status_code=400,
@@ -722,6 +562,7 @@ def get_payment(
 # REFUND PAYMENT
 # ============================================================
 
+
 @router.post("/refund/{payment_id}")
 def refund(
     payment_id: str,
@@ -729,24 +570,17 @@ def refund(
 
     try:
 
-        refund_data = client.payment.refund(
-            payment_id
-        )
+        refund_data = client.payment.refund(payment_id)
 
         return {
             "success": True,
-            "message":
-                "Refund initiated successfully.",
-            "refund":
-                refund_data,
+            "message": "Refund initiated successfully.",
+            "refund": refund_data,
         }
 
     except Exception as e:
 
-        print(
-            "Refund error:",
-            str(e)
-        )
+        print("Refund error:", str(e))
 
         raise HTTPException(
             status_code=400,
@@ -763,6 +597,7 @@ def refund(
 #
 # ============================================================
 
+
 @router.post("/webhook")
 async def webhook(
     request: Request,
@@ -770,6 +605,5 @@ async def webhook(
 
     return {
         "success": True,
-        "status":
-            "webhook setup pending",
+        "status": "webhook setup pending",
     }

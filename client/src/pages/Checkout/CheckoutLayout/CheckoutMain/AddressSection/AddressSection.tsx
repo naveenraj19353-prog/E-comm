@@ -1,20 +1,15 @@
 import { useState } from "react";
 import { Check, Edit3, MapPin, Plus, Trash2 } from "lucide-react";
-
 import styles from "./AddressSection.module.css";
 import type { Address } from "../../../../../features/address/types/address.types";
 import { useAddresses } from "../../../../../features/address/hooks/useAddresses";
 import type { AddressFormData } from "./AddressForm";
 import AddressForm from "./AddressForm";
-
-
-
 interface AddressSectionProps {
   userId?: string;
   tenantId?: string;
   onAddressSelect?: (address: Address) => void;
 }
-
 const AddressSection = ({
   userId = "686f91a3d1c6a23456789abc",
   tenantId = "TENANT001",
@@ -30,65 +25,32 @@ const AddressSection = ({
     editAddress,
     removeAddress,
   } = useAddresses(userId, tenantId);
-
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(
-    null
+    null,
   );
-
   const [showForm, setShowForm] = useState(false);
-
   const [editingAddress, setEditingAddress] = useState<Address | null>(null);
-
-  /*
-   * Derive selected address.
-   *
-   * Priority:
-   * 1. User selected address
-   * 2. Default address from backend
-   * 3. First available address
-   */
   const selectedAddress =
     addresses.find((address) => address._id === selectedAddressId) ||
     addresses.find((address) => address.isDefault) ||
     addresses[0] ||
     null;
-
-  /*
-   * Select address
-   */
   const handleSelectAddress = (address: Address) => {
     setSelectedAddressId(address._id);
-
     onAddressSelect?.(address);
   };
-
-  /*
-   * Add address
-   */
   const handleAddAddress = () => {
     setEditingAddress(null);
     setShowForm(true);
   };
-
-  /*
-   * Edit address
-   */
   const handleEditAddress = (address: Address) => {
     setEditingAddress(address);
     setShowForm(true);
   };
-
-  /*
-   * Cancel form
-   */
   const handleCancelForm = () => {
     setShowForm(false);
     setEditingAddress(null);
   };
-
-  /*
-   * Create address
-   */
   const handleCreateAddress = async (data: AddressFormData) => {
     try {
       await addAddress({
@@ -96,52 +58,37 @@ const AddressSection = ({
         userId,
         ...data,
       });
-
       setShowForm(false);
       setEditingAddress(null);
     } catch (error) {
       console.error("Failed to create address:", error);
     }
   };
-
-  /*
-   * Update address
-   */
   const handleUpdateAddress = async (data: AddressFormData) => {
     if (!editingAddress) {
       return;
     }
-
     try {
       await editAddress(editingAddress._id, {
         tenantId,
         ...data,
       });
-
       setSelectedAddressId(editingAddress._id);
-
       setShowForm(false);
       setEditingAddress(null);
     } catch (error) {
       console.error("Failed to update address:", error);
     }
   };
-
-  /*
-   * Delete address
-   */
   const handleDeleteAddress = async (id: string) => {
     const confirmed = window.confirm(
-      "Are you sure you want to delete this address?"
+      "Are you sure you want to delete this address?",
     );
-
     if (!confirmed) {
       return;
     }
-
     try {
       await removeAddress(id);
-
       if (selectedAddressId === id) {
         setSelectedAddressId(null);
       }
@@ -149,33 +96,22 @@ const AddressSection = ({
       console.error("Failed to delete address:", error);
     }
   };
-
-  /*
-   * Loading
-   */
   if (isLoading) {
     return (
       <section className={styles.section}>
         <div className={styles.header}>
           <div>
             <span className={styles.eyebrow}>DELIVERY ADDRESS</span>
-
             <h2>Select delivery address</h2>
           </div>
         </div>
-
         <div className={styles.loading}>
           <MapPin size={20} />
-
           <span>Loading your addresses...</span>
         </div>
       </section>
     );
   }
-
-  /*
-   * Address form
-   */
   if (showForm) {
     return (
       <section className={styles.section}>
@@ -191,19 +127,15 @@ const AddressSection = ({
       </section>
     );
   }
-
   return (
     <section className={styles.section}>
-      {/* Header */}
+      {}
       <div className={styles.header}>
         <div>
           <span className={styles.eyebrow}>DELIVERY ADDRESS</span>
-
           <h2>Select delivery address</h2>
-
           <p>Choose where you want your order delivered.</p>
         </div>
-
         <button
           type="button"
           className={styles.addButton}
@@ -213,21 +145,16 @@ const AddressSection = ({
           Add Address
         </button>
       </div>
-
-      {/* Error */}
+      {}
       {error && <div className={styles.error}>{error}</div>}
-
-      {/* Empty state */}
+      {}
       {addresses.length === 0 ? (
         <div className={styles.empty}>
           <div className={styles.emptyIcon}>
             <MapPin size={28} />
           </div>
-
           <h3>No addresses found</h3>
-
           <p>Add a delivery address to continue checkout.</p>
-
           <button
             type="button"
             className={styles.addButton}
@@ -241,7 +168,6 @@ const AddressSection = ({
         <div className={styles.addressList}>
           {addresses.map((address) => {
             const isSelected = selectedAddress?._id === address._id;
-
             return (
               <div
                 key={address._id}
@@ -250,65 +176,52 @@ const AddressSection = ({
                 }`}
                 onClick={() => handleSelectAddress(address)}
               >
-                {/* Address content */}
+                {}
                 <div className={styles.cardTop}>
                   <div className={styles.radio}>
                     {isSelected && <Check size={14} />}
                   </div>
-
                   <div className={styles.addressMain}>
                     <div className={styles.nameRow}>
                       <strong>{address.fullName}</strong>
-
                       <span className={styles.type}>{address.addressType}</span>
-
                       {address.isDefault && (
                         <span className={styles.defaultBadge}>Default</span>
                       )}
                     </div>
-
                     <p>
                       {address.addressLine1}
-
                       {address.addressLine2 ? `, ${address.addressLine2}` : ""}
                     </p>
-
                     <p>
                       {address.city}, {address.state} - {address.postalCode}
                     </p>
-
                     <p>{address.country}</p>
-
                     <span className={styles.phone}>Phone: {address.phone}</span>
                   </div>
                 </div>
-
-                {/* Actions */}
+                {}
                 <div className={styles.cardActions}>
                   <button
                     type="button"
                     onClick={(event) => {
                       event.stopPropagation();
-
                       handleEditAddress(address);
                     }}
                   >
                     <Edit3 size={14} />
                     Edit
                   </button>
-
                   <button
                     type="button"
                     className={styles.deleteButton}
                     disabled={isDeleting}
                     onClick={(event) => {
                       event.stopPropagation();
-
                       handleDeleteAddress(address._id);
                     }}
                   >
                     <Trash2 size={14} />
-
                     {isDeleting ? "Deleting..." : "Delete"}
                   </button>
                 </div>
@@ -320,5 +233,4 @@ const AddressSection = ({
     </section>
   );
 };
-
 export default AddressSection;

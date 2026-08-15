@@ -2,10 +2,11 @@ from pymongo import MongoClient
 from dotenv import load_dotenv
 import os
 import json
+
 load_dotenv()
 
-MONGO_URI = os.getenv('MONGO_URI')
-DATABASE_NAME = os.getenv('DATABASE_NAME')
+MONGO_URI = os.getenv("MONGO_URI")
+DATABASE_NAME = os.getenv("DATABASE_NAME")
 
 print(DATABASE_NAME, MONGO_URI)
 
@@ -33,5 +34,6 @@ wishlists = db["wishlists"]
 addresses = db["addresses"]
 orders = db["orders"]
 reviews = db["reviews"]
-coupons= db["coupons"]
+coupons = db["coupons"]
 banners = db["banners"]
+tenants = db["tenants"]

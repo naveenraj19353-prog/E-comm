@@ -1,10 +1,7 @@
-import {  useState } from "react";
+import { useState } from "react";
 import { X } from "lucide-react";
-
 import styles from "./AddressForm.module.css";
-
 import type { Address } from "../../../../../features/address/types/address.types";
-
 export interface AddressFormData {
   fullName: string;
   phone: string;
@@ -17,7 +14,6 @@ export interface AddressFormData {
   addressType: "Home" | "Office" | "Other";
   isDefault: boolean;
 }
-
 interface AddressFormProps {
   initialData?: Address;
   isEditing?: boolean;
@@ -26,7 +22,6 @@ interface AddressFormProps {
   onSubmit: (data: AddressFormData) => Promise<void>;
   onCancel: () => void;
 }
-
 const EMPTY_FORM: AddressFormData = {
   fullName: "",
   phone: "",
@@ -39,7 +34,6 @@ const EMPTY_FORM: AddressFormData = {
   addressType: "Home",
   isDefault: false,
 };
-
 const AddressForm = ({
   initialData,
   isEditing = false,
@@ -48,9 +42,7 @@ const AddressForm = ({
   onSubmit,
   onCancel,
 }: AddressFormProps) => {
-
   const [validationError, setValidationError] = useState("");
-
   const [formData, setFormData] = useState<AddressFormData>(() => {
     if (initialData) {
       return {
@@ -66,69 +58,54 @@ const AddressForm = ({
         isDefault: initialData.isDefault,
       };
     }
-
     return EMPTY_FORM;
   });
-
   const handleChange = (
     field: keyof AddressFormData,
-    value: string | boolean
+    value: string | boolean,
   ) => {
     setFormData((previous) => ({
       ...previous,
       [field]: value,
     }));
-
     if (validationError) {
       setValidationError("");
     }
   };
-
   const validateForm = () => {
     if (formData.fullName.trim().length < 3) {
       return "Please enter your full name.";
     }
-
     if (
       formData.phone.trim().length < 10 ||
       formData.phone.trim().length > 15
     ) {
       return "Please enter a valid phone number.";
     }
-
     if (formData.addressLine1.trim().length < 5) {
       return "Please enter a valid address.";
     }
-
     if (!formData.city.trim()) {
       return "Please enter your city.";
     }
-
     if (!formData.state.trim()) {
       return "Please enter your state.";
     }
-
     if (!formData.country.trim()) {
       return "Please enter your country.";
     }
-
     if (!formData.postalCode.trim()) {
       return "Please enter your postal code.";
     }
-
     return "";
   };
-
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-
     const errorMessage = validateForm();
-
     if (errorMessage) {
       setValidationError(errorMessage);
       return;
     }
-
     try {
       await onSubmit({
         ...formData,
@@ -145,18 +122,14 @@ const AddressForm = ({
       console.error("Address form submission failed:", submitError);
     }
   };
-
   return (
     <div className={styles.formWrapper}>
       <div className={styles.formHeader}>
         <div>
           <span className={styles.eyebrow}>DELIVERY ADDRESS</span>
-
           <h3>{isEditing ? "Edit Address" : "Add New Address"}</h3>
-
           <p>Enter the address where your order should be delivered.</p>
         </div>
-
         <button
           type="button"
           className={styles.closeButton}
@@ -167,16 +140,13 @@ const AddressForm = ({
           <X size={19} />
         </button>
       </div>
-
       {(validationError || error) && (
         <div className={styles.error}>{validationError || error}</div>
       )}
-
       <form className={styles.form} onSubmit={handleSubmit}>
-        {/* Full Name */}
+        {}
         <div className={styles.field}>
           <label htmlFor="fullName">Full Name</label>
-
           <input
             id="fullName"
             type="text"
@@ -186,11 +156,9 @@ const AddressForm = ({
             disabled={loading}
           />
         </div>
-
-        {/* Phone */}
+        {}
         <div className={styles.field}>
           <label htmlFor="phone">Phone Number</label>
-
           <input
             id="phone"
             type="tel"
@@ -200,11 +168,9 @@ const AddressForm = ({
             disabled={loading}
           />
         </div>
-
-        {/* Address Line 1 */}
+        {}
         <div className={styles.fieldFull}>
           <label htmlFor="addressLine1">Address Line 1</label>
-
           <input
             id="addressLine1"
             type="text"
@@ -216,13 +182,11 @@ const AddressForm = ({
             disabled={loading}
           />
         </div>
-
-        {/* Address Line 2 */}
+        {}
         <div className={styles.fieldFull}>
           <label htmlFor="addressLine2">
             Address Line 2<span className={styles.optional}>Optional</span>
           </label>
-
           <input
             id="addressLine2"
             type="text"
@@ -234,11 +198,9 @@ const AddressForm = ({
             disabled={loading}
           />
         </div>
-
-        {/* City */}
+        {}
         <div className={styles.field}>
           <label htmlFor="city">City</label>
-
           <input
             id="city"
             type="text"
@@ -248,11 +210,9 @@ const AddressForm = ({
             disabled={loading}
           />
         </div>
-
-        {/* State */}
+        {}
         <div className={styles.field}>
           <label htmlFor="state">State</label>
-
           <input
             id="state"
             type="text"
@@ -262,11 +222,9 @@ const AddressForm = ({
             disabled={loading}
           />
         </div>
-
-        {/* Country */}
+        {}
         <div className={styles.field}>
           <label htmlFor="country">Country</label>
-
           <input
             id="country"
             type="text"
@@ -276,11 +234,9 @@ const AddressForm = ({
             disabled={loading}
           />
         </div>
-
-        {/* Postal Code */}
+        {}
         <div className={styles.field}>
           <label htmlFor="postalCode">Postal Code</label>
-
           <input
             id="postalCode"
             type="text"
@@ -290,11 +246,9 @@ const AddressForm = ({
             disabled={loading}
           />
         </div>
-
-        {/* Address Type */}
+        {}
         <div className={styles.fieldFull}>
           <label>Address Type</label>
-
           <div className={styles.typeOptions}>
             {(["Home", "Office", "Other"] as const).map((type) => (
               <button
@@ -311,8 +265,7 @@ const AddressForm = ({
             ))}
           </div>
         </div>
-
-        {/* Default Address */}
+        {}
         <label className={styles.defaultOption}>
           <input
             type="checkbox"
@@ -322,11 +275,9 @@ const AddressForm = ({
             }
             disabled={loading}
           />
-
           <span>Set as default address</span>
         </label>
-
-        {/* Actions */}
+        {}
         <div className={styles.actions}>
           <button
             type="button"
@@ -336,7 +287,6 @@ const AddressForm = ({
           >
             Cancel
           </button>
-
           <button
             type="submit"
             className={styles.submitButton}
@@ -345,13 +295,12 @@ const AddressForm = ({
             {loading
               ? "Saving..."
               : isEditing
-              ? "Update Address"
-              : "Save Address"}
+                ? "Update Address"
+                : "Save Address"}
           </button>
         </div>
       </form>
     </div>
   );
 };
-
 export default AddressForm;

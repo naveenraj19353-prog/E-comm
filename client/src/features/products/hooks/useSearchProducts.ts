@@ -1,11 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
-
 import { searchProducts } from "../api/product.api";
 import type { ProductSearchRequest } from "../types";
-
 export const useSearchProducts = (
   payload: ProductSearchRequest,
-  enabled = true
+  enabled = true,
 ) => {
   return useQuery({
     queryKey: ["search-products", payload],

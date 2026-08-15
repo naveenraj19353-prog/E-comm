@@ -1,34 +1,25 @@
 .wrapper {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-  }
-  
-  .size {
-    min-width: 48px;
-    height: 42px;
-  
-    padding: 0 14px;
-  
-    border: 1px solid #e5e7eb;
-    border-radius: 10px;
-  
-    background: #fff;
-  
-    cursor: pointer;
-  
-    font-weight: 600;
-    font-size: 14px;
-  
-    transition: all 0.2s ease;
-  }
-  
-  .size:hover {
-    border-color: #16a34a;
-  }
-  
-  .active {
-    background: #16a34a;
-    color: white;
-    border-color: #16a34a;
-  }
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.size {
+  min-width: 48px;
+  height: 42px;
+  padding: 0 14px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: #fff;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+.size:hover {
+  border-color: #16a34a;
+}
+.active {
+  background: #16a34a;
+  color: white;
+  border-color: #16a34a;
+}

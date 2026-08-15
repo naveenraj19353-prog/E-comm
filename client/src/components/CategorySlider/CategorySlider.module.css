@@ -1,0 +1,651 @@
+.section {
+  width: 100%;
+  padding: 34px 0 30px;
+}
+
+/* =========================================================
+   HEADER
+========================================================= */
+
+.header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.headingArea {
+  min-width: 0;
+}
+
+.eyebrow {
+  display: block;
+
+  margin-bottom: 5px;
+
+  color: #2f6b52;
+
+  font-size: 10px;
+  font-weight: 800;
+
+  letter-spacing: 0.16em;
+
+  text-transform: uppercase;
+}
+
+.titleRow {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.title {
+  margin: 0;
+
+  color: #1f2a26;
+
+  font-size: 25px;
+  font-weight: 700;
+
+  letter-spacing: -0.02em;
+}
+
+.count {
+  color: #8b9791;
+
+  font-size: 12px;
+  font-weight: 500;
+}
+
+/* =========================================================
+   NAVIGATION
+========================================================= */
+
+.navigation {
+  display: flex;
+  align-items: center;
+
+  gap: 8px;
+}
+
+.arrow {
+  width: 38px;
+  height: 38px;
+
+  padding: 0;
+
+  border: 1px solid #e4e8e5;
+  border-radius: 50%;
+
+  background: #ffffff;
+
+  color: #26332d;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  cursor: pointer;
+
+  box-shadow: 0 2px 8px rgba(31, 42, 38, 0.04);
+
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.arrow:hover {
+  background: #2f6b52;
+
+  border-color: #2f6b52;
+
+  color: #ffffff;
+
+  transform: translateY(-2px);
+
+  box-shadow:
+    0 7px 16px rgba(47, 107, 82, 0.2);
+}
+
+.arrow:active {
+  transform: translateY(0);
+}
+
+/* =========================================================
+   SLIDER
+========================================================= */
+
+.sliderWrapper {
+  position: relative;
+
+  width: 100%;
+}
+
+.slider {
+  display: flex;
+
+  gap: 16px;
+
+  width: 100%;
+
+  overflow-x: auto;
+
+  padding: 3px 3px 12px;
+
+  scroll-behavior: smooth;
+
+  scrollbar-width: none;
+
+  -ms-overflow-style: none;
+
+  scroll-snap-type: x proximity;
+}
+
+.slider::-webkit-scrollbar {
+  display: none;
+}
+
+/* =========================================================
+   CATEGORY CARD
+========================================================= */
+
+.categoryCard {
+  position: relative;
+
+  flex: 0 0 184px;
+
+  width: 184px;
+
+  padding: 0;
+
+  border: 1px solid #e7ebe8;
+
+  border-radius: 14px;
+
+  overflow: hidden;
+
+  background: #ffffff;
+
+  text-align: left;
+
+  cursor: pointer;
+
+  scroll-snap-align: start;
+
+  box-shadow:
+    0 3px 12px rgba(31, 42, 38, 0.045);
+
+  transition:
+    transform 0.28s ease,
+    box-shadow 0.28s ease,
+    border-color 0.28s ease;
+}
+
+.categoryCard:hover {
+  transform: translateY(-5px);
+
+  border-color: #d5dfd9;
+
+  box-shadow:
+    0 14px 28px rgba(31, 42, 38, 0.12);
+}
+
+/* =========================================================
+   IMAGE
+========================================================= */
+
+.imageWrapper {
+  position: relative;
+
+  width: 100%;
+
+  height: 128px;
+
+  overflow: hidden;
+
+  background:
+    linear-gradient(
+      135deg,
+      #f2f5f3,
+      #e6ebe8
+    );
+}
+
+.image {
+  width: 100%;
+  height: 100%;
+
+  display: block;
+
+  object-fit: cover;
+
+  transition:
+    transform 0.6s
+    cubic-bezier(
+      0.22,
+      1,
+      0.36,
+      1
+    );
+}
+
+.categoryCard:hover .image {
+  transform: scale(1.07);
+}
+
+/* =========================================================
+   IMAGE OVERLAY
+========================================================= */
+
+.imageOverlay {
+  position: absolute;
+
+  left: 0;
+  right: 0;
+  bottom: 0;
+
+  height: 45%;
+
+  background:
+    linear-gradient(
+      to top,
+      rgba(15, 25, 20, 0.16),
+      rgba(15, 25, 20, 0)
+    );
+
+  pointer-events: none;
+}
+
+/* =========================================================
+   PLACEHOLDER
+========================================================= */
+
+.placeholder {
+  width: 100%;
+  height: 100%;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  background:
+    linear-gradient(
+      135deg,
+      #e9f0eb,
+      #dce7e0
+    );
+
+  color: #2f6b52;
+
+  font-size: 42px;
+  font-weight: 700;
+}
+
+.placeholder span {
+  width: 58px;
+  height: 58px;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+
+  background: rgba(255, 255, 255, 0.7);
+
+  box-shadow:
+    0 5px 15px rgba(31, 42, 38, 0.08);
+}
+
+/* =========================================================
+   CONTENT
+========================================================= */
+
+.cardContent {
+  display: flex;
+
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 8px;
+
+  min-height: 58px;
+
+  padding: 10px 12px;
+}
+
+.categoryName {
+  min-width: 0;
+
+  overflow: hidden;
+
+  color: #1f2a26;
+
+  font-size: 13px;
+  font-weight: 700;
+
+  line-height: 1.25;
+
+  text-overflow: ellipsis;
+
+  white-space: nowrap;
+
+  transition: color 0.2s ease;
+}
+
+.categoryCard:hover .categoryName {
+  color: #2f6b52;
+}
+
+.exploreText {
+  flex-shrink: 0;
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 3px;
+
+  color: #8b9791;
+
+  font-size: 10px;
+  font-weight: 600;
+
+  opacity: 0;
+
+  transform: translateX(-4px);
+
+  transition:
+    opacity 0.25s ease,
+    transform 0.25s ease,
+    color 0.2s ease;
+}
+
+.categoryCard:hover .exploreText {
+  opacity: 1;
+
+  transform: translateX(0);
+
+  color: #2f6b52;
+}
+
+.exploreText svg {
+  width: 11px;
+  height: 11px;
+}
+
+/* =========================================================
+   SKELETON
+========================================================= */
+
+.skeletonCard {
+  flex: 0 0 184px;
+
+  width: 184px;
+
+  overflow: hidden;
+
+  border: 1px solid #e8ece9;
+
+  border-radius: 14px;
+
+  background: #ffffff;
+}
+
+.skeletonImage {
+  width: 100%;
+  height: 128px;
+
+  background:
+    linear-gradient(
+      90deg,
+      #f0f2f1 25%,
+      #e5e9e7 50%,
+      #f0f2f1 75%
+    );
+
+  background-size: 200% 100%;
+
+  animation:
+    skeletonLoading 1.4s infinite;
+}
+
+.skeletonText {
+  width: 100px;
+  height: 12px;
+
+  margin: 13px 12px 0;
+
+  border-radius: 6px;
+
+  background:
+    linear-gradient(
+      90deg,
+      #f0f2f1 25%,
+      #e5e9e7 50%,
+      #f0f2f1 75%
+    );
+
+  background-size: 200% 100%;
+
+  animation:
+    skeletonLoading 1.4s infinite;
+}
+
+.skeletonTextSmall {
+  width: 55px;
+  height: 8px;
+
+  margin: 8px 12px 14px;
+
+  border-radius: 6px;
+
+  background:
+    linear-gradient(
+      90deg,
+      #f0f2f1 25%,
+      #e5e9e7 50%,
+      #f0f2f1 75%
+    );
+
+  background-size: 200% 100%;
+
+  animation:
+    skeletonLoading 1.4s infinite;
+}
+
+@keyframes skeletonLoading {
+  0% {
+    background-position: 200% 0;
+  }
+
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* =========================================================
+   ERROR
+========================================================= */
+
+.error {
+  padding: 18px;
+
+  border: 1px solid #f0dede;
+
+  border-radius: 12px;
+
+  background: #fff7f7;
+
+  color: #c33d3d;
+
+  font-size: 13px;
+
+  text-align: center;
+}
+
+/* =========================================================
+   TABLET
+========================================================= */
+
+@media (max-width: 900px) {
+  .section {
+    padding: 28px 0;
+  }
+
+  .categoryCard {
+    flex-basis: 170px;
+
+    width: 170px;
+  }
+
+  .imageWrapper {
+    height: 120px;
+  }
+
+  .skeletonCard {
+    flex-basis: 170px;
+
+    width: 170px;
+  }
+
+  .skeletonImage {
+    height: 120px;
+  }
+}
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 768px) {
+  .section {
+    padding: 24px 0;
+  }
+
+  .header {
+    align-items: center;
+
+    margin-bottom: 16px;
+  }
+
+  .title {
+    font-size: 20px;
+  }
+
+  .count {
+    display: none;
+  }
+
+  .navigation {
+    display: flex;
+  }
+
+  .arrow {
+    width: 34px;
+    height: 34px;
+  }
+
+  .categoryCard {
+    flex-basis: 160px;
+
+    width: 160px;
+  }
+
+  .imageWrapper {
+    height: 112px;
+  }
+
+  .exploreText {
+    display: none;
+  }
+
+  .cardContent {
+    min-height: 48px;
+
+    padding: 9px 11px;
+  }
+
+  .categoryName {
+    font-size: 12.5px;
+  }
+
+  .skeletonCard {
+    flex-basis: 160px;
+
+    width: 160px;
+  }
+
+  .skeletonImage {
+    height: 112px;
+  }
+}
+
+/* =========================================================
+   SMALL MOBILE
+========================================================= */
+
+@media (max-width: 480px) {
+  .section {
+    padding: 20px 0;
+  }
+
+  .eyebrow {
+    font-size: 9px;
+  }
+
+  .title {
+    font-size: 18px;
+  }
+
+  .navigation {
+    gap: 5px;
+  }
+
+  .arrow {
+    width: 31px;
+    height: 31px;
+  }
+
+  .slider {
+    gap: 12px;
+
+    padding-left: 2px;
+    padding-right: 2px;
+  }
+
+  .categoryCard {
+    flex-basis: 145px;
+
+    width: 145px;
+  }
+
+  .imageWrapper {
+    height: 100px;
+  }
+
+  .cardContent {
+    min-height: 45px;
+
+    padding: 8px 10px;
+  }
+
+  .categoryName {
+    font-size: 12px;
+  }
+
+  .skeletonCard {
+    flex-basis: 145px;
+
+    width: 145px;
+  }
+
+  .skeletonImage {
+    height: 100px;
+  }
+}

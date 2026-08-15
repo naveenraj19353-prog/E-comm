@@ -1,11 +1,9 @@
 import styles from "./ColorFilter.module.css";
-
 interface ColorFilterProps {
   colors: string[];
   selectedColors: string[];
   onChange: (colors: string[]) => void;
 }
-
 const colorMap: Record<string, string> = {
   Black: "#000000",
   White: "#FFFFFF",
@@ -20,7 +18,6 @@ const colorMap: Record<string, string> = {
   Purple: "#8B5CF6",
   Brown: "#8B5A2B",
 };
-
 const ColorFilter = ({
   colors,
   selectedColors,
@@ -33,7 +30,6 @@ const ColorFilter = ({
       onChange([...selectedColors, color]);
     }
   };
-
   return (
     <div className={styles.wrapper}>
       {colors.map((color) => (
@@ -41,25 +37,20 @@ const ColorFilter = ({
           key={color}
           type="button"
           className={`${styles.colorItem} ${
-            selectedColors.includes(color)
-              ? styles.active
-              : ""
+            selectedColors.includes(color) ? styles.active : ""
           }`}
           onClick={() => toggleColor(color)}
         >
           <span
             className={styles.dot}
             style={{
-              backgroundColor:
-                colorMap[color] ?? "#D1D5DB",
+              backgroundColor: colorMap[color] ?? "#D1D5DB",
             }}
           />
-
           <span>{color}</span>
         </button>
       ))}
     </div>
   );
 };
-
 export default ColorFilter;

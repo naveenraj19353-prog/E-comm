@@ -1,19 +1,15 @@
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Autoplay } from "swiper/modules";
-
 import "swiper/css";
 import "swiper/css/navigation";
-
 import styles from "./BrandSlider.module.css";
 import type { Brand } from "./types";
 import BrandCard from "./BrandCard";
-
 interface BrandSliderProps {
   title?: string;
   subTitle?: string;
   brands: Brand[];
 }
-
 const BrandSlider = ({
   title = "Featured Brands",
   subTitle = "Trusted by Top Fashion Brands",
@@ -25,7 +21,6 @@ const BrandSlider = ({
         <h2>{title}</h2>
         <p>{subTitle}</p>
       </div>
-
       <Swiper
         modules={[Navigation, Autoplay]}
         navigation
@@ -62,5 +57,4 @@ const BrandSlider = ({
     </section>
   );
 };
-
 export default BrandSlider;

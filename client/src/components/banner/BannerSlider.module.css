@@ -1,0 +1,231 @@
+.section {
+  width: 100%;
+  padding: 24px 0 48px;
+}
+.swiper {
+  width: 100%;
+  overflow: hidden;
+  border-radius: 24px;
+}
+.banner {
+  position: relative;
+  width: 100%;
+  height: 700px;
+  overflow: hidden;
+  border-radius: 24px;
+  background: #1f2a26;
+}
+.image {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  object-position: center;
+  transition: transform 6s ease;
+}
+.swiper :global(.swiper-slide-active) .image {
+  transform: scale(1.04);
+}
+.overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  background: linear-gradient(
+    90deg,
+    rgba(15, 23, 19, 0.78) 0%,
+    rgba(15, 23, 19, 0.55) 32%,
+    rgba(15, 23, 19, 0.18) 65%,
+    rgba(15, 23, 19, 0.02) 100%
+  );
+}
+.content {
+  width: min(100% - 100px, 1200px);
+  margin: 0 auto;
+  color: #ffffff;
+}
+.subtitle {
+  display: inline-flex;
+  align-items: center;
+  margin-bottom: 14px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 1.6px;
+  text-transform: uppercase;
+  color: #d8e9df;
+}
+.title {
+  max-width: 620px;
+  margin: 0 0 16px;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(42px, 5vw, 68px);
+  line-height: 1.05;
+  font-weight: 600;
+  letter-spacing: -1px;
+}
+.description {
+  max-width: 480px;
+  margin: 0 0 28px;
+  color: rgba(255, 255, 255, 0.86);
+  font-size: 16px;
+  line-height: 1.6;
+}
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 120px;
+  height: 46px;
+  padding: 0 24px;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #1f2a26;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 700;
+  transition:
+    transform 0.2s ease,
+    background 0.2s ease,
+    color 0.2s ease;
+}
+.button:hover {
+  transform: translateY(-2px);
+  background: #2f6b52;
+  color: #ffffff;
+}
+.swiper :global(.swiper-button-prev),
+.swiper :global(.swiper-button-next) {
+  width: 46px;
+  height: 46px;
+  margin-top: 0;
+  top: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.92);
+  color: #1f2a26;
+  backdrop-filter: blur(8px);
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    transform 0.2s ease;
+}
+.swiper :global(.swiper-button-prev) {
+  left: 24px;
+}
+.swiper :global(.swiper-button-next) {
+  right: 24px;
+}
+.swiper :global(.swiper-button-prev):hover,
+.swiper :global(.swiper-button-next):hover {
+  background: #2f6b52;
+  color: #ffffff;
+  transform: scale(1.06);
+}
+.swiper :global(.swiper-button-prev)::after,
+.swiper :global(.swiper-button-next)::after {
+  font-size: 16px;
+  font-weight: 700;
+}
+.swiper :global(.swiper-pagination) {
+  bottom: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.swiper :global(.swiper-pagination-bullet) {
+  width: 7px;
+  height: 7px;
+  margin: 0 !important;
+  opacity: 1;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.55);
+  transition:
+    width 0.25s ease,
+    background 0.25s ease;
+}
+.swiper :global(.swiper-pagination-bullet-active) {
+  width: 24px;
+  background: #ffffff;
+}
+@media (max-width: 1024px) {
+  .section {
+    padding: 20px 0 40px;
+  }
+  .banner {
+    height: 440px;
+    border-radius: 20px;
+  }
+  .content {
+    width: min(100% - 80px, 900px);
+  }
+  .title {
+    font-size: 48px;
+  }
+}
+@media (max-width: 768px) {
+  .section {
+    padding: 16px 0 32px;
+  }
+  .banner {
+    height: 430px;
+    border-radius: 16px;
+  }
+  .overlay {
+    align-items: flex-end;
+    background: linear-gradient(
+      0deg,
+      rgba(15, 23, 19, 0.82) 0%,
+      rgba(15, 23, 19, 0.45) 45%,
+      rgba(15, 23, 19, 0.05) 100%
+    );
+  }
+  .content {
+    width: 100%;
+    padding: 32px 28px 52px;
+  }
+  .subtitle {
+    font-size: 11px;
+  }
+  .title {
+    max-width: 100%;
+    font-size: 38px;
+    letter-spacing: -0.5px;
+  }
+  .description {
+    max-width: 100%;
+    font-size: 14px;
+    margin-bottom: 20px;
+  }
+  .swiper :global(.swiper-button-prev),
+  .swiper :global(.swiper-button-next) {
+    width: 36px;
+    height: 36px;
+  }
+  .swiper :global(.swiper-button-prev) {
+    left: 12px;
+  }
+  .swiper :global(.swiper-button-next) {
+    right: 12px;
+  }
+  .swiper :global(.swiper-button-prev)::after,
+  .swiper :global(.swiper-button-next)::after {
+    font-size: 13px;
+  }
+}
+@media (max-width: 480px) {
+  .banner {
+    height: 390px;
+  }
+  .content {
+    padding: 24px 20px 46px;
+  }
+  .title {
+    font-size: 32px;
+  }
+  .button {
+    height: 42px;
+    min-width: 105px;
+    padding: 0 20px;
+  }
+}

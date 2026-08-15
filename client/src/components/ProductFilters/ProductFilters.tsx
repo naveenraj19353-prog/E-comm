@@ -1,88 +1,63 @@
 import { useMemo } from "react";
-
 import { useAppDispatch, useAppSelector } from "../../app/hooks";
-
 import { setFilters, clearFilters } from "../../features/products/productSlice";
-
 import { useCategory } from "../../features/products/hooks/useCategory";
-
 import FilterSection from "./FilterSection";
 import PriceRange from "./PriceRange";
 import RatingFilter from "./RatingFilter";
 import ColorFilter from "./ColorFilter";
 import SizeFilter from "./SizeFilter";
-
 import styles from "./ProductFilters.module.css";
-
 const ProductFilters = () => {
   const dispatch = useAppDispatch();
-
   const tenantId =
     useAppSelector((state) => state.tenant.currentTenant?.id) ?? "";
-
   const filters = useAppSelector((state) => state.products.filters);
-
   const {
     data: categories,
     isLoading,
     isError,
     error,
   } = useCategory(tenantId || "TENANT001");
-
   const colors = ["Black", "White", "Grey", "Green", "Red"];
-
   const sizes = ["XS", "S", "M", "L", "XL", "XXL"];
-
   const activeFilterCount = useMemo(() => {
     let count = 0;
-
     count += filters.categories.length;
     count += filters.colors.length;
     count += filters.sizes.length;
-
     if (filters.rating !== null) {
       count += 1;
     }
-
     const isDefaultPrice =
       filters.priceRange[0] === 0 && filters.priceRange[1] === 100000;
-
     if (!isDefaultPrice) {
       count += 1;
     }
-
     if (filters.search.trim()) {
       count += 1;
     }
-
     return count;
   }, [filters]);
-
   const toggleCategory = (id: string) => {
     dispatch(
       setFilters({
         categories: filters.categories.includes(id)
           ? filters.categories.filter((categoryId) => categoryId !== id)
           : [...filters.categories, id],
-      })
+      }),
     );
   };
-
   return (
     <div className={styles.wrapper}>
-      {/* ================================
-          HEADER
-      ================================= */}
-
+     
       <div className={styles.title}>
         <div className={styles.titleLeft}>
           <h2>Filters</h2>
-
           {activeFilterCount > 0 && (
             <span className={styles.activeCount}>{activeFilterCount}</span>
           )}
         </div>
-
         {activeFilterCount > 0 && (
           <button
             type="button"
@@ -93,11 +68,7 @@ const ProductFilters = () => {
           </button>
         )}
       </div>
-
-      {/* ================================
-          CATEGORY
-      ================================= */}
-
+     
       <FilterSection title="Category">
         {isLoading ? (
           <div className={styles.loadingState}>
@@ -119,18 +90,13 @@ const ProductFilters = () => {
                   checked={filters.categories.includes(category.name)}
                   onChange={() => toggleCategory(category.name)}
                 />
-
                 <span>{category.name}</span>
               </label>
             ))}
           </div>
         )}
       </FilterSection>
-
-      {/* ================================
-          PRICE
-      ================================= */}
-
+     
       <FilterSection title="Price">
         <PriceRange
           values={filters.priceRange}
@@ -140,16 +106,12 @@ const ProductFilters = () => {
             dispatch(
               setFilters({
                 priceRange,
-              })
+              }),
             )
           }
         />
       </FilterSection>
-
-      {/* ================================
-          RATING
-      ================================= */}
-
+     
       <FilterSection title="Rating">
         <RatingFilter
           value={filters.rating}
@@ -157,16 +119,12 @@ const ProductFilters = () => {
             dispatch(
               setFilters({
                 rating,
-              })
+              }),
             )
           }
         />
       </FilterSection>
-
-      {/* ================================
-          COLORS
-      ================================= */}
-
+     
       <FilterSection title="Colors">
         <ColorFilter
           colors={colors}
@@ -175,16 +133,12 @@ const ProductFilters = () => {
             dispatch(
               setFilters({
                 colors,
-              })
+              }),
             )
           }
         />
       </FilterSection>
-
-      {/* ================================
-          SIZES
-      ================================= */}
-
+     
       <FilterSection title="Sizes">
         <SizeFilter
           sizes={sizes}
@@ -193,7 +147,7 @@ const ProductFilters = () => {
             dispatch(
               setFilters({
                 sizes,
-              })
+              }),
             )
           }
         />
@@ -201,5 +155,4 @@ const ProductFilters = () => {
     </div>
   );
 };
-
 export default ProductFilters;

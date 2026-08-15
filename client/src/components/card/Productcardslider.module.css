@@ -1,65 +1,63 @@
 .section {
-    --nt-green: #2f6b52;
-    --nt-text: #1f2a26;
-    --nt-border: #e7e9e8;
-  
-    font-family: 'Segoe UI', Roboto, -apple-system, BlinkMacSystemFont, sans-serif;
-  }
-  
-  .header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 16px;
-  }
-  
-  .title {
-    font-size: 19px;
-    font-weight: 700;
-    color: var(--nt-text);
-    margin: 0;
-  }
-  
-  .arrows {
-    display: flex;
-    gap: 8px;
-  }
-  
-  .arrowButton {
-    width: 34px;
-    height: 34px;
-    border-radius: 50%;
-    border: 1px solid var(--nt-border);
-    background: #fff;
-    color: var(--nt-text);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
-  }
-  
-  .arrowButton:hover {
-    background: var(--nt-green);
-    border-color: var(--nt-green);
-    color: #fff;
-  }
-  
-  .arrowButton:disabled {
-    opacity: 0.35;
-    cursor: default;
-  }
-  
-  .arrowButton:disabled:hover {
-    background: #fff;
-    border-color: var(--nt-border);
-    color: var(--nt-text);
-  }
-  
-  .swiper {
-    padding-bottom: 4px; /* room for card hover shadow */
-  }
-  
-  .slide {
-    height: auto; /* let cards inside stretch equally */
-  }
+  --nt-green: #2f6b52;
+  --nt-text: #1f2a26;
+  --nt-border: #e7e9e8;
+  font-family:
+    "Segoe UI",
+    Roboto,
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif;
+}
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+.title {
+  font-size: 19px;
+  font-weight: 700;
+  color: var(--nt-text);
+  margin: 0;
+}
+.arrows {
+  display: flex;
+  gap: 8px;
+}
+.arrowButton {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1px solid var(--nt-border);
+  background: #fff;
+  color: var(--nt-text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease,
+    border-color 0.15s ease;
+}
+.arrowButton:hover {
+  background: var(--nt-green);
+  border-color: var(--nt-green);
+  color: #fff;
+}
+.arrowButton:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+.arrowButton:disabled:hover {
+  background: #fff;
+  border-color: var(--nt-border);
+  color: var(--nt-text);
+}
+.swiper {
+  padding-bottom: 4px; /* room for card hover shadow */
+}
+.slide {
+  height: auto; /* let cards inside stretch equally */
+}

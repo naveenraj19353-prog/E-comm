@@ -1,6 +1,11 @@
 import apiClient from "../../../api/client";
-import type { LoginRequest, LoginResponse, RegisterRequest, RegisterResponse } from "../types";
 
+import type {
+  LoginRequest,
+  LoginResponse,
+  RegisterRequest,
+  RegisterResponse,
+} from "../types";
 
 export const loginApi = async (
   payload: LoginRequest
@@ -20,13 +25,12 @@ export const registerApi = async (
   return response.data;
 };
 
-export const getUser = async (
-    userId: string,
-    tenantId: string
-  ) => {
-    const response = await apiClient.get(
-      `/users/${userId}?tenantId=${tenantId}`
-    );
-  
-    return response.data;
-  };
+export const getUser = async (userId: string, tenantId: string | null) => {
+  if (!tenantId) {
+    return null;
+  }
+
+  const response = await apiClient.get(`/users/${userId}?tenantId=${tenantId}`);
+
+  return response.data;
+};

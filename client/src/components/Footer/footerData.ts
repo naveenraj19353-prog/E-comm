@@ -1,11 +1,8 @@
 import type { FooterProps } from "./types";
-
 export const footerData: FooterProps = {
   companyName: "OmniStore",
-
   description:
     "Discover premium fashion, accessories and lifestyle products with secure shopping and fast delivery.",
-
   sections: [
     {
       title: "Shop",
@@ -16,7 +13,6 @@ export const footerData: FooterProps = {
         { label: "Accessories", href: "#" },
       ],
     },
-
     {
       title: "Company",
       links: [
@@ -26,7 +22,6 @@ export const footerData: FooterProps = {
         { label: "Blogs", href: "#" },
       ],
     },
-
     {
       title: "Support",
       links: [

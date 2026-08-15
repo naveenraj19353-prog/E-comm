@@ -31,10 +31,12 @@ def calculate_checkout(
     # ========================================================
 
     cart_items = list(
-        carts.find({
-            "tenantId": tenant_id,
-            "userId": ObjectId(user_id),
-        })
+        carts.find(
+            {
+                "tenantId": tenant_id,
+                "userId": ObjectId(user_id),
+            }
+        )
     )
 
     if not cart_items:
@@ -52,11 +54,13 @@ def calculate_checkout(
 
     for cart_item in cart_items:
 
-        product = products.find_one({
-            "_id": cart_item["productId"],
-            "tenantId": tenant_id,
-            "isActive": True,
-        })
+        product = products.find_one(
+            {
+                "_id": cart_item["productId"],
+                "tenantId": tenant_id,
+                "isActive": True,
+            }
+        )
 
         if not product:
             raise HTTPException(
@@ -71,15 +75,10 @@ def calculate_checkout(
         if quantity > stock:
             raise HTTPException(
                 status_code=400,
-                detail=(
-                    f"{product['name']} has only "
-                    f"{stock} item(s) in stock."
-                ),
+                detail=(f"{product['name']} has only " f"{stock} item(s) in stock."),
             )
 
-        price = float(
-            product["finalPrice"]
-        )
+        price = float(product["finalPrice"])
 
         line_total = round(
             price * quantity,
@@ -88,18 +87,16 @@ def calculate_checkout(
 
         subtotal += line_total
 
-        items.append({
-            "productId": str(product["_id"]),
-            "name": product["name"],
-            "price": price,
-            "quantity": quantity,
-            "subtotal": line_total,
-            "image": (
-                product["images"][0]
-                if product.get("images")
-                else None
-            ),
-        })
+        items.append(
+            {
+                "productId": str(product["_id"]),
+                "name": product["name"],
+                "price": price,
+                "quantity": quantity,
+                "subtotal": line_total,
+                "image": (product["images"][0] if product.get("images") else None),
+            }
+        )
 
     subtotal = round(subtotal, 2)
 
@@ -113,15 +110,15 @@ def calculate_checkout(
 
     if coupon_code and coupon_code.strip():
 
-        normalized_coupon = (
-            coupon_code.strip().upper()
-        )
+        normalized_coupon = coupon_code.strip().upper()
 
-        coupon = coupons.find_one({
-            "tenantId": tenant_id,
-            "code": normalized_coupon,
-            "isActive": True,
-        })
+        coupon = coupons.find_one(
+            {
+                "tenantId": tenant_id,
+                "code": normalized_coupon,
+                "isActive": True,
+            }
+        )
 
         if not coupon:
             raise HTTPException(
@@ -135,9 +132,7 @@ def calculate_checkout(
         # Start date
         # ----------------------------------------------------
 
-        if coupon.get("startDate") and (
-            coupon["startDate"] > now
-        ):
+        if coupon.get("startDate") and (coupon["startDate"] > now):
             raise HTTPException(
                 status_code=400,
                 detail="Coupon is not active yet.",
@@ -147,9 +142,7 @@ def calculate_checkout(
         # End date
         # ----------------------------------------------------
 
-        if coupon.get("endDate") and (
-            coupon["endDate"] < now
-        ):
+        if coupon.get("endDate") and (coupon["endDate"] < now):
             raise HTTPException(
                 status_code=400,
                 detail="Coupon has expired.",
@@ -169,10 +162,7 @@ def calculate_checkout(
         if subtotal < minimum_order_amount:
             raise HTTPException(
                 status_code=400,
-                detail=(
-                    f"Minimum order amount is "
-                    f"₹{minimum_order_amount}"
-                ),
+                detail=(f"Minimum order amount is " f"₹{minimum_order_amount}"),
             )
 
         # ----------------------------------------------------
@@ -189,10 +179,7 @@ def calculate_checkout(
             0,
         )
 
-        if (
-            usage_limit > 0
-            and used_count >= usage_limit
-        ):
+        if usage_limit > 0 and used_count >= usage_limit:
             raise HTTPException(
                 status_code=400,
                 detail="Coupon usage limit exceeded.",
@@ -202,9 +189,7 @@ def calculate_checkout(
         # Calculate discount
         # ----------------------------------------------------
 
-        discount_type = coupon.get(
-            "discountType"
-        )
+        discount_type = coupon.get("discountType")
 
         discount_value = float(
             coupon.get(
@@ -215,15 +200,9 @@ def calculate_checkout(
 
         if discount_type == "percentage":
 
-            discount = (
-                subtotal
-                * discount_value
-                / 100
-            )
+            discount = subtotal * discount_value / 100
 
-            maximum_discount = coupon.get(
-                "maximumDiscount"
-            )
+            maximum_discount = coupon.get("maximumDiscount")
 
             if maximum_discount:
                 discount = min(
@@ -246,9 +225,7 @@ def calculate_checkout(
             2,
         )
 
-        coupon_code_response = coupon.get(
-            "code"
-        )
+        coupon_code_response = coupon.get("code")
 
     # ========================================================
     # SHIPPING
@@ -278,9 +255,7 @@ def calculate_checkout(
     # ========================================================
 
     grand_total = round(
-        taxable_amount
-        + shipping
-        + tax,
+        taxable_amount + shipping + tax,
         2,
     )
 
@@ -294,21 +269,19 @@ def calculate_checkout(
     # DEFAULT ADDRESS
     # ========================================================
 
-    address = addresses.find_one({
-        "tenantId": tenant_id,
-        "userId": ObjectId(user_id),
-        "isDefault": True,
-    })
+    address = addresses.find_one(
+        {
+            "tenantId": tenant_id,
+            "userId": ObjectId(user_id),
+            "isDefault": True,
+        }
+    )
 
     if address:
 
-        address["_id"] = str(
-            address["_id"]
-        )
+        address["_id"] = str(address["_id"])
 
-        address["userId"] = str(
-            address["userId"]
-        )
+        address["userId"] = str(address["userId"])
 
     # ========================================================
     # RETURN CHECKOUT DATA

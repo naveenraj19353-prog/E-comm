@@ -1,59 +1,41 @@
 import styles from "./PriceRange.module.css";
-
 interface PriceRangeProps {
   values: number[];
   min: number;
   max: number;
   onChange: (values: number[]) => void;
 }
-
 const PriceRange = ({ values, min, max, onChange }: PriceRangeProps) => {
   const minValue = values[0];
   const maxValue = values[1];
-
   const minPercent = ((minValue - min) / (max - min)) * 100;
-
   const maxPercent = ((maxValue - min) / (max - min)) * 100;
-
   const handleMinChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = Number(e.target.value);
-
     if (value >= maxValue) {
       return;
     }
-
     onChange([value, maxValue]);
   };
-
   const handleMaxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = Number(e.target.value);
-
     if (value <= minValue) {
       return;
     }
-
     onChange([minValue, value]);
   };
-
   return (
     <div className={styles.container}>
-      {/* Price values */}
-
+     
       <div className={styles.values}>
         <span>₹{minValue.toLocaleString("en-IN")}</span>
-
         <span>₹{maxValue.toLocaleString("en-IN")}</span>
       </div>
-
-      {/* Slider */}
-
+     
       <div className={styles.slider}>
-        {/* Background */}
-
+       
         <div className={styles.track} />
-
-        {/* Selected range */}
-
+       
         <div
           className={styles.range}
           style={{
@@ -61,9 +43,7 @@ const PriceRange = ({ values, min, max, onChange }: PriceRangeProps) => {
             right: `${100 - maxPercent}%`,
           }}
         />
-
-        {/* Minimum handle */}
-
+       
         <input
           type="range"
           min={min}
@@ -72,9 +52,7 @@ const PriceRange = ({ values, min, max, onChange }: PriceRangeProps) => {
           onChange={handleMinChange}
           className={`${styles.input} ${styles.minInput}`}
         />
-
-        {/* Maximum handle */}
-
+       
         <input
           type="range"
           min={min}
@@ -84,16 +62,12 @@ const PriceRange = ({ values, min, max, onChange }: PriceRangeProps) => {
           className={`${styles.input} ${styles.maxInput}`}
         />
       </div>
-
-      {/* Min / Max labels */}
-
+     
       <div className={styles.labels}>
         <span>₹{min.toLocaleString("en-IN")}</span>
-
         <span>₹{max.toLocaleString("en-IN")}</span>
       </div>
     </div>
   );
 };
-
 export default PriceRange;

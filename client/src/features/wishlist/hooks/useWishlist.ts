@@ -1,145 +1,55 @@
-import {
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from "@tanstack/react-query";
-
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   addToWishlist,
   clearWishlist,
   getWishlist,
   removeFromWishlist,
 } from "../api/wishlist.api";
-
-import type {
-  AddToWishlistRequest,
-} from "../api/wishlist.api";
-
-export const useWishlist = (
-  userId: string,
-  tenantId: string
-) => {
+import type { AddToWishlistRequest } from "../api/wishlist.api";
+export const useWishlist = (userId: string, tenantId: string) => {
   const queryClient = useQueryClient();
-
-  // ============================================================
-  // GET WISHLIST
-  // ============================================================
-
   const wishlistQuery = useQuery({
     queryKey: ["wishlist", userId, tenantId],
-
-    queryFn: () =>
-      getWishlist(userId, tenantId),
-
+    queryFn: () => getWishlist(userId, tenantId),
     enabled: Boolean(userId && tenantId),
   });
-
-  // ============================================================
-  // ADD TO WISHLIST
-  // ============================================================
-
   const addMutation = useMutation({
-    mutationFn: (
-      payload: AddToWishlistRequest
-    ) => addToWishlist(payload),
-
+    mutationFn: (payload: AddToWishlistRequest) => addToWishlist(payload),
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: [
-          "wishlist",
-          userId,
-          tenantId,
-        ],
+        queryKey: ["wishlist", userId, tenantId],
       });
     },
   });
-
-  // ============================================================
-  // REMOVE FROM WISHLIST
-  // ============================================================
-
   const removeMutation = useMutation({
-    mutationFn: (
-      productId: string
-    ) =>
-      removeFromWishlist(
-        productId,
-        userId,
-        tenantId
-      ),
-
+    mutationFn: (productId: string) =>
+      removeFromWishlist(productId, userId, tenantId),
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: [
-          "wishlist",
-          userId,
-          tenantId,
-        ],
+        queryKey: ["wishlist", userId, tenantId],
       });
     },
   });
-
-  // ============================================================
-  // CLEAR WISHLIST
-  // ============================================================
-
   const clearMutation = useMutation({
-    mutationFn: () =>
-      clearWishlist(
-        userId,
-        tenantId
-      ),
-
+    mutationFn: () => clearWishlist(userId, tenantId),
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: [
-          "wishlist",
-          userId,
-          tenantId,
-        ],
+        queryKey: ["wishlist", userId, tenantId],
       });
     },
   });
-
-  // ============================================================
-  // RETURN
-  // ============================================================
-
   return {
-    wishlist:
-      wishlistQuery.data?.data ?? [],
-
-    wishlistCount:
-      wishlistQuery.data?.count ?? 0,
-
-    isLoading:
-      wishlistQuery.isLoading,
-
-    isError:
-      wishlistQuery.isError,
-
-    error:
-      wishlistQuery.error,
-
-    refetch:
-      wishlistQuery.refetch,
-
-    addToWishlist:
-      addMutation.mutateAsync,
-
-    removeFromWishlist:
-      removeMutation.mutateAsync,
-
-    clearWishlist:
-      () => clearMutation.mutateAsync(),
-
-    isAdding:
-      addMutation.isPending,
-
-    isRemoving:
-      removeMutation.isPending,
-
-    isClearing:
-      clearMutation.isPending,
+    wishlist: wishlistQuery.data?.data ?? [],
+    wishlistCount: wishlistQuery.data?.count ?? 0,
+    isLoading: wishlistQuery.isLoading,
+    isError: wishlistQuery.isError,
+    error: wishlistQuery.error,
+    refetch: wishlistQuery.refetch,
+    addToWishlist: addMutation.mutateAsync,
+    removeFromWishlist: removeMutation.mutateAsync,
+    clearWishlist: () => clearMutation.mutateAsync(),
+    isAdding: addMutation.isPending,
+    isRemoving: removeMutation.isPending,
+    isClearing: clearMutation.isPending,
   };
 };

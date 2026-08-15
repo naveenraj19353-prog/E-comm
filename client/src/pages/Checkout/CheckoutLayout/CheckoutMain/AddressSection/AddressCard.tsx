@@ -1,9 +1,6 @@
 import { Check, Edit3, MapPin, Trash2 } from "lucide-react";
-
-
 import styles from "./AddressCard.module.css";
 import type { Address } from "../../../../../features/address/types/address.types";
-
 interface AddressCardProps {
   address: Address;
   selected: boolean;
@@ -12,7 +9,6 @@ interface AddressCardProps {
   onDelete: () => void;
   isDeleting?: boolean;
 }
-
 const AddressCard = ({
   address,
   selected,
@@ -26,46 +22,36 @@ const AddressCard = ({
       className={`${styles.card} ${selected ? styles.selected : ""}`}
       onClick={onSelect}
     >
-      {/* Selection */}
+      {}
       <div className={styles.selection}>
         <div className={styles.radio}>{selected && <Check size={13} />}</div>
       </div>
-
-      {/* Content */}
+      {}
       <div className={styles.content}>
         <div className={styles.header}>
           <div className={styles.nameRow}>
             <strong>{address.fullName}</strong>
-
             <span className={styles.type}>{address.addressType}</span>
-
             {address.isDefault && (
               <span className={styles.default}>Default</span>
             )}
           </div>
         </div>
-
         <div className={styles.address}>
           <MapPin size={15} />
-
           <div>
             <p>{address.addressLine1}</p>
-
             {address.addressLine2 && <p>{address.addressLine2}</p>}
-
             <p>
               {address.city}, {address.state} {address.postalCode}
             </p>
-
             <p>{address.country}</p>
           </div>
         </div>
-
         <div className={styles.phone}>
           <span>Phone:</span> {address.phone}
         </div>
-
-        {/* Actions */}
+        {}
         <div
           className={styles.actions}
           onClick={(event) => event.stopPropagation()}
@@ -74,7 +60,6 @@ const AddressCard = ({
             <Edit3 size={14} />
             Edit
           </button>
-
           <button
             type="button"
             className={styles.deleteButton}
@@ -82,7 +67,6 @@ const AddressCard = ({
             onClick={onDelete}
           >
             <Trash2 size={14} />
-
             {isDeleting ? "Deleting..." : "Delete"}
           </button>
         </div>
@@ -90,5 +74,4 @@ const AddressCard = ({
     </div>
   );
 };
-
 export default AddressCard;

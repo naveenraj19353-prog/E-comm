@@ -7,7 +7,6 @@ from fastapi import APIRouter, HTTPException
 from app.database.mongo import addresses
 from app.models.address import CreateAddress, UpdateAddress
 
-
 router = APIRouter(
     prefix="/addresses",
     tags=["Addresses"],
@@ -17,6 +16,7 @@ router = APIRouter(
 # ============================================================
 # HELPERS
 # ============================================================
+
 
 def validate_object_id(value: str, field_name: str = "ID") -> ObjectId:
     """
@@ -34,6 +34,7 @@ def validate_object_id(value: str, field_name: str = "ID") -> ObjectId:
 # ============================================================
 # CREATE ADDRESS
 # ============================================================
+
 
 @router.post("/create-address")
 def create_address(request: CreateAddress):
@@ -61,21 +62,16 @@ def create_address(request: CreateAddress):
     address_data = {
         "tenantId": request.tenantId,
         "userId": user_id,
-
         "fullName": request.fullName,
         "phone": request.phone,
-
         "addressLine1": request.addressLine1,
         "addressLine2": request.addressLine2,
-
         "city": request.city,
         "state": request.state,
         "country": request.country,
         "postalCode": request.postalCode,
-
         "addressType": request.addressType,
         "isDefault": request.isDefault,
-
         "createdAt": now,
         "updatedAt": now,
     }
@@ -92,6 +88,7 @@ def create_address(request: CreateAddress):
 # ============================================================
 # GET USER ADDRESSES
 # ============================================================
+
 
 @router.get("/get-address/{userId}")
 def get_addresses(
@@ -131,6 +128,7 @@ def get_addresses(
 # UPDATE ADDRESS
 # ============================================================
 
+
 @router.put("/update-address/{id}")
 def update_address(
     id: str,
@@ -153,9 +151,7 @@ def update_address(
         )
 
     # Only update fields provided by the request.
-    update_data = request.model_dump(
-        exclude_unset=True
-    )
+    update_data = request.model_dump(exclude_unset=True)
 
     # Do not allow these fields to be changed
     # through the update request.
@@ -215,6 +211,7 @@ def update_address(
 # ============================================================
 # DELETE ADDRESS
 # ============================================================
+
 
 @router.delete("/{id}")
 def delete_address(

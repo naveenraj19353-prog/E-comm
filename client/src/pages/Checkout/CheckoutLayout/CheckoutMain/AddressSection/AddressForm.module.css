@@ -1,292 +1,226 @@
 .form {
-    display: flex;
-    flex-direction: column;
-    gap: 18px;
-    padding: 24px;
-    background: #ffffff;
-    border: 1px solid #e5e7eb;
-    border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 24px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+}
+.header {
+  margin-bottom: 2px;
+}
+.header h3 {
+  margin: 0;
+  color: #111827;
+  font-size: 18px;
+  font-weight: 700;
+}
+.header p {
+  margin: 6px 0 0;
+  color: #64748b;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+.fullWidth {
+  grid-column: 1 / -1;
+}
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.field label {
+  color: #334155;
+  font-size: 13px;
+  font-weight: 650;
+}
+.required {
+  color: #dc2626;
+  margin-left: 2px;
+}
+.field input,
+.field select,
+.field textarea {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid #dbe1e8;
+  border-radius: 10px;
+  outline: none;
+  background: #ffffff;
+  color: #111827;
+  font-family: inherit;
+  font-size: 14px;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+.field input,
+.field select {
+  height: 44px;
+  padding: 0 13px;
+}
+.field textarea {
+  min-height: 82px;
+  padding: 11px 13px;
+  resize: vertical;
+}
+.field input::placeholder,
+.field textarea::placeholder {
+  color: #94a3b8;
+}
+.field input:hover,
+.field select:hover,
+.field textarea:hover {
+  border-color: #cbd5e1;
+}
+.field input:focus,
+.field select:focus,
+.field textarea:focus {
+  border-color: #111827;
+  box-shadow: 0 0 0 3px rgba(17, 24, 39, 0.07);
+}
+.typeSection {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+.typeLabel {
+  color: #334155;
+  font-size: 13px;
+  font-weight: 650;
+}
+.typeOptions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.typeButton {
+  min-width: 90px;
+  height: 40px;
+  padding: 0 16px;
+  border: 1px solid #dbe1e8;
+  border-radius: 9px;
+  background: #ffffff;
+  color: #475569;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease,
+    color 0.2s ease;
+}
+.typeButton:hover {
+  border-color: #94a3b8;
+  color: #111827;
+}
+.typeButtonActive {
+  border-color: #111827;
+  background: #111827;
+  color: #ffffff;
+}
+.defaultRow {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-top: 2px;
+}
+.checkbox {
+  width: 17px;
+  height: 17px;
+  margin: 0;
+  accent-color: #111827;
+  cursor: pointer;
+}
+.defaultRow label {
+  color: #475569;
+  font-size: 13px;
+  cursor: pointer;
+}
+.error {
+  padding: 11px 13px;
+  border: 1px solid #fecaca;
+  border-radius: 9px;
+  background: #fef2f2;
+  color: #b91c1c;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 10px;
+  padding-top: 4px;
+  border-top: 1px solid #f1f5f9;
+}
+.cancelButton,
+.saveButton {
+  height: 44px;
+  padding: 0 20px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
+}
+.cancelButton {
+  border: 1px solid #dbe1e8;
+  background: #ffffff;
+  color: #475569;
+}
+.cancelButton:hover:not(:disabled) {
+  border-color: #cbd5e1;
+  background: #f8fafc;
+}
+.saveButton {
+  border: 1px solid #111827;
+  background: #111827;
+  color: #ffffff;
+}
+.saveButton:hover:not(:disabled) {
+  background: #000000;
+  transform: translateY(-1px);
+}
+.cancelButton:disabled,
+.saveButton:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+@media (max-width: 640px) {
+  .form {
+    padding: 18px;
+    border-radius: 14px;
   }
-  
-  .header {
-    margin-bottom: 2px;
-  }
-  
-  .header h3 {
-    margin: 0;
-    color: #111827;
-    font-size: 18px;
-    font-weight: 700;
-  }
-  
-  .header p {
-    margin: 6px 0 0;
-    color: #64748b;
-    font-size: 13px;
-    line-height: 1.5;
-  }
-  
-  /* ================================
-     FORM GRID
-  ================================ */
-  
   .grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 16px;
+    grid-template-columns: 1fr;
+    gap: 15px;
   }
-  
   .fullWidth {
-    grid-column: 1 / -1;
+    grid-column: auto;
   }
-  
-  /* ================================
-     FIELD
-  ================================ */
-  
-  .field {
-    display: flex;
-    flex-direction: column;
-    gap: 7px;
-  }
-  
-  .field label {
-    color: #334155;
-    font-size: 13px;
-    font-weight: 650;
-  }
-  
-  .required {
-    color: #dc2626;
-    margin-left: 2px;
-  }
-  
-  .field input,
-  .field select,
-  .field textarea {
-    width: 100%;
-    box-sizing: border-box;
-    border: 1px solid #dbe1e8;
-    border-radius: 10px;
-    outline: none;
-    background: #ffffff;
-    color: #111827;
-    font-family: inherit;
-    font-size: 14px;
-    transition:
-      border-color 0.2s ease,
-      box-shadow 0.2s ease;
-  }
-  
-  .field input,
-  .field select {
-    height: 44px;
-    padding: 0 13px;
-  }
-  
-  .field textarea {
-    min-height: 82px;
-    padding: 11px 13px;
-    resize: vertical;
-  }
-  
-  .field input::placeholder,
-  .field textarea::placeholder {
-    color: #94a3b8;
-  }
-  
-  .field input:hover,
-  .field select:hover,
-  .field textarea:hover {
-    border-color: #cbd5e1;
-  }
-  
-  .field input:focus,
-  .field select:focus,
-  .field textarea:focus {
-    border-color: #111827;
-    box-shadow: 0 0 0 3px rgba(17, 24, 39, 0.07);
-  }
-  
-  /* ================================
-     ADDRESS TYPE
-  ================================ */
-  
-  .typeSection {
-    display: flex;
-    flex-direction: column;
-    gap: 9px;
-  }
-  
-  .typeLabel {
-    color: #334155;
-    font-size: 13px;
-    font-weight: 650;
-  }
-  
   .typeOptions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
+    gap: 8px;
   }
-  
   .typeButton {
-    min-width: 90px;
-    height: 40px;
-    padding: 0 16px;
-    border: 1px solid #dbe1e8;
-    border-radius: 9px;
-    background: #ffffff;
-    color: #475569;
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-    transition:
-      border-color 0.2s ease,
-      background 0.2s ease,
-      color 0.2s ease;
+    flex: 1;
+    min-width: 0;
   }
-  
-  .typeButton:hover {
-    border-color: #94a3b8;
-    color: #111827;
-  }
-  
-  .typeButtonActive {
-    border-color: #111827;
-    background: #111827;
-    color: #ffffff;
-  }
-  
-  /* ================================
-     DEFAULT ADDRESS
-  ================================ */
-  
-  .defaultRow {
-    display: flex;
-    align-items: center;
-    gap: 9px;
-    margin-top: 2px;
-  }
-  
-  .checkbox {
-    width: 17px;
-    height: 17px;
-    margin: 0;
-    accent-color: #111827;
-    cursor: pointer;
-  }
-  
-  .defaultRow label {
-    color: #475569;
-    font-size: 13px;
-    cursor: pointer;
-  }
-  
-  /* ================================
-     ERROR
-  ================================ */
-  
-  .error {
-    padding: 11px 13px;
-    border: 1px solid #fecaca;
-    border-radius: 9px;
-    background: #fef2f2;
-    color: #b91c1c;
-    font-size: 13px;
-    line-height: 1.5;
-  }
-  
-  /* ================================
-     ACTIONS
-  ================================ */
-  
   .actions {
-    display: flex;
-    justify-content: flex-end;
-    align-items: center;
-    gap: 10px;
-    padding-top: 4px;
-    border-top: 1px solid #f1f5f9;
+    flex-direction: column-reverse;
+    align-items: stretch;
   }
-  
   .cancelButton,
   .saveButton {
-    height: 44px;
-    padding: 0 20px;
-    border-radius: 10px;
-    font-size: 13px;
-    font-weight: 700;
-    cursor: pointer;
-    transition:
-      background 0.2s ease,
-      border-color 0.2s ease,
-      transform 0.2s ease;
+    width: 100%;
   }
-  
-  .cancelButton {
-    border: 1px solid #dbe1e8;
-    background: #ffffff;
-    color: #475569;
-  }
-  
-  .cancelButton:hover:not(:disabled) {
-    border-color: #cbd5e1;
-    background: #f8fafc;
-  }
-  
-  .saveButton {
-    border: 1px solid #111827;
-    background: #111827;
-    color: #ffffff;
-  }
-  
-  .saveButton:hover:not(:disabled) {
-    background: #000000;
-    transform: translateY(-1px);
-  }
-  
-  .cancelButton:disabled,
-  .saveButton:disabled {
-    opacity: 0.55;
-    cursor: not-allowed;
-  }
-  
-  /* ================================
-     MOBILE
-  ================================ */
-  
-  @media (max-width: 640px) {
-    .form {
-      padding: 18px;
-      border-radius: 14px;
-    }
-  
-    .grid {
-      grid-template-columns: 1fr;
-      gap: 15px;
-    }
-  
-    .fullWidth {
-      grid-column: auto;
-    }
-  
-    .typeOptions {
-      gap: 8px;
-    }
-  
-    .typeButton {
-      flex: 1;
-      min-width: 0;
-    }
-  
-    .actions {
-      flex-direction: column-reverse;
-      align-items: stretch;
-    }
-  
-    .cancelButton,
-    .saveButton {
-      width: 100%;
-    }
-  }
+}

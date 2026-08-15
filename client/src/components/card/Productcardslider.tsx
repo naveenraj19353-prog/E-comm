@@ -1,36 +1,49 @@
-import React, { useRef, useId } from 'react';
-import { Swiper, SwiperSlide } from 'swiper/react';
-import { Navigation, FreeMode, Autoplay } from 'swiper/modules';
-import 'swiper/css';
-import 'swiper/css/navigation';
-import ProductCard from './Productcard';
-import styles from './ProductCardSlider.module.css';
-
-/**
- * Generic product carousel. Pass any array of product objects (see ProductCard.jsx
- * for the shape) and it renders them as a horizontally scrollable, arrow-navigable row.
- *
- * <ProductCardSlider title="You may also like" products={products} />
- */
+import { useRef } from "react";
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Navigation, FreeMode, Autoplay } from "swiper/modules";
+import "swiper/css";
+import "swiper/css/navigation";
+import ProductCard from "./Productcard";
+import styles from "./ProductCardSlider.module.css";
+import type { Product } from "../../features/products/types";
+interface ProductCardSliderProps {
+  title: string;
+  products?: Product[];
+  onToggleWishlist?: (productId: string, isAdding: boolean) => void;
+  onQuickAdd?: (productId: string) => void;
+  slidesPerView?: number;
+}
 export default function ProductCardSlider({
   title,
   products = [],
   onToggleWishlist,
+  onQuickAdd,
   slidesPerView,
-}) {
-  const uid = useId().replace(/:/g, '');
-  const prevRef = useRef(null);
-  const nextRef = useRef(null);
-console.log("ProductCardSlider", products)
-  if (products.length === 0) return null;
-
+}: ProductCardSliderProps) {
+  // const uid = useId().replace(/:/g, "");
+  const prevRef = useRef<HTMLButtonElement | null>(null);
+  const nextRef = useRef<HTMLButtonElement | null>(null);
+  if (products.length === 0) {
+    return null;
+  }
   const defaultBreakpoints = {
-    0: { slidesPerView: 1, spaceBetween: 12 },
-    560: { slidesPerView: 3, spaceBetween: 14 },
-    900: { slidesPerView: 4.2, spaceBetween: 16 },
-    1280: { slidesPerView: 4, spaceBetween: 18 },
+    0: {
+      slidesPerView: 1,
+      spaceBetween: 12,
+    },
+    560: {
+      slidesPerView: 3,
+      spaceBetween: 14,
+    },
+    900: {
+      slidesPerView: 4.2,
+      spaceBetween: 16,
+    },
+    1280: {
+      slidesPerView: 4,
+      spaceBetween: 18,
+    },
   };
-
   return (
     <section className={styles.section}>
       <div className={styles.header}>
@@ -54,35 +67,58 @@ console.log("ProductCardSlider", products)
           </button>
         </div>
       </div>
-
       <Swiper
         modules={[Navigation, FreeMode, Autoplay]}
         onBeforeInit={(swiper) => {
-          swiper.params.navigation.prevEl = prevRef.current;
-          swiper.params.navigation.nextEl = nextRef.current;
+          if (typeof swiper.params.navigation !== "boolean") {
+            swiper.params.navigation.prevEl = prevRef.current;
+            swiper.params.navigation.nextEl = nextRef.current;
+          }
         }}
-        navigation={{ prevEl: prevRef.current, nextEl: nextRef.current }}
-        freeMode={{ enabled: true, momentum: true }}
-        slidesPerView={slidesPerView || 'auto'}
+        // navigation={{
+        //   prevEl: prevRef.current,
+        //   nextEl: nextRef.current,
+        // }}
+        freeMode={{
+          enabled: true,
+          momentum: true,
+        }}
+        slidesPerView={slidesPerView || "auto"}
         spaceBetween={16}
         breakpoints={slidesPerView ? undefined : defaultBreakpoints}
         className={styles.swiper}
-        autoplay={{ delay: 2600, disableOnInteraction: false, pauseOnMouseEnter: true }}
+        autoplay={{
+          delay: 2600,
+          disableOnInteraction: false,
+          pauseOnMouseEnter: true,
+        }}
       >
         {products.map((product) => (
-          <SwiperSlide key={product.id ?? `${uid}-${product.title}`} className={styles.slide}>
-            <ProductCard product={product} onToggleWishlist={onToggleWishlist} />
+          <SwiperSlide key={product._id} className={styles.slide}>
+            <ProductCard
+              product={product}
+              onToggleWishlist={onToggleWishlist}
+              onQuickAdd={onQuickAdd}
+            />
           </SwiperSlide>
         ))}
       </Swiper>
     </section>
   );
 }
-
-function ArrowIcon({ direction = 'right' }) {
-  const rotate = direction === 'left' ? 'rotate(180deg)' : 'none';
+function ArrowIcon({ direction = "right" }: { direction?: "left" | "right" }) {
+  const rotate = direction === "left" ? "rotate(180deg)" : "none";
   return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{ transform: rotate }} aria-hidden="true">
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      style={{
+        transform: rotate,
+      }}
+      aria-hidden="true"
+    >
       <path
         d="M5 12h14M13 6l6 6-6 6"
         stroke="currentColor"

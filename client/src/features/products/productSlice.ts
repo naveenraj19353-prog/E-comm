@@ -1,5 +1,4 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
-
 export interface ProductFilters {
   categories: string[];
   colors: string[];
@@ -9,11 +8,9 @@ export interface ProductFilters {
   sort: string;
   search: string;
 }
-
 interface ProductState {
   filters: ProductFilters;
 }
-
 const getInitialFilters = (): ProductFilters => ({
   categories: [],
   colors: [],
@@ -23,16 +20,12 @@ const getInitialFilters = (): ProductFilters => ({
   sort: "newest",
   search: "",
 });
-
 const initialState: ProductState = {
   filters: getInitialFilters(),
 };
-
 const productSlice = createSlice({
   name: "products",
-
   initialState,
-
   reducers: {
     setFilters(state, action: PayloadAction<Partial<ProductFilters>>) {
       state.filters = {
@@ -40,26 +33,21 @@ const productSlice = createSlice({
         ...action.payload,
       };
     },
-
     clearFilters(state) {
       state.filters = getInitialFilters();
     },
-
     clearCategoryFilter(state) {
       state.filters.categories = [];
     },
-
     clearSearchFilter(state) {
       state.filters.search = "";
     },
   },
 });
-
 export const {
   setFilters,
   clearFilters,
   clearCategoryFilter,
   clearSearchFilter,
 } = productSlice.actions;
-
 export default productSlice.reducer;

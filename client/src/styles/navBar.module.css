@@ -1,7 +1,3 @@
-/* ============================================================
-   Navbar
-============================================================ */
-
 .navbar {
   --nt-green: #2f6b52;
   --nt-green-light: #4c8a6d;
@@ -9,17 +5,12 @@
   --nt-text-muted: #5b6a63;
   --nt-border: #e7e9e8;
   --nt-bg: #ffffff;
-
   position: sticky;
   top: 0;
-
   z-index: 100;
-
   width: 100%;
-
   background: var(--nt-bg);
   border-bottom: 1px solid var(--nt-border);
-
   font-family:
     "Segoe UI",
     Roboto,
@@ -27,1032 +18,597 @@
     BlinkMacSystemFont,
     sans-serif;
 }
-
-
-/* ============================================================
-   Container
-============================================================ */
-
 .container {
   max-width: 1280px;
   height: 64px;
-
   margin: 0 auto;
   padding: 0 24px;
-
   display: flex;
   align-items: center;
-
   gap: 24px;
 }
-
-
-/* ============================================================
-   Logo
-============================================================ */
-
 .logo {
   display: flex;
   align-items: center;
-
   gap: 10px;
-
   padding: 0;
-
   border: none;
   background: transparent;
-
   text-decoration: none;
-
   cursor: pointer;
-
   flex-shrink: 0;
 }
-
 .logoIcon {
   width: 32px;
   height: 32px;
-
   border-radius: 8px;
-
-  background: linear-gradient(
-    135deg,
-    var(--nt-green),
-    var(--nt-green-light)
-  );
-
+  background: linear-gradient(135deg, var(--nt-green), var(--nt-green-light));
   color: #ffffff;
-
   display: flex;
   align-items: center;
   justify-content: center;
-
   font-size: 12px;
   font-weight: 800;
-
   flex-shrink: 0;
 }
-
 .logoText {
   font-size: 17px;
   font-weight: 700;
-
   color: var(--nt-text);
-
   letter-spacing: -0.01em;
-
   white-space: nowrap;
 }
-
-
-/* ============================================================
-   Desktop Navigation
-============================================================ */
-
 .navLinks {
   display: flex;
   align-items: center;
-
   gap: 28px;
-
   flex: 1;
 }
-
 .navLink {
   position: relative;
-
   padding: 4px 0;
-
   border: none;
   background: transparent;
-
   font-family: inherit;
-
   font-size: 14px;
   font-weight: 600;
-
   color: var(--nt-text-muted);
-
   cursor: pointer;
-
   white-space: nowrap;
-
   transition:
     color 0.15s ease,
     transform 0.15s ease;
 }
-
 .navLink:hover {
   color: var(--nt-green);
 }
-
 .navLink:active {
   transform: translateY(1px);
 }
-
 .navLink:focus-visible {
   outline: 2px solid var(--nt-green);
   outline-offset: 4px;
   border-radius: 4px;
 }
-
-
-/* ============================================================
-   Right Section
-============================================================ */
-
 .rightSection {
   display: flex;
   align-items: center;
-
   gap: 14px;
-
   margin-left: auto;
-
   flex-shrink: 0;
 }
-
-
-/* ============================================================
-   Desktop Search
-============================================================ */
-
 .searchWrapper {
   display: flex;
   align-items: center;
-
   gap: 8px;
-
   width: 260px;
-
   padding: 7px 10px 7px 14px;
-
   border: 1px solid var(--nt-border);
-
   border-radius: 999px;
-
   background: #fafbfa;
-
   color: var(--nt-text-muted);
-
   transition:
     border-color 0.15s ease,
     box-shadow 0.15s ease,
     background 0.15s ease;
 }
-
 .searchWrapper:focus-within {
   border-color: var(--nt-green-light);
-
   background: #ffffff;
-
-  box-shadow:
-    0 0 0 3px rgba(47, 107, 82, 0.08);
+  box-shadow: 0 0 0 3px rgba(47, 107, 82, 0.08);
 }
-
 .searchWrapper .searchIcon {
   flex-shrink: 0;
 }
-
 .searchInput {
   min-width: 0;
-
   width: 100%;
-
   border: none;
   outline: none;
-
   background: transparent;
-
   font-family: inherit;
-
   font-size: 14px;
-
   color: var(--nt-text);
 }
-
 .searchInput::placeholder {
   color: #9aa5a0;
 }
-
 .searchIcon {
   color: #9aa5a0;
-
   flex-shrink: 0;
 }
-
-
-/* ============================================================
-   Search Button
-============================================================ */
-
 .searchButton {
   width: 30px;
   height: 30px;
-
   display: flex;
   align-items: center;
   justify-content: center;
-
   padding: 0;
-
   border: none;
-
   background: transparent;
-
   color: var(--nt-text-muted);
-
   cursor: pointer;
-
   border-radius: 50%;
-
   flex-shrink: 0;
-
   transition:
     color 0.15s ease,
     background 0.15s ease;
 }
-
 .searchButton:hover {
   color: var(--nt-green);
-
   background: #f1f3f2;
 }
-
 .searchButton:focus-visible {
   outline: 2px solid var(--nt-green);
   outline-offset: 2px;
 }
-
-
-/* ============================================================
-   Icon Buttons
-============================================================ */
-
 .iconButton {
   position: relative;
-
   display: none;
-
   align-items: center;
   justify-content: center;
-
   width: 36px;
   height: 36px;
-
   padding: 0;
-
   border: none;
-
   background: transparent;
-
   color: var(--nt-text);
-
   cursor: pointer;
-
   border-radius: 999px;
-
   flex-shrink: 0;
-
   transition:
     background 0.15s ease,
     color 0.15s ease;
 }
-
 .iconButton:hover {
   background: #f1f3f2;
 }
-
 .iconButton:focus-visible {
   outline: 2px solid var(--nt-green);
   outline-offset: 2px;
 }
-
-
-/* ============================================================
-   Wishlist + Cart
-============================================================ */
-
 .rightSection .iconButton {
   display: flex;
 }
-
-
-/* First icon button = search trigger */
-
 .rightSection > .iconButton:first-of-type {
   display: none;
 }
-
-
-/* ============================================================
-   Badge
-============================================================ */
-
 .badge {
   position: absolute;
-
   top: -2px;
   right: -2px;
-
   min-width: 16px;
   height: 16px;
-
   padding: 0 3px;
-
   border-radius: 999px;
-
   background: var(--nt-green);
-
   color: #ffffff;
-
   font-size: 10px;
   font-weight: 700;
-
   display: flex;
   align-items: center;
   justify-content: center;
-
   line-height: 1;
-
   pointer-events: none;
 }
-
-
-/* ============================================================
-   Avatar
-============================================================ */
-
 .avatar {
   width: 34px;
   height: 34px;
-color: #ffffff;
+  color: #ffffff;
   padding: 0;
-
   border: none;
-
   border-radius: 50%;
-
-  background: linear-gradient(
-    135deg,
-    var(--nt-green-light),
-    var(--nt-green)
-  );
-
+  background: linear-gradient(135deg, var(--nt-green-light), var(--nt-green));
   flex-shrink: 0;
-
   cursor: pointer;
 }
-
 .avatar:focus-visible {
   outline: 2px solid var(--nt-green);
   outline-offset: 2px;
 }
-
-
-/* ============================================================
-   Hamburger
-============================================================ */
-
 .menuButton {
   display: none;
-
   flex-direction: column;
   justify-content: center;
   align-items: center;
-
   gap: 5px;
-
   width: 36px;
   height: 36px;
-
   padding: 0;
-
   border: none;
-
   background: transparent;
-
   cursor: pointer;
-
   border-radius: 50%;
 }
-
 .menuButton:hover {
   background: #f1f3f2;
 }
-
 .menuButton:focus-visible {
   outline: 2px solid var(--nt-green);
   outline-offset: 2px;
 }
-
 .menuButton span {
   display: block;
-
   width: 20px;
   height: 2px;
-
   border-radius: 2px;
-
   background: var(--nt-text);
-
   transition:
     transform 0.3s ease,
     opacity 0.2s ease;
 }
-
 .menuButtonOpen span:nth-child(1) {
   transform: translateY(7px) rotate(45deg);
 }
-
 .menuButtonOpen span:nth-child(2) {
   opacity: 0;
 }
-
 .menuButtonOpen span:nth-child(3) {
   transform: translateY(-7px) rotate(-45deg);
 }
-
-
-/* ============================================================
-   Tablet / Mobile Search Row
-============================================================ */
-
 .searchRow {
   display: none;
-
   align-items: center;
-
   gap: 8px;
-
   max-height: 0;
-
   overflow: hidden;
-
   padding: 0 24px;
-
   border-top: 1px solid transparent;
-
   background: var(--nt-bg);
-
   transition:
     max-height 0.28s ease,
     padding 0.28s ease,
     border-color 0.28s ease;
 }
-
 .searchRowOpen {
   max-height: 64px;
-
   padding: 10px 24px;
-
   border-top-color: var(--nt-border);
 }
-
 .searchRow .searchInput {
   padding: 8px 0;
 }
-
 .searchRow .searchIcon {
   flex-shrink: 0;
 }
-
 .searchRow .searchButton {
   flex-shrink: 0;
 }
-
-
-/* ============================================================
-   Overlay
-============================================================ */
-
 .overlay {
   position: fixed;
-
   inset: 0;
-
   background: rgba(15, 23, 20, 0.45);
-
   opacity: 0;
-
   visibility: hidden;
-
   pointer-events: none;
-
   transition:
     opacity 0.25s ease,
     visibility 0.25s ease;
-
   z-index: 999;
 }
-
 .overlayVisible {
   opacity: 1;
-
   visibility: visible;
-
   pointer-events: auto;
 }
-
-
-/* ============================================================
-   Mobile Menu
-============================================================ */
-
 .mobileMenu {
   position: fixed;
-
   top: 0;
   right: 0;
-
   width: min(340px, 88vw);
   height: 100dvh;
-
   background: #ffffff;
-
-  box-shadow:
-    -12px 0 35px rgba(0, 0, 0, 0.12);
-
+  box-shadow: -12px 0 35px rgba(0, 0, 0, 0.12);
   transform: translateX(100%);
-
-  transition:
-    transform 0.32s cubic-bezier(0.22, 1, 0.36, 1);
-
+  transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1);
   z-index: 1000;
-
   display: flex;
   flex-direction: column;
-
   overflow-y: auto;
-
   overscroll-behavior: contain;
 }
-
 .mobileMenuOpen {
   transform: translateX(0);
 }
-
-
-/* ============================================================
-   Mobile Menu Header
-============================================================ */
-
 .mobileMenuHeader {
   min-height: 68px;
-
   display: flex;
-
   align-items: center;
   justify-content: space-between;
-
   padding: 0 20px;
-
   border-bottom: 1px solid var(--nt-border);
-
   background: #ffffff;
-
   flex-shrink: 0;
 }
-
 .mobileMenuTitle {
   display: flex;
   align-items: center;
-
   gap: 10px;
 }
-
 .mobileMenuLogo {
   width: 32px;
   height: 32px;
-
   display: flex;
   align-items: center;
   justify-content: center;
-
   border-radius: 8px;
-
-  background: linear-gradient(
-    135deg,
-    var(--nt-green),
-    var(--nt-green-light)
-  );
-
+  background: linear-gradient(135deg, var(--nt-green), var(--nt-green-light));
   color: #ffffff;
-
   font-size: 11px;
   font-weight: 800;
 }
-
 .mobileMenuText {
   font-size: 18px;
-
   font-weight: 700;
-
   color: var(--nt-text);
 }
-
-
-/* ============================================================
-   Close Button
-============================================================ */
-
 .closeButton {
   width: 38px;
   height: 38px;
-
   display: flex;
   align-items: center;
   justify-content: center;
-
   padding: 0;
-
   border: none;
-
   border-radius: 50%;
-
   background: #f3f5f4;
-
   color: var(--nt-text);
-
   cursor: pointer;
-
   transition:
     background 0.2s ease,
     color 0.2s ease,
     transform 0.2s ease;
 }
-
 .closeButton:hover {
   background: #e8ecea;
-
   color: var(--nt-green);
-
   transform: rotate(90deg);
 }
-
 .closeButton:active {
   transform: rotate(90deg) scale(0.95);
 }
-
 .closeButton:focus-visible {
   outline: 2px solid var(--nt-green);
-
   outline-offset: 2px;
 }
-
-
-/* ============================================================
-   Mobile Navigation
-============================================================ */
-
 .mobileNavLinks {
   display: flex;
-
   flex-direction: column;
-
   gap: 6px;
-
   padding: 18px 14px 24px;
 }
-
 .mobileNavLink {
   width: 100%;
   min-height: 52px;
-
   display: flex;
   align-items: center;
   justify-content: space-between;
-
   padding: 0 16px;
-
   border: none;
-
   border-radius: 10px;
-
   background: transparent;
-
   color: var(--nt-text);
-
   font-family: inherit;
-
   font-size: 15px;
-
   font-weight: 600;
-
   text-align: left;
-
   cursor: pointer;
-
   opacity: 0;
-
   transform: translateX(18px);
-
   transition:
     opacity 0.3s ease,
     transform 0.3s ease,
     background 0.2s ease,
     color 0.2s ease;
 }
-
 .mobileMenuOpen .mobileNavLink {
   opacity: 1;
-
   transform: translateX(0);
 }
-
 .mobileNavLink svg {
   color: #9aa5a0;
-
   transition:
     color 0.2s ease,
     transform 0.2s ease;
 }
-
 .mobileNavLink:hover {
   background: #f1f5f3;
-
   color: var(--nt-green);
 }
-
 .mobileNavLink:hover svg {
   color: var(--nt-green);
-
   transform: translateX(3px);
 }
-
 .mobileNavLink:active {
   background: #e5eee9;
 }
-
 .mobileNavLink:focus-visible {
   outline: 2px solid var(--nt-green);
-
   outline-offset: -2px;
 }
-
-
-/* ============================================================
-   Mobile Menu Footer
-============================================================ */
-
 .mobileMenuFooter {
   margin-top: auto;
-
   display: grid;
-
   grid-template-columns: repeat(3, 1fr);
-
   gap: 8px;
-
   padding: 16px 14px 20px;
-
   border-top: 1px solid var(--nt-border);
 }
-
 .mobileMenuFooter button {
   min-height: 42px;
-
   border: 1px solid var(--nt-border);
-
   border-radius: 9px;
-
   background: #fafbfa;
-
   color: var(--nt-text);
-
   font-family: inherit;
-
   font-size: 12px;
-
   font-weight: 600;
-
   cursor: pointer;
-
   transition:
     background 0.2s ease,
     border-color 0.2s ease,
     color 0.2s ease;
 }
-
 .mobileMenuFooter button:hover {
   background: #f1f5f3;
-
   border-color: #cfdad4;
-
   color: var(--nt-green);
 }
-
-
-/* ============================================================
-   Desktop
-   > 1024px
-============================================================ */
-
 @media (min-width: 1025px) {
   .navLinks {
     display: flex;
   }
-
   .searchWrapper {
     display: flex;
   }
-
   .searchRow {
     display: none;
   }
-
   .menuButton {
     display: none;
   }
-
   .mobileMenu,
   .overlay {
     display: none;
   }
 }
-
-
-/* ============================================================
-   Tablet
-   641px - 1024px
-============================================================ */
-
 @media (max-width: 1024px) {
   .container {
     gap: 16px;
   }
-
   .navLinks {
     display: none;
   }
-
   .searchWrapper {
     display: none;
   }
-
-  /* First icon = search trigger */
   .rightSection > .iconButton:first-of-type {
     display: flex;
   }
-
   .menuButton {
     display: flex;
   }
-
   .searchRow {
     display: flex;
   }
 }
-
-
-/* ============================================================
-   Mobile
-   <= 640px
-============================================================ */
-
 @media (max-width: 640px) {
   .container {
     height: 58px;
-
     padding: 0 14px;
-
     gap: 10px;
   }
-
   .logo {
     gap: 8px;
   }
-
   .logoIcon {
     width: 30px;
     height: 30px;
-
     border-radius: 7px;
   }
-
   .logoText {
     font-size: 15px;
   }
-
   .rightSection {
     gap: 5px;
   }
-
   .iconButton {
     width: 34px;
     height: 34px;
   }
-
   .menuButton {
     width: 34px;
     height: 34px;
   }
-
   .avatar {
     display: none;
   }
-
   .searchRow {
     padding-left: 14px;
     padding-right: 14px;
   }
-
   .searchRowOpen {
     padding: 9px 14px;
   }
-
   .mobileMenu {
     width: min(330px, 90vw);
   }
-
   .mobileMenuHeader {
     min-height: 62px;
-
     padding: 0 16px;
   }
-
   .mobileMenuText {
     font-size: 17px;
   }
-
   .mobileNavLinks {
     padding: 16px 12px 24px;
-
     gap: 5px;
   }
-
   .mobileNavLink {
     min-height: 52px;
-
     padding: 0 16px;
-
     font-size: 15px;
   }
-
   .closeButton {
     width: 36px;
     height: 36px;
   }
 }
-
-
-/* ============================================================
-   Very Small Mobile
-   <= 380px
-============================================================ */
-
 @media (max-width: 380px) {
   .container {
     padding: 0 10px;
-
     gap: 6px;
   }
-
   .logoText {
     display: none;
   }
-
   .rightSection {
     gap: 3px;
   }
-
   .logoIcon {
     width: 29px;
     height: 29px;
   }
-
   .iconButton,
   .menuButton {
     width: 32px;
     height: 32px;
   }
-
   .mobileMenu {
     width: 88vw;
   }
-
   .mobileMenuHeader {
     padding: 0 14px;
   }
-
   .mobileNavLinks {
     padding-left: 10px;
-
     padding-right: 10px;
   }
-
   .mobileMenuFooter {
     grid-template-columns: 1fr;
-
     gap: 6px;
   }
 }
-
-
-/* ============================================================
-   Reduced Motion
-============================================================ */
-
 @media (prefers-reduced-motion: reduce) {
   .mobileMenu,
   .menuButton span,
@@ -1066,4 +622,3 @@ color: #ffffff;
     transition-duration: 0.01ms !important;
   }
 }
-

@@ -1,177 +1,100 @@
 import { X } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
-
 import { useAppDispatch, useAppSelector } from "../../app/hooks";
-
 import { setFilters, clearFilters } from "../../features/products/productSlice";
-
 import styles from "./AppliedFilters.module.css";
-
 const AppliedFilters = () => {
   const dispatch = useAppDispatch();
-
   const [searchParams, setSearchParams] = useSearchParams();
-
   const filters = useAppSelector((state) => state.products.filters);
-
-  /* =========================================================
-     SEARCH
-  ========================================================= */
-
   const search = searchParams.get("search") ?? "";
-
   const removeSearch = () => {
     const params = new URLSearchParams(searchParams);
-
     params.delete("search");
     params.set("page", "1");
-
     dispatch(
       setFilters({
         search: "",
-      })
+      }),
     );
-
     setSearchParams(params);
   };
-
-  /* =========================================================
-     CATEGORY
-  ========================================================= */
-
   const removeCategory = (category: string) => {
     const params = new URLSearchParams(searchParams);
-
     const categories = params
       .getAll("categoryIds")
       .filter((item) => item !== category);
-
     params.delete("categoryIds");
-
     categories.forEach((item) => {
       params.append("categoryIds", item);
     });
-
     params.set("page", "1");
-
     dispatch(
       setFilters({
         categories,
-      })
+      }),
     );
-
     setSearchParams(params);
   };
-
-  /* =========================================================
-     COLOR
-  ========================================================= */
-
   const removeColor = (color: string) => {
     const params = new URLSearchParams(searchParams);
-
     const colors = params.getAll("colors").filter((item) => item !== color);
-
     params.delete("colors");
-
     colors.forEach((item) => {
       params.append("colors", item);
     });
-
     params.set("page", "1");
-
     dispatch(
       setFilters({
         colors,
-      })
+      }),
     );
-
     setSearchParams(params);
   };
-
-  /* =========================================================
-     SIZE
-  ========================================================= */
-
   const removeSize = (size: string) => {
     const params = new URLSearchParams(searchParams);
-
     const sizes = params.getAll("sizes").filter((item) => item !== size);
-
     params.delete("sizes");
-
     sizes.forEach((item) => {
       params.append("sizes", item);
     });
-
     params.set("page", "1");
-
     dispatch(
       setFilters({
         sizes,
-      })
+      }),
     );
-
     setSearchParams(params);
   };
-
-  /* =========================================================
-     RATING
-  ========================================================= */
-
   const removeRating = () => {
     const params = new URLSearchParams(searchParams);
-
     params.delete("rating");
     params.set("page", "1");
-
     dispatch(
       setFilters({
         rating: null,
-      })
+      }),
     );
-
     setSearchParams(params);
   };
-
-  /* =========================================================
-     PRICE
-  ========================================================= */
-
   const removePrice = () => {
     const params = new URLSearchParams(searchParams);
-
     params.delete("minPrice");
     params.delete("maxPrice");
-
     params.set("page", "1");
-
     dispatch(
       setFilters({
         priceRange: [0, 100000],
-      })
+      }),
     );
-
     setSearchParams(params);
   };
-
-  /* =========================================================
-     CLEAR ALL
-  ========================================================= */
-
   const clearAll = () => {
     dispatch(clearFilters());
-
     setSearchParams({});
   };
-
-  /* =========================================================
-     CHECK
-  ========================================================= */
-
   const hasPriceFilter =
     filters.priceRange[0] !== 0 || filters.priceRange[1] !== 100000;
-
   const hasFilters =
     Boolean(search) ||
     filters.categories.length > 0 ||
@@ -179,15 +102,9 @@ const AppliedFilters = () => {
     filters.sizes.length > 0 ||
     filters.rating !== null ||
     hasPriceFilter;
-
   if (!hasFilters) {
     return null;
   }
-
-  /* =========================================================
-     UI
-  ========================================================= */
-
   return (
     <div className={styles.wrapper}>
       <div className={styles.chips}>
@@ -197,7 +114,6 @@ const AppliedFilters = () => {
             <X size={14} />
           </button>
         )}
-
         {filters.categories.map((category) => (
           <button
             type="button"
@@ -209,7 +125,6 @@ const AppliedFilters = () => {
             <X size={14} />
           </button>
         ))}
-
         {filters.colors.map((color) => (
           <button
             type="button"
@@ -221,7 +136,6 @@ const AppliedFilters = () => {
             <X size={14} />
           </button>
         ))}
-
         {filters.sizes.map((size) => (
           <button
             type="button"
@@ -233,14 +147,12 @@ const AppliedFilters = () => {
             <X size={14} />
           </button>
         ))}
-
         {filters.rating !== null && (
           <button type="button" className={styles.chip} onClick={removeRating}>
             {filters.rating}★ & Up
             <X size={14} />
           </button>
         )}
-
         {hasPriceFilter && (
           <button type="button" className={styles.chip} onClick={removePrice}>
             ₹{filters.priceRange[0]}
@@ -249,12 +161,10 @@ const AppliedFilters = () => {
           </button>
         )}
       </div>
-
       <button type="button" className={styles.clear} onClick={clearAll}>
         Clear All
       </button>
     </div>
   );
 };
-
 export default AppliedFilters;

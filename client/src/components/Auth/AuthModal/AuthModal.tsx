@@ -1,26 +1,16 @@
 import { useState } from "react";
 import { X } from "lucide-react";
-
 import styles from "./AuthModal.module.css";
 import LoginForm from "../LoginForm/LoginForm";
 import RegisterForm from "../RegisterForm/RegisterForm";
-
-
 interface AuthModalProps {
   tenantId: string;
   onClose: () => void;
   onSuccess: () => void;
 }
-
 export type AuthMode = "login" | "register";
-
-const AuthModal = ({
-  tenantId,
-  onClose,
-  onSuccess,
-}: AuthModalProps) => {
+const AuthModal = ({ tenantId, onClose, onSuccess }: AuthModalProps) => {
   const [mode, setMode] = useState<AuthMode>("login");
-
   return (
     <div
       className={styles.overlay}
@@ -44,7 +34,6 @@ const AuthModal = ({
         >
           <X size={20} />
         </button>
-
         {mode === "login" ? (
           <LoginForm
             tenantId={tenantId}
@@ -61,5 +50,4 @@ const AuthModal = ({
     </div>
   );
 };
-
 export default AuthModal;

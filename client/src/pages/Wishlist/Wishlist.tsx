@@ -1,75 +1,41 @@
 import { useState } from "react";
 import { Heart } from "lucide-react";
-
 import { useWishlist } from "../../features/wishlist/hooks/useWishlist";
 import { useCart } from "../../features/cart/hooks/useCart";
-
 import styles from "./Wishlist.module.css";
-
 import ProductCard from "../../components/ProductCard/UniCard/ProductCard";
-
+import { useAuth } from "../../features/auth/hooks/useAuth";
 const Wishlist = () => {
-  const userId = "6a4c664aad39d00258ffc0ba";
-  const tenantId = "TENANT001";
-
-  // ============================================================
-  // WISHLIST
-  // ============================================================
-
+  const user = useAuth().user;
   const { wishlist, wishlistCount, isLoading, removeFromWishlist } =
-    useWishlist(userId, tenantId);
-
-  // ============================================================
-  // CART
-  // ============================================================
-
-  const { addToCart } = useCart(userId, tenantId);
-
+    useWishlist(user?._id, user?.tenantId);
+  const { addToCart } = useCart(user?._id, user?.tenantId);
   const [addingProductId, setAddingProductId] = useState<string | null>(null);
-
-  // ============================================================
-  // LOADING
-  // ============================================================
-
   if (isLoading) {
     return (
       <div className={styles.loading}>
         <Heart size={28} />
-
         <span>Loading your wishlist...</span>
       </div>
     );
   }
-
-  // ============================================================
-  // EMPTY
-  // ============================================================
-
   if (wishlist.length === 0) {
     return (
       <div className={styles.empty}>
         <div className={styles.emptyIcon}>
           <Heart size={38} />
         </div>
-
         <h1>Your Wishlist Is Empty</h1>
-
         <p>Save your favorite products here and come back to them anytime.</p>
       </div>
     );
   }
-
-  // ============================================================
-  // ADD TO CART
-  // ============================================================
-
   const handleAddToCart = async (productId: string) => {
     try {
       setAddingProductId(productId);
-
       await addToCart({
-        tenantId,
-        userId,
+        tenantId: user?.tenantId,
+        userId: user?._id,
         productId,
         quantity: 1,
       });
@@ -79,11 +45,6 @@ const Wishlist = () => {
       setAddingProductId(null);
     }
   };
-
-  // ============================================================
-  // REMOVE FROM WISHLIST
-  // ============================================================
-
   const handleWishlist = async (productId: string) => {
     try {
       await removeFromWishlist(productId);
@@ -91,37 +52,22 @@ const Wishlist = () => {
       console.error("Remove from wishlist failed:", error);
     }
   };
-
-  // ============================================================
-  // UI
-  // ============================================================
-
   return (
     <div className={styles.container}>
-      {/* Header */}
-
+      
       <div className={styles.header}>
         <div className={styles.eyebrow}>
           <Heart size={15} />
           Saved For Later
         </div>
-
         <h1>My Wishlist</h1>
-
         <p>
           {wishlistCount} {wishlistCount === 1 ? "product" : "products"} saved
         </p>
       </div>
-
-      {/* Product Grid */}
-
+      
       <div className={styles.grid}>
         {wishlist.map((item) => {
-          /*
-           * Convert WishlistItem into the
-           * common ProductCardData shape.
-           */
-
           const product = {
             _id: item.productId,
             name: item.name,
@@ -133,7 +79,6 @@ const Wishlist = () => {
             averageRating: 0,
             reviewCount: 0,
           };
-
           return (
             <ProductCard
               key={item.productId}
@@ -149,5 +94,4 @@ const Wishlist = () => {
     </div>
   );
 };
-
 export default Wishlist;

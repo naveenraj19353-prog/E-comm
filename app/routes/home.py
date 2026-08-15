@@ -2,32 +2,19 @@ from fastapi import APIRouter, HTTPException, Query
 
 from app.services.home_service import get_home_data
 
-
-router = APIRouter(
-    prefix="/home",
-    tags=["Home"]
-)
+router = APIRouter(prefix="/home", tags=["Home"])
 
 
 # ============================================================
 # GET HOME PAGE DATA
 # ============================================================
 
+
 @router.get("/")
 def get_home(
     tenantId: str,
-
-    productLimit: int = Query(
-        default=10,
-        ge=1,
-        le=50
-    ),
-
-    categoryLimit: int = Query(
-        default=12,
-        ge=1,
-        le=50
-    )
+    productLimit: int = Query(default=10, ge=1, le=50),
+    categoryLimit: int = Query(default=12, ge=1, le=50),
 ):
 
     try:
@@ -37,9 +24,7 @@ def get_home(
         # ----------------------------------------------------
 
         data = get_home_data(
-            tenant_id=tenantId,
-            product_limit=productLimit,
-            category_limit=categoryLimit
+            tenant_id=tenantId, product_limit=productLimit, category_limit=categoryLimit
         )
 
         # ----------------------------------------------------
@@ -49,7 +34,7 @@ def get_home(
         return {
             "success": True,
             "message": "Home data fetched successfully.",
-            "data": data
+            "data": data,
         }
 
     except Exception as e:
@@ -60,7 +45,4 @@ def get_home(
         print(str(e))
         print("====================================")
 
-        raise HTTPException(
-            status_code=500,
-            detail="Unable to load home page."
-        )
+        raise HTTPException(status_code=500, detail="Unable to load home page.")

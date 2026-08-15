@@ -1,10 +1,10 @@
-import React from 'react';
-import { Swiper, SwiperSlide } from 'swiper/react';
-import { Navigation, Pagination, Autoplay, Keyboard } from 'swiper/modules';
-import 'swiper/css';
-import 'swiper/css/navigation';
-import 'swiper/css/pagination';
-import styles from './HeroSlider.module.css';
+import React from "react";
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Navigation, Pagination, Autoplay, Keyboard } from "swiper/modules";
+import "swiper/css";
+import "swiper/css/navigation";
+import "swiper/css/pagination";
+import styles from "./HeroSlider.module.css";
 
 /**
  * Pass an array of slide objects as `slides`. Each slide shape:
@@ -23,12 +23,19 @@ import styles from './HeroSlider.module.css';
  *   badge: { eyebrow: 'LIMITED EDITION', title: 'Quantum Series X', price: '$1,299' },
  * }
  */
-export default function HeroSlider({ slides = [], autoPlay = true, interval = 2000, announcement }) {
+export default function HeroSlider({
+  slides = [],
+  autoPlay = true,
+  interval = 2000,
+  announcement,
+}) {
   if (slides.length === 0) return null;
 
   return (
     <section className={styles.wrapper}>
-      {announcement && <div className={styles.announcementBar}>{announcement}</div>}
+      {announcement && (
+        <div className={styles.announcementBar}>{announcement}</div>
+      )}
 
       <Swiper
         modules={[Navigation, Pagination, Autoplay, Keyboard]}
@@ -44,7 +51,11 @@ export default function HeroSlider({ slides = [], autoPlay = true, interval = 20
         }}
         autoplay={
           autoPlay
-            ? { delay: interval, disableOnInteraction: false, pauseOnMouseEnter: true }
+            ? {
+                delay: interval,
+                disableOnInteraction: false,
+                pauseOnMouseEnter: true,
+              }
             : false
         }
         keyboard={{ enabled: true }}
@@ -60,10 +71,18 @@ export default function HeroSlider({ slides = [], autoPlay = true, interval = 20
 
         {slides.length > 1 && (
           <>
-            <button type="button" className={`${styles.arrow} ${styles.arrowLeft}`} aria-label="Previous slide">
+            <button
+              type="button"
+              className={`${styles.arrow} ${styles.arrowLeft}`}
+              aria-label="Previous slide"
+            >
               <ArrowIcon direction="left" />
             </button>
-            <button type="button" className={`${styles.arrow} ${styles.arrowRight}`} aria-label="Next slide">
+            <button
+              type="button"
+              className={`${styles.arrow} ${styles.arrowRight}`}
+              aria-label="Next slide"
+            >
               <ArrowIcon direction="right" />
             </button>
             <div className={styles.dots} />
@@ -100,13 +119,13 @@ function Slide({ slide }) {
 
         <div className={styles.ctaRow}>
           {primaryCta && (
-            <a href={primaryCta.href || '#'} className={styles.primaryCta}>
+            <a href={primaryCta.href || "#"} className={styles.primaryCta}>
               {primaryCta.label}
               <ArrowIcon direction="right" small />
             </a>
           )}
           {secondaryCta && (
-            <a href={secondaryCta.href || '#'} className={styles.secondaryCta}>
+            <a href={secondaryCta.href || "#"} className={styles.secondaryCta}>
               {secondaryCta.label}
             </a>
           )}
@@ -132,14 +151,22 @@ function Slide({ slide }) {
 
       <div className={styles.imageColumn}>
         <div className={styles.imageCard}>
-          {image && <img src={image} alt={badge?.title || ''} className={styles.image} />}
+          {image && (
+            <img
+              src={image}
+              alt={badge?.title || ""}
+              className={styles.image}
+            />
+          )}
           {badge && (
             <div className={styles.imageBadge}>
               <div>
                 <span className={styles.badgeEyebrow}>{badge.eyebrow}</span>
                 <span className={styles.badgeTitle}>{badge.title}</span>
               </div>
-              {badge.price && <span className={styles.badgePrice}>{badge.price}</span>}
+              {badge.price && (
+                <span className={styles.badgePrice}>{badge.price}</span>
+              )}
             </div>
           )}
         </div>
@@ -151,14 +178,14 @@ function Slide({ slide }) {
 function Stars({ count }) {
   return (
     <span className={styles.stars} aria-hidden="true">
-      {'★'.repeat(count)}
+      {"★".repeat(count)}
     </span>
   );
 }
 
-function ArrowIcon({ direction = 'right', small = false }) {
+function ArrowIcon({ direction = "right", small = false }) {
   const size = small ? 14 : 18;
-  const rotate = direction === 'left' ? 'rotate(180deg)' : 'none';
+  const rotate = direction === "left" ? "rotate(180deg)" : "none";
   return (
     <svg
       width={size}

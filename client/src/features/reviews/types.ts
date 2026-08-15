@@ -11,13 +11,11 @@ export interface Review {
   userName?: string;
   images?: string[];
 }
-
 export interface ReviewsResponse {
   success: boolean;
   count: number;
   data: Review[];
 }
-
 export interface CreateReviewRequest {
   tenantId: string;
   productId: string;

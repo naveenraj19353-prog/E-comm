@@ -31,7 +31,6 @@ export interface ProductSearchRequest {
   limit?: number;
   sort?: string;
 }
-
 export interface ProductQueryParams {
   tenantId: string;
   page?: number;
@@ -57,7 +56,6 @@ export interface ProductsResponse {
   hasPreviousPage: boolean;
   data: Product[];
 }
-
 export interface Category {
   _id: string;
   tenantId: string;
