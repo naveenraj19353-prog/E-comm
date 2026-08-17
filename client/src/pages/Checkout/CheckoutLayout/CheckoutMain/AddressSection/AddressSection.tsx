@@ -11,8 +11,8 @@ interface AddressSectionProps {
   onAddressSelect?: (address: Address) => void;
 }
 const AddressSection = ({
-  userId = "686f91a3d1c6a23456789abc",
-  tenantId = "TENANT001",
+  userId ,
+  tenantId  ,
   onAddressSelect,
 }: AddressSectionProps) => {
   const {

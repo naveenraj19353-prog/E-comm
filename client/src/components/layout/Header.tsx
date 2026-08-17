@@ -1,186 +1,346 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import styles from "../../styles/navBar.module.css";
 import { ShoppingCart } from "lucide-react";
+
+import styles from "../../styles/navBar.module.css";
+
 import { useCart } from "../../features/cart/hooks/useCart";
 import { useWishlist } from "../../features/wishlist/hooks/useWishlist";
 import { useAuth } from "../../features/auth/hooks/useAuth";
-const NAV_LINKS = [
-  {
-    label: "Electronics",
-    categoryId: "ELECTRONICS",
-  },
-  {
-    label: "Accessories",
-    categoryId: "ACCESSORIES",
-  },
-  {
-    label: "Home Decor",
-    categoryId: "HOME_DECOR",
-  },
-  {
-    label: "Lighting",
-    categoryId: "LIGHTING",
-  },
-];
+import { useCategory } from "../../features/products/hooks/useCategory";
+
+interface Category {
+  _id?: string;
+  categoryId?: string;
+  name: string;
+  slug?: string;
+}
+
 const getInitials = (name?: string) => {
-  if (!name?.trim()) return "NA";
+  if (!name?.trim()) {
+    return "NA";
+  }
+
   const parts = name.trim().split(/\s+/);
+
   return ((parts[0]?.[0] || "N") + (parts[1]?.[0] || "A")).toUpperCase();
 };
+
 export default function Navbar() {
-  const user = useAuth().user;
-  const { cartCount } = useCart(user?._id, user?.tenantId);
-  const { wishlistCount } = useWishlist(user?._id, user?.tenantId);
-  console.log("User in Navbar:", user);
-  console.log("Cart Count in Navbar:", cartCount);
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [searchOpen, setSearchOpen] = useState(false);
-  const [searchValue, setSearchValue] = useState("");
-  const menuRef = useRef<HTMLElement | null>(null);
   const navigate = useNavigate();
-  const { tenantSlug } = useParams();
+
+  const { tenantSlug } = useParams<{
+    tenantSlug: string;
+  }>();
+
+  const { user } = useAuth();
+
+  const tenantId = tenantSlug || "";
+
+  /*
+   * ================================
+   * CATEGORY API
+   * ================================
+   */
+  const { data: categoryResponse, isLoading: categoriesLoading } =
+    useCategory(tenantId);
+
+  /*
+   * ================================
+   * CART
+   * ================================
+   */
+
+  const { cartCount } = useCart(user?._id, user?.tenantId);
+
+  /*
+   * ================================
+   * WISHLIST
+   * ================================
+   */
+
+  const { wishlistCount } = useWishlist(user?._id, user?.tenantId);
+
+  const [categoryStart, setCategoryStart] = useState(0);
+
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  const [searchOpen, setSearchOpen] = useState(false);
+
+  const [searchValue, setSearchValue] = useState("");
+
+  /*
+   * ================================
+   * GET CATEGORIES
+   * ================================
+   */
+
+  const categories: Category[] = categoryResponse?.data
+    ? categoryResponse.data.slice(0, 5)
+    : [];
+
+  /*
+   * ================================
+   * SLIDE 3 CATEGORIES
+   * EVERY 3 SECONDS
+   * ================================
+   */
+
+  useEffect(() => {
+    if (categories.length <= 3) {
+      return;
+    }
+
+    const interval = window.setInterval(() => {
+      setCategoryStart((current) => {
+        const next = current + 3;
+
+        return next >= categories.length ? 0 : next;
+      });
+    }, 3000);
+
+    return () => {
+      window.clearInterval(interval);
+    };
+  }, [categories.length]);
+  /*
+   * ================================
+   * VISIBLE 3 CATEGORIES
+   * ================================
+   */
+
+  let visibleCategories = categories.slice(categoryStart, categoryStart + 3);
+
+  /*
+   * If only 1 or 2 are remaining,
+   * fill from beginning.
+   */
+
+  if (visibleCategories.length < 3 && categories.length > 3) {
+    visibleCategories = [
+      ...visibleCategories,
+      ...categories.slice(0, 3 - visibleCategories.length),
+    ];
+  }
+
+  /*
+   * ================================
+   * SEARCH
+   * ================================
+   */
+
+  const handleSearch = () => {
+    const search = searchValue.trim();
+
+    if (!search || !tenantSlug) {
+      return;
+    }
+
+    navigate(`/${tenantSlug}/products?search=${encodeURIComponent(search)}`);
+
+    setSearchOpen(false);
+    setMenuOpen(false);
+  };
+
+  /*
+   * ================================
+   * CATEGORY CLICK
+   * ================================
+   */
+
+  const handleCategoryClick = (category: Category) => {
+    if (!tenantSlug) {
+      return;
+    }
+
+    const categoryId = category.categoryId || category.slug || category.name;
+
+    navigate(
+      `/${tenantSlug}/products?category=${encodeURIComponent(categoryId)}`
+    );
+
+    setMenuOpen(false);
+    setSearchOpen(false);
+  };
+
+  /*
+   * ================================
+   * HOME
+   * ================================
+   */
+
+  const handleHome = () => {
+    if (!tenantSlug) {
+      return;
+    }
+
+    navigate(`/${tenantSlug}`);
+
+    setMenuOpen(false);
+    setSearchOpen(false);
+  };
+
+  /*
+   * ================================
+   * MENU BODY
+   * ================================
+   */
+
   useEffect(() => {
     document.body.style.overflow = menuOpen ? "hidden" : "";
+
     return () => {
       document.body.style.overflow = "";
     };
   }, [menuOpen]);
+
+  /*
+   * ================================
+   * ESCAPE
+   * ================================
+   */
+
   useEffect(() => {
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
         setMenuOpen(false);
         setSearchOpen(false);
       }
     };
-    window.addEventListener("keydown", onKeyDown);
+
+    window.addEventListener("keydown", handleKeyDown);
+
     return () => {
-      window.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("keydown", handleKeyDown);
     };
   }, []);
-  const handleSearch = () => {
-    const search = searchValue.trim();
-    if (!search) {
-      return;
-    }
-    navigate(`/${tenantSlug}/products?search=${encodeURIComponent(search)}`);
-    setSearchOpen(false);
-    setMenuOpen(false);
-  };
-  const handleCategoryClick = (categoryId: string) => {
-    navigate(
-      `/${tenantSlug}/products?category=${encodeURIComponent(categoryId)}`,
-    );
-    setMenuOpen(false);
-    setSearchOpen(false);
-  };
-  const handleHome = () => {
-    navigate(`/${tenantSlug}`);
-    setMenuOpen(false);
-    setSearchOpen(false);
-  };
+
   return (
     <header className={styles.navbar}>
       <div className={styles.container}>
-       
-        <button
-          type="button"
-          className={styles.logo}
-          onClick={handleHome}
-          aria-label="Go to home"
-        >
+        {/* ================================
+            LOGO
+        ================================= */}
+
+        <button type="button" className={styles.logo} onClick={handleHome}>
           <span className={styles.logoIcon}>LT</span>
+
           <span className={styles.logoText}>Lunar Tech</span>
         </button>
-       
+
+        {/* ================================
+            DESKTOP CATEGORY NAV
+        ================================= */}
+
         <nav className={styles.navLinks} aria-label="Primary navigation">
-          {NAV_LINKS.map((link) => (
-            <button
-              key={link.categoryId}
-              type="button"
-              className={styles.navLink}
-              onClick={() => handleCategoryClick(link.categoryId)}
-            >
-              {link.label}
-            </button>
-          ))}
+          {categoriesLoading ? (
+            <span className={styles.navLink}>Loading...</span>
+          ) : (
+            visibleCategories.map((category) => {
+              const key =
+                category._id ||
+                category.categoryId ||
+                category.slug ||
+                category.name;
+
+              return (
+                <button
+                  key={key}
+                  type="button"
+                  className={styles.navLink}
+                  onClick={() => handleCategoryClick(category)}
+                >
+                  {category.name}
+                </button>
+              );
+            })
+          )}
         </nav>
-       
+
+        {/* ================================
+            RIGHT SECTION
+        ================================= */}
+
         <div className={styles.rightSection}>
-         
+          {/* SEARCH */}
+
           <div className={styles.searchWrapper}>
             <SearchIcon className={styles.searchIcon} />
+
             <input
               type="text"
               value={searchValue}
-              onChange={(e) => setSearchValue(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
+              onChange={(event) => setSearchValue(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") {
                   handleSearch();
                 }
               }}
               placeholder="Search products, brands..."
               className={styles.searchInput}
-              aria-label="Search products, brands"
             />
+
             <button
               type="button"
               className={styles.searchButton}
               onClick={handleSearch}
-              aria-label="Search"
             >
               <SearchIcon />
             </button>
           </div>
-         
+
+          {/* MOBILE SEARCH */}
+
           <button
             type="button"
             className={styles.iconButton}
-            onClick={() => setSearchOpen((open) => !open)}
-            aria-label="Toggle search"
-            aria-expanded={searchOpen}
+            onClick={() => setSearchOpen((value) => !value)}
           >
             <SearchIcon />
           </button>
-         
+
+          {/* WISHLIST */}
+
           <button
             type="button"
             className={styles.iconButton}
-            aria-label="Wishlist"
-            onClick={() => {
-              navigate(`/${tenantSlug}/wishlist`);
-            }}
+            onClick={() => navigate(`/${tenantSlug}/wishlist`)}
           >
             <HeartIcon />
+
             {wishlistCount > 0 && (
               <span className={styles.badge}>{wishlistCount}</span>
             )}
           </button>
-         
-          <button type="button" className={styles.iconButton} aria-label="Cart">
+
+          {/* CART */}
+
+          <button
+            type="button"
+            className={styles.iconButton}
+            onClick={() => navigate(`/${tenantSlug}/cart`)}
+          >
             <ShoppingCart size={20} />
+
             {cartCount > 0 && <span className={styles.badge}>{cartCount}</span>}
           </button>
-         
+
+          {/* PROFILE */}
+
           <button
             type="button"
             className={styles.avatar}
-            aria-label="Account"
-            onClick={() => {
-              navigate(`/${tenantSlug}/profile`);
-            }}
+            onClick={() => navigate(`/${tenantSlug}/profile`)}
           >
-            {getInitials(user?.name || "User")}
+            {getInitials(user?.name)}
           </button>
-         
+
+          {/* MOBILE MENU */}
+
           <button
             type="button"
-            className={`${styles.menuButton} ${
-              menuOpen ? styles.menuButtonOpen : ""
-            }`}
-            onClick={() => setMenuOpen((open) => !open)}
-            aria-label={menuOpen ? "Close menu" : "Open menu"}
-            aria-expanded={menuOpen}
+            className={styles.menuButton}
+            onClick={() => setMenuOpen((value) => !value)}
           >
             <span />
             <span />
@@ -188,106 +348,127 @@ export default function Navbar() {
           </button>
         </div>
       </div>
-     
+
+      {/* ================================
+          MOBILE SEARCH
+      ================================= */}
+
       <div
         className={`${styles.searchRow} ${
           searchOpen ? styles.searchRowOpen : ""
         }`}
       >
         <SearchIcon className={styles.searchIcon} />
+
         <input
           type="text"
           value={searchValue}
-          onChange={(e) => setSearchValue(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
+          onChange={(event) => setSearchValue(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === "Enter") {
               handleSearch();
             }
           }}
           placeholder="Search products, brands..."
           className={styles.searchInput}
-          aria-label="Search products, brands"
         />
+
         <button
           type="button"
           className={styles.searchButton}
           onClick={handleSearch}
-          aria-label="Search"
         >
           <SearchIcon />
         </button>
       </div>
-     
+
+      {/* ================================
+          OVERLAY
+      ================================= */}
+
       <div
         className={`${styles.overlay} ${menuOpen ? styles.overlayVisible : ""}`}
         onClick={() => setMenuOpen(false)}
-        aria-hidden="true"
       />
-     
+
+      {/* ================================
+          MOBILE MENU
+      ================================= */}
+
       <aside
-        ref={menuRef}
         className={`${styles.mobileMenu} ${
           menuOpen ? styles.mobileMenuOpen : ""
         }`}
-        aria-label="Mobile menu"
-        aria-hidden={!menuOpen}
       >
-       
         <div className={styles.mobileMenuHeader}>
           <div className={styles.mobileMenuTitle}>
             <span className={styles.mobileMenuLogo}>LT</span>
+
             <span className={styles.mobileMenuText}>Menu</span>
           </div>
+
           <button
             type="button"
             className={styles.closeButton}
             onClick={() => setMenuOpen(false)}
-            aria-label="Close menu"
           >
             <XIcon />
           </button>
         </div>
-       
-        <nav className={styles.mobileNavLinks} aria-label="Mobile navigation">
-          {NAV_LINKS.map((link, index) => (
-            <button
-              key={link.categoryId}
-              type="button"
-              className={styles.mobileNavLink}
-              style={{
-                transitionDelay: menuOpen ? `${80 + index * 60}ms` : "0ms",
-              }}
-              onClick={() => handleCategoryClick(link.categoryId)}
-            >
-              <span>{link.label}</span>
-              <ChevronIcon />
-            </button>
-          ))}
+
+        {/* MOBILE CATEGORIES */}
+
+        <nav className={styles.mobileNavLinks}>
+          {categoryResponse &&
+            categoryResponse.data.map((category) => (
+              <button
+                key={
+                  category._id ||
+                  category.categoryId ||
+                  category.slug ||
+                  category.name
+                }
+                type="button"
+                className={styles.mobileNavLink}
+                onClick={() => handleCategoryClick(category)}
+              >
+                <span>{category.name}</span>
+
+                <ChevronIcon />
+              </button>
+            ))}
         </nav>
-       
+
+        {/* MOBILE FOOTER */}
+
         <div className={styles.mobileMenuFooter}>
           <button
             type="button"
             onClick={() => {
               navigate(`/${tenantSlug}/wishlist`);
+
               setMenuOpen(false);
             }}
           >
             Wishlist
           </button>
+
           <button
             type="button"
             onClick={() => {
               navigate(`/${tenantSlug}/cart`);
+
               setMenuOpen(false);
             }}
           >
             Cart
           </button>
+
           <button
             type="button"
             onClick={() => {
               navigate(`/${tenantSlug}/profile`);
+
               setMenuOpen(false);
             }}
           >
@@ -298,6 +479,11 @@ export default function Navbar() {
     </header>
   );
 }
+
+/* ============================================
+   ICONS
+============================================ */
+
 function SearchIcon({ className = "" }: { className?: string }) {
   return (
     <svg
@@ -310,13 +496,14 @@ function SearchIcon({ className = "" }: { className?: string }) {
       strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"
-      aria-hidden="true"
     >
       <circle cx="11" cy="11" r="7" />
+
       <path d="m20 20-4-4" />
     </svg>
   );
 }
+
 function HeartIcon() {
   return (
     <svg
@@ -328,12 +515,12 @@ function HeartIcon() {
       strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"
-      aria-hidden="true"
     >
       <path d="M20.8 8.6c0 5.4-8.8 10.4-8.8 10.4S3.2 14 3.2 8.6A4.6 4.6 0 0 1 12 6.1a4.6 4.6 0 0 1 8.8 2.5Z" />
     </svg>
   );
 }
+
 function XIcon() {
   return (
     <svg
@@ -345,13 +532,13 @@ function XIcon() {
       strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"
-      aria-hidden="true"
     >
       <path d="M18 6 6 18" />
       <path d="m6 6 12 12" />
     </svg>
   );
 }
+
 function ChevronIcon() {
   return (
     <svg
@@ -363,7 +550,6 @@ function ChevronIcon() {
       strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"
-      aria-hidden="true"
     >
       <path d="m9 18 6-6-6-6" />
     </svg>

@@ -12,6 +12,18 @@ router = APIRouter(
     tags=["Product"],
 )
 
+# products.update_many(
+#     {"tenantId": {"$exists": True}},
+#     [
+#         {
+#             "$set": {
+#                 "tenantId": {
+#                     "$toLower": "$tenantId"
+#                 }
+#             }
+#         }
+#     ],
+# )
 
 # =========================================================
 # CREATE PRODUCT
@@ -293,12 +305,9 @@ def get_all_products(
 @router.get("/{id}")
 def get_product(
     id: str,
-    tenantId: str,
-    includeInactive: bool = False,
+    tenantId: str | None = None,
 ):
-
     if not ObjectId.is_valid(id):
-
         raise HTTPException(
             status_code=400,
             detail="Invalid product ID.",
@@ -306,31 +315,27 @@ def get_product(
 
     query = {
         "_id": ObjectId(id),
-        "tenantId": tenantId,
+        "isActive": True,
     }
 
-    if not includeInactive:
-        query["isActive"] = True
+    # tenantId is optional
+    if tenantId:
+        query["tenantId"] = tenantId
 
     product = products.find_one(query)
 
     if not product:
-
         raise HTTPException(
             status_code=404,
             detail="Product not found.",
         )
 
-    product["_id"] = str(
-        product["_id"]
-    )
+    product["_id"] = str(product["_id"])
 
     return {
         "success": True,
         "data": product,
     }
-
-
 # =========================================================
 # UPDATE PRODUCT
 # =========================================================

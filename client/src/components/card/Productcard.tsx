@@ -1,4 +1,15 @@
 import React, { useState } from "react";
+import { Swiper, SwiperSlide } from "swiper/react";
+import {
+  Autoplay,
+  Navigation,
+  Pagination,
+} from "swiper/modules";
+
+import "swiper/css";
+import "swiper/css/navigation";
+import "swiper/css/pagination";
+
 import styles from "./Productcard.module.css";
 
 export interface Product {
@@ -25,8 +36,7 @@ export default function ProductCard({
   onToggleWishlist,
   onQuickAdd,
 }: ProductCardProps) {
-  const [isWishlisted, setIsWishlisted] =
-    useState(false);
+  const [isWishlisted, setIsWishlisted] = useState(false);
 
   const {
     _id,
@@ -41,13 +51,12 @@ export default function ProductCard({
     isActive = true,
   } = product;
 
-  const image =
-    images?.find((item) => item) || "";
+  const validImages = images.filter(Boolean);
 
   const handleWishlist = (
-    e: React.MouseEvent<HTMLButtonElement>
+    event: React.MouseEvent<HTMLButtonElement>,
   ) => {
-    e.stopPropagation();
+    event.stopPropagation();
 
     const value = !isWishlisted;
 
@@ -57,9 +66,9 @@ export default function ProductCard({
   };
 
   const handleAddToCart = (
-    e: React.MouseEvent<HTMLButtonElement>
+    event: React.MouseEvent<HTMLButtonElement>,
   ) => {
-    e.stopPropagation();
+    event.stopPropagation();
 
     onQuickAdd?.(_id);
   };
@@ -73,20 +82,64 @@ export default function ProductCard({
       {/* IMAGE SECTION */}
 
       <div className={styles.imageContainer}>
-        {image ? (
-          <img
-            src={image}
-            alt={name}
-            className={styles.productImage}
-            loading="lazy"
-          />
+        {validImages.length > 0 ? (
+          <Swiper
+            modules={[
+              Autoplay,
+              Navigation,
+              Pagination,
+            ]}
+            className={styles.productSwiper}
+            slidesPerView={1}
+            spaceBetween={0}
+            loop={validImages.length > 1}
+            speed={600}
+            autoplay={
+              validImages.length > 1
+                ? {
+                    delay: 3000,
+                    disableOnInteraction: false,
+                    pauseOnMouseEnter: true,
+                  }
+                : false
+            }
+            navigation={
+              validImages.length > 1
+                ? {
+                    prevEl: `.product-prev-${_id}`,
+                    nextEl: `.product-next-${_id}`,
+                  }
+                : false
+            }
+            pagination={
+              validImages.length > 1
+                ? {
+                    clickable: true,
+                  }
+                : false
+            }
+          >
+            {validImages.map((image, index) => (
+              <SwiperSlide
+                key={`${_id}-image-${index}`}
+                className={styles.productSlide}
+              >
+                <img
+                  src={image}
+                  alt={`${name} ${index + 1}`}
+                  className={styles.productImage}
+                  loading={index === 0 ? "eager" : "lazy"}
+                />
+              </SwiperSlide>
+            ))}
+          </Swiper>
         ) : (
           <div className={styles.noImage}>
-            No Image
+            <span>No Image</span>
           </div>
         )}
 
-        {/* IMAGE DARK GRADIENT */}
+        {/* IMAGE GRADIENT */}
 
         <div className={styles.gradient} />
 
@@ -114,15 +167,44 @@ export default function ProductCard({
               : "Add to wishlist"
           }
         >
-          <HeartIcon
-            filled={isWishlisted}
-          />
+          <HeartIcon filled={isWishlisted} />
         </button>
+
+        {/* SWIPER NAVIGATION */}
+
+        {validImages.length > 1 && (
+          <>
+            <button
+              type="button"
+              className={`${styles.sliderArrow} ${
+                styles.leftArrow
+              } product-prev-${_id}`}
+              onClick={(event) =>
+                event.stopPropagation()
+              }
+              aria-label="Previous image"
+            >
+              <ArrowIcon direction="left" />
+            </button>
+
+            <button
+              type="button"
+              className={`${styles.sliderArrow} ${
+                styles.rightArrow
+              } product-next-${_id}`}
+              onClick={(event) =>
+                event.stopPropagation()
+              }
+              aria-label="Next image"
+            >
+              <ArrowIcon direction="right" />
+            </button>
+          </>
+        )}
 
         {/* RATING */}
 
-        {typeof averageRating ===
-          "number" && (
+        {typeof averageRating === "number" && (
           <div className={styles.rating}>
             <span>
               {averageRating.toFixed(1)}
@@ -136,9 +218,7 @@ export default function ProductCard({
               }
             />
 
-            <span>
-              {reviewCount}
-            </span>
+            <span>{reviewCount}</span>
           </div>
         )}
 
@@ -152,9 +232,7 @@ export default function ProductCard({
           >
             <BagIcon />
 
-            <span>
-              Add to Cart
-            </span>
+            <span>Add to Cart</span>
           </button>
         </div>
       </div>
@@ -174,22 +252,14 @@ export default function ProductCard({
 
         <div className={styles.priceRow}>
           <span className={styles.finalPrice}>
-            ₹
-            {finalPrice.toLocaleString(
-              "en-IN"
-            )}
+            ₹{finalPrice.toLocaleString("en-IN")}
           </span>
 
           {price > finalPrice && (
             <span
-              className={
-                styles.originalPrice
-              }
+              className={styles.originalPrice}
             >
-              ₹
-              {price.toLocaleString(
-                "en-IN"
-              )}
+              ₹{price.toLocaleString("en-IN")}
             </span>
           )}
 
@@ -208,9 +278,9 @@ export default function ProductCard({
   );
 }
 
-/* =========================================
-   HEART
-========================================= */
+/* =========================================================
+   HEART ICON
+========================================================= */
 
 function HeartIcon({
   filled,
@@ -239,9 +309,9 @@ function HeartIcon({
   );
 }
 
-/* =========================================
-   STAR
-========================================= */
+/* =========================================================
+   STAR ICON
+========================================================= */
 
 function StarIcon() {
   return (
@@ -256,9 +326,9 @@ function StarIcon() {
   );
 }
 
-/* =========================================
-   BAG
-========================================= */
+/* =========================================================
+   BAG ICON
+========================================================= */
 
 function BagIcon() {
   return (
@@ -280,6 +350,37 @@ function BagIcon() {
         stroke="currentColor"
         strokeWidth="1.8"
         strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+/* =========================================================
+   ARROW ICON
+========================================================= */
+
+function ArrowIcon({
+  direction,
+}: {
+  direction: "left" | "right";
+}) {
+  return (
+    <svg
+      width="17"
+      height="17"
+      viewBox="0 0 24 24"
+      fill="none"
+    >
+      <path
+        d={
+          direction === "left"
+            ? "M15 18l-6-6 6-6"
+            : "M9 18l6-6-6-6"
+        }
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
       />
     </svg>
   );

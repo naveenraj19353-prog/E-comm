@@ -114,10 +114,14 @@ export const getProductDetails = async (
   productId: string,
   tenantId: string,
 ) => {
-  const response = await apiClient.get(`/product/${productId}`, {
-    params: {
-      tenantId,
+  const response = await apiClient.get(
+    `/product/${productId}`,
+    {
+      params: {
+        tenantId,
+      },
     },
-  });
+  );
+
   return response.data;
 };

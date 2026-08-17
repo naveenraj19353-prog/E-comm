@@ -3,6 +3,7 @@ from typing import Optional
 
 
 class CreateTenant(BaseModel):
+    tenantId: str = Field(..., min_length=3, max_length=50)
     name: str = Field(..., min_length=2, max_length=100)
     slug: str = Field(..., min_length=2, max_length=100)
     logo: Optional[str] = ""

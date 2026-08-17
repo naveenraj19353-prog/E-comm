@@ -10,7 +10,7 @@ import CategorySlider from "../components/CategorySlider/CategorySlider";
 const Home = () => {
   const tenantSlug = useAppSelector((state) => state.tenant.tenantSlug);
   const user = useAppSelector((state) => state.auth.user);
-  const tenantId = tenantSlug ? tenantSlug.toUpperCase() : "";
+  const tenantId = tenantSlug;
   const { data: homeData, isLoading, isError, refetch } = useHome(tenantId);
   const { addToCart } = useCart(user?._id, tenantId);
   const { addToWishlist, removeFromWishlist } = useWishlist(user?._id, tenantId);

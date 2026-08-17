@@ -1,6 +1,7 @@
 import { FormEvent, useState } from "react";
 import { useCreateTenant, useTenants } from "../hooks/useTenants";
 import styles from "../styles/TenantsPage.module.css";
+import { Link } from "react-router-dom";
 
 export default function TenantsPage() {
   const {
@@ -220,16 +221,17 @@ export default function TenantsPage() {
                               .toUpperCase()
                           )}
                         </div>
+                        <Link to={`/admin/tenants/${tenant.tenantId}`}>
+                          <div className={styles.tenantInfo}>
+                            <strong>
+                              {tenant.name}
+                            </strong>
 
-                        <div className={styles.tenantInfo}>
-                          <strong>
-                            {tenant.name}
-                          </strong>
-
-                          <span>
-                            /{tenant.slug}
-                          </span>
-                        </div>
+                            <span>
+                              /{tenant.slug}
+                            </span>
+                          </div>
+                        </Link>
                       </div>
                     </td>
 
@@ -265,8 +267,8 @@ export default function TenantsPage() {
                       <span className={styles.date}>
                         {tenant.createdAt
                           ? new Date(
-                              tenant.createdAt
-                            ).toLocaleDateString()
+                            tenant.createdAt
+                          ).toLocaleDateString()
                           : "-"}
                       </span>
                     </td>

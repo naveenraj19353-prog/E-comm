@@ -2,6 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import styles from "../styles/ProductsPage.module.css";
 import apiClient from "../../../api/client";
+import { useAppSelector } from "../../../app/hooks";
 
 interface Product {
   _id: string;
@@ -37,13 +38,16 @@ interface ProductsResponse {
 
 export default function ProductsPage() {
   const navigate = useNavigate();
-
+  const tenantIdStore =
+    useAppSelector(
+      (state) => state.tenant.currentTenant?.id || state.tenant.tenantSlug
+    ) ?? "";
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   const [search, setSearch] = useState("");
-  const [tenantId, setTenantId] = useState("TENANT001");
+  const [tenantId, setTenantId] = useState(tenantIdStore);
   const [page, setPage] = useState(1);
 
   const limit = 10;

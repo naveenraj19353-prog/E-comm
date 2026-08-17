@@ -48,7 +48,7 @@ const Cart = () => {
             />
           ))}
         </div>
-        <CartSummary cartCount={cartCount} grandTotal={grandTotal} />
+        <CartSummary cartCount={cartCount} grandTotal={grandTotal} tenantId={user?.tenantId}/>
       </div>
     </div>
   );

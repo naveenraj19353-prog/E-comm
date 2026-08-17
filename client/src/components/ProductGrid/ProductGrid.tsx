@@ -25,6 +25,12 @@ const ProductGrid = ({ products }: { products: Product[] }) => {
   const handleAddToCart = async (productId: string) => {
     try {
       setAddingProductId(productId);
+      console.log({
+        tenantId: user?.tenantId,
+        userId: user?._id,
+        productId,
+        quantity: 1,
+      })
       await addToCart({
         tenantId: user?.tenantId,
         userId: user?._id,

@@ -78,16 +78,16 @@ const DealOfTheDay = ({
             disableOnInteraction: false,
             pauseOnMouseEnter: true,
           }}
-          navigation={{
-            prevEl: prevRef.current,
-            nextEl: nextRef.current,
-          }}
-          onBeforeInit={(swiper) => {
-            if (typeof swiper.params.navigation !== "boolean") {
-              swiper.params.navigation.prevEl = prevRef.current;
-              swiper.params.navigation.nextEl = nextRef.current;
-            }
-          }}
+          // navigation={{
+          //   prevEl: prevRef.current,
+          //   nextEl: nextRef.current,
+          // }}
+          // onBeforeInit={(swiper) => {
+          //   if (typeof swiper.params.navigation !== "boolean") {
+          //     swiper.params.navigation.prevEl = prevRef.current;
+          //     swiper.params.navigation.nextEl = nextRef.current;
+          //   }
+          // }}
           breakpoints={{
             600: {
               slidesPerView: 1.5,

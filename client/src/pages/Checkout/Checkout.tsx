@@ -1,6 +1,11 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useRazorpay } from "react-razorpay";
+
 import { useCart } from "../../features/cart/hooks/useCart";
+import { useAuth } from "../../features/auth/hooks/useAuth";
+import { usePayment } from "../../features/payment/hooks/usePayment";
+
 import CheckoutHeader from "./CheckoutHeader/CheckoutHeader";
 import CheckoutLayout from "./CheckoutLayout/CheckoutLayout";
 import CheckoutMain from "./CheckoutLayout/CheckoutMain/CheckoutMain";
@@ -8,17 +13,27 @@ import AddressSection from "./CheckoutLayout/CheckoutMain/AddressSection/Address
 import DeliveryMethod from "./CheckoutLayout/CheckoutMain/DeliveryMethod/DeliveryMethod";
 import PaymentMethod from "./CheckoutLayout/CheckoutMain/PaymentMethod/PaymentMethod";
 import CheckoutSidebar from "./CheckoutLayout/CheckoutSidebar/CheckoutSidebar";
+
 import styles from "./Checkout.module.css";
+
 import type { Address } from "../../features/address/types/address.types";
 import type { DeliveryOption } from "./CheckoutLayout/CheckoutMain/DeliveryMethod/DeliveryMethod";
 import type { PaymentMethodType } from "./CheckoutLayout/CheckoutMain/PaymentMethod/PaymentMethod";
-import { useAuth } from "../../features/auth/hooks/useAuth";
-const API_URL = "http://127.0.0.1:8000";
+
 const Checkout = () => {
-  const user = useAuth().user;
-  const { cart, grandTotal, isLoading } = useCart(user?._id, user?.tenantId);
+  const navigate = useNavigate();
+
   const { Razorpay } = useRazorpay();
+
+  const { user } = useAuth();
+
+  const { cart, grandTotal, isLoading } = useCart(user?._id, user?.tenantId);
+
+  const { createOrder, verifyPayment, isCreatingOrder, isVerifyingPayment } =
+    usePayment();
+
   const [selectedAddress, setSelectedAddress] = useState<Address | null>(null);
+
   const [deliveryMethod, setDeliveryMethod] = useState<DeliveryOption>({
     id: "standard",
     name: "Standard Delivery",
@@ -26,131 +41,200 @@ const Checkout = () => {
     estimatedTime: "3–5 business days",
     price: 0,
   });
+
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethodType>("upi");
+
   const [isProcessing, setIsProcessing] = useState(false);
+
   const discount = 0;
+
   const subtotal = grandTotal;
+
   const deliveryCharge = deliveryMethod.price;
+
   const total = subtotal + deliveryCharge - discount;
- 
+
   const handlePlaceOrder = async () => {
+    debugger
     try {
+      if (!user?._id || !user?.tenantId) {
+        alert("Please login before placing an order.");
+        return;
+      }
+
       if (!selectedAddress) {
         alert("Please select a delivery address.");
         return;
       }
+
       if (!cart.length) {
         alert("Your cart is empty.");
         return;
       }
-      setIsProcessing(true);
- 
-      const response = await fetch(`${API_URL}/payments/create-order`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          tenantId: user?.tenantId,
-          userId: user?._id,
-          couponCode: null,
-        }),
-      });
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data?.detail || "Unable to create payment order.");
-      }
-      console.log("Razorpay order created:", data);
-   
+
       if (!Razorpay) {
-        throw new Error("Razorpay SDK is not loaded.");
+        alert("Razorpay SDK is not loaded.");
+        return;
       }
+
+      setIsProcessing(true);
+
+      /*
+       * ================================
+       * CREATE RAZORPAY ORDER
+       * ================================
+       */
+
+      const orderData = await createOrder({
+        tenantId: user.tenantId,
+        userId: user._id,
+        couponCode: null,
+      });
+
+      console.log("Razorpay order created:", orderData);
+
+      /*
+       * ================================
+       * RAZORPAY OPTIONS
+       * ================================
+       */
+
       const options = {
         key: import.meta.env.VITE_RAZORPAY_KEY_ID,
-        amount: data.amountInPaise,
-        currency: data.currency,
+
+        amount: orderData.amountInPaise,
+
+        currency: orderData.currency,
+
         name: "OmniStore",
+
         description: "E-commerce Order Payment",
-        order_id: data.orderId,
+
+        order_id: orderData.orderId,
+
         prefill: {
           name: selectedAddress.fullName,
+
           contact: selectedAddress.phone,
         },
-        notes: JSON.stringify({
-          tenantId: user?.tenantId,
-          userId: user?._id,
-        }),
+
+        notes: {
+          tenantId: user.tenantId,
+
+          userId: user._id,
+        },
+
         theme: {
           color: "#2f6b52",
         },
-        handler: async function (paymentResponse: {
+
+        /*
+         * ================================
+         * PAYMENT SUCCESS
+         * ================================
+         */
+
+        handler: async (paymentResponse: {
           razorpay_payment_id: string;
           razorpay_order_id: string;
           razorpay_signature: string;
-        }) {
+        }) => {
           try {
             console.log("Razorpay payment response:", paymentResponse);
-          
-            const verifyResponse = await fetch(`${API_URL}/payments/verify`, {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
-                tenantId: user?.tenantId,
-                userId: user?._id,
-                razorpayOrderId: paymentResponse.razorpay_order_id,
-                razorpayPaymentId: paymentResponse.razorpay_payment_id,
-                razorpaySignature: paymentResponse.razorpay_signature,
-                couponCode: null,
-              }),
+
+            /*
+             * ================================
+             * VERIFY PAYMENT
+             * ================================
+             */
+
+            const verifyData = await verifyPayment({
+              tenantId: user.tenantId,
+
+              userId: user._id,
+
+              razorpayOrderId: paymentResponse.razorpay_order_id,
+
+              razorpayPaymentId: paymentResponse.razorpay_payment_id,
+
+              razorpaySignature: paymentResponse.razorpay_signature,
+
+              couponCode: null,
             });
-            const verifyData = await verifyResponse.json();
-            if (!verifyResponse.ok) {
-              throw new Error(
-                verifyData?.detail || "Payment verification failed.",
+
+            console.log("Payment verified:", verifyData);
+
+            alert("Payment successful! Order placed.");
+
+            /*
+             * Redirect to orders page later
+             */
+
+            if (verifyData.orderId) {
+              navigate(
+                `/${user.tenantId.toLowerCase()}/orders/${verifyData.orderId}`
               );
             }
-            console.log("Payment verified:", verifyData);
-          
-            alert("Payment successful! Order placed.");
-            console.log("Order ID:", verifyData.orderId);
-            // Later:
-            // navigate(`/${tenantId}/orders/${verifyData.orderId}`);
           } catch (error) {
             console.error("Payment verification error:", error);
+
             alert(
               error instanceof Error
                 ? error.message
-                : "Payment verification failed.",
+                : "Payment verification failed."
             );
           } finally {
             setIsProcessing(false);
           }
         },
+
+        /*
+         * ================================
+         * RAZORPAY CLOSED
+         * ================================
+         */
+
         modal: {
-          ondismiss: function () {
+          ondismiss: () => {
             console.log("Razorpay checkout closed.");
+
             setIsProcessing(false);
           },
         },
       };
+
+      /*
+       * ================================
+       * OPEN RAZORPAY
+       * ================================
+       */
+
       const razorpay = new Razorpay(options);
+
       razorpay.open();
     } catch (error) {
       console.error("Place order error:", error);
+
       alert(
-        error instanceof Error ? error.message : "Unable to process order.",
+        error instanceof Error ? error.message : "Unable to process order."
       );
+
       setIsProcessing(false);
     }
   };
-  
+
+  /*
+   * ================================
+   * LOADING
+   * ================================
+   */
+
   if (isLoading) {
     return (
       <div className={styles.page}>
         <div className={styles.container}>
           <CheckoutHeader />
+
           <div
             style={{
               padding: "60px 0",
@@ -162,16 +246,26 @@ const Checkout = () => {
         </div>
       </div>
     );
-  } 
+  }
+
+  /*
+   * ================================
+   * CHECKOUT UI
+   * ================================
+   */
+
   return (
     <div className={styles.page}>
       <div className={styles.container}>
         <CheckoutHeader />
+
         <CheckoutLayout
           main={
             <CheckoutMain>
-              <AddressSection onAddressSelect={setSelectedAddress} />
+              <AddressSection userId={user._id} tenantId={user.tenantId} onAddressSelect={setSelectedAddress} />
+
               <DeliveryMethod onDeliveryChange={setDeliveryMethod} />
+
               <PaymentMethod
                 selectedMethod={paymentMethod}
                 onMethodChange={setPaymentMethod}
@@ -192,7 +286,9 @@ const Checkout = () => {
               discount={discount}
               total={total}
               onPlaceOrder={handlePlaceOrder}
-              isPlacingOrder={isProcessing}
+              isPlacingOrder={
+                isProcessing || isCreatingOrder || isVerifyingPayment
+              }
             />
           }
         />
@@ -200,4 +296,5 @@ const Checkout = () => {
     </div>
   );
 };
+
 export default Checkout;

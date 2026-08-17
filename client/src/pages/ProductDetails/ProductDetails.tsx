@@ -1,108 +1,116 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useParams } from "react-router-dom";
+
 import ProductDetailsView from "./ProductDetailsView";
-import type { Product } from "../../features/products/types";
-import type { Review } from "../../features/reviews/types";
+import styles from "./ProductDetails.module.css";
+
+import { useAuth } from "../../features/auth/hooks/useAuth";
 import { useCart } from "../../features/cart/hooks/useCart";
 import { useWishlist } from "../../features/wishlist/hooks/useWishlist";
-import styles from "./ProductDetails.module.css";
+
+import { useProductDetails } from "../../features/products/hooks/useProductDetails";
+import { useReviews } from "../../features/reviews/hooks/useReviews";
+
 import AuthModal from "../../components/Auth/AuthModal/AuthModal";
-import { useAuth } from "../../features/auth/hooks/useAuth";
 
 const ProductDetails = () => {
-  const { productId } = useParams<{
+  const { tenantSlug, productId } = useParams<{
+    tenantSlug: string;
     productId: string;
   }>();
 
   const { user, isAuthenticated } = useAuth();
-  console.log(
-    "ProductDetails - user:",
-    user,
-    "isAuthenticated:",
-    isAuthenticated,
-  );
 
-  const [product, setProduct] = useState<Product | null>(null);
-  const [reviews, setReviews] = useState<Review[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [reviewsLoading, setReviewsLoading] = useState(false);
-  const [error, setError] = useState("");
+  /*
+   * Product detail API requires tenantId.
+   *
+   * Example:
+   * /TENANT004/product-details/PRODUCT_ID
+   *
+   * tenantSlug = TENANT004
+   */
+  const tenantId = user?.tenantId || tenantSlug || "";
+
+  /*
+   * PRODUCT DETAILS
+   */
+  const {
+    data: productResponse,
+    isLoading: productLoading,
+    isError: productIsError,
+  } = useProductDetails(productId || "", tenantId);
+
+  const product = productResponse?.data || null;
+
+  /*
+   * REVIEWS
+   */
+  const {
+    reviews,
+    isLoading: reviewsLoading,
+    addReview,
+    isCreating: isSubmittingReview,
+  } = useReviews(productId || "", tenantId);
+
+  /*
+   * UI STATE
+   */
   const [showAuthModal, setShowAuthModal] = useState(false);
+
   const [showReviewForm, setShowReviewForm] = useState(false);
+
   const [reviewRating, setReviewRating] = useState(0);
+
   const [reviewTitle, setReviewTitle] = useState("");
+
   const [reviewComment, setReviewComment] = useState("");
-  const [isSubmittingReview, setIsSubmittingReview] = useState(false);
-  
-  const cartUserId = user?._id;
-  const { addToCart, isAdding } = useCart(cartUserId, user?.tenantId);
- 
+
+  /*
+   * USER ID
+   */
+  const cartUserId = user?._id || "";
+
+  /*
+   * CART
+   */
+  const { addToCart, isAdding } = useCart(cartUserId, tenantId);
+
+  /*
+   * WISHLIST
+   */
   const { wishlist, addToWishlist, removeFromWishlist } = useWishlist(
     cartUserId,
-    user?.tenantId,
+    tenantId
   );
- 
-  const fetchReviews = async () => {
-    if (!productId) {
-      return;
-    }
-    try {
-      setReviewsLoading(true);
-      const response = await fetch(
-        `http://127.0.0.1:8000/reviews/product/${productId}?tenantId=${user?.tenantId}`,
-      );
-      if (!response.ok) {
-        throw new Error("Unable to fetch reviews");
-      }
-      const result = await response.json();
-      if (result.success) {
-        setReviews(result.data || []);
-      }
-    } catch (error) {
-      console.error("Reviews fetch failed:", error);
-    } finally {
-      setReviewsLoading(false);
-    }
-  };
-  useEffect(() => {
-    if (!productId) {
-      return;
-    }
-    const fetchProduct = async () => {
-      try {
-        setLoading(true);
-        setError("");
-        const response = await fetch(
-          `http://127.0.0.1:8000/product/${productId}?tenantId=${user?.tenantId}`,
-        );
-        if (!response.ok) {
-          throw new Error("Unable to fetch product");
-        }
-        const result = await response.json();
-        if (!result.success || !result.data) {
-          throw new Error("Product not found");
-        }
-        setProduct(result.data);
-      } catch (error) {
-        console.error("Product fetch failed:", error);
-        setError("Unable to load this product.");
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchProduct();
-  }, [productId]);
 
+  /*
+   * WISHLIST STATUS
+   */
   const isWishlisted = product
     ? wishlist.some((item) => item.productId === product._id)
     : false;
 
-  const handleAddToCart = async (productId: string, quantity: number) => {
+  /*
+   * ADD TO CART
+   */
+  const handleAddToCart = async (
+    selectedProductId: string,
+    quantity: number
+  ) => {
+    /*
+     * Customer must be logged in
+     * to add product to cart.
+     */
+    if (!isAuthenticated || !user) {
+      setShowAuthModal(true);
+      return;
+    }
+
     try {
       await addToCart({
-        tenantId: user?.tenantId,
-        userId: cartUserId,
-        productId,
+        tenantId,
+        userId: user._id,
+        productId: selectedProductId,
         quantity,
       });
     } catch (error) {
@@ -110,15 +118,27 @@ const ProductDetails = () => {
     }
   };
 
-  const handleWishlist = async (productId: string) => {
+  /*
+   * WISHLIST
+   */
+  const handleWishlist = async (selectedProductId: string) => {
+    /*
+     * Customer must be logged in
+     * to use wishlist.
+     */
+    if (!isAuthenticated || !user) {
+      setShowAuthModal(true);
+      return;
+    }
+
     try {
       if (isWishlisted) {
-        await removeFromWishlist(productId);
+        await removeFromWishlist(selectedProductId);
       } else {
         await addToWishlist({
-          tenantId: user?.tenantId,
-          userId: cartUserId,
-          productId,
+          tenantId,
+          userId: user._id,
+          productId: selectedProductId,
         });
       }
     } catch (error) {
@@ -126,103 +146,132 @@ const ProductDetails = () => {
     }
   };
 
+  /*
+   * WRITE REVIEW
+   */
   const handleWriteReview = () => {
     if (!isAuthenticated || !user) {
       setShowAuthModal(true);
       return;
     }
+
     setShowReviewForm(true);
   };
 
+  /*
+   * AUTH MODAL SUCCESS
+   */
   const handleAuthSuccess = () => {
     setShowAuthModal(false);
     setShowReviewForm(true);
   };
 
-  
+  /*
+   * SUBMIT REVIEW
+   */
   const handleSubmitReview = async () => {
     if (!product) {
       return;
     }
-  
-    
-    if (!user) {
+
+    /*
+     * Login required
+     */
+    if (!isAuthenticated || !user) {
       setShowAuthModal(true);
       return;
     }
+
+    /*
+     * Validate rating
+     */
     if (reviewRating === 0) {
       alert("Please select a rating.");
       return;
     }
+
+    /*
+     * Validate title
+     */
     if (!reviewTitle.trim()) {
       alert("Please enter a review title.");
       return;
     }
+
+    /*
+     * Validate comment
+     */
     if (!reviewComment.trim()) {
       alert("Please enter your review.");
       return;
     }
+
     try {
-      setIsSubmittingReview(true);
-      const response = await fetch("http://127.0.0.1:8000/reviews/", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          tenantId: product?.tenantId,
-          productId: product._id,
-          userId: user?._id,
-          userName: user.name,
-          rating: reviewRating,
-          title: reviewTitle.trim(),
-          comment: reviewComment.trim(),
-          images: [],
-        }),
+      await addReview({
+        tenantId: product.tenantId || tenantId,
+
+        productId: product._id,
+
+        userId: user._id,
+
+        userName: user.name,
+
+        rating: reviewRating,
+
+        title: reviewTitle.trim(),
+
+        comment: reviewComment.trim(),
+
+        images: [],
       });
-      const result = await response.json();
-      if (!response.ok) {
-        throw new Error(result?.detail || "Unable to submit review");
-      }
-      // Refresh reviews
-      await fetchReviews();
-      // Reset form
+
+      /*
+       * Reset form
+       */
       setReviewRating(0);
       setReviewTitle("");
       setReviewComment("");
       setShowReviewForm(false);
+
       alert("Review submitted successfully!");
     } catch (error) {
       console.error("Review submission failed:", error);
+
       alert(
-        error instanceof Error ? error.message : "Unable to submit review.",
+        error instanceof Error ? error.message : "Unable to submit review."
       );
-    } finally {
-      setIsSubmittingReview(false);
     }
   };
 
-  useEffect(() => {
-    fetchReviews();
-  }, [productId]);
-  if (loading) {
+  /*
+   * PRODUCT LOADING
+   */
+  if (productLoading) {
     return (
       <div className={styles.state}>
         <div className={styles.loader} />
+
         <p>Loading product...</p>
       </div>
     );
   }
- 
-  if (!product || error) {
+
+  /*
+   * PRODUCT ERROR
+   */
+  if (productIsError || !product) {
     return (
       <div className={styles.state}>
         <h2>Product Not Found</h2>
-        <p>{error || "Unable to find this product."}</p>
+
+        <p>Unable to load this product.</p>
       </div>
     );
   }
-  
+
+  /*
+   * PRODUCT DETAILS VIEW
+   */
   return (
     <>
       <ProductDetailsView
@@ -244,10 +293,10 @@ const ProductDetails = () => {
         isSubmittingReview={isSubmittingReview}
         reviewsLoading={reviewsLoading}
       />
-      
+      /* * AUTH MODAL */
       {showAuthModal && (
         <AuthModal
-          tenantId={user?.tenantId}
+          tenantId={tenantId}
           onClose={() => setShowAuthModal(false)}
           onSuccess={handleAuthSuccess}
         />
@@ -255,4 +304,5 @@ const ProductDetails = () => {
     </>
   );
 };
+
 export default ProductDetails;

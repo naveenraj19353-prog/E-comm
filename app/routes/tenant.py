@@ -24,51 +24,45 @@ def create_tenant(
     current_user: dict = Depends(require_super_admin),
 ):
     try:
-        existing = tenants.find_one({
-            "slug": tenant.slug
+        # Normalize tenantId
+        tenant_id = tenant.tenantId.strip().upper()
+
+        # Check whether tenantId already exists
+        existing_tenant_id = tenants.find_one({
+            "tenantId": {
+                "$regex": f"^{tenant_id}$",
+                "$options": "i",
+            }
         })
 
-        if existing:
+        if existing_tenant_id:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Tenant ID '{tenant.tenantId}' already exists.",
+            )
+
+        # Check duplicate slug
+        slug = tenant.slug.strip().lower()
+
+        existing_slug = tenants.find_one({
+            "slug": {
+                "$regex": f"^{slug}$",
+                "$options": "i",
+            }
+        })
+
+        if existing_slug:
             raise HTTPException(
                 status_code=400,
                 detail="Tenant slug already exists.",
             )
 
-        last_tenant = tenants.find_one(
-            {},
-            sort=[("createdAt", -1)],
-        )
-
-        tenant_number = 1
-
-        if last_tenant:
-            last_tenant_id = last_tenant.get(
-                "tenantId",
-                "",
-            )
-
-            if last_tenant_id.startswith("TENANT"):
-                try:
-                    last_number = int(
-                        last_tenant_id.replace(
-                            "TENANT",
-                            "",
-                        )
-                    )
-
-                    tenant_number = last_number + 1
-
-                except ValueError:
-                    tenant_number = 1
-
-        tenant_id = f"TENANT{tenant_number:03d}"
-
         now = datetime.utcnow()
 
         payload = {
             "tenantId": tenant_id,
-            "name": tenant.name,
-            "slug": tenant.slug,
+            "name": tenant.name.strip(),
+            "slug": slug,
             "logo": tenant.logo or "",
             "theme": tenant.theme or "green",
             "isActive": True,
@@ -99,8 +93,6 @@ def create_tenant(
             status_code=500,
             detail=f"Failed to create tenant: {str(e)}",
         )
-
-
 # ==========================================================
 # GET ALL TENANTS
 # PUBLIC

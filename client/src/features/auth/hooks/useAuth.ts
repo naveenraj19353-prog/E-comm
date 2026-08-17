@@ -68,7 +68,7 @@ export const useAuth = () => {
       );
 
       const user = {
-        id: tokenPayload.userId,
+        _id: tokenPayload.userId,
         name:
           tokenPayload.name ||
           "Super Admin",

@@ -11,7 +11,18 @@ router = APIRouter(
     tags=["Categories"]
 )
 
-
+# categories.update_many(
+#     {"tenantId": {"$exists": True}},
+#     [
+#         {
+#             "$set": {
+#                 "tenantId": {
+#                     "$toLower": "$tenantId"
+#                 }
+#             }
+#         }
+#     ],
+# )
 # ==================================================
 # CREATE CATEGORY
 # ==================================================

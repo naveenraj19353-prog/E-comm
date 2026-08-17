@@ -8,17 +8,18 @@ import RatingFilter from "./RatingFilter";
 import ColorFilter from "./ColorFilter";
 import SizeFilter from "./SizeFilter";
 import styles from "./ProductFilters.module.css";
+import { store } from "../../app/store";
 const ProductFilters = () => {
   const dispatch = useAppDispatch();
-  const tenantId =
-    useAppSelector((state) => state.tenant.currentTenant?.id) ?? "";
+  const tenantId = useAppSelector((state) => state.tenant.currentTenant?.id || state.tenant.tenantSlug) ?? "";
   const filters = useAppSelector((state) => state.products.filters);
+  console.log(store.getState())
   const {
     data: categories,
     isLoading,
     isError,
     error,
-  } = useCategory(tenantId || "TENANT001");
+  } = useCategory(tenantId);
   const colors = ["Black", "White", "Grey", "Green", "Red"];
   const sizes = ["XS", "S", "M", "L", "XL", "XXL"];
   const activeFilterCount = useMemo(() => {
