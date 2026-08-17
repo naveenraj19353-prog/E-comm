@@ -4,7 +4,7 @@ export const testimonials: Testimonial[] = [
     id: "1",
     name: "Sophia",
     role: "Fashion Blogger",
-    image: "https:
+    image: "",
     rating: 5,
     review: "Amazing quality and fast delivery. Highly recommended!",
   },
@@ -12,7 +12,7 @@ export const testimonials: Testimonial[] = [
     id: "2",
     name: "Emma",
     role: "Designer",
-    image: "https:
+    image: "",
     rating: 5,
     review:
       "Beautiful collection with premium fabric and excellent customer service.",
@@ -21,7 +21,7 @@ export const testimonials: Testimonial[] = [
     id: "3",
     name: "Olivia",
     role: "Entrepreneur",
-    image: "https:
+    image: "",
     rating: 5,
     review: "Exactly what I was looking for. Great experience!",
   },
@@ -29,7 +29,7 @@ export const testimonials: Testimonial[] = [
     id: "3",
     name: "Olivia",
     role: "Entrepreneur",
-    image: "https:
+    image: "",
     rating: 5,
     review: "Exactly what I was looking for. Great experience!",
   },

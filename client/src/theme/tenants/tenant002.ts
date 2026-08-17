@@ -29,7 +29,8 @@ export const themes = {
       background: "#F9FAFB",
       surface: "#FFFFFF",
       border: "#E5E7EB",
-      text: "#111827",
+      textBlack: "#111827",
+      textWhite: "#FFFFFF"
     },
   },
 
@@ -45,7 +46,8 @@ export const themes = {
       background: "#F9FAFB",
       surface: "#FFFFFF",
       border: "#E5E7EB",
-      text: "#111827",
+      textBlack: "#111827",
+      textWhite: "#FFFFFF"
     },
   },
 
@@ -61,7 +63,8 @@ export const themes = {
       background: "#F9FAFB",
       surface: "#FFFFFF",
       border: "#E5E7EB",
-      text: "#111827",
+      textBlack: "#111827",
+      textWhite: "#FFFFFF"
     },
   },
 };

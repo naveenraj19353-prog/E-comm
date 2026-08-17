@@ -103,7 +103,8 @@ jobs:
 
   # ============================================================
   # SONARQUBE
-  # Frontend + Backend
+  # Backend Python only
+  # Frontend TypeScript excluded
   # ============================================================
 
   sonarqube:
@@ -129,3 +130,4 @@ jobs:
         with:
           args: >
             -Dsonar.qualitygate.wait=true
+            -Dsonar.exclusions=client/**

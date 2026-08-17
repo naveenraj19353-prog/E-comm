@@ -8,8 +8,8 @@ import { useAuth } from "../../features/auth/hooks/useAuth";
 const Wishlist = () => {
   const user = useAuth().user;
   const { wishlist, wishlistCount, isLoading, removeFromWishlist } =
-    useWishlist(user?._id, user?.tenantId);
-  const { addToCart } = useCart(user?._id, user?.tenantId);
+    useWishlist(user?._id as string, user?.tenantId as string);
+  const { addToCart } = useCart(user?._id as string, user?.tenantId as string);
   const [addingProductId, setAddingProductId] = useState<string | null>(null);
   if (isLoading) {
     return (
@@ -34,8 +34,8 @@ const Wishlist = () => {
     try {
       setAddingProductId(productId);
       await addToCart({
-        tenantId: user?.tenantId,
-        userId: user?._id,
+        tenantId: user?.tenantId || "",
+        userId: user?._id ||"",
         productId,
         quantity: 1,
       });

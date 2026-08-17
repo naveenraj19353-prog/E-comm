@@ -5,7 +5,7 @@ import "swiper/css/navigation";
 import "swiper/css/pagination";
 import styles from "./BannerSlider.module.css";
 export interface Banner {
-  id: string;
+  _id: string;
   title?: string;
   subtitle?: string;
   description?: string;
@@ -38,7 +38,7 @@ const BannerSlider = ({ banners }: BannerSliderProps) => {
         className={styles.swiper}
       >
         {banners.map((banner) => (
-          <SwiperSlide key={banner.id}>
+          <SwiperSlide key={banner._id}>
             <div className={styles.banner}>
               <picture>
                 {banner.mobileImage && (

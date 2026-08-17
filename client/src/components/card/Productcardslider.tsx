@@ -67,42 +67,40 @@ export default function ProductCardSlider({
           </button>
         </div>
       </div>
-      <Swiper
-        modules={[Navigation, FreeMode, Autoplay]}
-        onBeforeInit={(swiper) => {
-          if (typeof swiper.params.navigation !== "boolean") {
-            swiper.params.navigation.prevEl = prevRef.current;
-            swiper.params.navigation.nextEl = nextRef.current;
-          }
-        }}
-        // navigation={{
-        //   prevEl: prevRef.current,
-        //   nextEl: nextRef.current,
-        // }}
-        freeMode={{
-          enabled: true,
-          momentum: true,
-        }}
-        slidesPerView={slidesPerView || "auto"}
-        spaceBetween={16}
-        breakpoints={slidesPerView ? undefined : defaultBreakpoints}
-        className={styles.swiper}
-        autoplay={{
-          delay: 2600,
-          disableOnInteraction: false,
-          pauseOnMouseEnter: true,
-        }}
-      >
-        {products.map((product) => (
-          <SwiperSlide key={product._id} className={styles.slide}>
-            <ProductCard
-              product={product}
-              onToggleWishlist={onToggleWishlist}
-              onQuickAdd={onQuickAdd}
-            />
-          </SwiperSlide>
-        ))}
-      </Swiper>
+   <Swiper
+  modules={[Navigation, FreeMode, Autoplay]}
+  onBeforeInit={(swiper) => {
+    const navigation = swiper.params.navigation;
+
+    if (navigation && typeof navigation !== "boolean") {
+      navigation.prevEl = prevRef.current;
+      navigation.nextEl = nextRef.current;
+    }
+  }}
+  freeMode={{
+    enabled: true,
+    momentum: true,
+  }}
+  slidesPerView={slidesPerView || "auto"}
+  spaceBetween={16}
+  breakpoints={slidesPerView ? undefined : defaultBreakpoints}
+  className={styles.swiper}
+  autoplay={{
+    delay: 2600,
+    disableOnInteraction: false,
+    pauseOnMouseEnter: true,
+  }}
+>
+  {products.map((product) => (
+    <SwiperSlide key={product._id} className={styles.slide}>
+      <ProductCard
+        product={product}
+        onToggleWishlist={onToggleWishlist}
+        onQuickAdd={onQuickAdd}
+      />
+    </SwiperSlide>
+  ))}
+</Swiper>
     </section>
   );
 }

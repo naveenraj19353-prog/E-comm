@@ -34,7 +34,7 @@ console.log(theme)
 
     document.documentElement.style.setProperty(
       "--text",
-      theme.colors.text
+      theme.colors.textWhite
     );
 
     document.documentElement.style.setProperty(

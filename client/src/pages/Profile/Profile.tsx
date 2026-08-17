@@ -17,8 +17,8 @@ import { useAuth } from "../../features/auth/hooks/useAuth";
 const Profile = () => {
   const user = useAuth().user;
   const { profile, isLoading, isError, updateProfile, isUpdating } = useProfile(
-    user?.tenantId,
-    user?._id,
+    user?.tenantId as string,
+    user?._id as string,
   );
   const [editOpen, setEditOpen] = useState(false);
   if (isLoading) {

@@ -1,6 +1,6 @@
 import type { Product } from "../../features/products/types";
 import type { Review } from "../../features/reviews/types";
-import DeliverySection from "./DeliverySection";
+// import DeliverySection from "./DeliverySection";
 import ProductDelivery from "./ProductDelivery";
 import styles from "./ProductDetails.module.css";
 import ProductGallery from "./ProductGallery";

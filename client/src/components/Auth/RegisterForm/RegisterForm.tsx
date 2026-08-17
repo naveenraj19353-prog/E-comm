@@ -62,13 +62,14 @@ const RegisterForm = ({ tenantId, onSwitchToLogin }: RegisterFormProps) => {
       setPhone("");
       setPassword("");
       setConfirmPassword("");
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Registration failed:", error);
-      setError(
-        error?.response?.data?.detail ||
-          error?.message ||
-          "Unable to create account.",
-      );
+
+      if (error instanceof Error) {
+        setError(error.message || "Invalid email or password.");
+      } else {
+        setError("Invalid email or password.");
+      }
     } finally {
       setLoading(false);
     }

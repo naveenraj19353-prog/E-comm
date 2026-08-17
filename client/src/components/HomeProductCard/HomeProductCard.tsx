@@ -18,7 +18,7 @@ const HomeProductCard = ({ product, onClick }: HomeProductCardProps) => {
   const image =
     product.images?.length > 0
       ? product.images[0]
-      : "https:
+      :""
   return (
     <div className={styles.card} onClick={onClick}>
       <div className={styles.imageWrapper}>
