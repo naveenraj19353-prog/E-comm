@@ -1,4 +1,5 @@
-import { FormEvent, useState } from "react";
+import { useState } from "react";
+import { type SubmitEvent } from "react";
 import { useNavigate } from "react-router-dom";
 
 import styles from "../styles/CreateTenant.module.css";
@@ -16,7 +17,7 @@ export default function CreateTenant() {
 
   const [error, setError] = useState("");
 
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: SubmitEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     setError("");
@@ -42,10 +43,10 @@ export default function CreateTenant() {
       const createdTenant = response.data;
 
       navigate(`/admin/tenants/${createdTenant.tenantId}`);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Create tenant failed:", error);
 
-      setError(error?.response?.data?.detail || "Failed to create tenant.");
+      setError( "Failed to create tenant.");
     }
   };
 

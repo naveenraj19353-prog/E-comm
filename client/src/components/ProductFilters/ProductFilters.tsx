@@ -9,6 +9,7 @@ import ColorFilter from "./ColorFilter";
 import SizeFilter from "./SizeFilter";
 import styles from "./ProductFilters.module.css";
 import { store } from "../../app/store";
+import type { Category } from "../../features/products/types";
 const ProductFilters = () => {
   const dispatch = useAppDispatch();
   const tenantId = useAppSelector((state) => state.tenant.currentTenant?.id || state.tenant.tenantSlug) ?? "";
@@ -84,7 +85,7 @@ const ProductFilters = () => {
           <p className={styles.emptyText}>No categories found</p>
         ) : (
           <div className={styles.list}>
-            {categories?.data?.map((category) => (
+            {categories?.data?.map((category:Category) => (
               <label key={category._id} className={styles.checkbox}>
                 <input
                   type="checkbox"

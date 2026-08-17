@@ -18,47 +18,47 @@ const LoginForm = ({
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-const handleSubmit = async (event: React.FormEvent) => {
-  event.preventDefault();
-  setError("");
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setError("");
 
-  if (!email.trim()) {
-    setError("Please enter your email.");
-    return;
-  }
-
-  if (!password) {
-    setError("Please enter your password.");
-    return;
-  }
-
-  try {
-    setLoading(true);
-
-    const response = await login({
-      tenantId,
-      email: email.trim(),
-      password,
-    });
-
-    if (!response.success) {
-      setError("Unable to login.");
+    if (!email.trim()) {
+      setError("Please enter your email.");
       return;
     }
 
-    onSuccess();
-  } catch (error: unknown) {
-    console.error("Login failed:", error);
-
-    if (error instanceof Error) {
-      setError(error.message || "Invalid email or password.");
-    } else {
-      setError("Invalid email or password.");
+    if (!password) {
+      setError("Please enter your password.");
+      return;
     }
-  } finally {
-    setLoading(false);
-  }
-};
+
+    try {
+      setLoading(true);
+
+      const response = await login({
+        tenantId,
+        email: email.trim(),
+        password,
+      });
+
+      if (!response.success) {
+        setError("Unable to login.");
+        return;
+      }
+
+      onSuccess();
+    } catch (error: unknown) {
+      console.error("Login failed:", error);
+
+      if (error instanceof Error) {
+        setError(error.message || "Invalid email or password.");
+      } else {
+        setError("Invalid email or password.");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
   return (
     <>
       <div className={styles.header}>

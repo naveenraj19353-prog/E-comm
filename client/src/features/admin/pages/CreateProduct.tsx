@@ -5,6 +5,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useCreateProduct } from "../hooks/useTenantProducts";
 
 import styles from "../styles/CreateProduct.module.css";
+import axios from "axios";
 
 export default function CreateProduct() {
   const navigate = useNavigate();
@@ -107,7 +108,13 @@ export default function CreateProduct() {
     } catch (error) {
       console.error("Failed to create product:", error);
 
-      setError(error?.response?.data?.detail || "Failed to create product.");
+      if (axios.isAxiosError(error)) {
+        setError(error.response?.data?.detail || "Failed to create product.");
+      } else if (error instanceof Error) {
+        setError(error.message);
+      } else {
+        setError("Failed to create product.");
+      }
     }
   };
 

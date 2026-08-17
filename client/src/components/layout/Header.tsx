@@ -51,7 +51,7 @@ export default function Navbar() {
    * ================================
    */
 
-  const { cartCount } = useCart(user?._id, user?.tenantId);
+  const { cartCount } = useCart(user?._id as string, user?.tenantId  as string);
 
   /*
    * ================================
@@ -59,7 +59,7 @@ export default function Navbar() {
    * ================================
    */
 
-  const { wishlistCount } = useWishlist(user?._id, user?.tenantId);
+  const { wishlistCount } = useWishlist(user?._id as string, user?.tenantId  as string);
 
   const [categoryStart, setCategoryStart] = useState(0);
 
@@ -420,7 +420,7 @@ export default function Navbar() {
 
         <nav className={styles.mobileNavLinks}>
           {categoryResponse &&
-            categoryResponse.data.map((category) => (
+            categoryResponse.data.map((category: Category) => (
               <button
                 key={
                   category._id ||

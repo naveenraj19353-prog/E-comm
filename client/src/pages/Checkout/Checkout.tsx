@@ -27,7 +27,10 @@ const Checkout = () => {
 
   const { user } = useAuth();
 
-  const { cart, grandTotal, isLoading } = useCart(user?._id, user?.tenantId);
+  const { cart, grandTotal, isLoading } = useCart(
+    user?._id as string,
+    user?.tenantId as string,
+  );
 
   const { createOrder, verifyPayment, isCreatingOrder, isVerifyingPayment } =
     usePayment();
@@ -55,7 +58,6 @@ const Checkout = () => {
   const total = subtotal + deliveryCharge - discount;
 
   const handlePlaceOrder = async () => {
-    debugger
     try {
       if (!user?._id || !user?.tenantId) {
         alert("Please login before placing an order.");
@@ -79,12 +81,6 @@ const Checkout = () => {
 
       setIsProcessing(true);
 
-      /*
-       * ================================
-       * CREATE RAZORPAY ORDER
-       * ================================
-       */
-
       const orderData = await createOrder({
         tenantId: user.tenantId,
         userId: user._id,
@@ -93,46 +89,24 @@ const Checkout = () => {
 
       console.log("Razorpay order created:", orderData);
 
-      /*
-       * ================================
-       * RAZORPAY OPTIONS
-       * ================================
-       */
-
       const options = {
         key: import.meta.env.VITE_RAZORPAY_KEY_ID,
-
         amount: orderData.amountInPaise,
-
-        currency: orderData.currency,
-
+        currency: "INR" as const,
         name: "OmniStore",
-
         description: "E-commerce Order Payment",
-
         order_id: orderData.orderId,
-
         prefill: {
           name: selectedAddress.fullName,
-
           contact: selectedAddress.phone,
         },
-
-        notes: {
+        notes: JSON.stringify({
           tenantId: user.tenantId,
-
           userId: user._id,
-        },
-
+        }),
         theme: {
           color: "#2f6b52",
         },
-
-        /*
-         * ================================
-         * PAYMENT SUCCESS
-         * ================================
-         */
 
         handler: async (paymentResponse: {
           razorpay_payment_id: string;
@@ -142,23 +116,12 @@ const Checkout = () => {
           try {
             console.log("Razorpay payment response:", paymentResponse);
 
-            /*
-             * ================================
-             * VERIFY PAYMENT
-             * ================================
-             */
-
             const verifyData = await verifyPayment({
-              tenantId: user.tenantId,
-
+              tenantId: user.tenantId as string,
               userId: user._id,
-
               razorpayOrderId: paymentResponse.razorpay_order_id,
-
               razorpayPaymentId: paymentResponse.razorpay_payment_id,
-
               razorpaySignature: paymentResponse.razorpay_signature,
-
               couponCode: null,
             });
 
@@ -166,13 +129,9 @@ const Checkout = () => {
 
             alert("Payment successful! Order placed.");
 
-            /*
-             * Redirect to orders page later
-             */
-
-            if (verifyData.orderId) {
+            if (verifyData.orderId && user.tenantId) {
               navigate(
-                `/${user.tenantId.toLowerCase()}/orders/${verifyData.orderId}`
+                `/${user.tenantId.toLowerCase()}/orders/${verifyData.orderId}`,
               );
             }
           } catch (error) {
@@ -181,33 +140,20 @@ const Checkout = () => {
             alert(
               error instanceof Error
                 ? error.message
-                : "Payment verification failed."
+                : "Payment verification failed.",
             );
           } finally {
             setIsProcessing(false);
           }
         },
 
-        /*
-         * ================================
-         * RAZORPAY CLOSED
-         * ================================
-         */
-
         modal: {
           ondismiss: () => {
             console.log("Razorpay checkout closed.");
-
             setIsProcessing(false);
           },
         },
       };
-
-      /*
-       * ================================
-       * OPEN RAZORPAY
-       * ================================
-       */
 
       const razorpay = new Razorpay(options);
 
@@ -216,7 +162,7 @@ const Checkout = () => {
       console.error("Place order error:", error);
 
       alert(
-        error instanceof Error ? error.message : "Unable to process order."
+        error instanceof Error ? error.message : "Unable to process order.",
       );
 
       setIsProcessing(false);
@@ -262,7 +208,11 @@ const Checkout = () => {
         <CheckoutLayout
           main={
             <CheckoutMain>
-              <AddressSection userId={user._id} tenantId={user.tenantId} onAddressSelect={setSelectedAddress} />
+              <AddressSection
+                userId={user?._id}
+                tenantId={user?.tenantId as string}
+                onAddressSelect={setSelectedAddress}
+              />
 
               <DeliveryMethod onDeliveryChange={setDeliveryMethod} />
 

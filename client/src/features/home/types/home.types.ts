@@ -1,3 +1,4 @@
+import type { Banner } from "../../../components/banner/BannerSlider";
 import type { Product } from "../../products/types";
 export interface HomeCategory {
   id: string;
@@ -33,7 +34,7 @@ export interface SellingProduct extends Product {
   orderCount?: number;
 }
 export interface HomeData {
-  banners: HomeBanner[];
+  banners: Banner[];
   categories: HomeCategory[];
   trendingProducts: Product[];
   bestDiscountProducts: Product[];

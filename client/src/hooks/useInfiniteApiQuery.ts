@@ -1,12 +1,19 @@
-import { useInfiniteQuery, type QueryKey } from "@tanstack/react-query";
+import {
+  useInfiniteQuery,
+  type QueryKey,
+} from "@tanstack/react-query";
+
 export function useInfiniteApiQuery<TData>(
   queryKey: QueryKey,
-  queryFn: any,
-  getNextPageParam: any,
+  queryFn: (pageParam: number) => Promise<TData>,
+  getNextPageParam: (
+    lastPage: TData,
+    allPages: TData[],
+  ) => number | undefined,
 ) {
   return useInfiniteQuery({
     queryKey,
-    queryFn,
+    queryFn: ({ pageParam }) => queryFn(pageParam),
     initialPageParam: 1,
     getNextPageParam,
   });

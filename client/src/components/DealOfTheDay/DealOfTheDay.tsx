@@ -24,7 +24,6 @@ const DealOfTheDay = ({
   }
   return (
     <section className={styles.section}>
-      
       <div className={styles.left}>
         <span className={styles.tag}>🔥 Limited Time</span>
         <h2>
@@ -42,7 +41,7 @@ const DealOfTheDay = ({
           <span>→</span>
         </button>
       </div>
-      
+
       <div className={styles.right}>
         <div className={styles.sliderHeader}>
           <div>
@@ -108,8 +107,12 @@ const DealOfTheDay = ({
             <SwiperSlide key={product._id}>
               <ProductCard
                 product={product}
-                onToggleWishlist={onToggleWishlist}
-                onQuickAdd={onQuickAdd}
+                onWishlist={
+                  onToggleWishlist
+                    ? (id) => onToggleWishlist(id, true)
+                    : undefined
+                }
+                onAddToCart={onQuickAdd}
               />
             </SwiperSlide>
           ))}

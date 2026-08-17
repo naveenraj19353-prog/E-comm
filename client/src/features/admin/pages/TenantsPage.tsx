@@ -1,4 +1,5 @@
-import { FormEvent, useState } from "react";
+import { useState } from "react";
+import type { SubmitEvent } from "react";
 import { useCreateTenant, useTenants } from "../hooks/useTenants";
 import styles from "../styles/TenantsPage.module.css";
 import { Link } from "react-router-dom";
@@ -48,7 +49,7 @@ export default function TenantsPage() {
   };
 
   const handleSubmit = async (
-    event: FormEvent<HTMLFormElement>
+    event: SubmitEvent<HTMLFormElement>
   ) => {
     event.preventDefault();
 

@@ -6,6 +6,7 @@ import "swiper/css/pagination";
 import styles from "./BannerSlider.module.css";
 export interface Banner {
   _id: string;
+  tenantId: string;
   title?: string;
   subtitle?: string;
   description?: string;
@@ -13,6 +14,12 @@ export interface Banner {
   mobileImage?: string;
   buttonText?: string;
   link?: string;
+  priority?: number;
+  isActive?: boolean;
+  startDate?: string | null;
+  endDate?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
 }
 interface BannerSliderProps {
   banners: Banner[];

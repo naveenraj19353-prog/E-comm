@@ -11,8 +11,8 @@ interface AddressSectionProps {
   onAddressSelect?: (address: Address) => void;
 }
 const AddressSection = ({
-  userId ,
-  tenantId  ,
+  userId,
+  tenantId,
   onAddressSelect,
 }: AddressSectionProps) => {
   const {
@@ -24,7 +24,7 @@ const AddressSection = ({
     addAddress,
     editAddress,
     removeAddress,
-  } = useAddresses(userId, tenantId);
+  } = useAddresses(userId as string, tenantId as string);
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(
     null,
   );
@@ -54,8 +54,6 @@ const AddressSection = ({
   const handleCreateAddress = async (data: AddressFormData) => {
     try {
       await addAddress({
-        tenantId,
-        userId,
         ...data,
       });
       setShowForm(false);
@@ -70,7 +68,6 @@ const AddressSection = ({
     }
     try {
       await editAddress(editingAddress._id, {
-        tenantId,
         ...data,
       });
       setSelectedAddressId(editingAddress._id);

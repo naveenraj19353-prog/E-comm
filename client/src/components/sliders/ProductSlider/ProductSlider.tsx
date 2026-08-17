@@ -4,8 +4,8 @@ import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
 import ProductCard from "./ProductCard";
-import type { Product } from "./types";
 import styles from "./ProductSlider.module.css";
+import type { Product } from "../../../features/products/types";
 interface ProductSliderProps {
   title: string;
   products: Product[];
@@ -48,7 +48,7 @@ const ProductSlider = ({ title, products }: ProductSliderProps) => {
         }}
       >
         {products.map((product) => (
-          <SwiperSlide key={product.id}>
+          <SwiperSlide key={product._id}>
             <ProductCard product={product} />
           </SwiperSlide>
         ))}

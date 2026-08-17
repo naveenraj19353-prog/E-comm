@@ -7,11 +7,11 @@ import ProductCard from "../ProductCard/UniCard/ProductCard";
 import { useAuth } from "../../features/auth/hooks/useAuth";
 const ProductGrid = ({ products }: { products: Product[] }) => {
   const user = useAuth().user;
-  const { addToCart } = useCart(user?._id, user?.tenantId);
+  const { addToCart } = useCart(user?._id as string, user?.tenantId as string);
   const [addingProductId, setAddingProductId] = useState<string | null>(null);
   const { wishlist, addToWishlist, removeFromWishlist } = useWishlist(
-    user?._id,
-    user?.tenantId,
+    user?._id as string,
+    user?.tenantId as string,
   );
   if (products.length === 0) {
     return (
@@ -32,8 +32,8 @@ const ProductGrid = ({ products }: { products: Product[] }) => {
         quantity: 1,
       })
       await addToCart({
-        tenantId: user?.tenantId,
-        userId: user?._id,
+        tenantId: user?.tenantId as string,
+        userId: user?._id as string,
         productId,
         quantity: 1,
       });
@@ -52,8 +52,8 @@ const ProductGrid = ({ products }: { products: Product[] }) => {
         await removeFromWishlist(productId);
       } else {
         await addToWishlist({
-          tenantId: user?.tenantId,
-          userId: user?._id,
+          tenantId: user?.tenantId as string,
+          userId: user?._id as string,
           productId,
         });
       }

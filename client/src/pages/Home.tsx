@@ -12,8 +12,8 @@ const Home = () => {
   const user = useAppSelector((state) => state.auth.user);
   const tenantId = tenantSlug;
   const { data: homeData, isLoading, isError, refetch } = useHome(tenantId);
-  const { addToCart } = useCart(user?._id, tenantId);
-  const { addToWishlist, removeFromWishlist } = useWishlist(user?._id, tenantId);
+  const { addToCart } = useCart(user?._id as string, tenantId);
+  const { addToWishlist, removeFromWishlist } = useWishlist(user?._id as string, tenantId);
   const handleWishlist = async (productId: string, isAdding: boolean) => {
     if (!user?._id) {
       console.log("User is not logged in");
@@ -28,7 +28,7 @@ const Home = () => {
         });
         console.log("Product added to wishlist");
       } else {
-        await removeFromWishlist(productId, user?._id, tenantId);
+        await removeFromWishlist(productId);
         console.log("Product removed from wishlist");
       }
     } catch (error) {
@@ -68,14 +68,14 @@ const Home = () => {
   }
   const {
     banners = [],
-    categories = [],
+    // categories = [],
     trendingProducts = [],
     bestDiscountProducts = [],
     mostSellingProducts = [],
     newArrivals = [],
     topRatedProducts = [],
     dealOfTheDay = [],
-    brands = [],
+    // brands = [],
   } = homeData;
   return (
     <main className={styles.home}>

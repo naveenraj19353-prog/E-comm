@@ -20,7 +20,7 @@ const Cart = () => {
     updateCart,
     removeFromCart,
     clearCart,
-  } = useCart(user?._id, user?.tenantId);
+  } = useCart(user?._id as string, user?.tenantId as string);
   if (isLoading) {
     return <CartLoading />;
   }
@@ -48,7 +48,7 @@ const Cart = () => {
             />
           ))}
         </div>
-        <CartSummary cartCount={cartCount} grandTotal={grandTotal} tenantId={user?.tenantId}/>
+        <CartSummary cartCount={cartCount} grandTotal={grandTotal} tenantId={user?.tenantId as string}/>
       </div>
     </div>
   );
