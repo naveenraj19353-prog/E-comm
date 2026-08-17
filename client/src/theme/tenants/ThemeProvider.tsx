@@ -13,6 +13,8 @@ const ThemeProvider = ({ children }: Props) => {
     themes[tenantId as keyof typeof themes] ?? themes.DEFAULT;
 
   useEffect(() => {
+    // Sync the selected tenant palette with CSS custom properties so every component
+    // can consume the same design tokens without hardcoded colors.
     document.documentElement.style.setProperty(
       "--primary",
       theme.colors.primary
@@ -29,8 +31,18 @@ const ThemeProvider = ({ children }: Props) => {
     );
 
     document.documentElement.style.setProperty(
+      "--surface",
+      theme.colors.surface ?? "#ffffff"
+    );
+
+    document.documentElement.style.setProperty(
       "--text",
       theme.colors.text
+    );
+
+    document.documentElement.style.setProperty(
+      "--border",
+      theme.colors.border ?? "#e5e7eb"
     );
   }, [theme]);
 

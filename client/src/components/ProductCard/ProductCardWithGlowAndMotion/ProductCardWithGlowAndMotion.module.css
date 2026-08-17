@@ -41,9 +41,9 @@ body::before {
 
 .h-badge {
     display: inline-block;
-    background: rgba(0, 212, 255, .08);
-    border: 1px solid rgba(0, 212, 255, .2);
-    color: #00d4ff;
+    background: rgba(37, 99, 235, .08);
+    border: 1px solid rgba(37, 99, 235, .2);
+    color: var(--primary);
     font-size: 10px;
     letter-spacing: 3px;
     text-transform: uppercase;
@@ -55,13 +55,13 @@ body::before {
 .header h1 {
     font-size: clamp(22px, 3.5vw, 36px);
     font-weight: 700;
-    color: #fff;
+    color: var(--surface);
     margin-bottom: 8px
 }
 
 .header p {
     font-size: 13px;
-    color: #475569;
+    color: var(--text-muted);
     max-width: 460px;
     margin: 0 auto
 }
@@ -194,8 +194,8 @@ body::before {
     text-transform: uppercase;
     padding: 4px 10px;
     border-radius: 20px;
-    background: var(--c1, #00d4ff);
-    color: #000;
+    background: var(--c1, var(--primary));
+    color: var(--surface);
 }
 
 .cardWishlist {
@@ -238,14 +238,14 @@ body::before {
 .cardName {
     font-size: 17px;
     font-weight: 600;
-    color: #fff;
+    color: var(--surface);
     margin-bottom: 6px;
     line-height: 1.2
 }
 
 .cardDesc {
     font-size: 12px;
-    color: #475569;
+    color: var(--text-muted);
     line-height: 1.5;
     margin-bottom: 16px
 }

@@ -94,7 +94,7 @@
 .mobileMenu hr {
   width: 80%;
   border: none;
-  border-top: 1px solid #ddd;
+  border-top: 1px solid var(--border);
 }
 
 .open span:nth-child(1) {

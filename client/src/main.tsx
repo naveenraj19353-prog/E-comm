@@ -6,6 +6,7 @@ import { RouterProvider } from "react-router-dom";
 import { store } from "./redux/store";
 import { router } from "./routes";
 
+import "./index.css";
 import "./styles/global.css";
 import ThemeProvider from "./theme/tenants/ThemeProvider";
 import QueryProvider from "./providers/QueryProvider";

@@ -9,6 +9,7 @@ export default {
     danger: "#EF4444",
     background: "#F8FAFC",
     surface: "#FFFFFF",
+    border: "#E5E7EB",
     text: "#111827",
   },
 };
