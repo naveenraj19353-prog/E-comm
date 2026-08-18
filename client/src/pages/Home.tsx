@@ -1,149 +1,152 @@
-import { useState } from "react";
-import Banner from "../components/banner/banner";
-
-import { useAppSelector } from "../redux/hooks";
-import { useProducts } from "../hooks/queries/useProducts";
-import { useCategories } from "../hooks/queries/useCategories";
-import FlipProductCard from "../components/ProductCard/ProductCardWithFlipEffect/FlipProductCard";
-
-
-
-import { Swiper, SwiperSlide } from "swiper/react";
-import { Navigation, Autoplay } from "swiper/modules";
-import "swiper/css";
-import "swiper/css/navigation";
-import swiperStypes from "../components/ProductCarousel/ProductCarousel.module.css"
-import styles from "./Home.module.css"
-import SectionHeader from "../components/heading/Heading";
-
+import { useAppSelector } from "../app/hooks";
+import ProductCardSlider from "../components/card/Productcardslider";
+import DealOfTheDay from "../components/DealOfTheDay/DealOfTheDay";
+import { useHome } from "../features/home/hooks/useHome";
+import styles from "./Home.module.css";
+import { useCart } from "../features/cart/hooks/useCart";
+import { useWishlist } from "../features/wishlist/hooks/useWishlist";
+import BannerSlider from "../components/banner/BannerSlider";
+import CategorySlider from "../components/CategorySlider/CategorySlider";
 const Home = () => {
-  const tenantId = useAppSelector(
-    (state) => state.tenant.tenantId
-  );
-
-  const [category, setCategory] = useState("Women");
-
-  const { data: products, isLoading, isError } =
-    useProducts(tenantId);
-  const {
-    data: categoryResponse,
-    isLoading: isCategoryLoading,
-    isError: isCategoryError,
-  } = useCategories(tenantId);
-
-  const categories =
-    categoryResponse?.data ?? [];
-
-  // const filteredProducts =
-  //   products?.data?.filter(
-  //     (product) => product.categoryId === category.name
-  //   ) ?? [];
-
-  // console.log("products", categories, products)
-
-
-  return (
-    <section>
-      <Banner
-        slides={[
-          {
-            image:
-              "https://optimal-demos.myshopify.com/cdn/shop/files/demo9-slide1.jpg?v=1701331573",
-            title: "Summer Collection",
-            subTitle: "Discover our",
-            highlightText: "Latest Arrivals",
-            primaryButtonText: "Shop Women",
-            secondaryButtonText: "Shop Men",
-            onPrimaryClick: () => console.log("Women"),
-            onSecondaryClick: () => console.log("Men"),
-          },
-          {
-            image:
-              "https://optimal-demo.myshopify.com/cdn/shop/files/men-slide8_2000x.jpg?v=1704803378",
-            title: "Men's Fashion",
-            subTitle: "New Season",
-            highlightText: "2026",
-            primaryButtonText: "Explore",
-            secondaryButtonText: "View Deals",
-          },
-          {
-            image:
-              "https://www.pxdraft.com/wrap/shopapp/assets/img/fashion2/home-banner-4.jpg",
-            title: "Men's Fashion",
-            subTitle: "New Season",
-            highlightText: "2026",
-            primaryButtonText: "Explore",
-            secondaryButtonText: "View Deals",
-          },
-        ]}
-      />
-
-      <div className={swiperStypes.wrapper}>
-        <SectionHeader
-          title="Trending Now"
-          subtitle="Explore the latest popular collections"
-          actionText="View All"
-          onActionClick={() => console.log("clicked")}
-        />
-        <Swiper
-          modules={[Navigation, Autoplay]}
-          navigation
-          loop
-          autoplay={{
-            delay: 3000,
-            disableOnInteraction: false,
-            pauseOnMouseEnter: true,
-          }}
-          spaceBetween={20}
-          slidesPerView={4}
-          breakpoints={{
-            320: { slidesPerView: 1 },
-            640: { slidesPerView: 2 },
-            900: { slidesPerView: 3 },
-            1200: { slidesPerView: 5 },
-          }}
-        >
-          {categories.map((category) => (
-            <SwiperSlide key={category._id}>
-              <FlipProductCard
-                key={category._id}
-                badge={category.isActive ? "Active" : ""}
-                badgeType={category.isActive ? "hot" : "sale"}
-                image={'https://picsum.photos/600/600?random=9506'}
-                category="Category"
-                title={category.name}
-                description={category.description}
-                theme="blue"
-                label={"View"}
-              />
-            </SwiperSlide>
-          ))}
-        </Swiper>
+  const tenantSlug = useAppSelector((state) => state.tenant.tenantSlug);
+  const user = useAppSelector((state) => state.auth.user);
+  const tenantId = tenantSlug;
+  const { data: homeData, isLoading, isError, refetch } = useHome(tenantId);
+  const { addToCart } = useCart(user?._id as string, tenantId);
+  const { addToWishlist, removeFromWishlist } = useWishlist(user?._id as string, tenantId);
+  const handleWishlist = async (productId: string, isAdding: boolean) => {
+    if (!user?._id) {
+      console.log("User is not logged in");
+      return;
+    }
+    try {
+      if (isAdding) {
+        await addToWishlist({
+          tenantId,
+          userId: user?._id,
+          productId,
+        });
+        console.log("Product added to wishlist");
+      } else {
+        await removeFromWishlist(productId);
+        console.log("Product removed from wishlist");
+      }
+    } catch (error) {
+      console.error("Wishlist operation failed:", error);
+    }
+  };
+  const handleAddToCart = async (productId: string) => {
+    if (!user?._id) {
+      console.log("User is not logged in");
+      return;
+    }
+    try {
+      await addToCart({
+        tenantId,
+        userId: user?._id,
+        productId,
+        quantity: 1,
+      });
+      console.log("Product added to cart");
+    } catch (error) {
+      console.error("Add to cart failed:", error);
+    }
+  };
+  if (isLoading) {
+    return <div className={styles.loading}>Loading store...</div>;
+  }
+  if (isError) {
+    return (
+      <div className={styles.error}>
+        <h2>Unable to load store</h2>
+        <button onClick={() => refetch()}>Retry</button>
       </div>
+    );
+  }
+  if (!homeData) {
+    return null;
+  }
+  const {
+    banners = [],
+    // categories = [],
+    trendingProducts = [],
+    bestDiscountProducts = [],
+    mostSellingProducts = [],
+    newArrivals = [],
+    topRatedProducts = [],
+    dealOfTheDay = [],
+    // brands = [],
+  } = homeData;
+  return (
+    <main className={styles.home}>
+      <section className={styles.bannerSection}>
+        <BannerSlider banners={banners} />
+      </section>
 
-      {/* <div className={styles.categorySection}>
-        {
-          categories.map((obj) => (
-            <FlipProductCard
-              key={obj._id}
-              badge={obj.isActive ? "Active" : ""}
-              badgeType={obj.isActive ? "hot" : "sale"}
-              image={'https://picsum.photos/600/600?random=9506'}
-              category="Category"
-              title={obj.name}
-              description={obj.description}
-              theme="blue"
-              label={"View"}
-            />
-          ))
-        }
-      </div> */}
+      <section>
+        <CategorySlider
+          tenantId={tenantId}
+          onCategoryClick={(category) => {
+            console.log(
+              "Selected category:",
+              category
+            );
+          }}
+        />
+      </section>
+      <section className={styles.productSection}>
+        <ProductCardSlider
+          title="Trending Products"
+          products={trendingProducts}
+          onToggleWishlist={handleWishlist}
+          onQuickAdd={handleAddToCart}
+        />
+      </section>
 
-      {/* {filteredProducts.length > 0 && (
-        <ProductCarousel products={filteredProducts} />
-      )} */}
-    </section>
+      <section className={styles.productSection}>
+        <ProductCardSlider
+          title="Best Discounts"
+          products={bestDiscountProducts}
+          onToggleWishlist={handleWishlist}
+          onQuickAdd={handleAddToCart}
+        />
+      </section>
+
+      {mostSellingProducts.length > 0 && (
+        <section className={styles.productSection}>
+          <ProductCardSlider
+            title="Most Selling"
+            products={mostSellingProducts}
+            onToggleWishlist={handleWishlist}
+            onQuickAdd={handleAddToCart}
+          />
+        </section>
+      )}
+
+      <section className={styles.productSection}>
+        <ProductCardSlider
+          title="New Arrivals"
+          products={newArrivals}
+          onToggleWishlist={handleWishlist}
+          onQuickAdd={handleAddToCart}
+        />
+      </section>
+
+      <section className={styles.productSection}>
+        <ProductCardSlider
+          title="Top Rated Products"
+          products={topRatedProducts}
+          onToggleWishlist={handleWishlist}
+          onQuickAdd={handleAddToCart}
+        />
+      </section>
+
+      {dealOfTheDay.length > 0 && (
+        <section className={styles.productSection}>
+          <DealOfTheDay products={dealOfTheDay} />
+        </section>
+      )}
+    </main>
   );
 };
-
 export default Home;

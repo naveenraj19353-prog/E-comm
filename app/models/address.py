@@ -1,70 +1,72 @@
-from pydantic import BaseModel, Field, ConfigDict
 from typing import Optional
 
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+)
+
+# ============================================================
+# CREATE ADDRESS
+# ============================================================
+
+
 class CreateAddress(BaseModel):
-    tenantId: str
+
+    model_config = ConfigDict(str_strip_whitespace=True)
+
+    tenantId: str = Field(..., min_length=3)
+
     userId: str
 
     fullName: str = Field(..., min_length=3, max_length=100)
+
     phone: str = Field(..., min_length=10, max_length=15)
 
     addressLine1: str = Field(..., min_length=5)
-    addressLine2: str
 
-    city: str
-    state: str
-    country: str
-    postalCode: str
+    addressLine2: Optional[str] = ""
 
-    addressType: str  # Home / Office / Other
+    city: str = Field(..., min_length=2, max_length=100)
+
+    state: str = Field(..., min_length=2, max_length=100)
+
+    country: str = Field(..., min_length=2, max_length=100)
+
+    postalCode: str = Field(..., min_length=4, max_length=10)
+
+    addressType: str = Field(..., pattern="^(Home|Office|Other)$")
 
     isDefault: bool = False
 
+
+# ============================================================
+# UPDATE ADDRESS
+# ============================================================
+
+
 class UpdateAddress(BaseModel):
 
-    model_config = ConfigDict(
-        str_strip_whitespace=True
-    )
+    model_config = ConfigDict(str_strip_whitespace=True)
 
-    tenantId: str = Field(
-        ...,
-        min_length=3
-    )
+    tenantId: str = Field(..., min_length=3)
 
-    fullName: Optional[str] = Field(
-        default=None,
-        min_length=3,
-        max_length=100
-    )
+    fullName: Optional[str] = Field(default=None, min_length=3, max_length=100)
 
-    phone: Optional[str] = Field(
-        default=None,
-        min_length=10,
-        max_length=15
-    )
+    phone: Optional[str] = Field(default=None, min_length=10, max_length=15)
 
-    addressLine1: Optional[str] = Field(
-        default=None,
-        min_length=5
-    )
+    addressLine1: Optional[str] = Field(default=None, min_length=5)
 
     addressLine2: Optional[str] = None
 
-    city: Optional[str] = None
+    city: Optional[str] = Field(default=None, min_length=2, max_length=100)
 
-    state: Optional[str] = None
+    state: Optional[str] = Field(default=None, min_length=2, max_length=100)
 
-    country: Optional[str] = None
+    country: Optional[str] = Field(default=None, min_length=2, max_length=100)
 
-    postalCode: Optional[str] = Field(
-        default=None,
-        min_length=4,
-        max_length=10
-    )
+    postalCode: Optional[str] = Field(default=None, min_length=4, max_length=10)
 
-    addressType: Optional[str] = Field(
-        default=None,
-        pattern="^(Home|Office|Other)$"
-    )
+    addressType: Optional[str] = Field(default=None, pattern="^(Home|Office|Other)$")
 
     isDefault: Optional[bool] = None

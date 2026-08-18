@@ -5,22 +5,37 @@ from datetime import datetime
 from app.database.mongo import categories
 from app.models.category import CreateCategory, UpdateCategory
 
+
 router = APIRouter(
     prefix="/categories",
     tags=["Categories"]
 )
 
+# categories.update_many(
+#     {"tenantId": {"$exists": True}},
+#     [
+#         {
+#             "$set": {
+#                 "tenantId": {
+#                     "$toLower": "$tenantId"
+#                 }
+#             }
+#         }
+#     ],
+# )
+# ==================================================
+# CREATE CATEGORY
+# ==================================================
 
-# --------------------------------------------------
-# Create Category
-# --------------------------------------------------
 @router.post("/")
 def create_category(category: CreateCategory):
 
-    existing = categories.find_one({
-        "tenantId": category.tenantId,
-        "name": category.name
-    })
+    existing = categories.find_one(
+        {
+            "tenantId": category.tenantId,
+            "name": category.name
+        }
+    )
 
     if existing:
         raise HTTPException(
@@ -28,14 +43,16 @@ def create_category(category: CreateCategory):
             detail="Category already exists."
         )
 
+    now = datetime.utcnow()
+
     payload = {
         "tenantId": category.tenantId,
         "name": category.name,
         "description": category.description,
         "image": category.image,
         "isActive": True,
-        "createdAt": datetime.utcnow(),
-        "updatedAt": datetime.utcnow()
+        "createdAt": now,
+        "updatedAt": now
     }
 
     result = categories.insert_one(payload)
@@ -47,21 +64,28 @@ def create_category(category: CreateCategory):
     }
 
 
-# --------------------------------------------------
-# Get All Categories
-# --------------------------------------------------
+# ==================================================
+# GET ALL CATEGORIES
+# ==================================================
+
 @router.get("/")
 def get_all_categories(tenantId: str):
 
     data = []
 
-    cursor = categories.find({
-        "tenantId": tenantId,
-        "isActive": True
-    })
+    cursor = categories.find(
+        {
+            "tenantId": tenantId,
+            "isActive": True
+        }
+    ).sort("createdAt", 1)
 
     for category in cursor:
-        category["_id"] = str(category["_id"])
+
+        category["_id"] = str(
+            category["_id"]
+        )
+
         data.append(category)
 
     return {
@@ -71,17 +95,29 @@ def get_all_categories(tenantId: str):
     }
 
 
-# --------------------------------------------------
-# Get Category By Id
-# --------------------------------------------------
-@router.get("/{id}")
-def get_category_by_id(id: str, tenantId: str):
+# ==================================================
+# GET CATEGORY BY ID
+# ==================================================
 
-    category = categories.find_one({
-        "_id": ObjectId(id),
-        "tenantId": tenantId,
-        "isActive": True
-    })
+@router.get("/{id}")
+def get_category_by_id(
+    id: str,
+    tenantId: str
+):
+
+    if not ObjectId.is_valid(id):
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid category ID."
+        )
+
+    category = categories.find_one(
+        {
+            "_id": ObjectId(id),
+            "tenantId": tenantId,
+            "isActive": True
+        }
+    )
 
     if not category:
         raise HTTPException(
@@ -89,7 +125,9 @@ def get_category_by_id(id: str, tenantId: str):
             detail="Category not found."
         )
 
-    category["_id"] = str(category["_id"])
+    category["_id"] = str(
+        category["_id"]
+    )
 
     return {
         "success": True,
@@ -97,13 +135,25 @@ def get_category_by_id(id: str, tenantId: str):
     }
 
 
-# --------------------------------------------------
-# Update Category
-# --------------------------------------------------
-@router.put("/{id}")
-def update_category(id: str, category: UpdateCategory):
+# ==================================================
+# UPDATE CATEGORY
+# ==================================================
 
-    update_data = category.model_dump(exclude_unset=True)
+@router.put("/{id}")
+def update_category(
+    id: str,
+    category: UpdateCategory
+):
+
+    if not ObjectId.is_valid(id):
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid category ID."
+        )
+
+    update_data = category.model_dump(
+        exclude_unset=True
+    )
 
     if not update_data:
         raise HTTPException(
@@ -129,12 +179,17 @@ def update_category(id: str, category: UpdateCategory):
             detail="Category not found."
         )
 
-    updated = categories.find_one({
-        "_id": ObjectId(id),
-        "tenantId": category.tenantId
-    })
+    updated = categories.find_one(
+        {
+            "_id": ObjectId(id),
+            "tenantId": category.tenantId
+        }
+    )
 
-    updated["_id"] = str(updated["_id"])
+    if updated:
+        updated["_id"] = str(
+            updated["_id"]
+        )
 
     return {
         "success": True,
@@ -143,16 +198,28 @@ def update_category(id: str, category: UpdateCategory):
     }
 
 
-# --------------------------------------------------
-# Delete Category
-# --------------------------------------------------
-@router.delete("/{id}")
-def delete_category(id: str, tenantId: str):
+# ==================================================
+# DELETE CATEGORY
+# ==================================================
 
-    result = categories.delete_one({
-        "_id": ObjectId(id),
-        "tenantId": tenantId
-    })
+@router.delete("/{id}")
+def delete_category(
+    id: str,
+    tenantId: str
+):
+
+    if not ObjectId.is_valid(id):
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid category ID."
+        )
+
+    result = categories.delete_one(
+        {
+            "_id": ObjectId(id),
+            "tenantId": tenantId
+        }
+    )
 
     if result.deleted_count == 0:
         raise HTTPException(

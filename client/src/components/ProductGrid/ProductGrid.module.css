@@ -1,0 +1,73 @@
+.grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px;
+}
+.empty {
+  width: 100%;
+  min-height: 400px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 40px 20px;
+  color: #666;
+}
+.emptyIcon {
+  font-size: 48px;
+  line-height: 1;
+  margin-bottom: 16px;
+}
+.empty h2 {
+  margin: 0 0 8px;
+  font-size: 22px;
+  font-weight: 600;
+  color: #222;
+}
+.empty p {
+  margin: 0 0 24px;
+  font-size: 14px;
+  color: #666;
+}
+.clearButton {
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  background: #111;
+  color: #fff;
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
+}
+.clearButton:hover {
+  opacity: 0.85;
+}
+.clearButton:active {
+  transform: scale(0.98);
+}
+.wishlistActive {
+  background: #ef4444;
+  color: #ffffff;
+}
+.wishlistActive:hover {
+  background: #dc2626;
+}
+@media (max-width: 1200px) {
+  .grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+@media (max-width: 900px) {
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (max-width: 600px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}

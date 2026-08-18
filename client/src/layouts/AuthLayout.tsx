@@ -12,8 +12,8 @@ const AuthLayout = () => {
       <div
         style={{
           flex: 1,
-          background: "#2563eb",
-          color: "#fff",
+          background: "var(--primary)",
+          color: "var(--surface)",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",

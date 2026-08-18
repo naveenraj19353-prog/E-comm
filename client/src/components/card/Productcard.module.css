@@ -1,0 +1,587 @@
+.card {
+  --nt-green: #2f6b52;
+  --nt-green-light: #4c8a6d;
+  --nt-text: #1f2a26;
+  --nt-muted: #6b756f;
+  --nt-border: #e7e9e8;
+  --nt-bg: #ffffff;
+
+  position: relative;
+
+  width: 100%;
+
+  background: var(--nt-bg);
+
+  border: 1px solid var(--nt-border);
+  border-radius: 18px;
+
+  overflow: hidden;
+
+  transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+
+  border-color: #d9dfdc;
+
+  box-shadow: 0 12px 30px rgba(31, 42, 38, 0.1),
+    0 3px 8px rgba(31, 42, 38, 0.04);
+}
+
+.inactive {
+  opacity: 0.65;
+}
+
+/* =========================================================
+   IMAGE CONTAINER
+========================================================= */
+
+.imageContainer {
+  position: relative;
+
+  width: 100%;
+
+  overflow: hidden;
+
+  background: #f3f5f4;
+
+  aspect-ratio: 1 / 1;
+}
+
+/* =========================================================
+   SWIPER
+========================================================= */
+
+.productSwiper {
+  width: 100%;
+  height: 100%;
+}
+
+.productSlide {
+  position: relative;
+
+  width: 100%;
+  height: 100%;
+
+  overflow: hidden;
+}
+
+.productImage {
+  display: block;
+
+  width: 100%;
+  height: 100%;
+
+  object-fit: cover;
+
+  transition: transform 0.6s ease, filter 0.3s ease;
+}
+
+.card:hover .productImage {
+  transform: scale(1.035);
+}
+
+/* =========================================================
+   GRADIENT
+========================================================= */
+
+.gradient {
+  position: absolute;
+
+  left: 0;
+  right: 0;
+  bottom: 0;
+
+  height: 38%;
+
+  z-index: 2;
+
+  pointer-events: none;
+
+  background: linear-gradient(
+    to top,
+    rgba(15, 23, 20, 0.62),
+    rgba(15, 23, 20, 0.18),
+    transparent
+  );
+}
+
+/* =========================================================
+   DISCOUNT
+========================================================= */
+
+.discount {
+  position: absolute;
+
+  top: 12px;
+  left: 12px;
+
+  z-index: 10;
+
+  padding: 6px 9px;
+
+  border-radius: 7px;
+
+  background: #ffffff;
+
+  color: #b42318;
+
+  font-size: 11px;
+  font-weight: 800;
+
+  letter-spacing: 0.03em;
+
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+}
+
+/* =========================================================
+   WISHLIST
+========================================================= */
+
+.wishlist {
+  position: absolute;
+
+  top: 12px;
+  right: 12px;
+
+  z-index: 20;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 38px;
+  height: 38px;
+
+  padding: 0;
+
+  border: 1px solid rgba(255, 255, 255, 0.65);
+
+  border-radius: 50%;
+
+  background: rgba(255, 255, 255, 0.92);
+
+  color: #46514b;
+
+  cursor: pointer;
+
+  backdrop-filter: blur(8px);
+
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+
+  transition: transform 0.2s ease, background 0.2s ease, color 0.2s ease;
+}
+
+.wishlist:hover {
+  transform: scale(1.08);
+
+  background: #ffffff;
+
+  color: #c53030;
+}
+
+.wishlistActive {
+  background: #ffffff;
+  color: #c53030;
+}
+
+/* =========================================================
+   SWIPER ARROWS
+========================================================= */
+
+.sliderArrow {
+  position: absolute;
+
+  top: 50%;
+
+  z-index: 15;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 34px;
+  height: 34px;
+
+  padding: 0;
+
+  border: 1px solid rgba(255, 255, 255, 0.7);
+
+  border-radius: 50%;
+
+  background: rgba(255, 255, 255, 0.9);
+
+  color: #25312b;
+
+  cursor: pointer;
+
+  opacity: 0;
+
+  transform: translateY(-50%) scale(0.9);
+
+  backdrop-filter: blur(8px);
+
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.12);
+
+  transition: opacity 0.25s ease, transform 0.25s ease, background 0.2s ease;
+}
+
+.card:hover .sliderArrow {
+  opacity: 1;
+
+  transform: translateY(-50%) scale(1);
+}
+
+.sliderArrow:hover {
+  background: #ffffff;
+
+  transform: translateY(-50%) scale(1.08);
+}
+
+.leftArrow {
+  left: 10px;
+}
+
+.rightArrow {
+  right: 10px;
+}
+
+/* =========================================================
+   SWIPER PAGINATION
+========================================================= */
+
+.productSwiper :global(.swiper-pagination) {
+  bottom: 10px;
+
+  z-index: 12;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  gap: 4px;
+}
+
+.productSwiper :global(.swiper-pagination-bullet) {
+  width: 6px;
+  height: 6px;
+
+  margin: 0 !important;
+
+  opacity: 0.65;
+
+  background: #ffffff;
+
+  transition: width 0.25s ease, opacity 0.25s ease, transform 0.25s ease;
+}
+
+.productSwiper :global(.swiper-pagination-bullet-active) {
+  width: 18px;
+
+  opacity: 1;
+
+  border-radius: 10px;
+}
+
+/* =========================================================
+   RATING
+========================================================= */
+
+.rating {
+  position: absolute;
+
+  left: 12px;
+  bottom: 12px;
+
+  z-index: 10;
+
+  display: flex;
+  align-items: center;
+
+  gap: 5px;
+
+  padding: 6px 9px;
+
+  border-radius: 8px;
+
+  background: rgba(255, 255, 255, 0.94);
+
+  color: #27332d;
+
+  font-size: 11px;
+  font-weight: 700;
+
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+
+  backdrop-filter: blur(8px);
+}
+
+.rating svg {
+  color: #d69e2e;
+}
+
+.ratingSeparator {
+  width: 1px;
+  height: 12px;
+
+  background: #cfd5d1;
+}
+
+/* =========================================================
+   ADD TO CART
+========================================================= */
+
+.cartContainer {
+  position: absolute;
+
+  right: 12px;
+  bottom: 12px;
+
+  z-index: 10;
+}
+
+.cartButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 7px;
+
+  height: 36px;
+
+  padding: 0 13px;
+
+  border: 1px solid rgba(255, 255, 255, 0.25);
+
+  border-radius: 9px;
+
+  background: var(--nt-green);
+
+  color: #ffffff;
+
+  font-family: inherit;
+
+  font-size: 12px;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  box-shadow: 0 5px 14px rgba(0, 0, 0, 0.16);
+
+  transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.cartButton:hover {
+  background: #24563f;
+
+  transform: translateY(-2px);
+
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.2);
+}
+
+.cartButton:active {
+  transform: translateY(0);
+}
+
+/* =========================================================
+   NO IMAGE
+========================================================= */
+
+.noImage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 100%;
+  height: 100%;
+
+  background: linear-gradient(135deg, #f1f4f2, #e5eae7);
+
+  color: #8a958f;
+
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* =========================================================
+   PRODUCT INFO
+========================================================= */
+
+.info {
+  padding: 15px 15px 17px;
+}
+
+.name {
+  margin: 0;
+
+  color: var(--nt-text);
+
+  font-size: 15px;
+  font-weight: 700;
+
+  line-height: 1.4;
+
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+
+  overflow: hidden;
+
+  min-height: 42px;
+}
+
+.sizes {
+  margin: 7px 0 0;
+
+  color: var(--nt-muted);
+
+  font-size: 12px;
+
+  white-space: nowrap;
+
+  overflow: hidden;
+
+  text-overflow: ellipsis;
+}
+
+/* =========================================================
+   PRICE
+========================================================= */
+
+.priceRow {
+  display: flex;
+
+  align-items: center;
+
+  flex-wrap: wrap;
+
+  gap: 8px;
+
+  margin-top: 12px;
+}
+
+.finalPrice {
+  color: var(--nt-green);
+
+  font-size: 17px;
+  font-weight: 800;
+}
+
+.originalPrice {
+  color: #8b9490;
+
+  font-size: 12px;
+  font-weight: 500;
+
+  text-decoration: line-through;
+}
+
+.discountPill {
+  padding: 4px 7px;
+
+  border-radius: 6px;
+
+  background: #edf6f0;
+
+  color: var(--nt-green);
+
+  font-size: 10px;
+  font-weight: 800;
+}
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 900px) {
+  .card {
+    border-radius: 15px;
+  }
+
+  .info {
+    padding: 13px;
+  }
+
+  .name {
+    font-size: 14px;
+  }
+
+  .finalPrice {
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 640px) {
+  .sliderArrow {
+    width: 30px;
+    height: 30px;
+
+    opacity: 1;
+
+    transform: translateY(-50%);
+  }
+
+  .card:hover .sliderArrow {
+    transform: translateY(-50%);
+  }
+
+  .leftArrow {
+    left: 7px;
+  }
+
+  .rightArrow {
+    right: 7px;
+  }
+
+  .wishlist {
+    width: 34px;
+    height: 34px;
+
+    top: 9px;
+    right: 9px;
+  }
+
+  .discount {
+    top: 9px;
+    left: 9px;
+  }
+
+  .rating {
+    left: 9px;
+    bottom: 9px;
+  }
+
+  .cartContainer {
+    right: 9px;
+    bottom: 9px;
+  }
+
+  .cartButton {
+    height: 34px;
+
+    padding: 0 10px;
+
+    font-size: 11px;
+  }
+
+  .info {
+    padding: 12px;
+  }
+}
+
+@media (max-width: 420px) {
+  .cartButton span {
+    display: none;
+  }
+
+  .cartButton {
+    width: 34px;
+
+    padding: 0;
+  }
+
+  .rating {
+    padding: 5px 7px;
+  }
+}

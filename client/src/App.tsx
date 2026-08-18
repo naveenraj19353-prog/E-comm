@@ -1,11 +1,6 @@
-import { store } from "./redux/store"
-
-const App = () => {
-
-  console.log(store.getState())
-  return <div>
-    App
-  </div>
+import { store } from "./app/store";
+function App() {
+  console.log(store.getState());
+  return <h1>OmniStore SaaS</h1>;
 }
-
-export default App
+export default App;

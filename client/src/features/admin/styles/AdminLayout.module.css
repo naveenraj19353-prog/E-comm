@@ -1,0 +1,493 @@
+/* =========================================================
+   ADMIN LAYOUT
+========================================================= */
+
+.layout {
+    min-height: 100vh;
+    display: flex;
+  
+    background: #f6f8f7;
+    color: #1f2a26;
+  }
+  
+  /* =========================================================
+     SIDEBAR
+  ========================================================= */
+  
+  .sidebar {
+    width: 250px;
+    min-width: 250px;
+    height: 100vh;
+  
+    display: flex;
+    flex-direction: column;
+  
+    position: sticky;
+    top: 0;
+  
+    background: #ffffff;
+    border-right: 1px solid #e5e9e7;
+  }
+  
+  /* =========================================================
+     LOGO
+  ========================================================= */
+  
+  .logo {
+    height: 72px;
+  
+    display: flex;
+    align-items: center;
+  
+    gap: 11px;
+  
+    padding: 0 22px;
+  
+    border-bottom: 1px solid #eef1ef;
+  }
+  
+  .logoMark {
+    width: 38px;
+    height: 38px;
+  
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  
+    flex-shrink: 0;
+  
+    border-radius: 10px;
+  
+    background: #2f6b52;
+    color: #ffffff;
+  
+    font-size: 16px;
+    font-weight: 700;
+  }
+  
+  .logo h2 {
+    margin: 0;
+  
+    color: #1f2a26;
+  
+    font-size: 17px;
+    font-weight: 700;
+    line-height: 1.2;
+  }
+  
+  .logo span {
+    display: block;
+  
+    margin-top: 3px;
+  
+    color: #8a9690;
+  
+    font-size: 10px;
+    font-weight: 500;
+  }
+  
+  /* =========================================================
+     NAVIGATION
+  ========================================================= */
+  
+  .navigation {
+    flex: 1;
+  
+    padding: 22px 14px;
+  
+    overflow-y: auto;
+  }
+  
+  .navItem {
+    width: 100%;
+  
+    min-height: 42px;
+  
+    display: flex;
+    align-items: center;
+  
+    gap: 12px;
+  
+    padding: 0 12px;
+  
+    margin-bottom: 5px;
+  
+    border: none;
+    border-radius: 9px;
+  
+    background: transparent;
+  
+    color: #66736c;
+  
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 500;
+  
+    text-decoration: none;
+  
+    text-align: left;
+  
+    cursor: pointer;
+  
+    transition:
+      background 0.2s ease,
+      color 0.2s ease;
+  }
+  
+  .navItem span {
+    width: 20px;
+  
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  
+    color: #8a9690;
+  
+    font-size: 16px;
+  }
+  
+  .navItem:hover {
+    background: #f0f5f2;
+  
+    color: #2f6b52;
+  }
+  
+  .navItem:hover span {
+    color: #2f6b52;
+  }
+  
+  /* Active navigation */
+  
+  .active {
+    background: #e8f1ec;
+  
+    color: #2f6b52;
+  
+    font-weight: 600;
+  }
+  
+  .active span {
+    color: #2f6b52;
+  }
+  
+  /* =========================================================
+     SECTION TITLE
+  ========================================================= */
+  
+  .sectionTitle {
+    margin: 26px 10px 10px;
+  
+    color: #9aa49f;
+  
+    font-size: 10px;
+    font-weight: 700;
+  
+    letter-spacing: 0.12em;
+  
+    text-transform: uppercase;
+  }
+  
+  /* =========================================================
+     SIDEBAR BOTTOM
+  ========================================================= */
+  
+  .sidebarBottom {
+    padding: 15px;
+  
+    border-top: 1px solid #eef1ef;
+  }
+  
+  /* =========================================================
+     ADMIN USER
+  ========================================================= */
+  
+  .adminUser {
+    display: flex;
+    align-items: center;
+  
+    gap: 10px;
+  
+    padding: 10px;
+  
+    margin-bottom: 10px;
+  
+    border-radius: 10px;
+  
+    background: #f7f9f8;
+  }
+  
+  .avatar {
+    width: 36px;
+    height: 36px;
+  
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  
+    flex-shrink: 0;
+  
+    border-radius: 50%;
+  
+    background: #2f6b52;
+  
+    color: #ffffff;
+  
+    font-size: 11px;
+    font-weight: 700;
+  }
+  
+  .adminUser div:last-child {
+    min-width: 0;
+  
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .adminUser strong {
+    overflow: hidden;
+  
+    color: #1f2a26;
+  
+    font-size: 12px;
+    font-weight: 600;
+  
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+  
+  .adminUser span {
+    margin-top: 2px;
+  
+    color: #8a9690;
+  
+    font-size: 10px;
+  }
+  
+  /* =========================================================
+     LOGOUT
+  ========================================================= */
+  
+  .logoutButton {
+    width: 100%;
+  
+    height: 36px;
+  
+    border: 1px solid #e5e9e7;
+    border-radius: 8px;
+  
+    background: #ffffff;
+  
+    color: #68756e;
+  
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 500;
+  
+    cursor: pointer;
+  
+    transition:
+      background 0.2s ease,
+      color 0.2s ease,
+      border-color 0.2s ease;
+  }
+  
+  .logoutButton:hover {
+    border-color: #e5caca;
+  
+    background: #fff7f7;
+  
+    color: #b64b4b;
+  }
+  
+  /* =========================================================
+     MAIN
+  ========================================================= */
+  
+  .main {
+    flex: 1;
+  
+    min-width: 0;
+  
+    display: flex;
+    flex-direction: column;
+  }
+  
+  /* =========================================================
+     HEADER
+  ========================================================= */
+  
+  .header {
+    height: 72px;
+  
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  
+    padding: 0 30px;
+  
+    background: #ffffff;
+  
+    border-bottom: 1px solid #e5e9e7;
+  
+    position: sticky;
+    top: 0;
+  
+    z-index: 20;
+  }
+  
+  .headerLabel {
+    display: block;
+  
+    margin-bottom: 4px;
+  
+    color: #8a9690;
+  
+    font-size: 9px;
+    font-weight: 700;
+  
+    letter-spacing: 0.13em;
+  }
+  
+  .header h1 {
+    margin: 0;
+  
+    color: #1f2a26;
+  
+    font-size: 19px;
+    font-weight: 700;
+  }
+  
+  /* =========================================================
+     HEADER RIGHT
+  ========================================================= */
+  
+  .headerRight {
+    display: flex;
+    align-items: center;
+  
+    gap: 12px;
+  }
+  
+  .iconButton {
+    width: 38px;
+    height: 38px;
+  
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  
+    padding: 0;
+  
+    border: 1px solid #e4e9e6;
+    border-radius: 9px;
+  
+    background: #ffffff;
+  
+    color: #66736c;
+  
+    font-size: 17px;
+  
+    cursor: pointer;
+  
+    transition:
+      background 0.2s ease,
+      color 0.2s ease;
+  }
+  
+  .iconButton:hover {
+    background: #f0f5f2;
+  
+    color: #2f6b52;
+  }
+  
+  .headerAvatar {
+    width: 36px;
+    height: 36px;
+  
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  
+    border-radius: 50%;
+  
+    background: #e8f1ec;
+  
+    color: #2f6b52;
+  
+    font-size: 11px;
+    font-weight: 700;
+  }
+  
+  /* =========================================================
+     CONTENT
+  ========================================================= */
+  
+  .content {
+    flex: 1;
+  
+    padding: 30px;
+  
+    min-width: 0;
+  }
+  
+  /* =========================================================
+     RESPONSIVE
+  ========================================================= */
+  
+  @media (max-width: 900px) {
+    .sidebar {
+      width: 220px;
+      min-width: 220px;
+    }
+  
+    .header {
+      padding: 0 22px;
+    }
+  
+    .content {
+      padding: 22px;
+    }
+  }
+  
+  @media (max-width: 700px) {
+    .sidebar {
+      width: 200px;
+      min-width: 200px;
+    }
+  
+    .logo {
+      padding: 0 16px;
+    }
+  
+    .navigation {
+      padding: 18px 10px;
+    }
+  
+    .header {
+      height: 64px;
+  
+      padding: 0 16px;
+    }
+  
+    .content {
+      padding: 18px 14px;
+    }
+  }
+  
+  @media (max-width: 560px) {
+    .sidebar {
+      display: none;
+    }
+  
+    .header {
+      padding: 0 15px;
+    }
+  
+    .content {
+      padding: 16px 12px;
+    }
+  
+    .header h1 {
+      font-size: 17px;
+    }
+  }

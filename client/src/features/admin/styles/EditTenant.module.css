@@ -1,0 +1,455 @@
+.page {
+    width: 100%;
+    max-width: 1000px;
+    margin: 0 auto;
+  }
+  
+  /* ================================
+     HEADER
+  ================================ */
+  
+  .header {
+    margin-bottom: 24px;
+  }
+  
+  .backButton {
+    display: block;
+    margin-bottom: 18px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: #64736b;
+    font-size: 13px;
+    cursor: pointer;
+  }
+  
+  .backButton:hover {
+    color: #2f6b52;
+  }
+  
+  .eyebrow {
+    display: block;
+    margin-bottom: 6px;
+    color: #2f6b52;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+  }
+  
+  .header h1 {
+    margin: 0;
+    color: #1f2a26;
+    font-size: 30px;
+  }
+  
+  .header p {
+    margin: 7px 0 0;
+    color: #748078;
+    font-size: 14px;
+  }
+  
+  .header p strong {
+    color: #34423c;
+  }
+  
+  /* ================================
+     FORM CARD
+  ================================ */
+  
+  .formCard {
+    overflow: hidden;
+    border: 1px solid #e5ebe7;
+    border-radius: 15px;
+    background: #ffffff;
+    box-shadow:
+      0 4px 18px rgba(31, 42, 38, 0.04);
+  }
+  
+  .formHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 22px 24px;
+    border-bottom: 1px solid #edf0ee;
+  }
+  
+  .formHeader h2 {
+    margin: 0;
+    color: #26332e;
+    font-size: 17px;
+  }
+  
+  .formHeader p {
+    margin: 5px 0 0;
+    color: #7b8781;
+    font-size: 12px;
+  }
+  
+  /* ================================
+     STATUS BADGE
+  ================================ */
+  
+  .statusBadge {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 7px 11px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  
+  .statusBadge span {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+  }
+  
+  .active {
+    background: #edf7f0;
+    color: #2f6b52;
+  }
+  
+  .active span {
+    background: #3b9a69;
+  }
+  
+  .inactive {
+    background: #f5f5f5;
+    color: #777;
+  }
+  
+  .inactive span {
+    background: #999;
+  }
+  
+  /* ================================
+     FORM BODY
+  ================================ */
+  
+  .formBody {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 22px;
+    padding: 25px;
+  }
+  
+  .field {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .field label {
+    margin-bottom: 8px;
+    color: #35433d;
+    font-size: 13px;
+    font-weight: 600;
+  }
+  
+  .field label span {
+    margin-left: 3px;
+    color: #c44949;
+  }
+  
+  .field input,
+  .field select {
+    width: 100%;
+    height: 43px;
+    box-sizing: border-box;
+    padding: 0 12px;
+    border: 1px solid #dfe5e1;
+    border-radius: 8px;
+    outline: none;
+    background: #ffffff;
+    color: #26332e;
+    font-size: 13px;
+    transition:
+      border-color 0.2s ease,
+      box-shadow 0.2s ease;
+  }
+  
+  .field input:focus,
+  .field select:focus {
+    border-color: #2f6b52;
+    box-shadow:
+      0 0 0 3px rgba(47, 107, 82, 0.08);
+  }
+  
+  .field input:disabled {
+    background: #f5f7f6;
+    color: #7b8781;
+    cursor: not-allowed;
+  }
+  
+  .field small {
+    margin-top: 6px;
+    color: #89948e;
+    font-size: 11px;
+  }
+  
+  /* ================================
+     LOGO
+  ================================ */
+  
+  .logoPreview {
+    width: 80px;
+    height: 80px;
+    margin-top: 10px;
+    overflow: hidden;
+    border: 1px solid #e4e9e6;
+    border-radius: 10px;
+    background: #f5f7f6;
+  }
+  
+  .logoPreview img {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: contain;
+  }
+  
+  /* ================================
+     STATUS SECTION
+  ================================ */
+  
+  .statusSection {
+    grid-column: 1 / -1;
+  
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  
+    padding: 18px;
+  
+    border: 1px solid #e7ebe8;
+    border-radius: 11px;
+  
+    background: #fafcfb;
+  }
+  
+  .statusSection h3 {
+    margin: 0 0 5px;
+    color: #2d3a34;
+    font-size: 14px;
+  }
+  
+  .statusSection p {
+    margin: 0;
+    color: #7b8781;
+    font-size: 12px;
+  }
+  
+  /* ================================
+     TOGGLE
+  ================================ */
+  
+  .toggle {
+    position: relative;
+    width: 48px;
+    height: 26px;
+    flex: 0 0 48px;
+  
+    padding: 0;
+  
+    border: 0;
+    border-radius: 20px;
+  
+    background: #cbd2ce;
+  
+    cursor: pointer;
+  
+    transition:
+      background 0.2s ease;
+  }
+  
+  .toggle span {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+  
+    width: 20px;
+    height: 20px;
+  
+    border-radius: 50%;
+  
+    background: #ffffff;
+  
+    box-shadow:
+      0 1px 4px rgba(0, 0, 0, 0.15);
+  
+    transition:
+      transform 0.2s ease;
+  }
+  
+  .toggleActive {
+    background: #2f6b52;
+  }
+  
+  .toggleActive span {
+    transform: translateX(22px);
+  }
+  
+  /* ================================
+     ERROR
+  ================================ */
+  
+  .error {
+    grid-column: 1 / -1;
+  
+    padding: 12px 14px;
+  
+    border: 1px solid #f1d0d0;
+    border-radius: 8px;
+  
+    background: #fff6f6;
+  
+    color: #b23f3f;
+  
+    font-size: 13px;
+  }
+  
+  /* ================================
+     FOOTER
+  ================================ */
+  
+  .formFooter {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+  
+    padding: 18px 25px;
+  
+    border-top: 1px solid #edf0ee;
+    background: #fafcfb;
+  }
+  
+  .cancelButton,
+  .saveButton,
+  .secondaryButton {
+    height: 40px;
+    padding: 0 17px;
+  
+    border-radius: 8px;
+  
+    font-size: 13px;
+    font-weight: 600;
+  
+    cursor: pointer;
+  }
+  
+  .cancelButton {
+    border: 1px solid #dfe5e1;
+    background: #ffffff;
+    color: #536159;
+  }
+  
+  .cancelButton:hover {
+    background: #f5f7f6;
+  }
+  
+  .saveButton {
+    border: 0;
+    background: #2f6b52;
+    color: #ffffff;
+  }
+  
+  .saveButton:hover {
+    background: #255841;
+  }
+  
+  .cancelButton:disabled,
+  .saveButton:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+  
+  /* ================================
+     STATE
+  ================================ */
+  
+  .state {
+    min-height: 350px;
+  
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+  
+    gap: 8px;
+  
+    text-align: center;
+  }
+  
+  .state h2 {
+    margin: 0;
+    color: #26332e;
+    font-size: 20px;
+  }
+  
+  .state p {
+    margin: 0 0 12px;
+    color: #7b8781;
+    font-size: 13px;
+  }
+  
+  .secondaryButton {
+    border: 1px solid #dfe5e1;
+    background: #ffffff;
+    color: #35433d;
+  }
+  
+  .secondaryButton:hover {
+    background: #f5f7f6;
+  }
+  
+  /* ================================
+     LOADER
+  ================================ */
+  
+  .spinner {
+    width: 28px;
+    height: 28px;
+  
+    border: 3px solid #e4ebe7;
+    border-top-color: #2f6b52;
+  
+    border-radius: 50%;
+  
+    animation: spin 0.8s linear infinite;
+  }
+  
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  
+  /* ================================
+     RESPONSIVE
+  ================================ */
+  
+  @media (max-width: 700px) {
+    .formBody {
+      grid-template-columns: 1fr;
+    }
+  
+    .statusSection {
+      grid-column: auto;
+    }
+  
+    .formHeader {
+      align-items: flex-start;
+      flex-direction: column;
+    }
+  
+    .formFooter {
+      flex-direction: column-reverse;
+    }
+  
+    .cancelButton,
+    .saveButton {
+      width: 100%;
+    }
+  }
