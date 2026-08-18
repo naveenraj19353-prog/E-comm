@@ -46,7 +46,7 @@ jobs:
         run: npm run build
 
   backend:
-    name: Backend - Install Dependencies
+    name: Backend - FastAPI Python
     runs-on: ubuntu-latest
 
     steps:
@@ -65,19 +65,19 @@ jobs:
 
       - name: Install backend dependencies
         run: pip install -r requirements.txt
-      
+
       - name: Check Python syntax
         run: python -m compileall app
 
   sonarqube:
-      name: SonarQube Analysis
-      runs-on: ubuntu-latest
+    name: SonarQube Analysis
+    runs-on: ubuntu-latest
 
-      needs:
+    needs:
       - frontend
       - backend
 
-      steps:
+    steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
@@ -91,4 +91,5 @@ jobs:
         with:
           args: >
             -Dsonar.qualitygate.wait=true
+            -Dsonar.sources=app
             -Dsonar.exclusions=client/**
