@@ -18,7 +18,7 @@ permissions:
 
 jobs:
   frontend:
-    name: Frontend - Install Dependencies
+    name: Frontend - React TypeScript
     runs-on: ubuntu-latest
 
     defaults:
@@ -44,3 +44,24 @@ jobs:
 
       - name: Build frontend
         run: npm run build
+
+  backend:
+    name: Backend - Install Dependencies
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+          cache: pip
+          cache-dependency-path: requirements.txt
+
+      - name: Upgrade pip
+        run: python -m pip install --upgrade pip
+
+      - name: Install backend dependencies
+        run: pip install -r requirements.txt
