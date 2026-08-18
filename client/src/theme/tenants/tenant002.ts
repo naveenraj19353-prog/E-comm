@@ -13,7 +13,6 @@ export const themes = {
       border: "#E5E7EB",
       textBlack: "#111827",
       textWhite: "#FFFFFF",
-
     },
   },
 
@@ -29,8 +28,8 @@ export const themes = {
       background: "#F9FAFB",
       surface: "#FFFFFF",
       border: "#E5E7EB",
-      textBlack: "#111827",
-      textWhite: "#FFFFFF"
+      textBlack: "#1f2a26",
+      textWhite: "#FFFFFF",
     },
   },
 
@@ -47,7 +46,7 @@ export const themes = {
       surface: "#FFFFFF",
       border: "#E5E7EB",
       textBlack: "#111827",
-      textWhite: "#FFFFFF"
+      textWhite: "#FFFFFF",
     },
   },
 
@@ -55,7 +54,7 @@ export const themes = {
     tenantId: "DEFAULT",
     name: "Default",
     colors: {
-      primary: "#2f6b52",
+      primary: "#DC2626",
       secondary: "#4c8a6d",
       success: "#10B981",
       warning: "#F59E0B",
@@ -64,7 +63,7 @@ export const themes = {
       surface: "#FFFFFF",
       border: "#E5E7EB",
       textBlack: "#111827",
-      textWhite: "#FFFFFF"
+      textWhite: "#FFFFFF",
     },
   },
 };

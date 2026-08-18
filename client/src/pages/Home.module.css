@@ -1,150 +1,177 @@
 .home {
   width: 100%;
   min-height: 100vh;
-  background: #ffffff;
-  color: #1f2a26;
-  padding-bottom: 60px;
+  background: var(--background);
+  color: var(--text);
+  padding-bottom: 3.75rem;
 }
+
 .bannerSection,
 .categorySection,
 .productSection,
 .brandSection {
   width: 100%;
-  max-width: 1440px;
+  max-width: 90rem;
   margin: 0 auto;
-  padding: 32px 40px;
+  padding: 2rem 2.5rem;
 }
+
 .bannerSection h2,
 .categorySection h2,
 .productSection h2,
 .brandSection h2 {
-  margin: 0 0 10px;
-  font-size: 24px;
+  margin: 0 0 0.625rem;
+  font-size: 1.5rem;
   font-weight: 700;
   line-height: 1.3;
-  color: #1f2a26;
+  color: var(--text);
 }
+
 .bannerSection p,
 .categorySection p,
 .productSection p,
 .brandSection p {
   margin: 0;
-  font-size: 14px;
-  color: #5b6a63;
+  font-size: 0.875rem;
+  color: var(--text);
+  opacity: 0.65;
 }
+
 .bannerSection {
-  padding-top: 24px;
+  padding-top: 1.5rem;
 }
+
 .categorySection {
-  border-top: 1px solid #eeeeee;
+  border-top: 0.0625rem solid var(--border);
 }
+
 .productSection {
-  border-top: 1px solid #eeeeee;
+  border-top: 0.0625rem solid var(--border);
 }
+
 .productSection + .productSection {
-  padding-top: 36px;
+  padding-top: 2.25rem;
 }
+
 .brandSection {
-  border-top: 1px solid #eeeeee;
+  border-top: 0.0625rem solid var(--border);
 }
+
 .loading {
   min-height: 60vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 16px;
+  font-size: 1rem;
   font-weight: 500;
-  color: #5b6a63;
+  color: var(--text);
+  opacity: 0.65;
 }
+
 .error {
   min-height: 60vh;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 16px;
-  padding: 30px;
+  gap: 1rem;
+  padding: 1.875rem;
   text-align: center;
 }
+
 .error h2 {
   margin: 0;
-  font-size: 24px;
+  font-size: 1.5rem;
   font-weight: 600;
-  color: #1f2a26;
+  color: var(--text);
 }
+
 .error button {
   border: none;
-  border-radius: 8px;
-  padding: 10px 20px;
-  background: #2f6b52;
-  color: #ffffff;
-  font-size: 14px;
+  border-radius: 0.5rem;
+  padding: 0.625rem 1.25rem;
+  background: var(--primary);
+  color: var(--text-white);
+  font-size: 0.875rem;
   font-weight: 600;
   cursor: pointer;
   transition:
     background 0.2s ease,
     transform 0.2s ease;
 }
+
 .error button:hover {
-  background: #255841;
-  transform: translateY(-1px);
+  background: var(--secondary);
+  transform: translateY(-0.0625rem);
 }
-@media (max-width: 1200px) {
+
+@media (max-width: 75rem) {
   .home {
-    padding-bottom: 50px;
+    padding-bottom: 3.125rem;
   }
+
   .bannerSection,
   .categorySection,
   .productSection,
   .brandSection {
-    padding-left: 28px;
-    padding-right: 28px;
+    padding-left: 1.75rem;
+    padding-right: 1.75rem;
   }
 }
-@media (max-width: 768px) {
+
+@media (max-width: 48rem) {
   .home {
-    padding-bottom: 40px;
+    padding-bottom: 2.5rem;
   }
+
   .bannerSection,
   .categorySection,
   .productSection,
   .brandSection {
-    padding: 28px 20px;
+    padding: 1.75rem 1.25rem;
   }
+
   .bannerSection h2,
   .categorySection h2,
   .productSection h2,
   .brandSection h2 {
-    font-size: 20px;
+    font-size: 1.25rem;
   }
+
   .error h2 {
-    font-size: 20px;
+    font-size: 1.25rem;
   }
 }
-@media (max-width: 480px) {
+
+@media (max-width: 30rem) {
   .home {
-    padding-bottom: 30px;
+    padding-bottom: 1.875rem;
   }
+
   .bannerSection,
   .categorySection,
   .productSection,
   .brandSection {
-    padding: 24px 16px;
+    padding: 1.5rem 1rem;
   }
+
   .bannerSection h2,
   .categorySection h2,
   .productSection h2,
   .brandSection h2 {
-    font-size: 18px;
+    font-size: 1.125rem;
   }
+
   .loading {
     min-height: 50vh;
-    font-size: 14px;
+    font-size: 0.875rem;
   }
+
   .error {
     min-height: 50vh;
   }
+
   .error h2 {
-    font-size: 18px;
+    font-size: 1.125rem;
   }
 }

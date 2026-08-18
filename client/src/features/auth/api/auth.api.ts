@@ -8,7 +8,7 @@ import type {
 } from "../types";
 
 export const loginApi = async (
-  payload: LoginRequest
+  payload: LoginRequest,
 ): Promise<LoginResponse> => {
   const response = await apiClient.post("/auth/login", payload);
 
@@ -18,7 +18,7 @@ export const loginApi = async (
 };
 
 export const registerApi = async (
-  payload: RegisterRequest
+  payload: RegisterRequest,
 ): Promise<RegisterResponse> => {
   const response = await apiClient.post("/auth/register", payload);
 

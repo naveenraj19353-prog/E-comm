@@ -80,7 +80,7 @@ const ProductDetails = () => {
    */
   const { wishlist, addToWishlist, removeFromWishlist } = useWishlist(
     cartUserId,
-    tenantId
+    tenantId,
   );
 
   /*
@@ -95,7 +95,7 @@ const ProductDetails = () => {
    */
   const handleAddToCart = async (
     selectedProductId: string,
-    quantity: number
+    quantity: number,
   ) => {
     /*
      * Customer must be logged in
@@ -238,7 +238,7 @@ const ProductDetails = () => {
       console.error("Review submission failed:", error);
 
       alert(
-        error instanceof Error ? error.message : "Unable to submit review."
+        error instanceof Error ? error.message : "Unable to submit review.",
       );
     }
   };

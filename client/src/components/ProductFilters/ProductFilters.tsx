@@ -12,15 +12,13 @@ import { store } from "../../app/store";
 import type { Category } from "../../features/products/types";
 const ProductFilters = () => {
   const dispatch = useAppDispatch();
-  const tenantId = useAppSelector((state) => state.tenant.currentTenant?.id || state.tenant.tenantSlug) ?? "";
+  const tenantId =
+    useAppSelector(
+      (state) => state.tenant.currentTenant?.id || state.tenant.tenantSlug,
+    ) ?? "";
   const filters = useAppSelector((state) => state.products.filters);
-  console.log(store.getState())
-  const {
-    data: categories,
-    isLoading,
-    isError,
-    error,
-  } = useCategory(tenantId);
+  console.log(store.getState());
+  const { data: categories, isLoading, isError, error } = useCategory(tenantId);
   const colors = ["Black", "White", "Grey", "Green", "Red"];
   const sizes = ["XS", "S", "M", "L", "XL", "XXL"];
   const activeFilterCount = useMemo(() => {
@@ -52,7 +50,6 @@ const ProductFilters = () => {
   };
   return (
     <div className={styles.wrapper}>
-     
       <div className={styles.title}>
         <div className={styles.titleLeft}>
           <h2>Filters</h2>
@@ -70,7 +67,7 @@ const ProductFilters = () => {
           </button>
         )}
       </div>
-     
+
       <FilterSection title="Category">
         {isLoading ? (
           <div className={styles.loadingState}>
@@ -85,7 +82,7 @@ const ProductFilters = () => {
           <p className={styles.emptyText}>No categories found</p>
         ) : (
           <div className={styles.list}>
-            {categories?.data?.map((category:Category) => (
+            {categories?.data?.map((category: Category) => (
               <label key={category._id} className={styles.checkbox}>
                 <input
                   type="checkbox"
@@ -98,7 +95,7 @@ const ProductFilters = () => {
           </div>
         )}
       </FilterSection>
-     
+
       <FilterSection title="Price">
         <PriceRange
           values={filters.priceRange}
@@ -113,7 +110,7 @@ const ProductFilters = () => {
           }
         />
       </FilterSection>
-     
+
       <FilterSection title="Rating">
         <RatingFilter
           value={filters.rating}
@@ -126,7 +123,7 @@ const ProductFilters = () => {
           }
         />
       </FilterSection>
-     
+
       <FilterSection title="Colors">
         <ColorFilter
           colors={colors}
@@ -140,7 +137,7 @@ const ProductFilters = () => {
           }
         />
       </FilterSection>
-     
+
       <FilterSection title="Sizes">
         <SizeFilter
           sizes={sizes}

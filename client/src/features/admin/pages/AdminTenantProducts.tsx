@@ -156,7 +156,7 @@ export default function AdminTenantProducts() {
     setCategory("");
   };
 
-  const hasFilters = searchInput !== "" || category !== "" ;
+  const hasFilters = searchInput !== "" || category !== "";
 
   const handleEdit = (product: Product) => {
     setEditingProduct(product);
@@ -308,7 +308,7 @@ export default function AdminTenantProducts() {
               {
                 products.filter(
                   (product) =>
-                    (product.stock ?? 0) > 0 && (product.stock ?? 0) < 10
+                    (product.stock ?? 0) > 0 && (product.stock ?? 0) < 10,
                 ).length
               }
             </strong>
@@ -326,8 +326,8 @@ export default function AdminTenantProducts() {
                 products.reduce(
                   (total, product) =>
                     total + (product.finalPrice || 0) * (product.stock || 0),
-                  0
-                )
+                  0,
+                ),
               )}
             </strong>
           </div>
@@ -398,7 +398,6 @@ export default function AdminTenantProducts() {
           {category && (
             <span className={styles.filterTag}>Category: {category}</span>
           )}
-
         </div>
       )}
 

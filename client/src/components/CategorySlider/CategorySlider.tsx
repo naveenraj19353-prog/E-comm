@@ -78,7 +78,7 @@ export default function CategorySlider({
     }
 
     const card = slider.querySelector(
-      `.${styles.categoryCard}`
+      `.${styles.categoryCard}`,
     ) as HTMLElement | null;
 
     if (!card) {
@@ -128,7 +128,7 @@ export default function CategorySlider({
 
         if (slider) {
           const card = slider.querySelector(
-            `.${styles.categoryCard}`
+            `.${styles.categoryCard}`,
           ) as HTMLElement | null;
 
           if (card) {

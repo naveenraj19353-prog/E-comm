@@ -1,14 +1,7 @@
 .footer {
-  --nt-green: #2f6b52;
-  --nt-green-light: #4c8a6d;
-  --nt-text: #1f2a26;
-  --nt-text-muted: #5b6a63;
-  --nt-text-faint: #8b9791;
-  --nt-border: #e7e9e8;
-  --nt-bg: #f7f9f8;
-  background: var(--nt-bg);
-  border-top: 1px solid var(--nt-border);
-  border-radius: 12px;
+  background: var(--background);
+  border-top: 0.0625rem solid var(--border);
+  border-radius: 0.75rem;
   font-family:
     "Segoe UI",
     Roboto,
@@ -16,169 +9,202 @@
     BlinkMacSystemFont,
     sans-serif;
 }
+
 .container {
-  max-width: 1280px;
+  max-width: 80rem;
   margin: 0 auto;
-  padding: 44px 40px 32px;
+  padding: 2.75rem 2.5rem 2rem;
   display: flex;
-  gap: 64px;
+  gap: 4rem;
   flex-wrap: wrap;
 }
+
 .brandColumn {
-  flex: 1 1 260px;
-  max-width: 320px;
+  flex: 1 1 16.25rem;
+  max-width: 20rem;
 }
+
 .logo {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
+  gap: 0.625rem;
   text-decoration: none;
-  margin-bottom: 14px;
+  margin-bottom: 0.875rem;
 }
+
 .logoIcon {
-  width: 30px;
-  height: 30px;
-  border-radius: 8px;
-  background: linear-gradient(135deg, var(--nt-green), var(--nt-green-light));
-  color: #fff;
+  width: 1.875rem;
+  height: 1.875rem;
+  border-radius: 0.5rem;
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  color: var(--text-white);
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
 }
+
 .logoText {
-  font-size: 16px;
+  font-size: 1rem;
   font-weight: 700;
-  color: var(--nt-text);
+  color: var(--text);
   letter-spacing: -0.01em;
 }
+
 .tagline {
-  font-size: 13.5px;
+  font-size: 0.8438rem;
   line-height: 1.6;
-  color: var(--nt-text-muted);
-  margin: 0 0 18px;
+  color: var(--text);
+  opacity: 0.7;
+  margin: 0 0 1.125rem;
 }
+
 .socials {
   display: flex;
-  gap: 10px;
+  gap: 0.625rem;
 }
+
 .socialLink {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 34px;
-  height: 34px;
-  border: 1px solid var(--nt-border);
+  width: 2.125rem;
+  height: 2.125rem;
+  border: 0.0625rem solid var(--border);
   border-radius: 50%;
-  color: var(--nt-text);
+  color: var(--text);
   text-decoration: none;
   transition:
     background 0.15s ease,
     border-color 0.15s ease,
     color 0.15s ease;
 }
+
 .socialLink:hover {
-  background: var(--nt-green);
-  border-color: var(--nt-green);
-  color: #fff;
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--text-white);
 }
+
 .linkColumns {
-  flex: 2 1 480px;
+  flex: 2 1 30rem;
   display: flex;
-  gap: 48px;
+  gap: 3rem;
   flex-wrap: wrap;
 }
+
 .linkColumn {
-  min-width: 130px;
+  min-width: 8.125rem;
 }
+
 .columnHeading {
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--nt-text);
-  margin: 0 0 16px;
+  color: var(--text);
+  margin: 0 0 1rem;
 }
+
 .linkList {
   list-style: none;
   margin: 0;
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 0.75rem;
 }
+
 .footerLink {
-  font-size: 14px;
-  color: var(--nt-text-muted);
+  font-size: 0.875rem;
+  color: var(--text);
+  opacity: 0.7;
   text-decoration: none;
   transition: color 0.15s ease;
 }
+
 .footerLink:hover {
-  color: var(--nt-green);
+  color: var(--primary);
+  opacity: 1;
 }
+
 .bottomBar {
-  max-width: 1280px;
+  max-width: 80rem;
   margin: 0 auto;
-  padding: 20px 40px 28px;
-  border-top: 1px solid var(--nt-border);
+  padding: 1.25rem 2.5rem 1.75rem;
+  border-top: 0.0625rem solid var(--border);
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: 0.75rem;
 }
+
 .copyright {
-  font-size: 13px;
-  color: var(--nt-text-faint);
+  font-size: 0.8125rem;
+  color: var(--text);
+  opacity: 0.55;
   margin: 0;
 }
+
 .bottomLinks {
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 1.25rem;
 }
+
 .bottomLinkButton {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 0.375rem;
   border: none;
   background: transparent;
-  font-size: 13px;
-  color: var(--nt-text-faint);
+  font-size: 0.8125rem;
+  color: var(--text);
+  opacity: 0.55;
   cursor: pointer;
   padding: 0;
   transition: color 0.15s ease;
 }
+
 .bottomLinkButton:hover {
-  color: var(--nt-green);
+  color: var(--primary);
+  opacity: 1;
 }
-@media (max-width: 900px) {
+
+@media (max-width: 56.25rem) {
   .container {
-    gap: 40px;
-    padding: 36px 28px 24px;
+    gap: 2.5rem;
+    padding: 2.25rem 1.75rem 1.5rem;
   }
+
   .linkColumns {
-    gap: 32px;
+    gap: 2rem;
   }
 }
-@media (max-width: 640px) {
+
+@media (max-width: 40rem) {
   .container {
     flex-direction: column;
-    gap: 32px;
-    padding: 32px 20px 20px;
+    gap: 2rem;
+    padding: 2rem 1.25rem 1.25rem;
   }
+
   .brandColumn {
     max-width: none;
   }
+
   .linkColumns {
-    gap: 28px;
+    gap: 1.75rem;
     justify-content: space-between;
   }
+
   .linkColumn {
     min-width: 45%;
   }
+
   .bottomBar {
-    padding: 16px 20px 24px;
+    padding: 1rem 1.25rem 1.5rem;
     flex-direction: column;
     align-items: flex-start;
   }

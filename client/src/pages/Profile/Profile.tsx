@@ -43,18 +43,13 @@ const Profile = () => {
   return (
     <div className={styles.page}>
       <div className={styles.container}>
-        
-        
-        
         <div className={styles.pageHeader}>
           <div>
             <h1>My Profile</h1>
             <p>Manage your personal information and account settings.</p>
           </div>
         </div>
-        
-        
-        
+
         <section className={styles.profileHero}>
           <div className={styles.avatar}>{initial}</div>
           <div className={styles.heroInfo}>
@@ -73,9 +68,7 @@ const Profile = () => {
             Edit Profile
           </button>
         </section>
-        
-        
-        
+
         <section className={styles.card}>
           <div className={styles.cardHeader}>
             <div>
@@ -123,9 +116,7 @@ const Profile = () => {
             </div>
           </div>
         </section>
-        
-        
-        
+
         <section className={styles.quickGrid}>
           <button className={styles.quickCard}>
             <div className={styles.quickIcon}>
@@ -164,17 +155,13 @@ const Profile = () => {
             </div>
           </button>
         </section>
-        
-        
-        
+
         <button className={styles.logoutButton}>
           <LogOut size={17} />
           Sign Out
         </button>
       </div>
-      
-      
-      
+
       {editOpen && (
         <EditProfileModal
           profile={profile}

@@ -17,13 +17,10 @@ interface CategoryResponse {
   data: Category[];
 }
 
-export async function getCategories(
-  tenantId: string
-): Promise<Category[]> {
-  const response =
-    await apiClient.get<CategoryResponse>(
-      `/categories/?tenantId=${tenantId}`
-    );
+export async function getCategories(tenantId: string): Promise<Category[]> {
+  const response = await apiClient.get<CategoryResponse>(
+    `/categories/?tenantId=${tenantId}`,
+  );
 
   return response.data.data;
 }

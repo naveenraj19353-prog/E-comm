@@ -51,7 +51,7 @@ export default function Navbar() {
    * ================================
    */
 
-  const { cartCount } = useCart(user?._id as string, user?.tenantId  as string);
+  const { cartCount } = useCart(user?._id as string, user?.tenantId as string);
 
   /*
    * ================================
@@ -59,7 +59,10 @@ export default function Navbar() {
    * ================================
    */
 
-  const { wishlistCount } = useWishlist(user?._id as string, user?.tenantId  as string);
+  const { wishlistCount } = useWishlist(
+    user?._id as string,
+    user?.tenantId as string,
+  );
 
   const [categoryStart, setCategoryStart] = useState(0);
 
@@ -156,7 +159,7 @@ export default function Navbar() {
     const categoryId = category.categoryId || category.slug || category.name;
 
     navigate(
-      `/${tenantSlug}/products?category=${encodeURIComponent(categoryId)}`
+      `/${tenantSlug}/products?category=${encodeURIComponent(categoryId)}`,
     );
 
     setMenuOpen(false);

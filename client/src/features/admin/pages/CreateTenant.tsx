@@ -46,7 +46,7 @@ export default function CreateTenant() {
     } catch (error: unknown) {
       console.error("Create tenant failed:", error);
 
-      setError( "Failed to create tenant.");
+      setError("Failed to create tenant.");
     }
   };
 
@@ -120,7 +120,7 @@ export default function CreateTenant() {
                   event.target.value
                     .toLowerCase()
                     .replace(/\s+/g, "-")
-                    .replace(/[^a-z0-9-]/g, "")
+                    .replace(/[^a-z0-9-]/g, ""),
                 )
               }
               placeholder="fashion-hub"

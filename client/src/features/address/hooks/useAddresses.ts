@@ -13,10 +13,7 @@ import type {
   UpdateAddressRequest,
 } from "../types/address.types";
 
-export const useAddresses = (
-  userId: string,
-  tenantId: string,
-) => {
+export const useAddresses = (userId: string, tenantId: string) => {
   const queryClient = useQueryClient();
 
   const addressQuery = useQuery({
@@ -26,8 +23,7 @@ export const useAddresses = (
   });
 
   const addMutation = useMutation({
-    mutationFn: (payload: CreateAddressRequest) =>
-      createAddress(payload),
+    mutationFn: (payload: CreateAddressRequest) => createAddress(payload),
 
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -53,8 +49,7 @@ export const useAddresses = (
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id: string) =>
-      deleteAddress(id, tenantId),
+    mutationFn: (id: string) => deleteAddress(id, tenantId),
 
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -66,13 +61,9 @@ export const useAddresses = (
   const addresses: Address[] = addressQuery.data ?? [];
 
   const defaultAddress =
-    addresses.find((address) => address.isDefault) ??
-    addresses[0] ??
-    null;
+    addresses.find((address) => address.isDefault) ?? addresses[0] ?? null;
 
-  const addAddress = async (
-    payload: CreateAddressRequest,
-  ) => {
+  const addAddress = async (payload: CreateAddressRequest) => {
     try {
       return await addMutation.mutateAsync(payload);
     } catch (error) {
@@ -81,10 +72,7 @@ export const useAddresses = (
     }
   };
 
-  const editAddress = async (
-    id: string,
-    payload: UpdateAddressRequest,
-  ) => {
+  const editAddress = async (id: string, payload: UpdateAddressRequest) => {
     try {
       return await editMutation.mutateAsync({
         id,
@@ -110,9 +98,7 @@ export const useAddresses = (
     defaultAddress,
 
     isLoading: addressQuery.isLoading,
-    isSaving:
-      addMutation.isPending ||
-      editMutation.isPending,
+    isSaving: addMutation.isPending || editMutation.isPending,
     isDeleting: deleteMutation.isPending,
 
     error:

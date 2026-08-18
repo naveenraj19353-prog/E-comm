@@ -1,25 +1,29 @@
 .layout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 360px;
-  gap: 24px;
+  grid-template-columns: minmax(0, 1fr) 22.5rem;
+  gap: 1.5rem;
   align-items: start;
 }
+
 .main,
 .sidebar {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 1.25rem;
 }
-@media (max-width: 900px) {
+
+@media (max-width: 56.25rem) {
   .layout {
     grid-template-columns: 1fr;
   }
+
   .sidebar {
     order: 2;
   }
 }
-@media (max-width: 520px) {
+
+@media (max-width: 32.5rem) {
   .layout {
-    gap: 16px;
+    gap: 1rem;
   }
 }

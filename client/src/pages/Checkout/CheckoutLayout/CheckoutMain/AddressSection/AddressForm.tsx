@@ -66,7 +66,7 @@ const AddressForm = ({
 
   const handleChange = (
     field: keyof AddressFormData,
-    value: string | boolean
+    value: string | boolean,
   ) => {
     setFormData((previous) => ({
       ...previous,
@@ -377,8 +377,8 @@ const AddressForm = ({
               {loading
                 ? "Saving..."
                 : isEditing
-                ? "Update Address"
-                : "Save Address"}
+                  ? "Update Address"
+                  : "Save Address"}
             </button>
           </div>
         </div>

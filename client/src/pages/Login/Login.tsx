@@ -14,9 +14,7 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const handleSubmit = async (
-    event: FormEvent<HTMLFormElement>,
-  ) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     setError("");
@@ -40,20 +38,14 @@ export default function Login() {
         password,
       });
 
-      if (
-        response.success &&
-        response.access_token
-      ) {
+      if (response.success && response.access_token) {
         navigate("/admin/tenants");
         return;
       }
 
       setError("Invalid email or password.");
     } catch (error: any) {
-      setError(
-        error?.response?.data?.detail ||
-          "Invalid email or password.",
-      );
+      setError(error?.response?.data?.detail || "Invalid email or password.");
     } finally {
       setLoading(false);
     }
@@ -63,9 +55,7 @@ export default function Login() {
     <main className={styles.authPage}>
       <section className={styles.authCard}>
         <div className={styles.brand}>
-          <div className={styles.brandIcon}>
-            SA
-          </div>
+          <div className={styles.brandIcon}>SA</div>
 
           <div>
             <strong>OmniStore</strong>
@@ -74,16 +64,11 @@ export default function Login() {
         </div>
 
         <div className={styles.heading}>
-          <span className={styles.eyebrow}>
-            SUPER ADMIN
-          </span>
+          <span className={styles.eyebrow}>SUPER ADMIN</span>
 
           <h1>Welcome back</h1>
 
-          <p>
-            Sign in to manage your tenants and
-            ecommerce platform.
-          </p>
+          <p>Sign in to manage your tenants and ecommerce platform.</p>
         </div>
 
         {error && (
@@ -93,23 +78,16 @@ export default function Login() {
           </div>
         )}
 
-        <form
-          className={styles.form}
-          onSubmit={handleSubmit}
-        >
+        <form className={styles.form} onSubmit={handleSubmit}>
           <div className={styles.field}>
-            <label htmlFor="email">
-              Email address
-            </label>
+            <label htmlFor="email">Email address</label>
 
             <input
               id="email"
               type="email"
               placeholder="admin@example.com"
               value={email}
-              onChange={(event) =>
-                setEmail(event.target.value)
-              }
+              onChange={(event) => setEmail(event.target.value)}
               autoComplete="email"
               disabled={loading}
             />
@@ -117,9 +95,7 @@ export default function Login() {
 
           <div className={styles.field}>
             <div className={styles.labelRow}>
-              <label htmlFor="password">
-                Password
-              </label>
+              <label htmlFor="password">Password</label>
 
               <button
                 type="button"
@@ -135,18 +111,10 @@ export default function Login() {
             <div className={styles.passwordWrapper}>
               <input
                 id="password"
-                type={
-                  showPassword
-                    ? "text"
-                    : "password"
-                }
+                type={showPassword ? "text" : "password"}
                 placeholder="Enter your password"
                 value={password}
-                onChange={(event) =>
-                  setPassword(
-                    event.target.value,
-                  )
-                }
+                onChange={(event) => setPassword(event.target.value)}
                 autoComplete="current-password"
                 disabled={loading}
               />
@@ -154,16 +122,8 @@ export default function Login() {
               <button
                 type="button"
                 className={styles.passwordToggle}
-                onClick={() =>
-                  setShowPassword(
-                    (current) => !current,
-                  )
-                }
-                aria-label={
-                  showPassword
-                    ? "Hide password"
-                    : "Show password"
-                }
+                onClick={() => setShowPassword((current) => !current)}
+                aria-label={showPassword ? "Hide password" : "Show password"}
               >
                 {showPassword ? "Hide" : "Show"}
               </button>
@@ -177,9 +137,7 @@ export default function Login() {
           >
             {loading ? (
               <>
-                <span
-                  className={styles.spinner}
-                />
+                <span className={styles.spinner} />
                 Signing in...
               </>
             ) : (
@@ -192,21 +150,16 @@ export default function Login() {
         </form>
 
         <div className={styles.security}>
-          <span className={styles.lock}>
-            ✓
-          </span>
+          <span className={styles.lock}>✓</span>
 
           <div>
             <strong>Secure access</strong>
-            <span>
-              Super Admin access only
-            </span>
+            <span>Super Admin access only</span>
           </div>
         </div>
 
         <p className={styles.footer}>
-          © {new Date().getFullYear()} OmniStore.
-          All rights reserved.
+          © {new Date().getFullYear()} OmniStore. All rights reserved.
         </p>
       </section>
     </main>

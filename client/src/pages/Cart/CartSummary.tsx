@@ -4,11 +4,10 @@ import { useNavigate } from "react-router-dom";
 interface CartSummaryProps {
   cartCount: number;
   grandTotal: number;
-  tenantId:string
+  tenantId: string;
 }
 const CartSummary = ({ cartCount, grandTotal, tenantId }: CartSummaryProps) => {
-
-  const navigate = useNavigate()
+  const navigate = useNavigate();
   return (
     <aside className={styles.summary}>
       <div className={styles.summaryHeader}>
@@ -35,7 +34,11 @@ const CartSummary = ({ cartCount, grandTotal, tenantId }: CartSummaryProps) => {
         </div>
         <strong>₹{grandTotal.toLocaleString("en-IN")}</strong>
       </div>
-      <button type="button" className={styles.checkout} onClick={()=>navigate(`/${tenantId}/checkout`)}>
+      <button
+        type="button"
+        className={styles.checkout}
+        onClick={() => navigate(`/${tenantId}/checkout`)}
+      >
         Proceed To Checkout
         <ArrowRight size={18} />
       </button>

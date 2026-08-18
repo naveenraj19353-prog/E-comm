@@ -1,26 +1,30 @@
 .header {
-  margin-bottom: 32px;
+  margin-bottom: 2rem;
 }
+
 .eyebrow {
-  color: #64748b;
-  font-size: 12px;
+  color: var(--text);
+  font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.12em;
 }
+
 .header h1 {
-  margin: 8px 0 6px;
-  color: #111827;
-  font-size: 32px;
+  margin: 0.5rem 0 0.375rem;
+  color: var(--text);
+  font-size: 2rem;
   line-height: 1.2;
 }
+
 .header p {
   margin: 0;
-  color: #64748b;
-  font-size: 14px;
+  color: var(--text);
+  font-size: 0.875rem;
   line-height: 1.6;
 }
-@media (max-width: 800px) {
+
+@media (max-width: 50rem) {
   .header h1 {
-    font-size: 26px;
+    font-size: 1.625rem;
   }
 }

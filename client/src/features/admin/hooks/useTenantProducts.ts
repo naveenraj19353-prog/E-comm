@@ -45,7 +45,7 @@ interface UpdateProductMutationPayload {
 }
 
 const getProducts = async (
-  params: ProductQueryParams
+  params: ProductQueryParams,
 ): Promise<ProductsResponse> => {
   const response = await apiClient.get("/product/get-all-products", {
     params,
@@ -98,10 +98,7 @@ export const useCreateProduct = () => {
 
   return useMutation({
     mutationFn: async (payload: CreateProductPayload) => {
-      const response = await apiClient.post(
-        "/product/create-product",
-        payload
-      );
+      const response = await apiClient.post("/product/create-product", payload);
 
       return response.data;
     },
@@ -126,10 +123,7 @@ export const useUpdateProduct = () => {
       productId,
       payload,
     }: UpdateProductMutationPayload) => {
-      const response = await apiClient.put(
-        `/product/${productId}`,
-        payload
-      );
+      const response = await apiClient.put(`/product/${productId}`, payload);
 
       return response.data;
     },
@@ -150,18 +144,12 @@ export const useDeleteProduct = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({
-      productId,
-      tenantId,
-    }: DeleteProductPayload) => {
-      const response = await apiClient.delete(
-        `/product/${productId}`,
-        {
-          params: {
-            tenantId,
-          },
-        }
-      );
+    mutationFn: async ({ productId, tenantId }: DeleteProductPayload) => {
+      const response = await apiClient.delete(`/product/${productId}`, {
+        params: {
+          tenantId,
+        },
+      });
 
       return response.data;
     },

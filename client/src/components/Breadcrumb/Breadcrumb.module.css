@@ -2,24 +2,35 @@
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 24px;
-  font-size: 14px;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+
+  color: var(--text);
+  font-size: 0.875rem;
 }
+
 .item {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 0.5rem;
 }
+
 .item a {
-  color: #6b7280;
+  color: var(--text);
+  opacity: 0.6;
   text-decoration: none;
-  transition: 0.2s;
+
+  transition:
+    color 0.2s ease,
+    opacity 0.2s ease;
 }
+
 .item a:hover {
-  color: #16a34a;
+  color: var(--primary);
+  opacity: 1;
 }
+
 .current {
-  color: #111827;
+  color: var(--text-black);
   font-weight: 600;
 }

@@ -42,7 +42,7 @@ export default function AdminTenant() {
       </div>
     );
   }
-console.log(tenant)
+  console.log(tenant);
   return (
     <div className={styles.page}>
       {/* =====================================================
