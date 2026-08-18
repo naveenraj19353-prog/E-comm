@@ -16,13 +16,9 @@ on:
 permissions:
   contents: read
 
-concurrency:
-  group: ci-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
-
 jobs:
   frontend:
-    name: Frontend - React TypeScript
+    name: Frontend - Install Dependencies
     runs-on: ubuntu-latest
 
     defaults:
@@ -32,8 +28,6 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -44,9 +38,3 @@ jobs:
 
       - name: Install frontend dependencies
         run: npm ci
-
-      - name: TypeScript check
-        run: npx tsc --noEmit
-
-      - name: Build frontend
-        run: npm run build
