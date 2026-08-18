@@ -5,44 +5,23 @@ import { useAppSelector } from "../../app/hooks";
 interface Props {
   children: React.ReactNode;
 }
-
 const ThemeProvider = ({ children }: Props) => {
   const tenantId = useAppSelector((state) => state.tenant.tenantSlug);
-
   const theme = themes[tenantId as keyof typeof themes] ?? themes.DEFAULT;
-console.log(theme)
   useEffect(() => {
-    document.documentElement.style.setProperty(
-      "--primary",
-      theme.colors.primary
-    );
-
-    document.documentElement.style.setProperty(
-      "--secondary",
-      theme.colors.secondary
-    );
-
-    document.documentElement.style.setProperty(
-      "--background",
-      theme.colors.background
-    );
-
-    document.documentElement.style.setProperty(
-      "--surface",
-      theme.colors.surface ?? "#ffffff"
-    );
-
-    document.documentElement.style.setProperty(
-      "--text",
-      theme.colors.textWhite
-    );
-
-    document.documentElement.style.setProperty(
-      "--border",
-      theme.colors.border ?? "#e5e7eb"
-    );
+    const root = document.documentElement;
+    root.style.setProperty("--primary", theme.colors.primary);
+    root.style.setProperty("--secondary", theme.colors.secondary);
+    root.style.setProperty("--background", theme.colors.background);
+    root.style.setProperty("--surface", theme.colors.surface);
+    root.style.setProperty("--border", theme.colors.border);
+    root.style.setProperty("--text", theme.colors.textBlack);
+    root.style.setProperty("--text-black", theme.colors.textBlack);
+    root.style.setProperty("--text-white", theme.colors.textWhite);
+    root.style.setProperty("--success", theme.colors.success);
+    root.style.setProperty("--warning", theme.colors.warning);
+    root.style.setProperty("--danger", theme.colors.danger);
   }, [theme]);
-
   return <>{children}</>;
 };
 

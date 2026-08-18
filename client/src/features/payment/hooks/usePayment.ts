@@ -1,9 +1,6 @@
 import { useMutation } from "@tanstack/react-query";
 
-import {
-  createPaymentOrder,
-  verifyPayment,
-} from "../api/payment.api";
+import { createPaymentOrder, verifyPayment } from "../api/payment.api";
 
 export const usePayment = () => {
   const createOrderMutation = useMutation({
@@ -18,10 +15,8 @@ export const usePayment = () => {
     createOrder: createOrderMutation.mutateAsync,
     verifyPayment: verifyPaymentMutation.mutateAsync,
 
-    isCreatingOrder:
-      createOrderMutation.isPending,
+    isCreatingOrder: createOrderMutation.isPending,
 
-    isVerifyingPayment:
-      verifyPaymentMutation.isPending,
+    isVerifyingPayment: verifyPaymentMutation.isPending,
   };
 };

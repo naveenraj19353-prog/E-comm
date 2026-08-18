@@ -106,9 +106,7 @@ export default function Register() {
 
         {error && <div className={styles.errorMessage}>{error}</div>}
 
-        {success && (
-          <div className={styles.successMessage}>{success}</div>
-        )}
+        {success && <div className={styles.successMessage}>{success}</div>}
 
         <form onSubmit={handleSubmit} className={styles.authForm}>
           <div className={styles.formGroup}>
@@ -182,9 +180,7 @@ export default function Register() {
               id="confirmPassword"
               type="password"
               value={confirmPassword}
-              onChange={(event) =>
-                setConfirmPassword(event.target.value)
-              }
+              onChange={(event) => setConfirmPassword(event.target.value)}
               placeholder="Re-enter your password"
               autoComplete="new-password"
             />

@@ -9,10 +9,7 @@ import {
 
 import type { AddToWishlistRequest } from "../api/wishlist.api";
 
-export const useWishlist = (
-  userId: string,
-  tenantId: string,
-) => {
+export const useWishlist = (userId: string, tenantId: string) => {
   const queryClient = useQueryClient();
 
   const wishlistQuery = useQuery({
@@ -22,8 +19,7 @@ export const useWishlist = (
   });
 
   const addMutation = useMutation({
-    mutationFn: (payload: AddToWishlistRequest) =>
-      addToWishlist(payload),
+    mutationFn: (payload: AddToWishlistRequest) => addToWishlist(payload),
 
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -44,8 +40,7 @@ export const useWishlist = (
   });
 
   const clearMutation = useMutation({
-    mutationFn: () =>
-      clearWishlist(userId, tenantId),
+    mutationFn: () => clearWishlist(userId, tenantId),
 
     onSuccess: () => {
       queryClient.invalidateQueries({

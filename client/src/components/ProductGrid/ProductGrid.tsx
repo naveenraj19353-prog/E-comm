@@ -30,7 +30,7 @@ const ProductGrid = ({ products }: { products: Product[] }) => {
         userId: user?._id,
         productId,
         quantity: 1,
-      })
+      });
       await addToCart({
         tenantId: user?.tenantId as string,
         userId: user?._id as string,

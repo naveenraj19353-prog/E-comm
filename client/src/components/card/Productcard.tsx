@@ -1,10 +1,6 @@
 import React, { useState } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
-import {
-  Autoplay,
-  Navigation,
-  Pagination,
-} from "swiper/modules";
+import { Autoplay, Navigation, Pagination } from "swiper/modules";
 
 import "swiper/css";
 import "swiper/css/navigation";
@@ -53,9 +49,7 @@ export default function ProductCard({
 
   const validImages = images.filter(Boolean);
 
-  const handleWishlist = (
-    event: React.MouseEvent<HTMLButtonElement>,
-  ) => {
+  const handleWishlist = (event: React.MouseEvent<HTMLButtonElement>) => {
     event.stopPropagation();
 
     const value = !isWishlisted;
@@ -65,30 +59,20 @@ export default function ProductCard({
     onToggleWishlist?.(_id, value);
   };
 
-  const handleAddToCart = (
-    event: React.MouseEvent<HTMLButtonElement>,
-  ) => {
+  const handleAddToCart = (event: React.MouseEvent<HTMLButtonElement>) => {
     event.stopPropagation();
 
     onQuickAdd?.(_id);
   };
 
   return (
-    <article
-      className={`${styles.card} ${
-        !isActive ? styles.inactive : ""
-      }`}
-    >
+    <article className={`${styles.card} ${!isActive ? styles.inactive : ""}`}>
       {/* IMAGE SECTION */}
 
       <div className={styles.imageContainer}>
         {validImages.length > 0 ? (
           <Swiper
-            modules={[
-              Autoplay,
-              Navigation,
-              Pagination,
-            ]}
+            modules={[Autoplay, Navigation, Pagination]}
             className={styles.productSwiper}
             slidesPerView={1}
             spaceBetween={0}
@@ -146,9 +130,7 @@ export default function ProductCard({
         {/* DISCOUNT */}
 
         {discountPercentage > 0 && (
-          <div className={styles.discount}>
-            {discountPercentage}% OFF
-          </div>
+          <div className={styles.discount}>{discountPercentage}% OFF</div>
         )}
 
         {/* WISHLIST */}
@@ -156,16 +138,10 @@ export default function ProductCard({
         <button
           type="button"
           className={`${styles.wishlist} ${
-            isWishlisted
-              ? styles.wishlistActive
-              : ""
+            isWishlisted ? styles.wishlistActive : ""
           }`}
           onClick={handleWishlist}
-          aria-label={
-            isWishlisted
-              ? "Remove from wishlist"
-              : "Add to wishlist"
-          }
+          aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
         >
           <HeartIcon filled={isWishlisted} />
         </button>
@@ -179,9 +155,7 @@ export default function ProductCard({
               className={`${styles.sliderArrow} ${
                 styles.leftArrow
               } product-prev-${_id}`}
-              onClick={(event) =>
-                event.stopPropagation()
-              }
+              onClick={(event) => event.stopPropagation()}
               aria-label="Previous image"
             >
               <ArrowIcon direction="left" />
@@ -192,9 +166,7 @@ export default function ProductCard({
               className={`${styles.sliderArrow} ${
                 styles.rightArrow
               } product-next-${_id}`}
-              onClick={(event) =>
-                event.stopPropagation()
-              }
+              onClick={(event) => event.stopPropagation()}
               aria-label="Next image"
             >
               <ArrowIcon direction="right" />
@@ -206,17 +178,11 @@ export default function ProductCard({
 
         {typeof averageRating === "number" && (
           <div className={styles.rating}>
-            <span>
-              {averageRating.toFixed(1)}
-            </span>
+            <span>{averageRating.toFixed(1)}</span>
 
             <StarIcon />
 
-            <span
-              className={
-                styles.ratingSeparator
-              }
-            />
+            <span className={styles.ratingSeparator} />
 
             <span>{reviewCount}</span>
           </div>
@@ -240,14 +206,10 @@ export default function ProductCard({
       {/* PRODUCT INFORMATION */}
 
       <div className={styles.info}>
-        <h3 className={styles.name}>
-          {name}
-        </h3>
+        <h3 className={styles.name}>{name}</h3>
 
         {sizes.length > 0 && (
-          <p className={styles.sizes}>
-            Sizes: {sizes.join(", ")}
-          </p>
+          <p className={styles.sizes}>Sizes: {sizes.join(", ")}</p>
         )}
 
         <div className={styles.priceRow}>
@@ -256,19 +218,13 @@ export default function ProductCard({
           </span>
 
           {price > finalPrice && (
-            <span
-              className={styles.originalPrice}
-            >
+            <span className={styles.originalPrice}>
               ₹{price.toLocaleString("en-IN")}
             </span>
           )}
 
           {discountPercentage > 0 && (
-            <span
-              className={
-                styles.discountPill
-              }
-            >
+            <span className={styles.discountPill}>
               {discountPercentage}% OFF
             </span>
           )}
@@ -282,21 +238,13 @@ export default function ProductCard({
    HEART ICON
 ========================================================= */
 
-function HeartIcon({
-  filled,
-}: {
-  filled: boolean;
-}) {
+function HeartIcon({ filled }: { filled: boolean }) {
   return (
     <svg
       width="18"
       height="18"
       viewBox="0 0 24 24"
-      fill={
-        filled
-          ? "currentColor"
-          : "none"
-      }
+      fill={filled ? "currentColor" : "none"}
     >
       <path
         d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78Z"
@@ -315,12 +263,7 @@ function HeartIcon({
 
 function StarIcon() {
   return (
-    <svg
-      width="11"
-      height="11"
-      viewBox="0 0 24 24"
-      fill="currentColor"
-    >
+    <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor">
       <path d="M12 2l2.9 6.4 7 .7-5.3 4.7 1.6 6.9L12 17l-6.2 3.7 1.6-6.9-5.3-.7L12 2z" />
     </svg>
   );
@@ -332,12 +275,7 @@ function StarIcon() {
 
 function BagIcon() {
   return (
-    <svg
-      width="16"
-      height="16"
-      viewBox="0 0 24 24"
-      fill="none"
-    >
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
       <path
         d="M6 8h12l1 12H5L6 8z"
         stroke="currentColor"
@@ -359,24 +297,11 @@ function BagIcon() {
    ARROW ICON
 ========================================================= */
 
-function ArrowIcon({
-  direction,
-}: {
-  direction: "left" | "right";
-}) {
+function ArrowIcon({ direction }: { direction: "left" | "right" }) {
   return (
-    <svg
-      width="17"
-      height="17"
-      viewBox="0 0 24 24"
-      fill="none"
-    >
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
       <path
-        d={
-          direction === "left"
-            ? "M15 18l-6-6 6-6"
-            : "M9 18l6-6-6-6"
-        }
+        d={direction === "left" ? "M15 18l-6-6 6-6" : "M9 18l6-6-6-6"}
         stroke="currentColor"
         strokeWidth="2"
         strokeLinecap="round"

@@ -1,335 +1,332 @@
 .authPage {
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 32px 20px;
-    background:
-      radial-gradient(
-        circle at 15% 10%,
-        rgba(47, 107, 82, 0.1),
-        transparent 32%
-      ),
-      radial-gradient(
-        circle at 90% 90%,
-        rgba(47, 107, 82, 0.08),
-        transparent 30%
-      ),
-      #f5f7f6;
-    font-family:
-      Inter,
-      -apple-system,
-      BlinkMacSystemFont,
-      "Segoe UI",
-      sans-serif;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1.25rem;
+  background:
+    radial-gradient(
+      circle at 15% 10%,
+      color-mix(in srgb, var(--primary) 10%, transparent),
+      transparent 32%
+    ),
+    radial-gradient(
+      circle at 90% 90%,
+      color-mix(in srgb, var(--primary) 8%, transparent),
+      transparent 30%
+    ),
+    var(--background);
+  font-family:
+    Inter,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+}
+
+.authCard {
+  width: 100%;
+  max-width: 27.5rem;
+  padding: 2.625rem;
+  background: var(--surface);
+  border: 0.0625rem solid var(--border);
+  border-radius: 1.25rem;
+  box-shadow: 0 1.25rem 3.75rem rgba(31, 42, 38, 0.08);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 2.625rem;
+}
+
+.brandIcon {
+  width: 2.75rem;
+  height: 2.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.75rem;
+  background: var(--primary);
+  color: var(--text-white);
+  font-size: 0.8125rem;
+  font-weight: 800;
+  letter-spacing: 0.0313rem;
+}
+
+.brand div:last-child {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.brand strong {
+  color: var(--text);
+  font-size: 1.0625rem;
+  line-height: 1.2;
+}
+
+.brand span {
+  color: var(--secondary);
+  font-size: 0.75rem;
+}
+
+.heading {
+  margin-bottom: 1.75rem;
+}
+
+.eyebrow {
+  display: inline-block;
+  margin-bottom: 0.625rem;
+  color: var(--primary);
+  font-size: 0.6875rem;
+  font-weight: 800;
+  letter-spacing: 0.0875rem;
+}
+
+.heading h1 {
+  margin: 0 0 0.5625rem;
+  color: var(--text);
+  font-size: 2rem;
+  line-height: 1.15;
+  font-weight: 750;
+}
+
+.heading p {
+  margin: 0;
+  color: var(--secondary);
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+
+.error {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  margin-bottom: 1.25rem;
+  padding: 0.75rem 0.875rem;
+  border: 0.0625rem solid var(--danger);
+  border-radius: 0.625rem;
+  background: var(--background);
+  color: var(--danger);
+  font-size: 0.8125rem;
+  line-height: 1.4;
+}
+
+.error span {
+  width: 1.25rem;
+  height: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--danger);
+  color: var(--text-white);
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.3125rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.field label {
+  color: var(--text);
+  font-size: 0.8125rem;
+  font-weight: 650;
+}
+
+.labelRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.forgotButton {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--primary);
+  cursor: pointer;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.forgotButton:hover {
+  text-decoration: underline;
+}
+
+.field input {
+  width: 100%;
+  box-sizing: border-box;
+  height: 3rem;
+  padding: 0 0.875rem;
+  border: 0.0625rem solid var(--border);
+  border-radius: 0.625rem;
+  outline: none;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 0.875rem;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
+}
+
+.field input::placeholder {
+  color: var(--secondary);
+}
+
+.field input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 0.1875rem color-mix(in srgb, var(--primary) 10%, transparent);
+}
+
+.field input:disabled {
+  cursor: not-allowed;
+  background: var(--background);
+}
+
+.passwordWrapper {
+  position: relative;
+}
+
+.passwordWrapper input {
+  padding-right: 4.375rem;
+}
+
+.passwordToggle {
+  position: absolute;
+  top: 50%;
+  right: 0.75rem;
+  transform: translateY(-50%);
+  padding: 0.3125rem;
+  border: 0;
+  background: transparent;
+  color: var(--primary);
+  cursor: pointer;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.loginButton {
+  height: 3.125rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.625rem;
+  margin-top: 0.1875rem;
+  border: 0;
+  border-radius: 0.625rem;
+  background: var(--primary);
+  color: var(--text-white);
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 700;
+  transition:
+    background 0.2s,
+    transform 0.2s,
+    box-shadow 0.2s;
+}
+
+.loginButton:hover:not(:disabled) {
+  background: var(--primary);
+  box-shadow: 0 0.5rem 1.25rem color-mix(in srgb, var(--primary) 20%, transparent);
+  transform: translateY(-0.0625rem);
+}
+
+.loginButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.spinner {
+  width: 0.9375rem;
+  height: 0.9375rem;
+  border: 0.125rem solid color-mix(in srgb, var(--text-white) 35%, transparent);
+  border-top-color: var(--text-white);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+.security {
+  display: flex;
+  align-items: center;
+  gap: 0.6875rem;
+  margin-top: 1.75rem;
+  padding: 0.8125rem;
+  border: 0.0625rem solid var(--border);
+  border-radius: 0.625rem;
+  background: var(--background);
+}
+
+.lock {
+  width: 1.875rem;
+  height: 1.875rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border-radius: 0.5rem;
+  background: var(--background);
+  color: var(--primary);
+  font-size: 0.8125rem;
+  font-weight: 800;
+}
+
+.security div {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.security strong {
+  color: var(--text);
+  font-size: 0.75rem;
+}
+
+.security div span {
+  color: var(--secondary);
+  font-size: 0.6875rem;
+}
+
+.footer {
+  margin: 1.625rem 0 0;
+  color: var(--secondary);
+  text-align: center;
+  font-size: 0.6875rem;
+}
+
+@keyframes spin {
+  to {
+    transform: translateY(-50%) rotate(360deg);
   }
-  
+}
+
+@media (max-width: 32.5rem) {
+  .authPage {
+    padding: 1.25rem 0.875rem;
+  }
+
   .authCard {
-    width: 100%;
-    max-width: 440px;
-    padding: 42px;
-    background: #ffffff;
-    border: 1px solid #e5e9e7;
-    border-radius: 20px;
-    box-shadow:
-      0 20px 60px rgba(31, 42, 38, 0.08);
+    padding: 1.875rem 1.375rem;
+    border-radius: 1rem;
   }
-  
+
   .brand {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 42px;
+    margin-bottom: 2rem;
   }
-  
-  .brandIcon {
-    width: 44px;
-    height: 44px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 12px;
-    background: #2f6b52;
-    color: #ffffff;
-    font-size: 13px;
-    font-weight: 800;
-    letter-spacing: 0.5px;
-  }
-  
-  .brand div:last-child {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-  }
-  
-  .brand strong {
-    color: #1f2a26;
-    font-size: 17px;
-    line-height: 1.2;
-  }
-  
-  .brand span {
-    color: #7b8781;
-    font-size: 12px;
-  }
-  
-  .heading {
-    margin-bottom: 28px;
-  }
-  
-  .eyebrow {
-    display: inline-block;
-    margin-bottom: 10px;
-    color: #2f6b52;
-    font-size: 11px;
-    font-weight: 800;
-    letter-spacing: 1.4px;
-  }
-  
+
   .heading h1 {
-    margin: 0 0 9px;
-    color: #1f2a26;
-    font-size: 32px;
-    line-height: 1.15;
-    font-weight: 750;
+    font-size: 1.75rem;
   }
-  
-  .heading p {
-    margin: 0;
-    color: #6d7873;
-    font-size: 14px;
-    line-height: 1.6;
-  }
-  
-  .error {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 20px;
-    padding: 12px 14px;
-    border: 1px solid #f0caca;
-    border-radius: 10px;
-    background: #fff5f5;
-    color: #b33a3a;
-    font-size: 13px;
-    line-height: 1.4;
-  }
-  
-  .error span {
-    width: 20px;
-    height: 20px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    border-radius: 50%;
-    background: #b33a3a;
-    color: #ffffff;
-    font-size: 12px;
-    font-weight: 800;
-  }
-  
-  .form {
-    display: flex;
-    flex-direction: column;
-    gap: 21px;
-  }
-  
-  .field {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-  
-  .field label {
-    color: #27332e;
-    font-size: 13px;
-    font-weight: 650;
-  }
-  
-  .labelRow {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-  
-  .forgotButton {
-    padding: 0;
-    border: 0;
-    background: transparent;
-    color: #2f6b52;
-    cursor: pointer;
-    font-size: 12px;
-    font-weight: 600;
-  }
-  
-  .forgotButton:hover {
-    text-decoration: underline;
-  }
-  
-  .field input {
-    width: 100%;
-    box-sizing: border-box;
-    height: 48px;
-    padding: 0 14px;
-    border: 1px solid #dce2df;
-    border-radius: 10px;
-    outline: none;
-    background: #ffffff;
-    color: #1f2a26;
-    font-size: 14px;
-    transition:
-      border-color 0.2s,
-      box-shadow 0.2s;
-  }
-  
-  .field input::placeholder {
-    color: #a1aaa5;
-  }
-  
-  .field input:focus {
-    border-color: #2f6b52;
-    box-shadow:
-      0 0 0 3px rgba(47, 107, 82, 0.1);
-  }
-  
-  .field input:disabled {
-    cursor: not-allowed;
-    background: #f5f6f5;
-  }
-  
-  .passwordWrapper {
-    position: relative;
-  }
-  
-  .passwordWrapper input {
-    padding-right: 70px;
-  }
-  
-  .passwordToggle {
-    position: absolute;
-    top: 50%;
-    right: 12px;
-    transform: translateY(-50%);
-    padding: 5px;
-    border: 0;
-    background: transparent;
-    color: #2f6b52;
-    cursor: pointer;
-    font-size: 12px;
-    font-weight: 700;
-  }
-  
-  .loginButton {
-    height: 50px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    margin-top: 3px;
-    border: 0;
-    border-radius: 10px;
-    background: #2f6b52;
-    color: #ffffff;
-    cursor: pointer;
-    font-size: 14px;
-    font-weight: 700;
-    transition:
-      background 0.2s,
-      transform 0.2s,
-      box-shadow 0.2s;
-  }
-  
-  .loginButton:hover:not(:disabled) {
-    background: #275c46;
-    box-shadow:
-      0 8px 20px rgba(47, 107, 82, 0.2);
-    transform: translateY(-1px);
-  }
-  
-  .loginButton:disabled {
-    cursor: not-allowed;
-    opacity: 0.7;
-  }
-  
-  .spinner {
-    width: 15px;
-    height: 15px;
-    border: 2px solid rgba(255, 255, 255, 0.35);
-    border-top-color: #ffffff;
-    border-radius: 50%;
-    animation: spin 0.7s linear infinite;
-  }
-  
-  .security {
-    display: flex;
-    align-items: center;
-    gap: 11px;
-    margin-top: 28px;
-    padding: 13px;
-    border: 1px solid #e5ebe7;
-    border-radius: 10px;
-    background: #f8faf9;
-  }
-  
-  .lock {
-    width: 30px;
-    height: 30px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    border-radius: 8px;
-    background: #e6f0ea;
-    color: #2f6b52;
-    font-size: 13px;
-    font-weight: 800;
-  }
-  
-  .security div {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-  }
-  
-  .security strong {
-    color: #35413b;
-    font-size: 12px;
-  }
-  
-  .security div span {
-    color: #87918c;
-    font-size: 11px;
-  }
-  
-  .footer {
-    margin: 26px 0 0;
-    color: #a0aaa5;
-    text-align: center;
-    font-size: 11px;
-  }
-  
-  @keyframes spin {
-    to {
-      transform: translateY(-50%) rotate(360deg);
-    }
-  }
-  
-  @media (max-width: 520px) {
-    .authPage {
-      padding: 20px 14px;
-    }
-  
-    .authCard {
-      padding: 30px 22px;
-      border-radius: 16px;
-    }
-  
-    .brand {
-      margin-bottom: 32px;
-    }
-  
-    .heading h1 {
-      font-size: 28px;
-    }
-  }
+}

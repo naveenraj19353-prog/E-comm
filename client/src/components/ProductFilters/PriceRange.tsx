@@ -26,16 +26,14 @@ const PriceRange = ({ values, min, max, onChange }: PriceRangeProps) => {
   };
   return (
     <div className={styles.container}>
-     
       <div className={styles.values}>
         <span>₹{minValue.toLocaleString("en-IN")}</span>
         <span>₹{maxValue.toLocaleString("en-IN")}</span>
       </div>
-     
+
       <div className={styles.slider}>
-       
         <div className={styles.track} />
-       
+
         <div
           className={styles.range}
           style={{
@@ -43,7 +41,7 @@ const PriceRange = ({ values, min, max, onChange }: PriceRangeProps) => {
             right: `${100 - maxPercent}%`,
           }}
         />
-       
+
         <input
           type="range"
           min={min}
@@ -52,7 +50,7 @@ const PriceRange = ({ values, min, max, onChange }: PriceRangeProps) => {
           onChange={handleMinChange}
           className={`${styles.input} ${styles.minInput}`}
         />
-       
+
         <input
           type="range"
           min={min}
@@ -62,7 +60,7 @@ const PriceRange = ({ values, min, max, onChange }: PriceRangeProps) => {
           className={`${styles.input} ${styles.maxInput}`}
         />
       </div>
-     
+
       <div className={styles.labels}>
         <span>₹{min.toLocaleString("en-IN")}</span>
         <span>₹{max.toLocaleString("en-IN")}</span>

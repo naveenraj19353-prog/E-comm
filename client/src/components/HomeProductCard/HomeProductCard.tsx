@@ -15,10 +15,7 @@ interface HomeProductCardProps {
   onClick?: () => void;
 }
 const HomeProductCard = ({ product, onClick }: HomeProductCardProps) => {
-  const image =
-    product.images?.length > 0
-      ? product.images[0]
-      :""
+  const image = product.images?.length > 0 ? product.images[0] : "";
   return (
     <div className={styles.card} onClick={onClick}>
       <div className={styles.imageWrapper}>

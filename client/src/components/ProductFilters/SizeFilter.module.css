@@ -1,23 +1,26 @@
 .wrapper {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 0.625rem;
 }
+
 .size {
-  min-width: 48px;
-  height: 42px;
-  padding: 0 14px;
-  border: 1px solid #e5e7eb;
-  border-radius: 10px;
+  min-width: 3rem;
+  height: 2.625rem;
+  padding: 0 0.875rem;
+  border: 0.0625rem solid #e5e7eb;
+  border-radius: 0.625rem;
   background: #fff;
   cursor: pointer;
   font-weight: 600;
-  font-size: 14px;
+  font-size: 0.875rem;
   transition: all 0.2s ease;
 }
+
 .size:hover {
   border-color: #16a34a;
 }
+
 .active {
   background: #16a34a;
   color: white;

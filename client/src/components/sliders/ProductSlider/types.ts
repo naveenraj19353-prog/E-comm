@@ -8,4 +8,3 @@ export interface Product {
   reviews: number;
   discount: number;
 }
-

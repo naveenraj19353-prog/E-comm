@@ -31,10 +31,7 @@ export interface VerifyPaymentResponse {
 export const createPaymentOrder = async (
   payload: CreatePaymentOrderRequest,
 ): Promise<CreatePaymentOrderResponse> => {
-  const response = await apiClient.post(
-    "/payments/create-order",
-    payload,
-  );
+  const response = await apiClient.post("/payments/create-order", payload);
 
   return response.data;
 };
@@ -42,10 +39,7 @@ export const createPaymentOrder = async (
 export const verifyPayment = async (
   payload: VerifyPaymentRequest,
 ): Promise<VerifyPaymentResponse> => {
-  const response = await apiClient.post(
-    "/payments/verify",
-    payload,
-  );
+  const response = await apiClient.post("/payments/verify", payload);
 
   return response.data;
 };

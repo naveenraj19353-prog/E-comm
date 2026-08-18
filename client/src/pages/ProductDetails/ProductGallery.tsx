@@ -27,7 +27,6 @@ const ProductGallery = ({ product }: ProductGalleryProps) => {
   };
   return (
     <div className={styles.gallery}>
-     
       <div className={styles.thumbnails}>
         {images.map((image, index) => (
           <button
@@ -42,7 +41,7 @@ const ProductGallery = ({ product }: ProductGalleryProps) => {
           </button>
         ))}
       </div>
-     
+
       <div
         className={styles.mainImageWrapper}
         onMouseEnter={() => setZoomVisible(true)}

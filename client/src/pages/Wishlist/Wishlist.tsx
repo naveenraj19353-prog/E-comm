@@ -35,7 +35,7 @@ const Wishlist = () => {
       setAddingProductId(productId);
       await addToCart({
         tenantId: user?.tenantId || "",
-        userId: user?._id ||"",
+        userId: user?._id || "",
         productId,
         quantity: 1,
       });
@@ -54,7 +54,6 @@ const Wishlist = () => {
   };
   return (
     <div className={styles.container}>
-      
       <div className={styles.header}>
         <div className={styles.eyebrow}>
           <Heart size={15} />
@@ -65,7 +64,7 @@ const Wishlist = () => {
           {wishlistCount} {wishlistCount === 1 ? "product" : "products"} saved
         </p>
       </div>
-      
+
       <div className={styles.grid}>
         {wishlist.map((item) => {
           const product = {

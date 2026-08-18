@@ -40,7 +40,7 @@ export default function ProductsPage() {
   const navigate = useNavigate();
   const tenantIdStore =
     useAppSelector(
-      (state) => state.tenant.currentTenant?.id || state.tenant.tenantSlug
+      (state) => state.tenant.currentTenant?.id || state.tenant.tenantSlug,
     ) ?? "";
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -67,7 +67,7 @@ export default function ProductsPage() {
               limit,
               search: search || undefined,
             },
-          }
+          },
         );
 
         setProducts(response.data.data);
@@ -234,8 +234,8 @@ export default function ProductsPage() {
                           product.stock === 0
                             ? styles.outOfStock
                             : product.stock < 10
-                            ? styles.lowStock
-                            : styles.stock
+                              ? styles.lowStock
+                              : styles.stock
                         }
                       >
                         {product.stock}

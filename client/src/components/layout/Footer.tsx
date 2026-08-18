@@ -18,7 +18,6 @@ export default function Footer() {
   return (
     <footer className={styles.footer}>
       <div className={styles.container}>
-     
         <div className={styles.brandColumn}>
           <a href="/" className={styles.logo}>
             <span className={styles.logoIcon} aria-hidden="true">
@@ -47,7 +46,7 @@ export default function Footer() {
             </a>
           </div>
         </div>
-     
+
         <div className={styles.linkColumns}>
           {FOOTER_COLUMNS.map((col) => (
             <div key={col.heading} className={styles.linkColumn}>

@@ -1,45 +1,50 @@
 .container {
   width: 100%;
-  padding: 10px 4px 5px;
+  padding: 0.625rem 0.25rem 0.3125rem;
 }
+
 .values {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 18px;
-  font-size: 14px;
+  margin-bottom: 1.125rem;
+  font-size: 0.875rem;
   font-weight: 600;
-  color: #222;
+  color: var(--text);
 }
+
 .slider {
   position: relative;
   width: 100%;
-  height: 20px;
+  height: 1.25rem;
 }
+
 .track {
   position: absolute;
   top: 50%;
   left: 0;
   right: 0;
-  height: 4px;
+  height: 0.25rem;
   transform: translateY(-50%);
-  background: #e5e7eb;
-  border-radius: 10px;
+  background: var(--border);
+  border-radius: 0.625rem;
 }
+
 .range {
   position: absolute;
   top: 50%;
-  height: 4px;
+  height: 0.25rem;
   transform: translateY(-50%);
-  background: #16a34a;
-  border-radius: 10px;
+  background: var(--primary);
+  border-radius: 0.625rem;
   pointer-events: none;
 }
+
 .input {
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
-  height: 20px;
+  height: 1.25rem;
   margin: 0;
   background: transparent;
   pointer-events: none;
@@ -47,44 +52,51 @@
   -webkit-appearance: none;
   outline: none;
 }
+
 .input::-webkit-slider-runnable-track {
-  height: 4px;
+  height: 0.25rem;
   background: transparent;
   border: none;
 }
+
 .input::-webkit-slider-thumb {
-  width: 18px;
-  height: 18px;
-  margin-top: -7px;
+  width: 1.125rem;
+  height: 1.125rem;
+  margin-top: -0.4375rem;
   border-radius: 50%;
-  border: 2px solid #16a34a;
-  background: #fff;
+  border: 0.125rem solid var(--primary);
+  background: var(--surface);
   cursor: grab;
   pointer-events: auto;
   -webkit-appearance: none;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 0.0625rem 0.25rem rgba(0, 0, 0, 0.15);
 }
+
 .input::-webkit-slider-thumb:active {
   cursor: grabbing;
 }
+
 .input::-moz-range-track {
-  height: 4px;
+  height: 0.25rem;
   background: transparent;
   border: none;
 }
+
 .input::-moz-range-thumb {
-  width: 14px;
-  height: 14px;
+  width: 0.875rem;
+  height: 0.875rem;
   border-radius: 50%;
-  border: 2px solid #16a34a;
-  background: #fff;
+  border: 0.125rem solid var(--primary);
+  background: var(--surface);
   cursor: grab;
   pointer-events: auto;
 }
+
 .labels {
   display: flex;
   justify-content: space-between;
-  margin-top: 8px;
-  font-size: 11px;
-  color: #888;
+  margin-top: 0.5rem;
+  font-size: 0.6875rem;
+  color: var(--text);
+  opacity: 0.6;
 }

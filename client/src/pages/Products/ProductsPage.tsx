@@ -55,8 +55,8 @@ const Products = () => {
     urlCategoryIds.length > 0
       ? urlCategoryIds
       : singleCategory
-      ? [singleCategory]
-      : [];
+        ? [singleCategory]
+        : [];
   const urlColors = searchParams.getAll("colors");
   const urlSizes = searchParams.getAll("sizes");
   const urlMinPrice = searchParams.get("minPrice");
@@ -85,13 +85,13 @@ const Products = () => {
           urlSortBy === "price" && urlSortOrder === "asc"
             ? "priceAsc"
             : urlSortBy === "price" && urlSortOrder === "desc"
-            ? "priceDesc"
-            : urlSortBy === "rating"
-            ? "rating"
-            : urlSortBy === "discount"
-            ? "discount"
-            : "newest",
-      })
+              ? "priceDesc"
+              : urlSortBy === "rating"
+                ? "rating"
+                : urlSortBy === "discount"
+                  ? "discount"
+                  : "newest",
+      }),
     );
   }, [
     dispatch,
@@ -125,7 +125,7 @@ const Products = () => {
   }, [urlSortBy, urlSortOrder]);
 
   const updateUrl = (
-    updates: Record<string, string | string[] | number | null | undefined>
+    updates: Record<string, string | string[] | number | null | undefined>,
   ) => {
     const params = new URLSearchParams(searchParams);
     Object.entries(updates).forEach(([key, value]) => {
@@ -149,8 +149,8 @@ const Products = () => {
     urlCategories.length > 0
       ? urlCategories
       : filters.categories.length > 0
-      ? filters.categories
-      : undefined;
+        ? filters.categories
+        : undefined;
 
   const search = urlSearch.trim() || undefined;
 
@@ -162,14 +162,14 @@ const Products = () => {
       urlColors.length > 0
         ? urlColors
         : filters.colors.length > 0
-        ? filters.colors
-        : undefined,
+          ? filters.colors
+          : undefined,
     sizes:
       urlSizes.length > 0
         ? urlSizes
         : filters.sizes.length > 0
-        ? filters.sizes
-        : undefined,
+          ? filters.sizes
+          : undefined,
     minPrice:
       debouncedPriceRange[0] !== DEFAULT_MIN_PRICE
         ? debouncedPriceRange[0]
@@ -183,7 +183,6 @@ const Products = () => {
     sortBy: urlSortBy as "createdAt" | "price" | "rating" | "discount" | "name",
     sortOrder: urlSortOrder as "asc" | "desc",
   });
-
 
   const products = productsQuery.data?.pages.flatMap((page) => page.data) ?? [];
   const totalCount = productsQuery.data?.pages[0]?.totalCount ?? 0;
@@ -226,7 +225,6 @@ const Products = () => {
         break;
     }
   };
-
 
   const previousFilters = useRef(filters);
 
@@ -293,7 +291,7 @@ const Products = () => {
       },
       {
         rootMargin: "300px",
-      }
+      },
     );
 
     observer.observe(element);
@@ -306,7 +304,6 @@ const Products = () => {
     productsQuery.isFetchingNextPage,
     productsQuery.fetchNextPage,
   ]);
-
 
   useEffect(() => {
     document.body.style.overflow = drawerOpen ? "hidden" : "";
@@ -323,7 +320,7 @@ const Products = () => {
     dispatch(
       setFilters({
         search: "",
-      })
+      }),
     );
     setSearchParams(params);
   };
@@ -412,9 +409,8 @@ const Products = () => {
   const pageTitle = hasSearch
     ? `Search results for "${urlSearch}"`
     : hasCategory
-    ? urlCategories.join(", ")
-    : "Products";
-
+      ? urlCategories.join(", ")
+      : "Products";
 
   return (
     <div className={styles.page}>

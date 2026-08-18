@@ -1,7 +1,8 @@
 .section {
-  border-bottom: 1px solid #eee;
-  padding: 18px 0;
+  border-bottom: 0.0625rem solid var(--border);
+  padding: 1.125rem 0;
 }
+
 .header {
   width: 100%;
   display: flex;
@@ -9,16 +10,20 @@
   align-items: center;
   background: none;
   border: none;
+  color: var(--text);
   cursor: pointer;
-  font-size: 15px;
+  font-size: 0.9375rem;
   font-weight: 600;
 }
+
 .icon {
   transition: 0.25s;
 }
+
 .rotate {
   transform: rotate(180deg);
 }
+
 .content {
-  margin-top: 16px;
+  margin-top: 1rem;
 }

@@ -35,11 +35,10 @@ const ProductCard = ({
   };
   return (
     <div className={styles.card}>
-      
       {product.discountPercentage > 0 && (
         <span className={styles.discount}>-{product.discountPercentage}%</span>
       )}
-      
+
       <button
         type="button"
         className={`${styles.wishlist} ${
@@ -50,7 +49,7 @@ const ProductCard = ({
       >
         <Heart size={18} fill={isWishlisted ? "currentColor" : "none"} />
       </button>
-      
+
       <div className={styles.imageWrapper}>
         <img
           src={product.images[0]}
@@ -58,10 +57,10 @@ const ProductCard = ({
           className={styles.image}
         />
       </div>
-      
+
       <div className={styles.content}>
         <h3>{product.name}</h3>
-        
+
         {product.averageRating ? (
           <div className={styles.rating}>
             <Star size={14} fill="#fbbf24" stroke="#fbbf24" />
@@ -72,7 +71,7 @@ const ProductCard = ({
         ) : (
           ""
         )}
-        
+
         {product.finalPrice && (
           <div className={styles.price}>
             <span className={styles.current}>
@@ -85,7 +84,7 @@ const ProductCard = ({
             )}
           </div>
         )}
-        
+
         <button
           type="button"
           className={styles.cartBtn}

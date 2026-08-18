@@ -5,7 +5,6 @@ export interface User {
   role: string;
   tenantId?: string | null;
   _id: string;
-
 }
 
 export interface LoginRequest {

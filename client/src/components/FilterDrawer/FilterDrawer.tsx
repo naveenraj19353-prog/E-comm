@@ -14,19 +14,17 @@ const FilterDrawer = ({
 }: FilterDrawerProps) => {
   return (
     <>
-      
       <div
         className={`${styles.overlay} ${open ? styles.overlayVisible : ""}`}
         onClick={onClose}
         aria-hidden="true"
       />
-      
+
       <aside
         className={`${styles.drawer} ${open ? styles.drawerOpen : ""}`}
         aria-hidden={!open}
         aria-label="Product filters"
       >
-        
         <div className={styles.header}>
           <div className={styles.headerInfo}>
             <h2>Filters</h2>
@@ -41,9 +39,9 @@ const FilterDrawer = ({
             <X size={20} />
           </button>
         </div>
-        
+
         <div className={styles.content}>{children}</div>
-        
+
         <div className={styles.footer}>
           <button
             type="button"
