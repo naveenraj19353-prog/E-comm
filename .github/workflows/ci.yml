@@ -38,3 +38,6 @@ jobs:
 
       - name: Install frontend dependencies
         run: npm ci
+
+      - name: TypeScript check
+        run: npx tsc --noEmit
