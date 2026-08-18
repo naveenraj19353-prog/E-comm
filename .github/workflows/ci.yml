@@ -9,22 +9,76 @@ frontend:
   steps:
 
     - name: Checkout repository
-      uses: actions/checkout@v4
-      with:
+      uses: actions/checkout@v4name: Multi-Tenant E-Commerce CI
+
+on:
+  push:
+    branches:
+      - main
+      - dev
+
+  pull_request:
+    branches:
+      - main
+      - dev
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+
+  frontend:
+    name: Frontend - React TypeScript
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: client
+
+    steps:
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22.13.0"
+          cache: npm
+          cache-dependency-path: client/package-lock.json
+
+      - name: Install frontend dependencies
+        run: npm ci
+
+      - name: TypeScript check
+        run: npx tsc --noEmit
+
+      - name: Build frontend
+        run: npm run build
+
+        with:
         fetch-depth: 0
 
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
         node-version: "22.13.0"
         cache: npm
         cache-dependency-path: client/package-lock.json
 
-    - name: Install frontend dependencies
-      run: npm ci
+      - name: Install frontend dependencies
+        run: npm ci
 
-    - name: TypeScript check
-      run: npx tsc --noEmit
+      - name: TypeScript check
+        run: npx tsc --noEmit
 
-    - name: Build frontend
-      run: npm run build
+      - name: Build frontend
+        run: npm run build
