@@ -1,74 +1,30 @@
-name: Multi-Tenant E-Commerce CI
+frontend:
+  name: Frontend - React TypeScript
+  runs-on: ubuntu-latest
 
-on:
-  push:
-    branches:
-      - main
-      - dev
+  defaults:
+    run:
+      working-directory: client
 
-  pull_request:
-    branches:
-      - main
-      - dev
+  steps:
 
-  workflow_dispatch:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
 
-permissions:
-  contents: read
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: "22.13.0"
+        cache: npm
+        cache-dependency-path: client/package-lock.json
 
-concurrency:
-  group: ci-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+    - name: Install frontend dependencies
+      run: npm ci
 
-jobs:
+    - name: TypeScript check
+      run: npx tsc --noEmit
 
-  frontend:
-    name: Frontend - React TypeScript
-    runs-on: ubuntu-latest
-
-    defaults:
-      run:
-        working-directory: client
-
-    steps:
-
-      # ----------------------------------------------------------
-      # Checkout
-      # ----------------------------------------------------------
-
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      # ----------------------------------------------------------
-      # Node.js
-      # ----------------------------------------------------------
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "22.12.0"
-          cache: npm
-          cache-dependency-path: client/package-lock.json
-
-      # ----------------------------------------------------------
-      # Dependencies
-      # ----------------------------------------------------------
-
-      - name: Install frontend dependencies
-        run: npm ci --include=optional
-
-      # ----------------------------------------------------------
-      # TypeScript
-      # ----------------------------------------------------------
-
-      - name: TypeScript check
-        run: npx tsc --noEmit
-
-      # ----------------------------------------------------------
-      # Production build
-      # ----------------------------------------------------------
-
-      - name: Build frontend
-        run: npm run build
+    - name: Build frontend
+      run: npm run build
