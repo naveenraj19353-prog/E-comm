@@ -119,6 +119,5 @@ export const getProductDetails = async (
       tenantId,
     },
   });
-
   return response.data;
 };

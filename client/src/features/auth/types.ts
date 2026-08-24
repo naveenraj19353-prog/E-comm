@@ -6,20 +6,17 @@ export interface User {
   tenantId?: string | null;
   _id: string;
 }
-
 export interface LoginRequest {
   tenantId: string | null;
   email: string;
   password: string;
 }
-
 export interface LoginResponse {
   success: boolean;
   access_token: string;
   token_type: string;
   user?: User;
 }
-
 export interface RegisterRequest {
   tenantId: string;
   name: string;
@@ -27,12 +24,10 @@ export interface RegisterRequest {
   phone: string;
   password: string;
 }
-
 export interface RegisterResponse {
   success: boolean;
   message: string;
 }
-
 export interface AuthState {
   user: User | null;
   accessToken: string | null;

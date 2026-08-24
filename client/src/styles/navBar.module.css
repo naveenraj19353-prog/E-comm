@@ -12,7 +12,6 @@
     BlinkMacSystemFont,
     sans-serif;
 }
-
 .container {
   max-width: 80rem;
   height: 4rem;
@@ -22,7 +21,6 @@
   align-items: center;
   gap: 1.5rem;
 }
-
 .logo {
   display: flex;
   align-items: center;
@@ -34,7 +32,6 @@
   cursor: pointer;
   flex-shrink: 0;
 }
-
 .logoIcon {
   width: 2rem;
   height: 2rem;
@@ -48,7 +45,6 @@
   font-weight: 800;
   flex-shrink: 0;
 }
-
 .logoText {
   font-size: 1.0625rem;
   font-weight: 700;
@@ -56,14 +52,12 @@
   letter-spacing: -0.01em;
   white-space: nowrap;
 }
-
 .navLinks {
   display: flex;
   align-items: center;
   gap: 1.75rem;
   flex: 1;
 }
-
 .navLink {
   position: relative;
   padding: 0.25rem 0;
@@ -79,21 +73,17 @@
     color 0.15s ease,
     transform 0.15s ease;
 }
-
 .navLink:hover {
   color: var(--primary);
 }
-
 .navLink:active {
   transform: translateY(0.0625rem);
 }
-
 .navLink:focus-visible {
   outline: 0.125rem solid var(--primary);
   outline-offset: 0.25rem;
   border-radius: 0.25rem;
 }
-
 .rightSection {
   display: flex;
   align-items: center;
@@ -101,7 +91,6 @@
   margin-left: auto;
   flex-shrink: 0;
 }
-
 .searchWrapper {
   display: flex;
   align-items: center;
@@ -117,17 +106,14 @@
     box-shadow 0.15s ease,
     background 0.15s ease;
 }
-
 .searchWrapper:focus-within {
   border-color: var(--secondary);
   background: var(--surface);
   box-shadow: 0 0 0 0.1875rem color-mix(in srgb, var(--primary) 8%, transparent);
 }
-
 .searchWrapper .searchIcon {
   flex-shrink: 0;
 }
-
 .searchInput {
   min-width: 0;
   width: 100%;
@@ -138,18 +124,15 @@
   font-size: 0.875rem;
   color: var(--text);
 }
-
 .searchInput::placeholder {
   color: var(--text);
   opacity: 0.5;
 }
-
 .searchIcon {
   color: var(--text);
   opacity: 0.5;
   flex-shrink: 0;
 }
-
 .searchButton {
   width: 1.875rem;
   height: 1.875rem;
@@ -167,17 +150,14 @@
     color 0.15s ease,
     background 0.15s ease;
 }
-
 .searchButton:hover {
   color: var(--primary);
   background: color-mix(in srgb, var(--primary) 8%, var(--surface));
 }
-
 .searchButton:focus-visible {
   outline: 0.125rem solid var(--primary);
   outline-offset: 0.125rem;
 }
-
 .iconButton {
   position: relative;
   display: none;
@@ -196,25 +176,20 @@
     background 0.15s ease,
     color 0.15s ease;
 }
-
 .iconButton:hover {
   background: color-mix(in srgb, var(--primary) 8%, var(--surface));
   color: var(--primary);
 }
-
 .iconButton:focus-visible {
   outline: 0.125rem solid var(--primary);
   outline-offset: 0.125rem;
 }
-
 .rightSection .iconButton {
   display: flex;
 }
-
 .rightSection > .iconButton:first-of-type {
   display: none;
 }
-
 .badge {
   position: absolute;
   top: -0.125rem;
@@ -233,7 +208,6 @@
   line-height: 1;
   pointer-events: none;
 }
-
 .avatar {
   width: 2.125rem;
   height: 2.125rem;
@@ -245,12 +219,10 @@
   flex-shrink: 0;
   cursor: pointer;
 }
-
 .avatar:focus-visible {
   outline: 0.125rem solid var(--primary);
   outline-offset: 0.125rem;
 }
-
 .menuButton {
   display: none;
   flex-direction: column;
@@ -265,16 +237,13 @@
   cursor: pointer;
   border-radius: 50%;
 }
-
 .menuButton:hover {
   background: color-mix(in srgb, var(--primary) 8%, var(--surface));
 }
-
 .menuButton:focus-visible {
   outline: 0.125rem solid var(--primary);
   outline-offset: 0.125rem;
 }
-
 .menuButton span {
   display: block;
   width: 1.25rem;
@@ -285,19 +254,15 @@
     transform 0.3s ease,
     opacity 0.2s ease;
 }
-
 .menuButtonOpen span:nth-child(1) {
   transform: translateY(0.4375rem) rotate(45deg);
 }
-
 .menuButtonOpen span:nth-child(2) {
   opacity: 0;
 }
-
 .menuButtonOpen span:nth-child(3) {
   transform: translateY(-0.4375rem) rotate(-45deg);
 }
-
 .searchRow {
   display: none;
   align-items: center;
@@ -312,25 +277,20 @@
     padding 0.28s ease,
     border-color 0.28s ease;
 }
-
 .searchRowOpen {
   max-height: 4rem;
   padding: 0.625rem 1.5rem;
   border-top-color: var(--border);
 }
-
 .searchRow .searchInput {
   padding: 0.5rem 0;
 }
-
 .searchRow .searchIcon {
   flex-shrink: 0;
 }
-
 .searchRow .searchButton {
   flex-shrink: 0;
 }
-
 .overlay {
   position: fixed;
   inset: 0;
@@ -343,13 +303,11 @@
     visibility 0.25s ease;
   z-index: 999;
 }
-
 .overlayVisible {
   opacity: 1;
   visibility: visible;
   pointer-events: auto;
 }
-
 .mobileMenu {
   position: fixed;
   top: 0;
@@ -366,11 +324,9 @@
   overflow-y: auto;
   overscroll-behavior: contain;
 }
-
 .mobileMenuOpen {
   transform: translateX(0);
 }
-
 .mobileMenuHeader {
   min-height: 4.25rem;
   display: flex;
@@ -381,13 +337,11 @@
   background: var(--surface);
   flex-shrink: 0;
 }
-
 .mobileMenuTitle {
   display: flex;
   align-items: center;
   gap: 0.625rem;
 }
-
 .mobileMenuLogo {
   width: 2rem;
   height: 2rem;
@@ -400,13 +354,11 @@
   font-size: 0.6875rem;
   font-weight: 800;
 }
-
 .mobileMenuText {
   font-size: 1.125rem;
   font-weight: 700;
   color: var(--text);
 }
-
 .closeButton {
   width: 2.375rem;
   height: 2.375rem;
@@ -424,29 +376,24 @@
     color 0.2s ease,
     transform 0.2s ease;
 }
-
 .closeButton:hover {
   background: color-mix(in srgb, var(--primary) 12%, var(--surface));
   color: var(--primary);
   transform: rotate(90deg);
 }
-
 .closeButton:active {
   transform: rotate(90deg) scale(0.95);
 }
-
 .closeButton:focus-visible {
   outline: 0.125rem solid var(--primary);
   outline-offset: 0.125rem;
 }
-
 .mobileNavLinks {
   display: flex;
   flex-direction: column;
   gap: 0.375rem;
   padding: 1.125rem 0.875rem 1.5rem;
 }
-
 .mobileNavLink {
   width: 100%;
   min-height: 3.25rem;
@@ -471,12 +418,10 @@
     background 0.2s ease,
     color 0.2s ease;
 }
-
 .mobileMenuOpen .mobileNavLink {
   opacity: 1;
   transform: translateX(0);
 }
-
 .mobileNavLink svg {
   color: var(--text);
   opacity: 0.5;
@@ -484,27 +429,22 @@
     color 0.2s ease,
     transform 0.2s ease;
 }
-
 .mobileNavLink:hover {
   background: color-mix(in srgb, var(--primary) 8%, var(--surface));
   color: var(--primary);
 }
-
 .mobileNavLink:hover svg {
   color: var(--primary);
   opacity: 1;
   transform: translateX(0.1875rem);
 }
-
 .mobileNavLink:active {
   background: color-mix(in srgb, var(--primary) 12%, var(--surface));
 }
-
 .mobileNavLink:focus-visible {
   outline: 0.125rem solid var(--primary);
   outline-offset: -0.125rem;
 }
-
 .mobileMenuFooter {
   margin-top: auto;
   display: grid;
@@ -513,7 +453,6 @@
   padding: 1rem 0.875rem 1.25rem;
   border-top: 0.0625rem solid var(--border);
 }
-
 .mobileMenuFooter button {
   min-height: 2.625rem;
   border: 0.0625rem solid var(--border);
@@ -529,184 +468,146 @@
     border-color 0.2s ease,
     color 0.2s ease;
 }
-
 .mobileMenuFooter button:hover {
   background: color-mix(in srgb, var(--primary) 8%, var(--surface));
   border-color: var(--secondary);
   color: var(--primary);
 }
-
 @media (min-width: 64.0625rem) {
   .navLinks {
     display: flex;
   }
-
   .searchWrapper {
     display: flex;
   }
-
   .searchRow {
     display: none;
   }
-
   .menuButton {
     display: none;
   }
-
   .mobileMenu,
   .overlay {
     display: none;
   }
 }
-
 @media (max-width: 64rem) {
   .container {
     gap: 1rem;
   }
-
   .navLinks {
     display: none;
   }
-
   .searchWrapper {
     display: none;
   }
-
   .rightSection > .iconButton:first-of-type {
     display: flex;
   }
-
   .menuButton {
     display: flex;
   }
-
   .searchRow {
     display: flex;
   }
 }
-
 @media (max-width: 40rem) {
   .container {
     height: 3.625rem;
     padding: 0 0.875rem;
     gap: 0.625rem;
   }
-
   .logo {
     gap: 0.5rem;
   }
-
   .logoIcon {
     width: 1.875rem;
     height: 1.875rem;
     border-radius: 0.4375rem;
   }
-
   .logoText {
     font-size: 0.9375rem;
   }
-
   .rightSection {
     gap: 0.3125rem;
   }
-
   .iconButton {
     width: 2.125rem;
     height: 2.125rem;
   }
-
   .menuButton {
     width: 2.125rem;
     height: 2.125rem;
   }
-
   .avatar {
     display: none;
   }
-
   .searchRow {
     padding-left: 0.875rem;
     padding-right: 0.875rem;
   }
-
   .searchRowOpen {
     padding: 0.5625rem 0.875rem;
   }
-
   .mobileMenu {
     width: min(20.625rem, 90vw);
   }
-
   .mobileMenuHeader {
     min-height: 3.875rem;
     padding: 0 1rem;
   }
-
   .mobileMenuText {
     font-size: 1.0625rem;
   }
-
   .mobileNavLinks {
     padding: 1rem 0.75rem 1.5rem;
     gap: 0.3125rem;
   }
-
   .mobileNavLink {
     min-height: 3.25rem;
     padding: 0 1rem;
     font-size: 0.9375rem;
   }
-
   .closeButton {
     width: 2.25rem;
     height: 2.25rem;
   }
 }
-
 @media (max-width: 23.75rem) {
   .container {
     padding: 0 0.625rem;
     gap: 0.375rem;
   }
-
   .logoText {
     display: none;
   }
-
   .rightSection {
     gap: 0.1875rem;
   }
-
   .logoIcon {
     width: 1.8125rem;
     height: 1.8125rem;
   }
-
   .iconButton,
   .menuButton {
     width: 2rem;
     height: 2rem;
   }
-
   .mobileMenu {
     width: 88vw;
   }
-
   .mobileMenuHeader {
     padding: 0 0.875rem;
   }
-
   .mobileNavLinks {
     padding-left: 0.625rem;
     padding-right: 0.625rem;
   }
-
   .mobileMenuFooter {
     grid-template-columns: 1fr;
     gap: 0.375rem;
   }
 }
-
 @media (prefers-reduced-motion: reduce) {
   .mobileMenu,
   .menuButton span,

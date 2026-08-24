@@ -67,7 +67,6 @@ const ProductFilters = () => {
           </button>
         )}
       </div>
-
       <FilterSection title="Category">
         {isLoading ? (
           <div className={styles.loadingState}>
@@ -95,7 +94,6 @@ const ProductFilters = () => {
           </div>
         )}
       </FilterSection>
-
       <FilterSection title="Price">
         <PriceRange
           values={filters.priceRange}
@@ -110,7 +108,6 @@ const ProductFilters = () => {
           }
         />
       </FilterSection>
-
       <FilterSection title="Rating">
         <RatingFilter
           value={filters.rating}
@@ -123,7 +120,6 @@ const ProductFilters = () => {
           }
         />
       </FilterSection>
-
       <FilterSection title="Colors">
         <ColorFilter
           colors={colors}
@@ -137,7 +133,6 @@ const ProductFilters = () => {
           }
         />
       </FilterSection>
-
       <FilterSection title="Sizes">
         <SizeFilter
           sizes={sizes}

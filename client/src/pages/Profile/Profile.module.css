@@ -3,28 +3,23 @@
   background: var(--background);
   padding: 2.5rem 1.25rem;
 }
-
 .container {
   width: min(68.75rem, 100%);
   margin: 0 auto;
 }
-
 .pageHeader {
   margin-bottom: 1.75rem;
 }
-
 .pageHeader h1 {
   margin: 0;
   font-size: 1.875rem;
   font-weight: 700;
   color: var(--text);
 }
-
 .pageHeader p {
   margin: 0.5rem 0 0;
   color: var(--secondary);
 }
-
 .profileHero {
   display: flex;
   align-items: center;
@@ -35,7 +30,6 @@
   border-radius: 1rem;
   margin-bottom: 1.25rem;
 }
-
 .avatar {
   width: 4.5rem;
   height: 4.5rem;
@@ -49,22 +43,18 @@
   font-weight: 700;
   flex-shrink: 0;
 }
-
 .heroInfo {
   flex: 1;
 }
-
 .heroInfo h2 {
   margin: 0;
   color: var(--text);
   font-size: 1.375rem;
 }
-
 .heroInfo p {
   margin: 0.3125rem 0 0.625rem;
   color: var(--secondary);
 }
-
 .activeBadge {
   display: inline-flex;
   align-items: center;
@@ -73,14 +63,12 @@
   color: var(--success);
   font-weight: 600;
 }
-
 .activeBadge span {
   width: 0.4375rem;
   height: 0.4375rem;
   border-radius: 50%;
   background: var(--success);
 }
-
 .editButton {
   display: flex;
   align-items: center;
@@ -93,12 +81,10 @@
   cursor: pointer;
   font-weight: 600;
 }
-
 .editButton:hover {
   background: var(--primary);
   opacity: 0.9;
 }
-
 .card {
   background: var(--surface);
   border: 0.0625rem solid var(--border);
@@ -106,7 +92,6 @@
   padding: 1.5625rem;
   margin-bottom: 1.25rem;
 }
-
 .cardHeader {
   display: flex;
   align-items: center;
@@ -114,31 +99,26 @@
   padding-bottom: 1.25rem;
   border-bottom: 0.0625rem solid var(--border);
 }
-
 .cardHeader h3 {
   margin: 0;
   color: var(--text);
 }
-
 .cardHeader p {
   margin: 0.3125rem 0 0;
   color: var(--secondary);
   font-size: 0.875rem;
 }
-
 .infoGrid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 1.5rem;
   padding-top: 1.5rem;
 }
-
 .infoItem {
   display: flex;
   gap: 0.8125rem;
   align-items: center;
 }
-
 .icon {
   width: 2.5rem;
   height: 2.5rem;
@@ -149,25 +129,21 @@
   align-items: center;
   justify-content: center;
 }
-
 .infoItem span {
   display: block;
   color: var(--secondary);
   font-size: 0.8125rem;
   margin-bottom: 0.25rem;
 }
-
 .infoItem strong {
   color: var(--text);
   font-size: 0.9375rem;
 }
-
 .quickGrid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 0.875rem;
 }
-
 .quickCard {
   display: flex;
   align-items: center;
@@ -179,11 +155,9 @@
   padding: 1.125rem;
   cursor: pointer;
 }
-
 .quickCard:hover {
   border-color: var(--primary);
 }
-
 .quickIcon {
   width: 2.625rem;
   height: 2.625rem;
@@ -194,22 +168,18 @@
   align-items: center;
   justify-content: center;
 }
-
 .quickCard strong,
 .quickCard span {
   display: block;
 }
-
 .quickCard strong {
   color: var(--text);
   margin-bottom: 0.25rem;
 }
-
 .quickCard span {
   color: var(--secondary);
   font-size: 0.75rem;
 }
-
 .logoutButton {
   margin-top: 1.5625rem;
   border: 0;
@@ -221,39 +191,32 @@
   cursor: pointer;
   font-weight: 600;
 }
-
 .loading,
 .error {
   padding: 5rem;
   text-align: center;
   color: var(--secondary);
 }
-
 @media (max-width: 50rem) {
   .quickGrid {
     grid-template-columns: repeat(2, 1fr);
   }
-
   .infoGrid {
     grid-template-columns: 1fr;
   }
 }
-
 @media (max-width: 37.5rem) {
   .page {
     padding: 1.5625rem 0.9375rem;
   }
-
   .profileHero {
     align-items: flex-start;
     flex-wrap: wrap;
   }
-
   .editButton {
     width: 100%;
     justify-content: center;
   }
-
   .quickGrid {
     grid-template-columns: 1fr;
   }

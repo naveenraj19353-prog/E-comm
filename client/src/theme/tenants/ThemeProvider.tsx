@@ -1,7 +1,6 @@
 import { useEffect } from "react";
 import { themes } from "./tenant002";
 import { useAppSelector } from "../../app/hooks";
-
 interface Props {
   children: React.ReactNode;
 }
@@ -24,5 +23,4 @@ const ThemeProvider = ({ children }: Props) => {
   }, [theme]);
   return <>{children}</>;
 };
-
 export default ThemeProvider;

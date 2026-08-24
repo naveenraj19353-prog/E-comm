@@ -10,13 +10,11 @@
     visibility 0.25s ease;
   z-index: 999;
 }
-
 .overlayVisible {
   opacity: 1;
   visibility: visible;
   pointer-events: auto;
 }
-
 .drawer {
   position: fixed;
   top: 0;
@@ -32,12 +30,10 @@
   z-index: 1000;
   visibility: hidden;
 }
-
 .drawerOpen {
   transform: translateX(0);
   visibility: visible;
 }
-
 .header {
   flex-shrink: 0;
   min-height: 4.5rem;
@@ -50,11 +46,9 @@
   position: relative;
   z-index: 2;
 }
-
 .headerInfo {
   min-width: 0;
 }
-
 .header h2 {
   margin: 0;
   color: var(--text);
@@ -62,7 +56,6 @@
   font-weight: 700;
   line-height: 1.2;
 }
-
 .header p {
   margin: 0.3125rem 0 0;
   color: var(--text);
@@ -70,7 +63,6 @@
   font-size: 0.75rem;
   line-height: 1.4;
 }
-
 .closeButton {
   width: 2.375rem;
   height: 2.375rem;
@@ -88,21 +80,17 @@
     color 0.15s ease,
     transform 0.15s ease;
 }
-
 .closeButton:hover {
   background: var(--border);
   color: var(--primary);
 }
-
 .closeButton:active {
   transform: scale(0.94);
 }
-
 .closeButton:focus-visible {
   outline: 0.125rem solid var(--primary);
   outline-offset: 0.125rem;
 }
-
 .content {
   flex: 1;
   min-height: 0;
@@ -113,24 +101,19 @@
   scrollbar-width: thin;
   scrollbar-color: var(--border) transparent;
 }
-
 .content::-webkit-scrollbar {
   width: 0.3125rem;
 }
-
 .content::-webkit-scrollbar-track {
   background: transparent;
 }
-
 .content::-webkit-scrollbar-thumb {
   background: var(--border);
   border-radius: 62.4375rem;
 }
-
 .content::-webkit-scrollbar-thumb:hover {
   background: var(--secondary);
 }
-
 .footer {
   flex-shrink: 0;
   display: flex;
@@ -144,7 +127,6 @@
   position: relative;
   z-index: 2;
 }
-
 .clearButton {
   flex: 0 0 auto;
   min-height: 2.875rem;
@@ -161,18 +143,15 @@
     border-color 0.15s ease,
     color 0.15s ease;
 }
-
 .clearButton:hover {
   background: var(--background);
   border-color: var(--secondary);
   color: var(--secondary);
 }
-
 .clearButton:focus-visible {
   outline: 0.125rem solid var(--primary);
   outline-offset: 0.125rem;
 }
-
 .applyButton {
   flex: 1;
   min-height: 2.875rem;
@@ -187,95 +166,76 @@
     background 0.15s ease,
     transform 0.15s ease;
 }
-
 .applyButton:hover {
   background: var(--secondary);
 }
-
 .applyButton:active {
   transform: translateY(0.0625rem);
 }
-
 .applyButton:focus-visible {
   outline: 0.125rem solid var(--primary);
   outline-offset: 0.125rem;
 }
-
 @media (min-width: 48.0625rem) and (max-width: 64rem) {
   .drawer {
     width: min(24.375rem, 75vw);
   }
 }
-
 @media (max-width: 48rem) {
   .drawer {
     width: min(24.375rem, 92vw);
   }
-
   .content {
     padding: 1.125rem 1rem;
   }
-
   .footer {
     padding-left: 1rem;
     padding-right: 1rem;
   }
 }
-
 @media (max-width: 30rem) {
   .drawer {
     width: 100vw;
     box-shadow: -0.5rem 0 1.5rem rgba(0, 0, 0, 0.12);
   }
-
   .header {
     min-height: 4rem;
     padding: 0 1rem;
   }
-
   .header h2 {
     font-size: 1.1875rem;
   }
-
   .content {
     padding: 1rem;
   }
-
   .footer {
     gap: 0.5rem;
     padding: 0.75rem 1rem;
     padding-bottom: calc(0.75rem + env(safe-area-inset-bottom));
   }
-
   .clearButton {
     min-height: 2.75rem;
     padding: 0 0.875rem;
   }
-
   .applyButton {
     min-height: 2.75rem;
   }
 }
-
 @media (max-width: 22.5rem) {
   .header {
     padding: 0 0.875rem;
   }
-
   .content {
     padding: 0.875rem;
   }
-
   .footer {
     padding-left: 0.875rem;
     padding-right: 0.875rem;
   }
-
   .clearButton {
     padding: 0 0.75rem;
   }
 }
-
 @media (prefers-reduced-motion: reduce) {
   .overlay,
   .drawer,

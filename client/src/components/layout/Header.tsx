@@ -1,42 +1,31 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ShoppingCart } from "lucide-react";
-
 import styles from "../../styles/navBar.module.css";
-
 import { useCart } from "../../features/cart/hooks/useCart";
 import { useWishlist } from "../../features/wishlist/hooks/useWishlist";
 import { useAuth } from "../../features/auth/hooks/useAuth";
 import { useCategory } from "../../features/products/hooks/useCategory";
-
 interface Category {
   _id?: string;
   categoryId?: string;
   name: string;
   slug?: string;
 }
-
 const getInitials = (name?: string) => {
   if (!name?.trim()) {
     return "NA";
   }
-
   const parts = name.trim().split(/\s+/);
-
   return ((parts[0]?.[0] || "N") + (parts[1]?.[0] || "A")).toUpperCase();
 };
-
 export default function Navbar() {
   const navigate = useNavigate();
-
   const { tenantSlug } = useParams<{
     tenantSlug: string;
   }>();
-
   const { user } = useAuth();
-
   const tenantId = tenantSlug || "";
-
   /*
    * ================================
    * CATEGORY API
@@ -44,64 +33,49 @@ export default function Navbar() {
    */
   const { data: categoryResponse, isLoading: categoriesLoading } =
     useCategory(tenantId);
-
   /*
    * ================================
    * CART
    * ================================
    */
-
   const { cartCount } = useCart(user?._id as string, user?.tenantId as string);
-
   /*
    * ================================
    * WISHLIST
    * ================================
    */
-
   const { wishlistCount } = useWishlist(
     user?._id as string,
     user?.tenantId as string,
   );
-
   const [categoryStart, setCategoryStart] = useState(0);
-
   const [menuOpen, setMenuOpen] = useState(false);
-
   const [searchOpen, setSearchOpen] = useState(false);
-
   const [searchValue, setSearchValue] = useState("");
-
   /*
    * ================================
    * GET CATEGORIES
    * ================================
    */
-
   const categories: Category[] = categoryResponse?.data
     ? categoryResponse.data.slice(0, 5)
     : [];
-
   /*
    * ================================
    * SLIDE 3 CATEGORIES
    * EVERY 3 SECONDS
    * ================================
    */
-
   useEffect(() => {
     if (categories.length <= 3) {
       return;
     }
-
     const interval = window.setInterval(() => {
       setCategoryStart((current) => {
         const next = current + 3;
-
         return next >= categories.length ? 0 : next;
       });
     }, 3000);
-
     return () => {
       window.clearInterval(interval);
     };
@@ -111,98 +85,76 @@ export default function Navbar() {
    * VISIBLE 3 CATEGORIES
    * ================================
    */
-
   let visibleCategories = categories.slice(categoryStart, categoryStart + 3);
-
   /*
    * If only 1 or 2 are remaining,
    * fill from beginning.
    */
-
   if (visibleCategories.length < 3 && categories.length > 3) {
     visibleCategories = [
       ...visibleCategories,
       ...categories.slice(0, 3 - visibleCategories.length),
     ];
   }
-
   /*
    * ================================
    * SEARCH
    * ================================
    */
-
   const handleSearch = () => {
     const search = searchValue.trim();
-
     if (!search || !tenantSlug) {
       return;
     }
-
     navigate(`/${tenantSlug}/products?search=${encodeURIComponent(search)}`);
-
     setSearchOpen(false);
     setMenuOpen(false);
   };
-
   /*
    * ================================
    * CATEGORY CLICK
    * ================================
    */
-
   const handleCategoryClick = (category: Category) => {
     if (!tenantSlug) {
       return;
     }
-
     const categoryId = category.categoryId || category.slug || category.name;
-
     navigate(
       `/${tenantSlug}/products?category=${encodeURIComponent(categoryId)}`,
     );
-
     setMenuOpen(false);
     setSearchOpen(false);
   };
-
   /*
    * ================================
    * HOME
    * ================================
    */
-
   const handleHome = () => {
     if (!tenantSlug) {
       return;
     }
-
     navigate(`/${tenantSlug}`);
-
     setMenuOpen(false);
     setSearchOpen(false);
   };
-
   /*
    * ================================
    * MENU BODY
    * ================================
    */
-
   useEffect(() => {
     document.body.style.overflow = menuOpen ? "hidden" : "";
-
     return () => {
       document.body.style.overflow = "";
     };
   }, [menuOpen]);
-
   /*
    * ================================
    * ESCAPE
    * ================================
    */
-
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
@@ -210,31 +162,24 @@ export default function Navbar() {
         setSearchOpen(false);
       }
     };
-
     window.addEventListener("keydown", handleKeyDown);
-
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, []);
-
   return (
     <header className={styles.navbar}>
       <div className={styles.container}>
         {/* ================================
             LOGO
         ================================= */}
-
         <button type="button" className={styles.logo} onClick={handleHome}>
           <span className={styles.logoIcon}>LT</span>
-
           <span className={styles.logoText}>Lunar Tech</span>
         </button>
-
         {/* ================================
             DESKTOP CATEGORY NAV
         ================================= */}
-
         <nav className={styles.navLinks} aria-label="Primary navigation">
           {categoriesLoading ? (
             <span className={styles.navLink}>Loading...</span>
@@ -245,7 +190,6 @@ export default function Navbar() {
                 category.categoryId ||
                 category.slug ||
                 category.name;
-
               return (
                 <button
                   key={key}
@@ -259,17 +203,13 @@ export default function Navbar() {
             })
           )}
         </nav>
-
         {/* ================================
             RIGHT SECTION
         ================================= */}
-
         <div className={styles.rightSection}>
           {/* SEARCH */}
-
           <div className={styles.searchWrapper}>
             <SearchIcon className={styles.searchIcon} />
-
             <input
               type="text"
               value={searchValue}
@@ -282,7 +222,6 @@ export default function Navbar() {
               placeholder="Search products, brands..."
               className={styles.searchInput}
             />
-
             <button
               type="button"
               className={styles.searchButton}
@@ -291,9 +230,7 @@ export default function Navbar() {
               <SearchIcon />
             </button>
           </div>
-
           {/* MOBILE SEARCH */}
-
           <button
             type="button"
             className={styles.iconButton}
@@ -301,35 +238,27 @@ export default function Navbar() {
           >
             <SearchIcon />
           </button>
-
           {/* WISHLIST */}
-
           <button
             type="button"
             className={styles.iconButton}
             onClick={() => navigate(`/${tenantSlug}/wishlist`)}
           >
             <HeartIcon />
-
             {wishlistCount > 0 && (
               <span className={styles.badge}>{wishlistCount}</span>
             )}
           </button>
-
           {/* CART */}
-
           <button
             type="button"
             className={styles.iconButton}
             onClick={() => navigate(`/${tenantSlug}/cart`)}
           >
             <ShoppingCart size={20} />
-
             {cartCount > 0 && <span className={styles.badge}>{cartCount}</span>}
           </button>
-
           {/* PROFILE */}
-
           <button
             type="button"
             className={styles.avatar}
@@ -337,9 +266,7 @@ export default function Navbar() {
           >
             {getInitials(user?.name)}
           </button>
-
           {/* MOBILE MENU */}
-
           <button
             type="button"
             className={styles.menuButton}
@@ -351,18 +278,15 @@ export default function Navbar() {
           </button>
         </div>
       </div>
-
       {/* ================================
           MOBILE SEARCH
       ================================= */}
-
       <div
         className={`${styles.searchRow} ${
           searchOpen ? styles.searchRowOpen : ""
         }`}
       >
         <SearchIcon className={styles.searchIcon} />
-
         <input
           type="text"
           value={searchValue}
@@ -375,7 +299,6 @@ export default function Navbar() {
           placeholder="Search products, brands..."
           className={styles.searchInput}
         />
-
         <button
           type="button"
           className={styles.searchButton}
@@ -384,20 +307,16 @@ export default function Navbar() {
           <SearchIcon />
         </button>
       </div>
-
       {/* ================================
           OVERLAY
       ================================= */}
-
       <div
         className={`${styles.overlay} ${menuOpen ? styles.overlayVisible : ""}`}
         onClick={() => setMenuOpen(false)}
       />
-
       {/* ================================
           MOBILE MENU
       ================================= */}
-
       <aside
         className={`${styles.mobileMenu} ${
           menuOpen ? styles.mobileMenuOpen : ""
@@ -406,10 +325,8 @@ export default function Navbar() {
         <div className={styles.mobileMenuHeader}>
           <div className={styles.mobileMenuTitle}>
             <span className={styles.mobileMenuLogo}>LT</span>
-
             <span className={styles.mobileMenuText}>Menu</span>
           </div>
-
           <button
             type="button"
             className={styles.closeButton}
@@ -418,9 +335,7 @@ export default function Navbar() {
             <XIcon />
           </button>
         </div>
-
         {/* MOBILE CATEGORIES */}
-
         <nav className={styles.mobileNavLinks}>
           {categoryResponse &&
             categoryResponse.data.map((category: Category) => (
@@ -436,42 +351,34 @@ export default function Navbar() {
                 onClick={() => handleCategoryClick(category)}
               >
                 <span>{category.name}</span>
-
                 <ChevronIcon />
               </button>
             ))}
         </nav>
-
         {/* MOBILE FOOTER */}
-
         <div className={styles.mobileMenuFooter}>
           <button
             type="button"
             onClick={() => {
               navigate(`/${tenantSlug}/wishlist`);
-
               setMenuOpen(false);
             }}
           >
             Wishlist
           </button>
-
           <button
             type="button"
             onClick={() => {
               navigate(`/${tenantSlug}/cart`);
-
               setMenuOpen(false);
             }}
           >
             Cart
           </button>
-
           <button
             type="button"
             onClick={() => {
               navigate(`/${tenantSlug}/profile`);
-
               setMenuOpen(false);
             }}
           >
@@ -482,11 +389,9 @@ export default function Navbar() {
     </header>
   );
 }
-
 /* ============================================
    ICONS
 ============================================ */
-
 function SearchIcon({ className = "" }: { className?: string }) {
   return (
     <svg
@@ -501,12 +406,10 @@ function SearchIcon({ className = "" }: { className?: string }) {
       strokeLinejoin="round"
     >
       <circle cx="11" cy="11" r="7" />
-
       <path d="m20 20-4-4" />
     </svg>
   );
 }
-
 function HeartIcon() {
   return (
     <svg
@@ -523,7 +426,6 @@ function HeartIcon() {
     </svg>
   );
 }
-
 function XIcon() {
   return (
     <svg
@@ -541,7 +443,6 @@ function XIcon() {
     </svg>
   );
 }
-
 function ChevronIcon() {
   return (
     <svg

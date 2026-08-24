@@ -21,35 +21,28 @@ const LoginForm = ({
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     setError("");
-
     if (!email.trim()) {
       setError("Please enter your email.");
       return;
     }
-
     if (!password) {
       setError("Please enter your password.");
       return;
     }
-
     try {
       setLoading(true);
-
       const response = await login({
         tenantId,
         email: email.trim(),
         password,
       });
-
       if (!response.success) {
         setError("Unable to login.");
         return;
       }
-
       onSuccess();
     } catch (error: unknown) {
       console.error("Login failed:", error);
-
       if (error instanceof Error) {
         setError(error.message || "Invalid email or password.");
       } else {

@@ -4,7 +4,6 @@
   gap: 1rem;
   width: 100%;
 }
-
 .card {
   padding: 1.5rem;
   background: var(--surface);
@@ -12,14 +11,12 @@
   border-radius: 1.125rem;
   box-shadow: 0 0.5rem 1.5rem rgba(15, 23, 42, 0.05);
 }
-
 .header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: 1rem;
 }
-
 .eyebrow {
   display: block;
   margin-bottom: 0.375rem;
@@ -28,7 +25,6 @@
   font-weight: 700;
   letter-spacing: 0.075rem;
 }
-
 .header h2 {
   margin: 0;
   color: var(--text);
@@ -37,7 +33,6 @@
   font-weight: 750;
   letter-spacing: -0.0187rem;
 }
-
 .itemCount {
   flex-shrink: 0;
   padding: 0.375rem 0.5625rem;
@@ -47,21 +42,18 @@
   font-size: 0.6875rem;
   font-weight: 600;
 }
-
 .items {
   display: flex;
   flex-direction: column;
   gap: 1rem;
   margin-top: 1.375rem;
 }
-
 .item {
   display: grid;
   grid-template-columns: 3.625rem minmax(0, 1fr) auto;
   align-items: center;
   gap: 0.75rem;
 }
-
 .imageWrapper {
   position: relative;
   width: 3.625rem;
@@ -70,7 +62,6 @@
   border-radius: 0.625rem;
   background: var(--background);
 }
-
 .image {
   width: 100%;
   height: 100%;
@@ -78,7 +69,6 @@
   object-fit: cover;
   border-radius: 0.625rem;
 }
-
 .quantity {
   position: absolute;
   top: -0.375rem;
@@ -96,11 +86,9 @@
   font-weight: 700;
   box-sizing: border-box;
 }
-
 .itemDetails {
   min-width: 0;
 }
-
 .itemDetails h3 {
   margin: 0 0 0.3125rem;
   overflow: hidden;
@@ -111,31 +99,26 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-
 .itemDetails span {
   color: var(--text);
   font-size: 0.6875rem;
 }
-
 .itemPrice {
   color: var(--text);
   font-size: 0.8125rem;
   font-weight: 700;
   white-space: nowrap;
 }
-
 .divider {
   height: 0.0625rem;
   margin: 1.25rem 0;
   background: var(--border);
 }
-
 .priceDetails {
   display: flex;
   flex-direction: column;
   gap: 0.8125rem;
 }
-
 .priceRow {
   display: flex;
   align-items: center;
@@ -144,64 +127,53 @@
   color: var(--text);
   font-size: 0.8125rem;
 }
-
 .priceRow strong {
   color: var(--text);
   font-size: 0.8125rem;
   font-weight: 650;
 }
-
 .deliveryLabel,
 .discountLabel {
   display: flex;
   align-items: center;
   gap: 0.375rem;
 }
-
 .free {
   color: var(--success) !important;
   font-size: 0.6875rem !important;
   font-weight: 750 !important;
 }
-
 .discountLabel {
   color: var(--text);
 }
-
 .discount {
   color: var(--success) !important;
 }
-
 .total {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
 }
-
 .total div {
   display: flex;
   flex-direction: column;
   gap: 0.1875rem;
 }
-
 .total span {
   color: var(--text);
   font-size: 0.9375rem;
   font-weight: 700;
 }
-
 .total small {
   color: var(--text);
   font-size: 0.625rem;
 }
-
 .total > strong {
   color: var(--text);
   font-size: 1.25rem;
   font-weight: 800;
 }
-
 .placeOrder {
   width: 100%;
   height: 3rem;
@@ -222,22 +194,18 @@
     transform 0.2s ease,
     box-shadow 0.2s ease;
 }
-
 .placeOrder:hover:not(:disabled) {
   background: var(--secondary);
   transform: translateY(-0.0625rem);
   box-shadow: 0 0.5rem 1.125rem rgba(15, 23, 42, 0.16);
 }
-
 .placeOrder:active:not(:disabled) {
   transform: translateY(0);
 }
-
 .placeOrder:disabled {
   opacity: 0.55;
   cursor: not-allowed;
 }
-
 .secure {
   display: flex;
   align-items: center;
@@ -247,11 +215,9 @@
   color: var(--text);
   font-size: 0.625rem;
 }
-
 .secure svg:last-child {
   color: var(--success);
 }
-
 .trustCard {
   display: flex;
   flex-direction: column;
@@ -261,73 +227,59 @@
   border: 0.0625rem solid var(--border);
   border-radius: 1.125rem;
 }
-
 .trustItem {
   display: flex;
   align-items: center;
   gap: 0.75rem;
   padding: 0.75rem 0;
 }
-
 .trustItem + .trustItem {
   border-top: 0.0625rem solid var(--border);
 }
-
 .trustItem > svg {
   flex-shrink: 0;
   color: var(--text);
 }
-
 .trustItem div {
   display: flex;
   flex-direction: column;
   gap: 0.125rem;
 }
-
 .trustItem strong {
   color: var(--text);
   font-size: 0.75rem;
   font-weight: 650;
 }
-
 .trustItem span {
   color: var(--text);
   font-size: 0.625rem;
 }
-
 @media (max-width: 48rem) {
   .card {
     padding: 1.25rem;
   }
-
   .trustCard {
     padding: 0.875rem 1.125rem;
   }
 }
-
 @media (max-width: 30rem) {
   .card {
     padding: 1.125rem;
     border-radius: 0.875rem;
   }
-
   .header h2 {
     font-size: 1.125rem;
   }
-
   .item {
     grid-template-columns: 3.25rem minmax(0, 1fr);
   }
-
   .imageWrapper {
     width: 3.25rem;
     height: 3.25rem;
   }
-
   .itemPrice {
     grid-column: 2;
   }
-
   .total > strong {
     font-size: 1.125rem;
   }

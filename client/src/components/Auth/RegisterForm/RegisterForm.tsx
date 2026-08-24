@@ -64,7 +64,6 @@ const RegisterForm = ({ tenantId, onSwitchToLogin }: RegisterFormProps) => {
       setConfirmPassword("");
     } catch (error: unknown) {
       console.error("Registration failed:", error);
-
       if (error instanceof Error) {
         setError(error.message || "Invalid email or password.");
       } else {

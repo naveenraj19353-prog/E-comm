@@ -4,18 +4,15 @@
   flex-direction: column;
   gap: 1.5rem;
 }
-
 /* =========================================
      HEADER
   ========================================= */
-
 .header {
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
   gap: 1.25rem;
 }
-
 .eyebrow {
   display: block;
   margin-bottom: 0.375rem;
@@ -24,20 +21,17 @@
   font-weight: 700;
   letter-spacing: 0.12em;
 }
-
 .header h2 {
   margin: 0;
   color: #17231e;
   font-size: 1.75rem;
   font-weight: 700;
 }
-
 .header p {
   margin: 0.4375rem 0 0;
   color: #77827d;
   font-size: 0.875rem;
 }
-
 .createButton {
   display: flex;
   align-items: center;
@@ -52,87 +46,72 @@
   cursor: pointer;
   transition: 0.2s ease;
 }
-
 .createButton span {
   font-size: 1.25rem;
   line-height: 1;
 }
-
 .createButton:hover {
   background: #255843;
   transform: translateY(-0.0625rem);
 }
-
 /* =========================================
      SUMMARY
   ========================================= */
-
 .summary {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 1rem;
 }
-
 .summaryCard {
   padding: 1.25rem;
   background: #ffffff;
   border: 0.0625rem solid #e8eeeb;
   border-radius: 0.875rem;
 }
-
 .summaryCard span {
   display: block;
   color: #78847f;
   font-size: 0.8125rem;
 }
-
 .summaryCard strong {
   display: block;
   margin-top: 0.5rem;
   color: #17231e;
   font-size: 1.75rem;
 }
-
 /* =========================================
      TABLE CARD
   ========================================= */
-
 .tableCard {
   overflow: hidden;
   background: #ffffff;
   border: 0.0625rem solid #e8eeeb;
   border-radius: 1rem;
 }
-
 .tableHeader {
   padding: 1.25rem 1.375rem;
   border-bottom: 0.0625rem solid #edf1ef;
 }
-
 .tableHeader h3 {
   margin: 0;
   color: #17231e;
   font-size: 1.0625rem;
 }
-
 .tableHeader span {
   display: block;
   margin-top: 0.3125rem;
   color: #89938f;
   font-size: 0.75rem;
 }
-
 .tableWrapper {
   width: 100%;
   overflow-x: auto;
 }
-
 .table {
   width: 100%;
   border-collapse: collapse;
   min-width: 47.5rem;
 }
-
 .table th {
   padding: 0.8125rem 1.25rem;
   background: #f8faf9;
@@ -143,32 +122,26 @@
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
-
 .table td {
   padding: 1.0625rem 1.25rem;
   border-top: 0.0625rem solid #eef2f0;
   color: #29352f;
   font-size: 0.8125rem;
 }
-
 .table tbody tr {
   transition: background 0.15s ease;
 }
-
 .table tbody tr:hover {
   background: #fbfcfb;
 }
-
 /* =========================================
      TENANT
   ========================================= */
-
 .tenant {
   display: flex;
   align-items: center;
   gap: 0.75rem;
 }
-
 .logo {
   width: 2.625rem;
   height: 2.625rem;
@@ -183,26 +156,22 @@
   font-size: 1rem;
   font-weight: 700;
 }
-
 .logo img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
-
 .tenantInfo strong {
   display: block;
   color: #17231e;
   font-size: 0.875rem;
 }
-
 .tenantInfo span {
   display: block;
   margin-top: 0.1875rem;
   color: #8a9590;
   font-size: 0.75rem;
 }
-
 .tenantId {
   padding: 0.3125rem 0.5rem;
   border-radius: 0.375rem;
@@ -211,7 +180,6 @@
   font-family: monospace;
   font-size: 0.6875rem;
 }
-
 .theme {
   display: inline-block;
   padding: 0.3125rem 0.625rem;
@@ -222,7 +190,6 @@
   font-weight: 600;
   text-transform: capitalize;
 }
-
 .active,
 .inactive {
   display: inline-flex;
@@ -233,37 +200,30 @@
   font-size: 0.6875rem;
   font-weight: 600;
 }
-
 .active {
   background: #e9f7ee;
   color: #23834a;
 }
-
 .inactive {
   background: #fff0f0;
   color: #cc4c4c;
 }
-
 .statusDot {
   width: 0.375rem;
   height: 0.375rem;
   border-radius: 50%;
   background: currentColor;
 }
-
 .date {
   color: #7d8883;
 }
-
 /* =========================================
      EMPTY STATE
   ========================================= */
-
 .empty {
   padding: 4.375rem 1.25rem;
   text-align: center;
 }
-
 .emptyIcon {
   width: 3.375rem;
   height: 3.375rem;
@@ -276,18 +236,15 @@
   color: #2f6b52;
   font-size: 1.75rem;
 }
-
 .empty h3 {
   margin: 0;
   color: #25322c;
 }
-
 .empty p {
   margin: 0.4375rem 0 1.25rem;
   color: #89938f;
   font-size: 0.8125rem;
 }
-
 .emptyButton {
   border: none;
   border-radius: 0.5625rem;
@@ -297,272 +254,203 @@
   font-weight: 600;
   cursor: pointer;
 }
-
 /* =========================================
      MODAL
   ========================================= */
-
 .modalOverlay {
   position: fixed;
   inset: 0;
   z-index: 1000;
-
   display: flex;
   align-items: center;
   justify-content: center;
-
   padding: 1.25rem;
-
   background: rgba(16, 28, 22, 0.48);
-
   backdrop-filter: blur(0.25rem);
 }
-
 .modal {
   width: 100%;
   max-width: 32.5rem;
   max-height: calc(100vh - 2.5rem);
-
   overflow-y: auto;
-
   background: #ffffff;
   border-radius: 1.125rem;
-
   box-shadow: 0 1.5625rem 4.375rem rgba(0, 0, 0, 0.18);
 }
-
 /* =========================================
      MODAL HEADER
   ========================================= */
-
 .modalHeader {
   display: flex;
   justify-content: space-between;
   gap: 1.25rem;
-
   padding: 1.5rem 1.625rem;
-
   border-bottom: 0.0625rem solid #edf1ef;
 }
-
 .modalEyebrow {
   color: #2f6b52;
   font-size: 0.625rem;
   font-weight: 700;
   letter-spacing: 0.12em;
 }
-
 .modalHeader h2 {
   margin: 0.3125rem 0 0;
   color: #17231e;
   font-size: 1.375rem;
 }
-
 .modalHeader p {
   margin: 0.3125rem 0 0;
   color: #89938f;
   font-size: 0.8125rem;
 }
-
 .closeButton {
   width: 2.125rem;
   height: 2.125rem;
   flex: 0 0 2.125rem;
-
   border: 0.0625rem solid #e5eae7;
   border-radius: 0.5625rem;
-
   background: #ffffff;
   color: #6c7772;
-
   font-size: 1.375rem;
   line-height: 1;
-
   cursor: pointer;
 }
-
 .closeButton:hover {
   background: #f5f7f6;
 }
-
 /* =========================================
      FORM
   ========================================= */
-
 .form {
   padding: 1.5rem 1.625rem;
 }
-
 .field {
   margin-bottom: 1.125rem;
 }
-
 .field label {
   display: block;
   margin-bottom: 0.4375rem;
-
   color: #34423b;
   font-size: 0.8125rem;
   font-weight: 600;
 }
-
 .field input,
 .field select {
   width: 100%;
   box-sizing: border-box;
-
   padding: 0.6875rem 0.8125rem;
-
   border: 0.0625rem solid #dfe6e2;
   border-radius: 0.5625rem;
-
   outline: none;
-
   background: #ffffff;
   color: #25322c;
-
   font-family: inherit;
   font-size: 0.8125rem;
-
   transition:
     border 0.2s ease,
     box-shadow 0.2s ease;
 }
-
 .field input:focus,
 .field select:focus {
   border-color: #2f6b52;
-
   box-shadow: 0 0 0 0.1875rem rgba(47, 107, 82, 0.1);
 }
-
 .helpText {
   display: block;
   margin-top: 0.3125rem;
   color: #98a19d;
   font-size: 0.6875rem;
 }
-
 /* =========================================
      ERROR
   ========================================= */
-
 .formError {
   margin-bottom: 1rem;
   padding: 0.6875rem 0.8125rem;
-
   border: 0.0625rem solid #f0caca;
   border-radius: 0.5rem;
-
   background: #fff5f5;
   color: #c84b4b;
-
   font-size: 0.75rem;
 }
-
 /* =========================================
      FORM ACTIONS
   ========================================= */
-
 .formActions {
   display: flex;
   justify-content: flex-end;
   gap: 0.625rem;
-
   margin-top: 1.5rem;
   padding-top: 1.25rem;
-
   border-top: 0.0625rem solid #edf1ef;
 }
-
 .cancelButton,
 .submitButton {
   min-width: 6.25rem;
-
   padding: 0.625rem 1rem;
-
   border-radius: 0.5625rem;
-
   font-size: 0.8125rem;
   font-weight: 600;
-
   cursor: pointer;
 }
-
 .cancelButton {
   border: 0.0625rem solid #dfe6e2;
   background: #ffffff;
   color: #56635d;
 }
-
 .submitButton {
   border: none;
   background: #2f6b52;
   color: #ffffff;
 }
-
 .submitButton:hover {
   background: #255843;
 }
-
 .cancelButton:disabled,
 .submitButton:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
-
 /* =========================================
      LOADING / ERROR
   ========================================= */
-
 .state {
   min-height: 18.75rem;
-
   display: flex;
   align-items: center;
   justify-content: center;
-
   color: #75817b;
   font-size: 0.875rem;
 }
-
 /* =========================================
      RESPONSIVE
   ========================================= */
-
 @media (max-width: 48rem) {
   .header {
     align-items: flex-start;
     flex-direction: column;
   }
-
   .createButton {
     width: 100%;
     justify-content: center;
   }
-
   .summary {
     grid-template-columns: 1fr;
   }
 }
-
 @media (max-width: 30rem) {
   .modalOverlay {
     padding: 0.625rem;
   }
-
   .modalHeader {
     padding: 1.25rem;
   }
-
   .form {
     padding: 1.25rem;
   }
-
   .formActions {
     flex-direction: column-reverse;
   }
-
   .cancelButton,
   .submitButton {
     width: 100%;

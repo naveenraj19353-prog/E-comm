@@ -11,7 +11,6 @@
   background-repeat: no-repeat;
   transition: background-image 0.8s ease-in-out;
 }
-
 /* Dark Overlay */
 .overlay {
   position: absolute;
@@ -23,7 +22,6 @@
   );
   z-index: 1;
 }
-
 /* Bottom Tilted White Shape */
 .banner::after {
   content: "";
@@ -37,7 +35,6 @@
   transform-origin: top left;
   z-index: 2;
 }
-
 /* Content */
 .headerContent {
   position: relative;
@@ -48,25 +45,21 @@
   text-align: center;
   animation: fadeIn 1s ease;
 }
-
 .headerContent h1 {
   margin: 0;
   font-size: clamp(3rem, 8vw, 7rem);
   font-weight: 700;
   line-height: 1.1;
 }
-
 .headerContent h3 {
   margin-top: 1.25rem;
   font-size: clamp(1.2rem, 2vw, 2rem);
   font-weight: 400;
 }
-
 .headerContent h3 span {
   color: var(--primary);
   font-weight: 700;
 }
-
 /* Buttons */
 .buttonContainer {
   margin-top: 2.5rem;
@@ -75,7 +68,6 @@
   gap: 1.25rem;
   flex-wrap: wrap;
 }
-
 .primaryButton,
 .secondaryButton {
   padding: 0.9375rem 2.25rem;
@@ -85,24 +77,19 @@
   font-size: 1rem;
   transition: 0.3s;
 }
-
 .primaryButton {
   background: var(--primary);
   color: var(--surface);
 }
-
 .secondaryButton {
   background: var(--surface);
   color: var(--text);
 }
-
 .primaryButton:hover,
 .secondaryButton:hover {
   transform: translateY(-0.1875rem);
 }
-
 /* Arrows */
-
 .arrow {
   position: absolute;
   top: 50%;
@@ -119,28 +106,22 @@
   z-index: 4;
   transition: 0.3s;
 }
-
 .arrow:hover {
   background: rgba(255, 255, 255, 0.35);
 }
-
 .prev {
   left: 2.5rem;
 }
-
 .next {
   right: 2.5rem;
 }
-
 /* Dots */
-
 .dots {
   margin-top: 3.125rem;
   display: flex;
   justify-content: center;
   gap: 0.75rem;
 }
-
 .dot {
   width: 0.875rem;
   height: 0.875rem;
@@ -149,56 +130,44 @@
   background: rgba(255, 255, 255, 0.4);
   transition: 0.3s;
 }
-
 .active {
   background: white;
   transform: scale(1.25);
 }
-
 /* Animation */
-
 @keyframes fadeIn {
   from {
     opacity: 0;
     transform: translateY(2.5rem);
   }
-
   to {
     opacity: 1;
     transform: translateY(0);
   }
 }
-
 /* Mobile */
-
 @media (max-width: 48rem) {
   .banner {
     min-height: 34.375rem;
   }
-
   .banner::after {
     bottom: -11.25rem;
     height: 16.25rem;
   }
-
   .arrow {
     display: none;
   }
-
   .buttonContainer {
     flex-direction: column;
     align-items: center;
   }
-
   .primaryButton,
   .secondaryButton {
     width: 13.75rem;
   }
-
   .headerContent h1 {
     font-size: 3rem;
   }
-
   .headerContent h3 {
     font-size: 1.2rem;
   }

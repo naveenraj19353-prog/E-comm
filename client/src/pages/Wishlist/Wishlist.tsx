@@ -64,7 +64,6 @@ const Wishlist = () => {
           {wishlistCount} {wishlistCount === 1 ? "product" : "products"} saved
         </p>
       </div>
-
       <div className={styles.grid}>
         {wishlist.map((item) => {
           const product = {

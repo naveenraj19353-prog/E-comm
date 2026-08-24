@@ -1,5 +1,4 @@
 import { Outlet } from "react-router-dom";
-
 const AuthLayout = () => {
   return (
     <div
@@ -23,7 +22,6 @@ const AuthLayout = () => {
       >
         SaaS E-Commerce
       </div>
-
       {/* Right Side */}
       <div
         style={{
@@ -39,5 +37,4 @@ const AuthLayout = () => {
     </div>
   );
 };
-
 export default AuthLayout;

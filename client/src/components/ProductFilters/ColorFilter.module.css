@@ -3,7 +3,6 @@
   flex-wrap: wrap;
   gap: 0.625rem;
 }
-
 .colorItem {
   display: flex;
   align-items: center;
@@ -16,16 +15,13 @@
   cursor: pointer;
   transition: 0.2s;
 }
-
 .colorItem:hover {
   border-color: var(--primary);
 }
-
 .active {
   border-color: var(--primary);
   background: var(--background);
 }
-
 .dot {
   width: 1rem;
   height: 1rem;

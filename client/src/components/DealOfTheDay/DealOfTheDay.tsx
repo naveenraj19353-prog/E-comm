@@ -41,7 +41,6 @@ const DealOfTheDay = ({
           <span>→</span>
         </button>
       </div>
-
       <div className={styles.right}>
         <div className={styles.sliderHeader}>
           <div>

@@ -3,7 +3,6 @@
   flex-wrap: wrap;
   gap: 0.625rem;
 }
-
 .size {
   min-width: 3rem;
   height: 2.625rem;
@@ -16,11 +15,9 @@
   font-size: 0.875rem;
   transition: all 0.2s ease;
 }
-
 .size:hover {
   border-color: #16a34a;
 }
-
 .active {
   background: #16a34a;
   color: white;

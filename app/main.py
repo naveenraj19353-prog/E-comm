@@ -1,5 +1,4 @@
 from fastapi import FastAPI
-
 from app.routes.auth import router as auth_router
 from app.routes.users import router as users_router
 from app.routes.product import router as create_product_router
@@ -17,18 +16,13 @@ from app.routes.home import router as home_router
 from app.routes.banner import router as banner_router
 from app.routes.tenant import router as tenant_router
 from app.routes.super_admin import router as super_admin_router
-
 from fastapi.middleware.cors import CORSMiddleware
 import json
-
 app = FastAPI()
-
-
 origins = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
 ]
-
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
@@ -36,7 +30,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
 app.include_router(auth_router)
 app.include_router(users_router)
 app.include_router(create_product_router)
@@ -54,7 +47,6 @@ app.include_router(home_router)
 app.include_router(banner_router)
 app.include_router(tenant_router)
 app.include_router(super_admin_router)
-
 @app.get("/")
 def health():
     return {"status": "UP", "database": "MongoDB Connected"}

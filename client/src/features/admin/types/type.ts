@@ -9,13 +9,11 @@ export interface Tenant {
   createdAt: string;
   updatedAt: string;
 }
-
 export interface TenantResponse {
   success: boolean;
   count: number;
   data: Tenant[];
 }
-
 export interface SingleTenantResponse {
   success: boolean;
   message?: string;
@@ -23,14 +21,12 @@ export interface SingleTenantResponse {
   id?: string;
   data: Tenant;
 }
-
 export interface CreateTenantPayload {
   name: string;
   slug: string;
   logo?: string;
   theme?: string;
 }
-
 export interface UpdateTenantPayload {
   name?: string;
   slug?: string;
@@ -57,7 +53,6 @@ export interface Product {
   averageRating: number;
   reviewCount: number;
 }
-
 export interface ProductsResponse {
   success: boolean;
   count: number;
@@ -69,7 +64,6 @@ export interface ProductsResponse {
   hasPreviousPage: boolean;
   data: Product[];
 }
-
 export interface ProductQueryParams {
   tenantId: string;
   page?: number;

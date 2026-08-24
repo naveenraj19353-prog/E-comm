@@ -6,11 +6,9 @@
   box-sizing: border-box;
   color: var(--text);
 }
-
 /* =========================
    PRODUCT SECTION
 ========================= */
-
 .productSection {
   display: grid;
   grid-template-columns:
@@ -19,23 +17,72 @@
   gap: 4.375rem;
   align-items: start;
 }
-
+/* =========================
+   PRODUCT GALLERY
+========================= */
 .gallery {
-  display: grid;
-  grid-template-columns: 4.875rem minmax(0, 1fr);
-  gap: 1rem;
-  min-width: 0;
-}
-
-.thumbnails {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 0.875rem;
+  min-width: 0;
 }
-
+/*
+ * Main image comes first.
+ */
+.mainImageWrapper {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  overflow: visible;
+  min-width: 0;
+  background: var(--surface);
+  border-radius: 0.875rem;
+}
+/*
+ * Main product image.
+ */
+.mainImage {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  border-radius: 0.875rem;
+}
+/* =========================
+   IMAGE THUMBNAILS
+========================= */
+.thumbnails {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0.125rem 0.125rem 0.375rem;
+  box-sizing: border-box;
+  /*
+   * Hide scrollbar but keep horizontal scrolling.
+   */
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+.thumbnails::-webkit-scrollbar {
+  height: 0.25rem;
+}
+.thumbnails::-webkit-scrollbar-track {
+  background: transparent;
+}
+.thumbnails::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 1rem;
+}
+/*
+ * Individual thumbnail.
+ */
 .thumbnail {
-  width: 4.75rem;
-  height: 4.75rem;
+  flex: 0 0 5rem;
+  width: 5rem;
+  height: 5rem;
   padding: 0.25rem;
   border: 0.0625rem solid var(--border);
   border-radius: 0.625rem;
@@ -44,40 +91,28 @@
   overflow: hidden;
   transition:
     border-color 0.2s ease,
-    transform 0.2s ease;
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
 }
-
 .thumbnail:hover {
   transform: translateY(-0.125rem);
   border-color: var(--primary);
 }
-
 .thumbnailActive {
   border: 0.125rem solid var(--primary);
+  box-shadow: 0 0 0 0.0625rem
+    color-mix(in srgb, var(--primary) 12%, transparent);
 }
-
 .thumbnail img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  display: block;
   border-radius: 0.375rem;
 }
-
-.mainImageWrapper {
-  position: relative;
-  width: 100%;
-  aspect-ratio: 1 / 1;
-  overflow: visible;
-  min-width: 0;
-}
-
-.mainImage {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  display: block;
-}
-
+/* =========================
+   ZOOM
+========================= */
 .zoomHint {
   position: absolute;
   left: 1rem;
@@ -87,14 +122,17 @@
   gap: 0.375rem;
   padding: 0.5rem 0.6875rem;
   border-radius: 1.25rem;
-  background: color-mix(in srgb, var(--surface) 88%, transparent);
+  background: color-mix(
+    in srgb,
+    var(--surface) 88%,
+    transparent
+  );
   color: var(--text);
   font-size: 0.625rem;
   pointer-events: none;
   backdrop-filter: blur(0.3125rem);
   z-index: 5;
 }
-
 .zoomPreview {
   position: absolute;
   left: calc(100% + 1.25rem);
@@ -106,20 +144,18 @@
   background-color: var(--surface);
   border: 0.0625rem solid var(--border);
   border-radius: 0.75rem;
-  box-shadow: 0 0.625rem 1.875rem rgba(0, 0, 0, 0.15);
+  box-shadow:
+    0 0.625rem 1.875rem rgba(0, 0, 0, 0.15);
   z-index: 100;
   pointer-events: none;
 }
-
 /* =========================
    PRODUCT INFO
 ========================= */
-
 .info {
   padding-top: 0.3125rem;
   min-width: 0;
 }
-
 .category {
   margin-bottom: 0.625rem;
   color: var(--primary);
@@ -128,7 +164,6 @@
   letter-spacing: 0.12em;
   text-transform: uppercase;
 }
-
 .title {
   margin: 0;
   max-width: 40.625rem;
@@ -137,31 +172,30 @@
   line-height: 1.18;
   letter-spacing: -0.035em;
 }
-
 .ratingRow {
   display: flex;
   align-items: center;
   gap: 0.4375rem;
   margin-top: 0.9375rem;
 }
-
 .stars {
   display: flex;
   gap: 0.125rem;
   color: var(--warning);
 }
-
 .ratingValue {
   color: var(--text);
   font-size: 0.8125rem;
   font-weight: 750;
 }
-
 .reviewCount {
-  color: color-mix(in srgb, var(--text) 55%, var(--surface));
+  color: color-mix(
+    in srgb,
+    var(--text) 55%,
+    var(--surface)
+  );
   font-size: 0.75rem;
 }
-
 .priceSection {
   display: flex;
   align-items: center;
@@ -169,52 +203,56 @@
   gap: 0.625rem;
   margin-top: 1.5625rem;
 }
-
 .currentPrice {
   color: var(--text);
   font-size: 1.8125rem;
   font-weight: 800;
   letter-spacing: -0.025em;
 }
-
 .originalPrice {
-  color: color-mix(in srgb, var(--text) 45%, var(--surface));
+  color: color-mix(
+    in srgb,
+    var(--text) 45%,
+    var(--surface)
+  );
   font-size: 0.875rem;
   text-decoration: line-through;
 }
-
 .discount {
   padding: 0.3125rem 0.5rem;
   border-radius: 0.3125rem;
-  background: color-mix(in srgb, var(--primary) 10%, var(--surface));
+  background: color-mix(
+    in srgb,
+    var(--primary) 10%,
+    var(--surface)
+  );
   color: var(--primary);
   font-size: 0.625rem;
   font-weight: 800;
 }
-
 .description {
   margin: 1.25rem 0 0;
   max-width: 40.625rem;
-  color: color-mix(in srgb, var(--text) 65%, var(--surface));
+  color: color-mix(
+    in srgb,
+    var(--text) 65%,
+    var(--surface)
+  );
   font-size: 0.8125rem;
   line-height: 1.8;
 }
-
 .divider {
   width: 100%;
   height: 0.0625rem;
   margin: 1.5625rem 0;
   background: var(--border);
 }
-
 /* =========================
    OPTIONS
 ========================= */
-
 .optionGroup {
   margin-top: 1.375rem;
 }
-
 .optionHeading {
   display: flex;
   align-items: center;
@@ -224,12 +262,14 @@
   font-size: 0.75rem;
   font-weight: 700;
 }
-
 .optionHeading strong {
-  color: color-mix(in srgb, var(--text) 65%, var(--surface));
+  color: color-mix(
+    in srgb,
+    var(--text) 65%,
+    var(--surface)
+  );
   font-weight: 600;
 }
-
 .sizeGuide {
   border: none;
   background: transparent;
@@ -238,13 +278,11 @@
   font-weight: 700;
   cursor: pointer;
 }
-
 .colorOptions {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
 }
-
 .colorOption {
   display: flex;
   align-items: center;
@@ -256,33 +294,40 @@
   color: var(--text);
   font-size: 0.6875rem;
   cursor: pointer;
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease,
+    color 0.2s ease;
 }
-
 .colorOption:hover {
   border-color: var(--primary);
   color: var(--primary);
 }
-
 .colorDot {
   width: 0.75rem;
   height: 0.75rem;
+  flex: 0 0 0.75rem;
   border-radius: 50%;
   background: #e7a5b3;
   border: 0.0625rem solid var(--border);
 }
-
 .optionSelected {
   border-color: var(--primary) !important;
   color: var(--primary) !important;
-  background: color-mix(in srgb, var(--primary) 8%, var(--surface)) !important;
+  background: color-mix(
+    in srgb,
+    var(--primary) 8%,
+    var(--surface)
+  ) !important;
 }
-
+/* =========================
+   SIZES
+========================= */
 .sizeOptions {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
 }
-
 .sizeOption {
   min-width: 2.75rem;
   height: 2.375rem;
@@ -296,16 +341,13 @@
   cursor: pointer;
   transition: 0.2s ease;
 }
-
 .sizeOption:hover {
   border-color: var(--primary);
   color: var(--primary);
 }
-
 /* =========================
    STOCK
 ========================= */
-
 .stockAvailable,
 .stockUnavailable {
   display: flex;
@@ -315,15 +357,12 @@
   font-size: 0.6875rem;
   font-weight: 650;
 }
-
 .stockAvailable {
   color: var(--success);
 }
-
 .stockUnavailable {
   color: var(--danger);
 }
-
 .stockAvailable span,
 .stockUnavailable span {
   width: 0.4375rem;
@@ -331,18 +370,18 @@
   border-radius: 50%;
   background: currentColor;
 }
-
 /* =========================
    ACTIONS
 ========================= */
-
 .actionRow {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) 3rem;
+  grid-template-columns:
+    auto
+    minmax(0, 1fr)
+    3rem;
   gap: 0.625rem;
   margin-top: 1.125rem;
 }
-
 .quantityControl {
   height: 3rem;
   display: flex;
@@ -352,7 +391,6 @@
   overflow: hidden;
   background: var(--surface);
 }
-
 .quantityControl button {
   width: 2.25rem;
   height: 100%;
@@ -364,16 +402,17 @@
   color: var(--text);
   cursor: pointer;
 }
-
 .quantityControl button:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--primary) 6%, var(--surface));
+  background: color-mix(
+    in srgb,
+    var(--primary) 6%,
+    var(--surface)
+  );
 }
-
 .quantityControl button:disabled {
   opacity: 0.35;
   cursor: not-allowed;
 }
-
 .quantityControl span {
   min-width: 1.75rem;
   text-align: center;
@@ -381,7 +420,6 @@
   font-size: 0.75rem;
   font-weight: 700;
 }
-
 .addToCart {
   height: 3rem;
   display: flex;
@@ -399,17 +437,18 @@
     background 0.2s ease,
     transform 0.2s ease;
 }
-
 .addToCart:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--primary) 85%, #000);
+  background: color-mix(
+    in srgb,
+    var(--primary) 85%,
+    #000
+  );
   transform: translateY(-0.0625rem);
 }
-
 .addToCart:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
-
 .wishlistButton {
   width: 3rem;
   height: 3rem;
@@ -425,34 +464,28 @@
     color 0.2s ease,
     border-color 0.2s ease;
 }
-
 .wishlistButton:hover {
   color: var(--danger);
   border-color: var(--danger);
 }
-
 .wishlistActive {
   color: var(--danger);
   border-color: var(--danger);
 }
-
 /* =========================
    DELIVERY
 ========================= */
-
 .deliverySection {
   margin-top: 1.875rem;
   padding-top: 1.5625rem;
   border-top: 0.0625rem solid var(--border);
 }
-
 .deliveryHeader h3 {
   margin: 0.375rem 0 1rem;
   color: var(--text);
   font-size: 1rem;
   font-weight: 700;
 }
-
 .pincodeInputWrapper {
   display: flex;
   align-items: center;
@@ -467,12 +500,16 @@
   color: var(--text);
   overflow: hidden;
 }
-
 .pincodeInputWrapper:focus-within {
   border-color: var(--primary);
-  box-shadow: 0 0 0 0.1875rem color-mix(in srgb, var(--primary) 10%, transparent);
+  box-shadow:
+    0 0 0 0.1875rem
+    color-mix(
+      in srgb,
+      var(--primary) 10%,
+      transparent
+    );
 }
-
 .pincodeInputWrapper input {
   flex: 1;
   min-width: 0;
@@ -485,7 +522,6 @@
   font-family: inherit;
   font-size: 0.75rem;
 }
-
 .pincodeInputWrapper button {
   height: 100%;
   padding: 0 1rem;
@@ -497,38 +533,36 @@
   font-weight: 750;
   cursor: pointer;
 }
-
 .pincodeInputWrapper button:hover {
-  background: color-mix(in srgb, var(--primary) 6%, var(--surface));
+  background: color-mix(
+    in srgb,
+    var(--primary) 6%,
+    var(--surface)
+  );
 }
-
 .pincodeSuccess,
 .pincodeError {
   margin: 0.5rem 0 0;
   font-size: 0.6875rem;
 }
-
 .pincodeSuccess {
   color: var(--success);
 }
-
 .pincodeError {
   color: var(--danger);
 }
-
 .deliveryInfo {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
   gap: 1.125rem;
   margin-top: 1.375rem;
 }
-
 .deliveryItem {
   display: flex;
   align-items: flex-start;
   gap: 0.6875rem;
 }
-
 .deliveryIcon {
   width: 2.25rem;
   height: 2.25rem;
@@ -537,10 +571,13 @@
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  background: color-mix(in srgb, var(--primary) 10%, var(--surface));
+  background: color-mix(
+    in srgb,
+    var(--primary) 10%,
+    var(--surface)
+  );
   color: var(--primary);
 }
-
 .deliveryItem strong {
   display: block;
   margin-bottom: 0.25rem;
@@ -548,18 +585,19 @@
   font-size: 0.6875rem;
   font-weight: 750;
 }
-
 .deliveryItem p {
   margin: 0;
-  color: color-mix(in srgb, var(--text) 60%, var(--surface));
+  color: color-mix(
+    in srgb,
+    var(--text) 60%,
+    var(--surface)
+  );
   font-size: 0.625rem;
   line-height: 1.5;
 }
-
 /* =========================
    DETAILS
 ========================= */
-
 .detailsSection {
   margin-top: 4.0625rem;
   padding: 2.5rem;
@@ -567,78 +605,75 @@
   border-radius: 1rem;
   background: var(--surface);
 }
-
 .detailsHeader {
   margin-bottom: 1.75rem;
 }
-
 .detailsHeader h2 {
   margin: 0.4375rem 0 0.3125rem;
   color: var(--text);
   font-size: 1.6875rem;
   letter-spacing: -0.025em;
 }
-
 .detailsHeader p {
   margin: 0;
-  color: color-mix(in srgb, var(--text) 55%, var(--surface));
+  color: color-mix(
+    in srgb,
+    var(--text) 55%,
+    var(--surface)
+  );
   font-size: 0.75rem;
 }
-
 .specificationTable {
   border-top: 0.0625rem solid var(--border);
 }
-
 .specRow {
   display: grid;
-  grid-template-columns: 13.75rem minmax(0, 1fr);
+  grid-template-columns:
+    13.75rem
+    minmax(0, 1fr);
   min-height: 3.25rem;
   align-items: center;
   border-bottom: 0.0625rem solid var(--border);
 }
-
 .specRow span {
-  color: color-mix(in srgb, var(--text) 55%, var(--surface));
+  color: color-mix(
+    in srgb,
+    var(--text) 55%,
+    var(--surface)
+  );
   font-size: 0.75rem;
 }
-
 .specRow strong {
   color: var(--text);
   font-size: 0.75rem;
   font-weight: 600;
 }
-
 /* =========================
    REVIEWS
 ========================= */
-
 .reviewsSection {
   margin-top: 5rem;
   padding-top: 2.8125rem;
   border-top: 0.0625rem solid var(--border);
 }
-
 .reviewsHeader {
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
   gap: 1.25rem;
 }
-
 .sectionEyebrow {
   color: var(--primary);
   font-size: 0.625rem;
   font-weight: 800;
   letter-spacing: 0.14em;
 }
-
 .reviewsHeader h2 {
   margin: 0.4375rem 0 0;
   color: var(--text);
   font-size: 1.6875rem;
   letter-spacing: -0.025em;
 }
-
 .writeReviewButton {
   height: 2.5rem;
   display: flex;
@@ -654,12 +689,10 @@
   cursor: pointer;
   transition: 0.2s ease;
 }
-
 .writeReviewButton:hover {
   background: var(--primary);
   color: var(--text-white);
 }
-
 .reviewForm {
   margin-top: 1.875rem;
   padding: 1.625rem;
@@ -667,32 +700,31 @@
   border-radius: 0.875rem;
   background: var(--background);
 }
-
 .reviewFormHeader h3 {
   margin: 0;
   color: var(--text);
   font-size: 1.125rem;
 }
-
 .reviewFormHeader p {
   margin: 0.3125rem 0 1.25rem;
-  color: color-mix(in srgb, var(--text) 55%, var(--surface));
+  color: color-mix(
+    in srgb,
+    var(--text) 55%,
+    var(--surface)
+  );
   font-size: 0.6875rem;
 }
-
 .reviewField {
   display: flex;
   flex-direction: column;
   gap: 0.4375rem;
   margin-top: 1.125rem;
 }
-
 .reviewField label {
   color: var(--text);
   font-size: 0.6875rem;
   font-weight: 700;
 }
-
 .reviewField input,
 .reviewField textarea {
   width: 100%;
@@ -707,23 +739,25 @@
   font-size: 0.75rem;
   resize: vertical;
 }
-
 .reviewField input {
   height: 2.6875rem;
 }
-
 .reviewField input:focus,
 .reviewField textarea:focus {
   border-color: var(--primary);
-  box-shadow: 0 0 0 0.1875rem color-mix(in srgb, var(--primary) 10%, transparent);
+  box-shadow:
+    0 0 0 0.1875rem
+    color-mix(
+      in srgb,
+      var(--primary) 10%,
+      transparent
+    );
 }
-
 .reviewStars {
   display: flex;
   gap: 0.1875rem;
   color: var(--warning);
 }
-
 .reviewStarButton {
   padding: 0;
   border: none;
@@ -731,7 +765,6 @@
   color: inherit;
   cursor: pointer;
 }
-
 .submitReview {
   height: 2.625rem;
   margin-top: 1.25rem;
@@ -744,23 +777,19 @@
   font-weight: 750;
   cursor: pointer;
 }
-
 .submitReview:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
-
 /* =========================
    REVIEW LIST
 ========================= */
-
 .reviewList {
   display: flex;
   flex-direction: column;
   gap: 0.875rem;
   margin-top: 1.75rem;
 }
-
 .reviewCard {
   display: flex;
   gap: 0.9375rem;
@@ -769,7 +798,6 @@
   border-radius: 0.75rem;
   background: var(--surface);
 }
-
 .reviewerAvatar {
   flex: 0 0 2.375rem;
   width: 2.375rem;
@@ -778,215 +806,230 @@
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  background: color-mix(in srgb, var(--primary) 10%, var(--surface));
+  background: color-mix(
+    in srgb,
+    var(--primary) 10%,
+    var(--surface)
+  );
   color: var(--primary);
 }
-
 .reviewContent {
   flex: 1;
   min-width: 0;
 }
-
 .reviewTop {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: 0.9375rem;
 }
-
 .reviewTop h3 {
   margin: 0.3125rem 0 0;
   color: var(--text);
   font-size: 0.8125rem;
 }
-
 .reviewContent p {
   margin: 0.625rem 0 0;
-  color: color-mix(in srgb, var(--text) 65%, var(--surface));
+  color: color-mix(
+    in srgb,
+    var(--text) 65%,
+    var(--surface)
+  );
   font-size: 0.75rem;
   line-height: 1.7;
 }
-
 .reviewDate {
-  color: color-mix(in srgb, var(--text) 45%, var(--surface));
+  color: color-mix(
+    in srgb,
+    var(--text) 45%,
+    var(--surface)
+  );
   font-size: 0.625rem;
   white-space: nowrap;
 }
-
 .noReviews {
   margin-top: 1.75rem;
   padding: 2.8125rem 1.25rem;
   text-align: center;
   border: 0.0625rem dashed var(--border);
   border-radius: 0.75rem;
-  color: color-mix(in srgb, var(--text) 55%, var(--surface));
+  color: color-mix(
+    in srgb,
+    var(--text) 55%,
+    var(--surface)
+  );
 }
-
 .noReviews svg {
   color: var(--warning);
 }
-
 .noReviews h3 {
   margin: 0.75rem 0 0.3125rem;
   color: var(--text);
   font-size: 0.9375rem;
 }
-
 .noReviews p {
   margin: 0;
   font-size: 0.6875rem;
 }
-
 /* =========================
    RESPONSIVE
 ========================= */
-
 @media (max-width: 68.75rem) {
   .productSection {
     grid-template-columns: 1fr;
     gap: 2.8125rem;
   }
-
   .info {
     max-width: 43.75rem;
   }
-
   .zoomPreview {
     display: none;
   }
 }
-
+/* =========================
+   TABLET
+========================= */
 @media (max-width: 50rem) {
   .deliveryInfo {
     grid-template-columns: 1fr;
   }
 }
-
+/* =========================
+   MOBILE
+========================= */
 @media (max-width: 40.625rem) {
   .page {
     padding: 1.5625rem 1rem 3.75rem;
   }
-
+  /*
+   * Gallery remains:
+   *
+   * BIG IMAGE
+   * thumbnails below
+   */
   .gallery {
-    grid-template-columns: 1fr;
+    display: flex;
+    flex-direction: column;
     gap: 0.75rem;
   }
-
+  .mainImageWrapper {
+    order: 1;
+    width: 100%;
+    border-radius: 0.8125rem;
+  }
+  .mainImage {
+    border-radius: 0.8125rem;
+  }
   .thumbnails {
     order: 2;
+    width: 100%;
     flex-direction: row;
     overflow-x: auto;
     padding-bottom: 0.25rem;
   }
-
   .thumbnail {
     flex: 0 0 4.0625rem;
     width: 4.0625rem;
     height: 4.0625rem;
   }
-
-  .mainImageWrapper {
-    order: 1;
-    border-radius: 0.8125rem;
-  }
-
   .zoomPreview {
     display: none;
   }
-
+  .zoomHint {
+    left: 0.75rem;
+    bottom: 0.75rem;
+    font-size: 0.5625rem;
+  }
   .title {
     font-size: 1.6875rem;
   }
-
   .currentPrice {
     font-size: 1.5625rem;
   }
-
   .actionRow {
     grid-template-columns: 1fr 3rem;
     gap: 0.5rem;
   }
-
   .quantityControl {
     grid-column: 1 / -1;
     width: fit-content;
   }
-
   .addToCart {
     grid-column: 1;
   }
-
   .wishlistButton {
     grid-column: 2;
   }
-
   .deliverySection {
     margin-top: 1.5625rem;
     padding-top: 1.375rem;
   }
-
   .deliveryInfo {
     grid-template-columns: 1fr;
     gap: 1rem;
   }
-
   .pincodeInputWrapper {
     max-width: 100%;
   }
-
   .detailsSection {
     margin-top: 2.5rem;
     padding: 1.375rem;
     border-radius: 0.75rem;
   }
-
   .detailsHeader h2 {
     font-size: 1.4375rem;
   }
-
   .specRow {
     grid-template-columns: 1fr;
     gap: 0.3125rem;
     padding: 0.8125rem 0;
   }
-
   .specRow strong {
     line-height: 1.5;
   }
-
   .reviewsSection {
     margin-top: 3.4375rem;
     padding-top: 2.1875rem;
   }
-
   .reviewsHeader {
     align-items: flex-start;
     flex-direction: column;
   }
-
   .writeReviewButton {
     width: 100%;
     justify-content: center;
   }
-
   .reviewCard {
     padding: 0.9375rem;
   }
-
   .reviewTop {
     flex-direction: column;
     gap: 0.3125rem;
   }
-
   .reviewDate {
     order: -1;
   }
 }
-
+/* =========================
+   SMALL MOBILE
+========================= */
+@media (max-width: 25rem) {
+  .thumbnail {
+    flex: 0 0 3.75rem;
+    width: 3.75rem;
+    height: 3.75rem;
+  }
+  .colorOption {
+    padding: 0.375rem 0.5625rem;
+  }
+  .sizeOption {
+    min-width: 2.5rem;
+    height: 2.25rem;
+  }
+}
 /* =========================
    LOADING / ERROR STATE
 ========================= */
-
 .state {
   min-height: 31.25rem;
   display: flex;
@@ -997,19 +1040,20 @@
   padding: 2.5rem 1.25rem;
   text-align: center;
 }
-
 .state h2 {
   margin: 0;
   color: var(--text);
   font-size: 1.375rem;
 }
-
 .state p {
   margin: 0;
-  color: color-mix(in srgb, var(--text) 55%, var(--surface));
+  color: color-mix(
+    in srgb,
+    var(--text) 55%,
+    var(--surface)
+  );
   font-size: 0.75rem;
 }
-
 .loader {
   width: 1.875rem;
   height: 1.875rem;
@@ -1018,7 +1062,6 @@
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
-
 @keyframes spin {
   to {
     transform: rotate(360deg);

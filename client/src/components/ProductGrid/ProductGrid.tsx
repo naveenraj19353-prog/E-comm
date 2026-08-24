@@ -3,78 +3,163 @@ import type { Product } from "../../features/products/types";
 import styles from "./ProductGrid.module.css";
 import { useCart } from "../../features/cart/hooks/useCart";
 import { useWishlist } from "../../features/wishlist/hooks/useWishlist";
-import ProductCard from "../ProductCard/UniCard/ProductCard";
 import { useAuth } from "../../features/auth/hooks/useAuth";
-const ProductGrid = ({ products }: { products: Product[] }) => {
+import ProductCard from "../ProductCard/UniCard/ProductCard";
+interface ProductGridProps {
+  products: Product[];
+}
+const ProductGrid = ({
+  products,
+}: ProductGridProps) => {
   const user = useAuth().user;
-  const { addToCart } = useCart(user?._id as string, user?.tenantId as string);
-  const [addingProductId, setAddingProductId] = useState<string | null>(null);
-  const { wishlist, addToWishlist, removeFromWishlist } = useWishlist(
-    user?._id as string,
-    user?.tenantId as string,
+  const tenantId =
+    user?.tenantId ?? "";
+  const userId =
+    user?._id ?? "";
+  // =========================================================
+  // CART
+  // =========================================================
+  const { addToCart } = useCart(
+    userId,
+    tenantId,
   );
+  const [
+    addingProductId,
+    setAddingProductId,
+  ] = useState<string | null>(null);
+  // =========================================================
+  // WISHLIST
+  // =========================================================
+  const {
+    wishlist,
+    addToWishlist,
+    removeFromWishlist,
+  } = useWishlist(
+    userId,
+    tenantId,
+  );
+  // =========================================================
+  // EMPTY
+  // =========================================================
   if (products.length === 0) {
     return (
       <div className={styles.empty}>
-        <div className={styles.emptyIcon}>🛍️</div>
+        <div className={styles.emptyIcon}>
+          🛍️
+        </div>
         <h2>No Products Found</h2>
-        <p>We couldn't find any products matching your filters.</p>
+        <p>
+          We couldn't find any products
+          matching your filters.
+        </p>
       </div>
     );
   }
-  const handleAddToCart = async (productId: string) => {
+  // =========================================================
+  // ADD TO CART
+  // =========================================================
+  const handleAddToCart = async (
+    productId: string,
+    variantId: string,
+    color: string,
+    size: string,
+  ) => {
+    if (!userId || !tenantId) {
+      console.log(
+        "User is not logged in",
+      );
+      return;
+    }
     try {
       setAddingProductId(productId);
-      console.log({
-        tenantId: user?.tenantId,
-        userId: user?._id,
+      const payload = {
+        tenantId,
+        userId,
         productId,
+        variantId,
         quantity: 1,
-      });
-      await addToCart({
-        tenantId: user?.tenantId as string,
-        userId: user?._id as string,
-        productId,
-        quantity: 1,
-      });
+        color,
+        size,
+      };
+      console.log(
+        "ADD TO CART:",
+        payload,
+      );
+      await addToCart(payload);
     } catch (error) {
-      console.error("Add to cart failed:", error);
+      console.error(
+        "Add to cart failed:",
+        error,
+      );
     } finally {
       setAddingProductId(null);
     }
   };
-  const handleWishlist = async (productId: string) => {
-    try {
-      const alreadyWishlisted = wishlist.some(
-        (item) => item.productId === productId,
+  // =========================================================
+  // WISHLIST
+  // =========================================================
+  const handleWishlist = async (
+    productId: string,
+  ) => {
+    if (!userId || !tenantId) {
+      console.log(
+        "User is not logged in",
       );
+      return;
+    }
+    try {
+      const alreadyWishlisted =
+        wishlist.some(
+          (item) =>
+            item.productId === productId,
+        );
       if (alreadyWishlisted) {
-        await removeFromWishlist(productId);
+        await removeFromWishlist(
+          productId,
+        );
+        console.log(
+          "Removed from wishlist",
+        );
       } else {
         await addToWishlist({
-          tenantId: user?.tenantId as string,
-          userId: user?._id as string,
+          tenantId,
+          userId,
           productId,
         });
+        console.log(
+          "Added to wishlist",
+        );
       }
     } catch (error) {
-      console.error("Wishlist update failed:", error);
+      console.error(
+        "Wishlist update failed:",
+        error,
+      );
     }
   };
+  // =========================================================
+  // RENDER
+  // =========================================================
   return (
     <div className={styles.grid}>
       {products.map((product) => {
-        const isWishlisted = wishlist.some(
-          (item) => item.productId === product?._id,
-        );
+        const isWishlisted =
+          wishlist.some(
+            (item) =>
+              item.productId ===
+              product._id,
+          );
         return (
           <ProductCard
-            key={product?._id}
+            key={product._id}
             product={product}
             isWishlisted={isWishlisted}
             onWishlist={handleWishlist}
             onAddToCart={handleAddToCart}
-            isAdding={addingProductId === product?._id}
+            isAdding={
+              addingProductId ===
+              product._id
+            }
           />
         );
       })}

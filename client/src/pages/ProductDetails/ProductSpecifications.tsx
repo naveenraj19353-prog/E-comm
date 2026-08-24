@@ -1,75 +1,142 @@
 import type { Product } from "../../features/products/types";
 import styles from "./ProductDetails.module.css";
-interface ProductWithSpecifications extends Product {
-  brand?: string;
-  material?: string;
-  pattern?: string;
-  closure?: string;
-  soleMaterial?: string;
-  countryOfOrigin?: string;
-  sku?: string;
-}
 interface ProductSpecificationsProps {
   product: Product;
 }
-const ProductSpecifications = ({ product }: ProductSpecificationsProps) => {
-  const productWithSpecs = product as ProductWithSpecifications;
+const ProductSpecifications = ({
+  product,
+}: ProductSpecificationsProps) => {
+  /*
+   * ============================================================
+   * AVAILABLE COLORS
+   * ============================================================
+   */
+  const colors = Array.from(
+    new Set(
+      product.inventory
+        .filter(
+          (variant) =>
+            variant.stock > 0 &&
+            variant.color &&
+            variant.color !== "Default",
+        )
+        .map(
+          (variant) =>
+            variant.color,
+        ),
+    ),
+  );
+  /*
+   * ============================================================
+   * AVAILABLE SIZES
+   * ============================================================
+   */
+  const sizes = Array.from(
+    new Set(
+      product.inventory
+        .filter(
+          (variant) =>
+            variant.stock > 0 &&
+            variant.size &&
+            variant.size !== "Default",
+        )
+        .map(
+          (variant) =>
+            variant.size,
+        ),
+    ),
+  );
+  /*
+   * ============================================================
+   * TOTAL STOCK
+   * ============================================================
+   */
+  const totalStock =
+    product.inventory.reduce(
+      (total, variant) =>
+        total +
+        Math.max(0, variant.stock),
+      0,
+    );
   const specifications = [
     {
       label: "Brand",
-      value: productWithSpecs.brand || "—",
+      value: product.brand || "—",
     },
     {
       label: "Category",
-      value: product.categoryId || "—",
-    },
-    {
-      label: "Material",
-      value: productWithSpecs.material || "—",
-    },
-    {
-      label: "Pattern",
-      value: productWithSpecs.pattern || "—",
-    },
-    {
-      label: "Closure",
-      value: productWithSpecs.closure || "—",
-    },
-    {
-      label: "Sole Material",
-      value: productWithSpecs.soleMaterial || "—",
+      value:
+        product.categoryName ||
+        product.categoryId ||
+        "—",
     },
     {
       label: "Available Colors",
-      value: product.colors?.length ? product.colors.join(", ") : "—",
+      value:
+        colors.length > 0
+          ? colors.join(", ")
+          : "—",
     },
     {
       label: "Available Sizes",
-      value: product.sizes?.length ? product.sizes.join(", ") : "—",
+      value:
+        sizes.length > 0
+          ? sizes.join(", ")
+          : "—",
     },
     {
-      label: "Country of Origin",
-      value: productWithSpecs.countryOfOrigin || "—",
-    },
-    {
-      label: "SKU",
-      value: productWithSpecs.sku || "—",
+      label: "Total Stock",
+      value: totalStock.toString(),
     },
   ];
   return (
-    <section className={styles.detailsSection}>
-      <div className={styles.detailsHeader}>
-        <span className={styles.sectionEyebrow}>PRODUCT INFORMATION</span>
+    <section
+      className={
+        styles.detailsSection
+      }
+    >
+      <div
+        className={
+          styles.detailsHeader
+        }
+      >
+        <span
+          className={
+            styles.sectionEyebrow
+          }
+        >
+          PRODUCT INFORMATION
+        </span>
         <h2>Product Details</h2>
-        <p>Everything you need to know about this product.</p>
+        <p>
+          Everything you need to
+          know about this product.
+        </p>
       </div>
-      <div className={styles.specificationTable}>
-        {specifications.map((specification) => (
-          <div key={specification.label} className={styles.specRow}>
-            <span>{specification.label}</span>
-            <strong>{specification.value}</strong>
-          </div>
-        ))}
+      <div
+        className={
+          styles.specificationTable
+        }
+      >
+        {specifications.map(
+          (specification) => (
+            <div
+              key={
+                specification.label
+              }
+              className={
+                styles.specRow
+              }
+            >
+              <span>
+                {specification.label}
+              </span>
+              <strong>
+                {specification.value}
+              </strong>
+            </div>
+          ),
+        )}
       </div>
     </section>
   );

@@ -9,7 +9,6 @@
     BlinkMacSystemFont,
     sans-serif;
 }
-
 .container {
   max-width: 80rem;
   margin: 0 auto;
@@ -18,12 +17,10 @@
   gap: 4rem;
   flex-wrap: wrap;
 }
-
 .brandColumn {
   flex: 1 1 16.25rem;
   max-width: 20rem;
 }
-
 .logo {
   display: inline-flex;
   align-items: center;
@@ -31,7 +28,6 @@
   text-decoration: none;
   margin-bottom: 0.875rem;
 }
-
 .logoIcon {
   width: 1.875rem;
   height: 1.875rem;
@@ -43,14 +39,12 @@
   justify-content: center;
   flex-shrink: 0;
 }
-
 .logoText {
   font-size: 1rem;
   font-weight: 700;
   color: var(--text);
   letter-spacing: -0.01em;
 }
-
 .tagline {
   font-size: 0.8438rem;
   line-height: 1.6;
@@ -58,12 +52,10 @@
   opacity: 0.7;
   margin: 0 0 1.125rem;
 }
-
 .socials {
   display: flex;
   gap: 0.625rem;
 }
-
 .socialLink {
   display: flex;
   align-items: center;
@@ -79,24 +71,20 @@
     border-color 0.15s ease,
     color 0.15s ease;
 }
-
 .socialLink:hover {
   background: var(--primary);
   border-color: var(--primary);
   color: var(--text-white);
 }
-
 .linkColumns {
   flex: 2 1 30rem;
   display: flex;
   gap: 3rem;
   flex-wrap: wrap;
 }
-
 .linkColumn {
   min-width: 8.125rem;
 }
-
 .columnHeading {
   font-size: 0.75rem;
   font-weight: 700;
@@ -105,7 +93,6 @@
   color: var(--text);
   margin: 0 0 1rem;
 }
-
 .linkList {
   list-style: none;
   margin: 0;
@@ -114,7 +101,6 @@
   flex-direction: column;
   gap: 0.75rem;
 }
-
 .footerLink {
   font-size: 0.875rem;
   color: var(--text);
@@ -122,12 +108,10 @@
   text-decoration: none;
   transition: color 0.15s ease;
 }
-
 .footerLink:hover {
   color: var(--primary);
   opacity: 1;
 }
-
 .bottomBar {
   max-width: 80rem;
   margin: 0 auto;
@@ -139,20 +123,17 @@
   flex-wrap: wrap;
   gap: 0.75rem;
 }
-
 .copyright {
   font-size: 0.8125rem;
   color: var(--text);
   opacity: 0.55;
   margin: 0;
 }
-
 .bottomLinks {
   display: flex;
   align-items: center;
   gap: 1.25rem;
 }
-
 .bottomLinkButton {
   display: inline-flex;
   align-items: center;
@@ -166,43 +147,35 @@
   padding: 0;
   transition: color 0.15s ease;
 }
-
 .bottomLinkButton:hover {
   color: var(--primary);
   opacity: 1;
 }
-
 @media (max-width: 56.25rem) {
   .container {
     gap: 2.5rem;
     padding: 2.25rem 1.75rem 1.5rem;
   }
-
   .linkColumns {
     gap: 2rem;
   }
 }
-
 @media (max-width: 40rem) {
   .container {
     flex-direction: column;
     gap: 2rem;
     padding: 2rem 1.25rem 1.25rem;
   }
-
   .brandColumn {
     max-width: none;
   }
-
   .linkColumns {
     gap: 1.75rem;
     justify-content: space-between;
   }
-
   .linkColumn {
     min-width: 45%;
   }
-
   .bottomBar {
     padding: 1rem 1.25rem 1.5rem;
     flex-direction: column;

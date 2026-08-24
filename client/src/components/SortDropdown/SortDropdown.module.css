@@ -2,7 +2,6 @@
   position: relative;
   width: 15.625rem;
 }
-
 .trigger {
   width: 100%;
   height: 2.875rem;
@@ -17,23 +16,18 @@
   cursor: pointer;
   transition: 0.25s;
 }
-
 .trigger:hover {
   border-color: var(--primary);
 }
-
 .trigger span {
   font-size: 0.875rem;
 }
-
 .icon {
   transition: 0.25s;
 }
-
 .rotate {
   transform: rotate(180deg);
 }
-
 .menu {
   position: absolute;
   top: calc(100% + 0.5rem);
@@ -46,7 +40,6 @@
   overflow: hidden;
   z-index: 100;
 }
-
 .option {
   width: 100%;
   border: none;
@@ -60,16 +53,13 @@
   transition: 0.2s;
   font-size: 0.875rem;
 }
-
 .option:hover {
   background: var(--background);
 }
-
 .active {
   color: var(--primary);
   font-weight: 600;
 }
-
 @media (max-width: 48rem) {
   .wrapper {
     width: 100%;

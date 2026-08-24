@@ -4,24 +4,20 @@
   gap: 1.5rem;
   align-items: start;
 }
-
 .main,
 .sidebar {
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
 }
-
 @media (max-width: 56.25rem) {
   .layout {
     grid-template-columns: 1fr;
   }
-
   .sidebar {
     order: 2;
   }
 }
-
 @media (max-width: 32.5rem) {
   .layout {
     gap: 1rem;
