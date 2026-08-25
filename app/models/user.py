@@ -1,8 +1,7 @@
 from typing import Optional
 from pydantic import BaseModel, EmailStr, Field
-# ==========================================================
-# CUSTOMER REGISTRATION
-# ==========================================================
+
+
 class RegisterUser(BaseModel):
     tenantId: str = Field(
         ...,
@@ -21,9 +20,8 @@ class RegisterUser(BaseModel):
         min_length=6,
         max_length=128,
     )
-# ==========================================================
-# LOGIN
-# ==========================================================
+
+
 class LoginUser(BaseModel):
     """
     tenantId is required for tenant users.
@@ -49,10 +47,8 @@ class LoginUser(BaseModel):
         min_length=6,
         max_length=128,
     )
-# ==========================================================
-# CREATE ADMIN
-# SUPER ADMIN ONLY
-# ==========================================================
+
+
 class CreateAdminUser(BaseModel):
     tenantId: str = Field(
         ...,
@@ -71,9 +67,8 @@ class CreateAdminUser(BaseModel):
         min_length=6,
         max_length=128,
     )
-# ==========================================================
-# FORGOT PASSWORD
-# ==========================================================
+
+
 class ForgotPasswordRequest(BaseModel):
     """
     For tenant customer/admin:
@@ -83,9 +78,8 @@ class ForgotPasswordRequest(BaseModel):
     """
     tenantId: Optional[str] = None
     email: EmailStr
-# ==========================================================
-# RESET PASSWORD
-# ==========================================================
+
+
 class ResetPasswordRequest(BaseModel):
     token: str = Field(
         ...,
@@ -96,9 +90,8 @@ class ResetPasswordRequest(BaseModel):
         min_length=6,
         max_length=128,
     )
-# ==========================================================
-# UPDATE USER
-# ==========================================================
+
+
 class UpdateUser(BaseModel):
     name: Optional[str] = Field(
         default=None,

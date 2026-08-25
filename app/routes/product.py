@@ -84,9 +84,8 @@ def validate_images(
                         f"'{color}' cannot be empty."
                     ),
                 )
-# =========================================================
-# INVENTORY VALIDATION
-# =========================================================
+
+
 def validate_inventory(
     inventory: list,
 ):
@@ -113,33 +112,29 @@ def validate_inventory(
             item.get("size", "")
         ).strip()
         stock = item.get("stock", 0)
-        # -------------------------------------------------
-        # VARIANT ID
-        # -------------------------------------------------
+
+
         if not variant_id:
             raise HTTPException(
                 status_code=400,
                 detail="Variant ID cannot be empty.",
             )
-        # -------------------------------------------------
-        # COLOR
-        # -------------------------------------------------
+
+
         if not color:
             raise HTTPException(
                 status_code=400,
                 detail="Inventory color cannot be empty.",
             )
-        # -------------------------------------------------
-        # SIZE
-        # -------------------------------------------------
+
+
         if not size:
             raise HTTPException(
                 status_code=400,
                 detail="Inventory size cannot be empty.",
             )
-        # -------------------------------------------------
-        # STOCK
-        # -------------------------------------------------
+
+
         try:
             stock = int(stock)
         except (TypeError, ValueError):
@@ -155,17 +150,15 @@ def validate_inventory(
                 status_code=400,
                 detail="Inventory stock cannot be negative.",
             )
-        # -------------------------------------------------
-        # DUPLICATE VARIANT ID
-        # -------------------------------------------------
+
+
         if variant_id in variant_ids:
             raise HTTPException(
                 status_code=400,
                 detail=f"Duplicate variantId: {variant_id}",
             )
-        # -------------------------------------------------
-        # DUPLICATE COLOR / SIZE
-        # -------------------------------------------------
+
+
         combination = (
             color.lower(),
             size.lower(),
@@ -180,9 +173,8 @@ def validate_inventory(
             )
         variant_ids.add(variant_id)
         combinations.add(combination)
-# =========================================================
-# IMAGE / INVENTORY CONSISTENCY
-# =========================================================
+
+
 def validate_color_images_against_inventory(
     inventory: list,
     images: dict,
@@ -216,18 +208,16 @@ def validate_color_images_against_inventory(
                 f"{', '.join(sorted(invalid_colors))}"
             ),
         )
-# =========================================================
-# IMAGE VALIDATION
-# =========================================================
+
+
 @router.post("/create-product")
 def create_product(
     product: CreateProduct,
     current_user: dict = Depends(require_admin),
 ):
     tenant_id = admin_tenant_id(current_user, product.tenantId)
-    # -----------------------------------------------------
-    # DUPLICATE PRODUCT
-    # -----------------------------------------------------
+
+
     existing = products.find_one(
         {
             "tenantId": tenant_id,
@@ -240,9 +230,8 @@ def create_product(
             status_code=400,
             detail="Product already exists.",
         )
-    # -----------------------------------------------------
-    # INVENTORY
-    # -----------------------------------------------------
+
+
     inventory = [
         item.model_dump()
         for item in product.inventory
@@ -250,14 +239,13 @@ def create_product(
     validate_inventory(
         inventory
     )
-    # Normalize stock
+
     for item in inventory:
         item["stock"] = int(
             item.get("stock", 0)
         )
-    # -----------------------------------------------------
-    # IMAGES
-    # -----------------------------------------------------
+
+
     images = product.images
     validate_images(
         images
@@ -266,28 +254,24 @@ def create_product(
         inventory,
         images,
     )
-    # -----------------------------------------------------
-    # PRICE
-    # -----------------------------------------------------
+
+
     final_price = calculate_final_price(
         product.price,
         product.discountPercentage,
     )
-    # -----------------------------------------------------
-    # TOTAL STOCK
-    # -----------------------------------------------------
+
+
     total_stock = calculate_total_stock(
         inventory
     )
-    # -----------------------------------------------------
-    # TIME
-    # -----------------------------------------------------
+
+
     now = datetime.now(
         timezone.utc
     )
-    # -----------------------------------------------------
-    # PAYLOAD
-    # -----------------------------------------------------
+
+
     payload = {
         "tenantId": tenant_id,
         "name": product.name.strip(),
@@ -322,9 +306,8 @@ def create_product(
             "Product created successfully."
         ),
     }
-# =========================================================
-# GET ALL PRODUCTS
-# =========================================================
+
+
 @router.get("/get-all-products")
 def get_all_products(
     tenantId: str,
@@ -348,9 +331,8 @@ def get_all_products(
     includeInactive: bool = False,
     current_user: dict | None = Depends(get_optional_user),
 ):
-    # -----------------------------------------------------
-    # PAGINATION
-    # -----------------------------------------------------
+
+
     page = max(
         page,
         1,
@@ -362,23 +344,20 @@ def get_all_products(
     skip = (
         page - 1
     ) * limit
-    # -----------------------------------------------------
-    # SEARCH NORMALIZATION
-    # -----------------------------------------------------
+
+
     search = (
         search.strip()
         if search
         else None
     )
-    # -----------------------------------------------------
-    # BASE QUERY
-    # -----------------------------------------------------
+
+
     query = {
         "tenantId": tenantId,
     }
-    # -----------------------------------------------------
-    # ACTIVE
-    # -----------------------------------------------------
+
+
     allow_inactive = False
     if (
         includeInactive
@@ -392,16 +371,14 @@ def get_all_products(
             allow_inactive = False
     if not allow_inactive:
         query["isActive"] = True
-    # -----------------------------------------------------
-    # CATEGORY
-    # -----------------------------------------------------
+
+
     if categoryIds:
         query["categoryId"] = {
             "$in": categoryIds
         }
-    # -----------------------------------------------------
-    # PRICE
-    # -----------------------------------------------------
+
+
     if (
         minPrice is not None
         or maxPrice is not None
@@ -415,16 +392,8 @@ def get_all_products(
             query["finalPrice"]["$lte"] = (
                 maxPrice
             )
-    # -----------------------------------------------------
-    # INVENTORY
-    #
-    # IMPORTANT:
-    #
-    # When size + color are provided, both must belong
-    # to the SAME inventory variant.
-    #
-    # Stock must always be > 0.
-    # -----------------------------------------------------
+
+
     if sizes and colors:
         query["inventory"] = {
             "$elemMatch": {
@@ -469,16 +438,14 @@ def get_all_products(
                 }
             }
         }
-    # -----------------------------------------------------
-    # RATING
-    # -----------------------------------------------------
+
+
     if rating is not None:
         query["averageRating"] = {
             "$gte": rating
         }
-    # -----------------------------------------------------
-    # SEARCH
-    # -----------------------------------------------------
+
+
     if search:
         search_regex = re.escape(
             search
@@ -503,9 +470,8 @@ def get_all_products(
                 }
             },
         ]
-    # -----------------------------------------------------
-    # SORT
-    # -----------------------------------------------------
+
+
     allowed_sort_fields = {
         "createdAt": "createdAt",
         "price": "finalPrice",
@@ -522,9 +488,8 @@ def get_all_products(
         if sortOrder.lower() == "desc"
         else 1
     )
-    # -----------------------------------------------------
-    # COUNT
-    # -----------------------------------------------------
+
+
     try:
         total_count = products.count_documents(
             query
@@ -538,9 +503,8 @@ def get_all_products(
             status_code=500,
             detail="Failed to count products.",
         )
-    # -----------------------------------------------------
-    # FETCH
-    # -----------------------------------------------------
+
+
     try:
         cursor = (
             products.find(query)
@@ -565,9 +529,8 @@ def get_all_products(
             status_code=500,
             detail="Failed to fetch products.",
         )
-    # -----------------------------------------------------
-    # TOTAL PAGES
-    # -----------------------------------------------------
+
+
     total_pages = (
         (
             total_count
@@ -578,9 +541,8 @@ def get_all_products(
         if total_count > 0
         else 0
     )
-    # -----------------------------------------------------
-    # RESPONSE
-    # -----------------------------------------------------
+
+
     return {
         "success": True,
         "count": len(data),
@@ -596,23 +558,20 @@ def get_all_products(
         ),
         "data": data,
     }
-# =========================================================
-# SEARCH PRODUCTS
-# =========================================================
+
+
 @router.post("/search")
 def search_product(
     request: ProductSearchRequest,
 ):
-    # -----------------------------------------------------
-    # BASE QUERY
-    # -----------------------------------------------------
+
+
     query = {
         "tenantId": request.tenantId,
         "isActive": True,
     }
-    # -----------------------------------------------------
-    # SEARCH
-    # -----------------------------------------------------
+
+
     if request.search:
         search = request.search.strip()
         if search:
@@ -639,16 +598,14 @@ def search_product(
                     }
                 },
             ]
-    # -----------------------------------------------------
-    # CATEGORY
-    # -----------------------------------------------------
+
+
     if request.categoryIds:
         query["categoryId"] = {
             "$in": request.categoryIds
         }
-    # -----------------------------------------------------
-    # PRICE
-    # -----------------------------------------------------
+
+
     if (
         request.minPrice is not None
         or request.maxPrice is not None
@@ -662,12 +619,8 @@ def search_product(
             query["finalPrice"]["$lte"] = (
                 request.maxPrice
             )
-    # -----------------------------------------------------
-    # INVENTORY
-    #
-    # All requested conditions must belong to
-    # the SAME inventory variant.
-    # -----------------------------------------------------
+
+
     inventory_conditions = []
     if request.sizes:
         inventory_conditions.append(
@@ -697,16 +650,14 @@ def search_product(
             "$and": inventory_conditions
         }
     }
-    # -----------------------------------------------------
-    # RATING
-    # -----------------------------------------------------
+
+
     if request.rating is not None:
         query["averageRating"] = {
             "$gte": request.rating
         }
-    # -----------------------------------------------------
-    # SORT
-    # -----------------------------------------------------
+
+
     allowed_sort_fields = {
         "createdAt": "createdAt",
         "price": "finalPrice",
@@ -723,9 +674,8 @@ def search_product(
         if request.sortOrder.lower() == "asc"
         else -1
     )
-    # -----------------------------------------------------
-    # PAGINATION
-    # -----------------------------------------------------
+
+
     page = max(
         request.page,
         1,
@@ -740,9 +690,8 @@ def search_product(
     skip = (
         page - 1
     ) * limit
-    # -----------------------------------------------------
-    # COUNT
-    # -----------------------------------------------------
+
+
     try:
         total_count = products.count_documents(
             query
@@ -756,9 +705,8 @@ def search_product(
             status_code=500,
             detail="Failed to count products.",
         )
-    # -----------------------------------------------------
-    # PRODUCTS
-    # -----------------------------------------------------
+
+
     try:
         cursor = (
             products.find(query)
@@ -783,9 +731,8 @@ def search_product(
             status_code=500,
             detail="Failed to search products.",
         )
-    # -----------------------------------------------------
-    # TOTAL PAGES
-    # -----------------------------------------------------
+
+
     total_pages = (
         (
             total_count
@@ -811,9 +758,8 @@ def search_product(
         ),
         "data": data,
     }
-# =========================================================
-# NEW ARRIVALS
-# =========================================================
+
+
 @router.get("/new-arrivals")
 def get_new_arrivals(
     tenantId: str,
@@ -862,9 +808,8 @@ def get_new_arrivals(
         "count": len(data),
         "data": data,
     }
-# =========================================================
-# GET SINGLE PRODUCT
-# =========================================================
+
+
 @router.get("/{id}")
 def get_product(
     id: str,
@@ -905,9 +850,8 @@ def get_product(
         "success": True,
         "data": product,
     }
-# =========================================================
-# UPDATE PRODUCT
-# =========================================================
+
+
 @router.put("/{id}")
 def update_product(
     id: str,
@@ -939,9 +883,8 @@ def update_product(
         "tenantId",
         None,
     )
-    # -----------------------------------------------------
-    # NAME
-    # -----------------------------------------------------
+
+
     if "name" in update_data:
         name = str(
             update_data["name"]
@@ -954,9 +897,8 @@ def update_product(
                 ),
             )
         update_data["name"] = name
-    # -----------------------------------------------------
-    # PRICE
-    # -----------------------------------------------------
+
+
     if "price" in update_data:
         if update_data["price"] < 0:
             raise HTTPException(
@@ -965,9 +907,8 @@ def update_product(
                     "Price cannot be negative."
                 ),
             )
-    # -----------------------------------------------------
-    # DISCOUNT
-    # -----------------------------------------------------
+
+
     if "discountPercentage" in update_data:
         discount = update_data[
             "discountPercentage"
@@ -980,9 +921,8 @@ def update_product(
                     "0 and 100."
                 ),
             )
-    # -----------------------------------------------------
-    # INVENTORY
-    # -----------------------------------------------------
+
+
     inventory = None
     if "inventory" in update_data:
         inventory = update_data[
@@ -991,7 +931,7 @@ def update_product(
         validate_inventory(
             inventory
         )
-        # Normalize stock
+
         for item in inventory:
             item["stock"] = int(
                 item.get("stock", 0)
@@ -1001,9 +941,8 @@ def update_product(
         ] = calculate_total_stock(
             inventory
         )
-    # -----------------------------------------------------
-    # IMAGES
-    # -----------------------------------------------------
+
+
     if "images" in update_data:
         images = update_data[
             "images"
@@ -1023,9 +962,8 @@ def update_product(
             inventory_for_validation,
             images,
         )
-    # -----------------------------------------------------
-    # FINAL PRICE
-    # -----------------------------------------------------
+
+
     if (
         "price" in update_data
         or "discountPercentage" in update_data
@@ -1050,17 +988,15 @@ def update_product(
             price,
             discount,
         )
-    # -----------------------------------------------------
-    # UPDATED TIME
-    # -----------------------------------------------------
+
+
     update_data[
         "updatedAt"
     ] = datetime.now(
         timezone.utc
     )
-    # -----------------------------------------------------
-    # UPDATE
-    # -----------------------------------------------------
+
+
     try:
         result = products.update_one(
             {
@@ -1091,9 +1027,8 @@ def update_product(
             "Product updated successfully."
         ),
     }
-# =========================================================
-# DELETE PRODUCT
-# =========================================================
+
+
 @router.delete("/{id}")
 def delete_product(
     id: str,
@@ -1133,9 +1068,8 @@ def delete_product(
             "Product deleted successfully."
         ),
     }
-# =========================================================
-# GET AVAILABLE VARIANTS
-# =========================================================
+
+
 @router.get("/{id}/inventory")
 def get_product_inventory(
     id: str,
@@ -1197,9 +1131,8 @@ def get_product_inventory(
         "success": True,
         "data": available_inventory,
     }
-# =========================================================
-# CHECK VARIANT STOCK
-# =========================================================
+
+
 @router.post("/{id}/check-stock")
 def check_variant_stock(
     id: str,

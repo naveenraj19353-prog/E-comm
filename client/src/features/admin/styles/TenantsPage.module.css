@@ -4,9 +4,7 @@
   flex-direction: column;
   gap: 1.5rem;
 }
-/* =========================================
-     HEADER
-  ========================================= */
+
 .header {
   display: flex;
   align-items: flex-end;
@@ -54,9 +52,7 @@
   background: #255843;
   transform: translateY(-0.0625rem);
 }
-/* =========================================
-     SUMMARY
-  ========================================= */
+
 .summary {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -79,9 +75,7 @@
   color: #17231e;
   font-size: 1.75rem;
 }
-/* =========================================
-     TABLE CARD
-  ========================================= */
+
 .tableCard {
   overflow: hidden;
   background: #ffffff;
@@ -134,9 +128,7 @@
 .table tbody tr:hover {
   background: #fbfcfb;
 }
-/* =========================================
-     TENANT
-  ========================================= */
+
 .tenant {
   display: flex;
   align-items: center;
@@ -217,9 +209,7 @@
 .date {
   color: #7d8883;
 }
-/* =========================================
-     EMPTY STATE
-  ========================================= */
+
 .empty {
   padding: 4.375rem 1.25rem;
   text-align: center;
@@ -254,9 +244,7 @@
   font-weight: 600;
   cursor: pointer;
 }
-/* =========================================
-     MODAL
-  ========================================= */
+
 .modalOverlay {
   position: fixed;
   inset: 0;
@@ -277,9 +265,7 @@
   border-radius: 1.125rem;
   box-shadow: 0 1.5625rem 4.375rem rgba(0, 0, 0, 0.18);
 }
-/* =========================================
-     MODAL HEADER
-  ========================================= */
+
 .modalHeader {
   display: flex;
   justify-content: space-between;
@@ -318,9 +304,7 @@
 .closeButton:hover {
   background: #f5f7f6;
 }
-/* =========================================
-     FORM
-  ========================================= */
+
 .form {
   padding: 1.5rem 1.625rem;
 }
@@ -361,9 +345,7 @@
   color: #98a19d;
   font-size: 0.6875rem;
 }
-/* =========================================
-     ERROR
-  ========================================= */
+
 .formError {
   margin-bottom: 1rem;
   padding: 0.6875rem 0.8125rem;
@@ -373,9 +355,7 @@
   color: #c84b4b;
   font-size: 0.75rem;
 }
-/* =========================================
-     FORM ACTIONS
-  ========================================= */
+
 .formActions {
   display: flex;
   justify-content: flex-end;
@@ -411,9 +391,7 @@
   opacity: 0.6;
   cursor: not-allowed;
 }
-/* =========================================
-     LOADING / ERROR
-  ========================================= */
+
 .state {
   min-height: 18.75rem;
   display: flex;
@@ -422,9 +400,7 @@
   color: #75817b;
   font-size: 0.875rem;
 }
-/* =========================================
-     RESPONSIVE
-  ========================================= */
+
 @media (max-width: 48rem) {
   .header {
     align-items: flex-start;

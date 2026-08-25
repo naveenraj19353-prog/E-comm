@@ -9,9 +9,8 @@ router = APIRouter(
     prefix="/addresses",
     tags=["Addresses"],
 )
-# ============================================================
-# HELPERS
-# ============================================================
+
+
 def validate_object_id(value: str, field_name: str = "ID") -> ObjectId:
     """
     Convert string to MongoDB ObjectId safely.
@@ -23,9 +22,8 @@ def validate_object_id(value: str, field_name: str = "ID") -> ObjectId:
             status_code=400,
             detail=f"Invalid {field_name}.",
         )
-# ============================================================
-# CREATE ADDRESS
-# ============================================================
+
+
 @router.post("/create-address")
 def create_address(
     request: CreateAddress,
@@ -68,9 +66,8 @@ def create_address(
         "addressId": str(result.inserted_id),
         "message": "Address added successfully.",
     }
-# ============================================================
-# GET USER ADDRESSES
-# ============================================================
+
+
 @router.get("/get-address/{userId}")
 def get_addresses(
     userId: str,
@@ -105,9 +102,8 @@ def get_addresses(
         "count": len(data),
         "data": data,
     }
-# ============================================================
-# UPDATE ADDRESS
-# ============================================================
+
+
 @router.put("/update-address/{id}")
 def update_address(
     id: str,
@@ -128,10 +124,10 @@ def update_address(
             status_code=404,
             detail="Address not found.",
         )
-    # Only update fields provided by the request.
+
     update_data = request.model_dump(exclude_unset=True)
-    # Do not allow these fields to be changed
-    # through the update request.
+
+
     update_data.pop("tenantId", None)
     update_data.pop("userId", None)
     if not update_data:
@@ -139,9 +135,8 @@ def update_address(
             status_code=400,
             detail="No fields provided.",
         )
-    # If this address is becoming the default,
-    # remove default status from all other addresses
-    # belonging to the same user and tenant.
+
+
     if update_data.get("isDefault") is True:
         addresses.update_many(
             {
@@ -176,9 +171,8 @@ def update_address(
         "success": True,
         "message": "Address updated successfully.",
     }
-# ============================================================
-# DELETE ADDRESS
-# ============================================================
+
+
 @router.delete("/{id}")
 def delete_address(
     id: str,
@@ -201,7 +195,7 @@ def delete_address(
         )
     user_id = address["userId"]
     was_default = address.get("isDefault", False)
-    # Delete the address
+
     result = addresses.delete_one(
         {
             "_id": address_id,
@@ -214,8 +208,8 @@ def delete_address(
             status_code=404,
             detail="Address not found.",
         )
-    # If deleted address was the default,
-    # automatically make another address default.
+
+
     if was_default:
         next_address = addresses.find_one(
             {

@@ -1,8 +1,7 @@
 from typing import Optional
 from pydantic import BaseModel, Field, ConfigDict
-# =========================================================
-# INVENTORY ITEM
-# =========================================================
+
+
 class InventoryItem(BaseModel):
     """
     Represents one product variant.
@@ -34,9 +33,8 @@ class InventoryItem(BaseModel):
         ge=0,
         description="Available stock",
     )
-# =========================================================
-# CREATE PRODUCT
-# =========================================================
+
+
 class CreateProduct(BaseModel):
     """
     Create product request.
@@ -96,27 +94,18 @@ class CreateProduct(BaseModel):
         ge=0,
         le=100
     )
-    # -----------------------------------------------------
-    # INVENTORY
-    # -----------------------------------------------------
+
+
     inventory: list[InventoryItem] = Field(
         default_factory=list
     )
-    # -----------------------------------------------------
-    # COLOR-SPECIFIC IMAGES
-    #
-    # {
-    #     "Green": ["url1", "url2"],
-    #     "Red": ["url1", "url2"],
-    #     "Black": ["url1", "url2"]
-    # }
-    # -----------------------------------------------------
+
+
     images: dict[str, list[str]] = Field(
         default_factory=dict
     )
-# =========================================================
-# UPDATE PRODUCT
-# =========================================================
+
+
 class UpdateProduct(BaseModel):
     """
     Update product request.
@@ -145,21 +134,17 @@ class UpdateProduct(BaseModel):
         ge=0,
         le=100
     )
-    # -----------------------------------------------------
-    # INVENTORY
-    # -----------------------------------------------------
+
+
     inventory: Optional[list[InventoryItem]] = None
-    # -----------------------------------------------------
-    # COLOR-SPECIFIC IMAGES
-    # -----------------------------------------------------
+
+
     images: Optional[dict[str, list[str]]] = None
-    # -----------------------------------------------------
-    # ACTIVE STATUS
-    # -----------------------------------------------------
+
+
     isActive: Optional[bool] = None
-# =========================================================
-# PRODUCT SEARCH REQUEST
-# =========================================================
+
+
 class ProductSearchRequest(BaseModel):
     """
     Product search/filter request.
@@ -170,17 +155,14 @@ class ProductSearchRequest(BaseModel):
     tenantId: str = Field(
         min_length=1
     )
-    # -----------------------------------------------------
-    # SEARCH
-    # -----------------------------------------------------
+
+
     search: Optional[str] = None
-    # -----------------------------------------------------
-    # CATEGORY
-    # -----------------------------------------------------
+
+
     categoryIds: Optional[list[str]] = None
-    # -----------------------------------------------------
-    # PRICE
-    # -----------------------------------------------------
+
+
     minPrice: Optional[float] = Field(
         default=None,
         ge=0
@@ -189,31 +171,26 @@ class ProductSearchRequest(BaseModel):
         default=None,
         ge=0
     )
-    # -----------------------------------------------------
-    # SIZE / COLOR
-    # -----------------------------------------------------
+
+
     sizes: Optional[list[str]] = None
     colors: Optional[list[str]] = None
-    # -----------------------------------------------------
-    # RATING
-    # -----------------------------------------------------
+
+
     rating: Optional[float] = Field(
         default=None,
         ge=0,
         le=5
     )
-    # -----------------------------------------------------
-    # STOCK
-    # -----------------------------------------------------
+
+
     inStock: bool = True
-    # -----------------------------------------------------
-    # SORT
-    # -----------------------------------------------------
+
+
     sortBy: str = "createdAt"
     sortOrder: str = "desc"
-    # -----------------------------------------------------
-    # PAGINATION
-    # -----------------------------------------------------
+
+
     page: int = Field(
         default=1,
         ge=1
@@ -223,9 +200,8 @@ class ProductSearchRequest(BaseModel):
         ge=1,
         le=100
     )
-# =========================================================
-# VARIANT STOCK REQUEST
-# =========================================================
+
+
 class VariantStockRequest(BaseModel):
     """
     Request used to check stock for a particular variant.

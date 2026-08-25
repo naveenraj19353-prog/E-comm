@@ -1,30 +1,20 @@
 import styles from "./HomeProductCard.module.css";
-import {
-  getFirstProductImage,
-  isProductOutOfStock,
-} from "../../features/products/inventory";
+import { getFirstProductImage, isProductOutOfStock, } from "../../features/products/inventory";
 import type { Product } from "../../features/products/types";
-
 interface HomeProductCardProps {
-  product: Product;
-  onClick?: () => void;
+    product: Product;
+    onClick?: () => void;
 }
-
 const HomeProductCard = ({ product, onClick }: HomeProductCardProps) => {
-  const image = getFirstProductImage(product.images);
-  const outOfStock = isProductOutOfStock(product);
-  return (
-    <div className={styles.card} onClick={onClick}>
+    const image = getFirstProductImage(product.images);
+    const outOfStock = isProductOutOfStock(product);
+    return (<div className={styles.card} onClick={onClick}>
       <div className={styles.imageWrapper}>
-        <img src={image} alt={product.name} className={styles.image} />
-        {product.discountPercentage > 0 && (
-          <span className={styles.discount}>
+        <img src={image} alt={product.name} className={styles.image}/>
+        {product.discountPercentage > 0 && (<span className={styles.discount}>
             {Math.round(product.discountPercentage)}% OFF
-          </span>
-        )}
-        {outOfStock && (
-          <div className={styles.outOfStock}>Out of Stock</div>
-        )}
+          </span>)}
+        {outOfStock && (<div className={styles.outOfStock}>Out of Stock</div>)}
       </div>
       <div className={styles.content}>
         <h3 className={styles.name}>{product.name}</h3>
@@ -37,15 +27,11 @@ const HomeProductCard = ({ product, onClick }: HomeProductCardProps) => {
           <span className={styles.price}>
             ₹{product.finalPrice.toLocaleString("en-IN")}
           </span>
-          {product.price > product.finalPrice && (
-            <span className={styles.originalPrice}>
+          {product.price > product.finalPrice && (<span className={styles.originalPrice}>
               ₹{product.price.toLocaleString("en-IN")}
-            </span>
-          )}
+            </span>)}
         </div>
       </div>
-    </div>
-  );
+    </div>);
 };
-
 export default HomeProductCard;

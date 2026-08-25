@@ -4,9 +4,7 @@
   background: #f6f8f7;
   color: #1f2a26;
 }
-/* =====================================================
-     STATE
-  ===================================================== */
+
 .state {
   min-height: 31.25rem;
   display: flex;
@@ -39,9 +37,7 @@
     transform: rotate(360deg);
   }
 }
-/* =====================================================
-     HEADER
-  ===================================================== */
+
 .header {
   display: flex;
   align-items: flex-end;
@@ -132,9 +128,7 @@
 .productsButton:active {
   transform: translateY(0.0625rem);
 }
-/* =====================================================
-     STATUS
-  ===================================================== */
+
 .statusCard {
   display: flex;
   align-items: center;
@@ -180,9 +174,7 @@
   border-radius: 50%;
   background: currentColor;
 }
-/* =====================================================
-     SECTION
-  ===================================================== */
+
 .section {
   margin-bottom: 1.5rem;
   padding: 1.5rem;
@@ -213,9 +205,7 @@
   color: #728078;
   font-size: 0.8125rem;
 }
-/* =====================================================
-     INFORMATION GRID
-  ===================================================== */
+
 .infoGrid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -244,9 +234,7 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-/* =====================================================
-     STORE PREVIEW
-  ===================================================== */
+
 .storeCard {
   display: flex;
   align-items: center;
@@ -312,9 +300,7 @@
   border-color: #2f6b52;
   background: #eef6f1;
 }
-/* =====================================================
-     ACTIONS
-  ===================================================== */
+
 .actionsGrid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -377,9 +363,7 @@
   color: #8a9791;
   font-size: 1.0625rem;
 }
-/* =====================================================
-     RESPONSIVE
-  ===================================================== */
+
 @media (max-width: 62.5rem) {
   .page {
     padding: 1.625rem 1.5rem 3.125rem;

@@ -7,53 +7,41 @@ import ProductCard from "./ProductCard";
 import styles from "./ProductSlider.module.css";
 import type { Product } from "../../../features/products/types";
 interface ProductSliderProps {
-  title: string;
-  products: Product[];
+    title: string;
+    products: Product[];
 }
 const ProductSlider = ({ title, products }: ProductSliderProps) => {
-  return (
-    <section className={styles.section}>
+    return (<section className={styles.section}>
       <div className={styles.header}>
         <h2>{title}</h2>
         <div className={styles.line}></div>
       </div>
-      <Swiper
-        modules={[Navigation, Pagination, Autoplay]}
-        navigation
-        pagination={{
-          clickable: true,
-        }}
-        autoplay={{
-          delay: 3000,
-          disableOnInteraction: false,
-        }}
-        loop
-        spaceBetween={24}
-        breakpoints={{
-          320: {
-            slidesPerView: 1.2,
-          },
-          576: {
-            slidesPerView: 2,
-          },
-          768: {
-            slidesPerView: 3,
-          },
-          1024: {
-            slidesPerView: 4,
-          },
-          1400: {
-            slidesPerView: 5,
-          },
-        }}
-      >
-        {products.map((product) => (
-          <SwiperSlide key={product._id}>
-            <ProductCard product={product} />
-          </SwiperSlide>
-        ))}
+      <Swiper modules={[Navigation, Pagination, Autoplay]} navigation pagination={{
+            clickable: true,
+        }} autoplay={{
+            delay: 3000,
+            disableOnInteraction: false,
+        }} loop spaceBetween={24} breakpoints={{
+            320: {
+                slidesPerView: 1.2,
+            },
+            576: {
+                slidesPerView: 2,
+            },
+            768: {
+                slidesPerView: 3,
+            },
+            1024: {
+                slidesPerView: 4,
+            },
+            1400: {
+                slidesPerView: 5,
+            },
+        }}>
+        {products.map((product) => (<SwiperSlide key={product._id}>
+            <ProductCard product={product}/>
+          </SwiperSlide>))}
       </Swiper>
-    </section>
-  );
+    </section>);
 };
 export default ProductSlider;

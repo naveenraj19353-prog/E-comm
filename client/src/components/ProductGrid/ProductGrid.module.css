@@ -3,9 +3,7 @@
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 1.5rem;
 }
-/* =========================================================
-   EMPTY STATE
-========================================================= */
+
 .empty {
   width: 100%;
   min-height: 25rem;
@@ -36,9 +34,7 @@
   opacity: 0.65;
   font-size: 0.875rem;
 }
-/* =========================================================
-   CLEAR BUTTON
-========================================================= */
+
 .clearButton {
   border: none;
   padding: 0.625rem 1.25rem;
@@ -62,9 +58,7 @@
 .clearButton:active {
   transform: scale(0.98);
 }
-/* =========================================================
-   WISHLIST ACTIVE
-========================================================= */
+
 .wishlistActive {
   background: color-mix(in srgb, var(--danger) 10%, var(--surface));
   color: var(--danger);
@@ -73,9 +67,7 @@
   background: var(--danger);
   color: var(--text-white);
 }
-/* =========================================================
-   RESPONSIVE
-========================================================= */
+
 @media (max-width: 75rem) {
   .grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));

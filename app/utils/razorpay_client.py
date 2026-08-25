@@ -13,8 +13,8 @@ RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET")
 
 def _ssl_context():
     context = ssl.create_default_context()
-    # Python 3.13+ OpenSSL rejects some Windows/corporate CAs
-    # that do not mark Basic Constraints as critical.
+
+
     if hasattr(ssl, "VERIFY_X509_STRICT"):
         context.verify_flags &= ~ssl.VERIFY_X509_STRICT
     return context
@@ -42,5 +42,5 @@ client = razorpay.Client(
     session=session,
     auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET),
 )
-# SDK default ca-bundle.crt fails TLS on this Python/Windows setup.
+
 client.cert_path = True

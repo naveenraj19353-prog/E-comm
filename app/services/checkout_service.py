@@ -77,7 +77,6 @@ def find_active_product(product_id, tenant_id: str):
     return product
 
 
-
 def get_variant(product: dict, variant_id: str | None):
     if not variant_id:
         return None
