@@ -26,7 +26,6 @@ export default function Navbar() {
     tenantSlug: string;
   }>();
   const { user } = useAuth();
-  const tenantId = tenantSlug || "";
   const catalogTenantId = useStorefrontTenant().tenantId;
   /*
    * ================================

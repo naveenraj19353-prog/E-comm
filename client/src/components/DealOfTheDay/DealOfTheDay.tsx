@@ -9,11 +9,18 @@ import ProductCard from "../sliders/ProductSlider/ProductCard";
 import type { Product } from "../../features/products/types";
 interface DealOfTheDayProps {
   products: Product[];
+  isWishlisted?: (productId: string) => boolean;
   onToggleWishlist?: (id: string, wishlisted: boolean) => void;
-  onQuickAdd?: (id: string) => void;
+  onQuickAdd?: (
+    productId: string,
+    variantId: string,
+    color: string,
+    size: string,
+  ) => void;
 }
 const DealOfTheDay = ({
   products,
+  isWishlisted,
   onToggleWishlist,
   onQuickAdd,
 }: DealOfTheDayProps) => {
@@ -106,9 +113,14 @@ const DealOfTheDay = ({
             <SwiperSlide key={product._id}>
               <ProductCard
                 product={product}
+                isWishlisted={isWishlisted?.(product._id)}
                 onWishlist={
                   onToggleWishlist
-                    ? (id) => onToggleWishlist(id, true)
+                    ? (id) =>
+                        onToggleWishlist(
+                          id,
+                          !(isWishlisted?.(id) ?? false),
+                        )
                     : undefined
                 }
                 onAddToCart={onQuickAdd}

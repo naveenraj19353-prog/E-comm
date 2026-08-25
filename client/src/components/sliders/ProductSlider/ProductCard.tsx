@@ -10,7 +10,12 @@ interface ProductCardProps {
   product: Product;
   isWishlisted?: boolean;
   onWishlist?: (id: string) => void;
-  onAddToCart?: (id: string) => void;
+  onAddToCart?: (
+    productId: string,
+    variantId: string,
+    color: string,
+    size: string,
+  ) => void;
   isAdding?: boolean;
 }
 
@@ -34,7 +39,18 @@ const ProductCard = ({
     if (outOfStock) {
       return;
     }
-    onAddToCart?.(product._id);
+    const variant = (product.inventory || []).find(
+      (item) => Number(item.stock) > 0 && item.variantId,
+    );
+    if (!variant) {
+      return;
+    }
+    onAddToCart?.(
+      product._id,
+      variant.variantId,
+      variant.color,
+      variant.size,
+    );
   };
 
   return (
