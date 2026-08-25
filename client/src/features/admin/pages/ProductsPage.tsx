@@ -21,6 +21,7 @@ interface Product {
   updatedAt: string;
   averageRating: number;
   reviewCount: number;
+  totalStock?:number;
 }
 interface ProductsResponse {
   success: boolean;
@@ -37,7 +38,7 @@ export default function ProductsPage() {
   const navigate = useNavigate();
   const tenantIdStore =
     useAppSelector(
-      (state) => state.tenant.currentTenant?.id || state.tenant.tenantSlug,
+      (state) =>  state.tenant.tenantSlug,
     ) ?? "";
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -197,14 +198,14 @@ export default function ProductsPage() {
                     <td>
                       <span
                         className={
-                          product.stock === 0
+                          product.totalStock === 0 || product.stock === 0
                             ? styles.outOfStock
-                            : product.stock < 10
+                            : (product.totalStock ?? product.stock ?? 0) < 10
                               ? styles.lowStock
                               : styles.stock
                         }
                       >
-                        {product.stock}
+                        {product.totalStock ?? product.stock}
                       </span>
                     </td>
                     <td>

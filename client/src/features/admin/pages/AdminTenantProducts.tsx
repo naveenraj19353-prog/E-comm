@@ -24,6 +24,7 @@ interface Product {
   isActive?: boolean;
   createdAt?: string;
   updatedAt?: string;
+  totalStock?:number
 }
 interface EditForm {
   name: string;
@@ -139,7 +140,7 @@ const imageInputRef = useRef<HTMLInputElement | null>(null);
       categoryId: product.categoryId || "",
       price: String(product.price ?? ""),
       discountPercentage: String(product.discountPercentage ?? ""),
-      stock: String(product.stock ?? ""),
+      stock: String(product.totalStock ?? product.stock ?? ""),
       sizes: Array.isArray(product.sizes) ? product.sizes.join(", ") : "",
       colors: Array.isArray(product.colors) ? product.colors.join(", ") : "",
       images: Array.isArray(product.images) ? product.images : [],
@@ -311,8 +312,10 @@ const imageInputRef = useRef<HTMLInputElement | null>(null);
             <strong>
               {
                 products.filter(
-                  (product) =>
-                    (product.stock ?? 0) > 0 && (product.stock ?? 0) < 10,
+                    (product) => {
+                      const stock = product.totalStock ?? product.stock ?? 0;
+                      return stock > 0 && stock < 10;
+                    },
                 ).length
               }
             </strong>
@@ -326,7 +329,9 @@ const imageInputRef = useRef<HTMLInputElement | null>(null);
               {formatPrice(
                 products.reduce(
                   (total, product) =>
-                    total + (product.finalPrice || 0) * (product.stock || 0),
+                    total +
+                    (product.finalPrice || 0) *
+                      (product.totalStock ?? product.stock ?? 0),
                   0,
                 ),
               )}
@@ -476,12 +481,14 @@ const imageInputRef = useRef<HTMLInputElement | null>(null);
                       <td>
                         <span
                           className={
-                            (product.stock ?? 0) < 10
+                            (product.totalStock ?? product.stock ?? 0) <= 0
                               ? styles.lowStock
-                              : styles.stock
+                              : (product.totalStock ?? product.stock ?? 0) < 10
+                                ? styles.lowStock
+                                : styles.stock
                           }
                         >
-                          {product.stock ?? 0}
+                          {product.totalStock ?? product.stock ?? 0}
                         </span>
                       </td>
                       <td>

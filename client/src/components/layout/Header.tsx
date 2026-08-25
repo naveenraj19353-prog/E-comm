@@ -6,6 +6,7 @@ import { useCart } from "../../features/cart/hooks/useCart";
 import { useWishlist } from "../../features/wishlist/hooks/useWishlist";
 import { useAuth } from "../../features/auth/hooks/useAuth";
 import { useCategory } from "../../features/products/hooks/useCategory";
+import { useStorefrontTenant } from "../../features/tenant/useTenant";
 interface Category {
   _id?: string;
   categoryId?: string;
@@ -26,13 +27,14 @@ export default function Navbar() {
   }>();
   const { user } = useAuth();
   const tenantId = tenantSlug || "";
+  const catalogTenantId = useStorefrontTenant().tenantId;
   /*
    * ================================
    * CATEGORY API
    * ================================
    */
   const { data: categoryResponse, isLoading: categoriesLoading } =
-    useCategory(tenantId);
+    useCategory(catalogTenantId);
   /*
    * ================================
    * CART
@@ -259,13 +261,23 @@ export default function Navbar() {
             {cartCount > 0 && <span className={styles.badge}>{cartCount}</span>}
           </button>
           {/* PROFILE */}
-          <button
-            type="button"
-            className={styles.avatar}
-            onClick={() => navigate(`/${tenantSlug}/profile`)}
-          >
-            {getInitials(user?.name)}
-          </button>
+          {user ? (
+            <button
+              type="button"
+              className={styles.avatar}
+              onClick={() => navigate(`/${tenantSlug}/profile`)}
+            >
+              {getInitials(user?.name)}
+            </button>
+          ) : (
+            <button
+              type="button"
+              className={styles.iconButton}
+              onClick={() => navigate(`/${tenantSlug}/login`)}
+            >
+              Sign in
+            </button>
+          )}
           {/* MOBILE MENU */}
           <button
             type="button"
@@ -378,11 +390,15 @@ export default function Navbar() {
           <button
             type="button"
             onClick={() => {
-              navigate(`/${tenantSlug}/profile`);
+              navigate(
+                user
+                  ? `/${tenantSlug}/profile`
+                  : `/${tenantSlug}/login`,
+              );
               setMenuOpen(false);
             }}
           >
-            Account
+            {user ? "Account" : "Sign in"}
           </button>
         </div>
       </aside>

@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useRazorpay } from "react-razorpay";
 import { useCart } from "../../features/cart/hooks/useCart";
 import { useAuth } from "../../features/auth/hooks/useAuth";
+import { useStorefrontTenant } from "../../features/tenant/useTenant";
 import { usePayment } from "../../features/payment/hooks/usePayment";
 import CheckoutHeader from "./CheckoutHeader/CheckoutHeader";
 import CheckoutLayout from "./CheckoutLayout/CheckoutLayout";
@@ -19,6 +20,7 @@ const Checkout = () => {
   const navigate = useNavigate();
   const { Razorpay } = useRazorpay();
   const { user } = useAuth();
+  const { tenantSlug } = useStorefrontTenant();
   const { cart, grandTotal, isLoading } = useCart(
     user?._id as string,
     user?.tenantId as string,
@@ -99,10 +101,8 @@ const Checkout = () => {
             });
             console.log("Payment verified:", verifyData);
             alert("Payment successful! Order placed.");
-            if (verifyData.orderId && user.tenantId) {
-              navigate(
-                `/${user.tenantId.toLowerCase()}/orders/${verifyData.orderId}`,
-              );
+            if (verifyData.orderId && tenantSlug) {
+              navigate(`/${tenantSlug}`);
             }
           } catch (error) {
             console.error("Payment verification error:", error);
@@ -168,7 +168,7 @@ const Checkout = () => {
             <CheckoutMain>
               <AddressSection
                 userId={user?._id}
-                tenantId={user?.tenantId as string}
+                tenantId={user?.tenantId || tenantSlug}
                 onAddressSelect={setSelectedAddress}
               />
               <DeliveryMethod onDeliveryChange={setDeliveryMethod} />

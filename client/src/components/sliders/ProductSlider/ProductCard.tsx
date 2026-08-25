@@ -1,6 +1,11 @@
 import { Heart, ShoppingCart, Star } from "lucide-react";
 import styles from "./ProductCard.module.css";
 import type { Product } from "../../../features/products/types";
+import {
+  getFirstProductImage,
+  isProductOutOfStock,
+} from "../../../features/products/inventory";
+
 interface ProductCardProps {
   product: Product;
   isWishlisted?: boolean;
@@ -8,6 +13,7 @@ interface ProductCardProps {
   onAddToCart?: (id: string) => void;
   isAdding?: boolean;
 }
+
 const ProductCard = ({
   product,
   isWishlisted = false,
@@ -15,21 +21,27 @@ const ProductCard = ({
   onAddToCart,
   isAdding = false,
 }: ProductCardProps) => {
+  const outOfStock = isProductOutOfStock(product);
+  const image = getFirstProductImage(product.images);
+
   const handleWishlist = (event: React.MouseEvent<HTMLButtonElement>) => {
     event.stopPropagation();
     onWishlist?.(product._id);
   };
+
   const handleAddToCart = (event: React.MouseEvent<HTMLButtonElement>) => {
     event.stopPropagation();
+    if (outOfStock) {
+      return;
+    }
     onAddToCart?.(product._id);
   };
+
   return (
     <div className={styles.card}>
-      {/* Discount */}
       {product.discountPercentage > 0 && (
         <span className={styles.discount}>-{product.discountPercentage}%</span>
       )}
-      {/* Wishlist */}
       <button
         type="button"
         className={`${styles.wishlist} ${
@@ -40,25 +52,17 @@ const ProductCard = ({
       >
         <Heart size={18} fill={isWishlisted ? "currentColor" : "none"} />
       </button>
-      {/* Product Image */}
       <div className={styles.imageWrapper}>
-        <img
-          src={product.images[0]}
-          alt={product.name}
-          className={styles.image}
-        />
+        <img src={image} alt={product.name} className={styles.image} />
       </div>
-      {/* Product Content */}
       <div className={styles.content}>
         <h3>{product.name}</h3>
-        {/* Rating */}
         <div className={styles.rating}>
           <Star size={14} fill="#fbbf24" stroke="#fbbf24" />
           <span>
             {product.averageRating} ({product.reviewCount})
           </span>
         </div>
-        {/* Price */}
         <div className={styles.price}>
           <span className={styles.current}>
             ₹{product.finalPrice.toLocaleString()}
@@ -69,22 +73,18 @@ const ProductCard = ({
             </span>
           )}
         </div>
-        {/* Add To Cart */}
         <button
           type="button"
           className={styles.cartBtn}
           onClick={handleAddToCart}
-          disabled={product.stock === 0 || isAdding}
+          disabled={outOfStock || isAdding}
         >
           <ShoppingCart size={18} />
-          {product.stock === 0
-            ? "Out Of Stock"
-            : isAdding
-              ? "Adding..."
-              : "Add To Cart"}
+          {outOfStock ? "Out Of Stock" : isAdding ? "Adding..." : "Add To Cart"}
         </button>
       </div>
     </div>
   );
 };
+
 export default ProductCard;

@@ -1,6 +1,9 @@
 import { useMemo, useState } from "react";
 import { Heart, ShoppingCart, Star } from "lucide-react";
 import styles from "./ProductCard.module.css";
+import {
+  isProductOutOfStock,
+} from "../../../features/products/inventory";
 import type {
   Product,
   ProductInventory,
@@ -113,13 +116,7 @@ const ProductCard = ({
   // =========================================================
   // TOTAL STOCK
   // =========================================================
-  const totalStock = useMemo(() => {
-    return (product.inventory ?? []).reduce(
-      (total, item) =>
-        total + Math.max(item.stock, 0),
-      0,
-    );
-  }, [product.inventory]);
+  const isOutOfStock = isProductOutOfStock(product);
   // =========================================================
   // IMAGE
   // =========================================================
@@ -220,12 +217,6 @@ const ProductCard = ({
     );
   };
   // =========================================================
-  // OUT OF STOCK
-  // =========================================================
-  const isOutOfStock =
-    !product.isActive ||
-    totalStock <= 0;
-  // =========================================================
   // RATING
   // =========================================================
   const hasRating =
@@ -292,6 +283,9 @@ const ProductCard = ({
           <div className={styles.noImage}>
             No Image
           </div>
+        )}
+        {isOutOfStock && (
+          <div className={styles.outOfStock}>Out of Stock</div>
         )}
       </div>
       {/* =====================================================

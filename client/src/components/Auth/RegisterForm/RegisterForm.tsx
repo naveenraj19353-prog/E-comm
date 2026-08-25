@@ -2,6 +2,7 @@ import { useState } from "react";
 import { ArrowLeft, Eye, EyeOff } from "lucide-react";
 import styles from "../AuthModal/AuthModal.module.css";
 import { useAuth } from "../../../features/auth/hooks/useAuth";
+import axios from "axios";
 interface RegisterFormProps {
   tenantId: string;
   onSwitchToLogin: () => void;
@@ -63,11 +64,15 @@ const RegisterForm = ({ tenantId, onSwitchToLogin }: RegisterFormProps) => {
       setPassword("");
       setConfirmPassword("");
     } catch (error: unknown) {
-      console.error("Registration failed:", error);
-      if (error instanceof Error) {
-        setError(error.message || "Invalid email or password.");
+      if (axios.isAxiosError(error)) {
+        const detail = error.response?.data?.detail;
+        setError(
+          typeof detail === "string"
+            ? detail
+            : "Unable to create account.",
+        );
       } else {
-        setError("Invalid email or password.");
+        setError("Unable to create account.");
       }
     } finally {
       setLoading(false);

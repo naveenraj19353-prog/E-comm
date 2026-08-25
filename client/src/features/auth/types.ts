@@ -1,10 +1,10 @@
 export interface User {
-  // id: string;
   name: string;
   email: string;
   role: string;
   tenantId?: string | null;
   _id: string;
+  userId?: string;
 }
 export interface LoginRequest {
   tenantId: string | null;

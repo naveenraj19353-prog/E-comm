@@ -1,21 +1,18 @@
 import styles from "./HomeProductCard.module.css";
-export interface HomeProduct {
-  _id: string;
-  name: string;
-  price: number;
-  finalPrice: number;
-  discountPercentage: number;
-  images: string[];
-  averageRating: number;
-  reviewCount: number;
-  stock: number;
-}
+import {
+  getFirstProductImage,
+  isProductOutOfStock,
+} from "../../features/products/inventory";
+import type { Product } from "../../features/products/types";
+
 interface HomeProductCardProps {
-  product: HomeProduct;
+  product: Product;
   onClick?: () => void;
 }
+
 const HomeProductCard = ({ product, onClick }: HomeProductCardProps) => {
-  const image = product.images?.length > 0 ? product.images[0] : "";
+  const image = getFirstProductImage(product.images);
+  const outOfStock = isProductOutOfStock(product);
   return (
     <div className={styles.card} onClick={onClick}>
       <div className={styles.imageWrapper}>
@@ -25,7 +22,7 @@ const HomeProductCard = ({ product, onClick }: HomeProductCardProps) => {
             {Math.round(product.discountPercentage)}% OFF
           </span>
         )}
-        {product.stock <= 0 && (
+        {outOfStock && (
           <div className={styles.outOfStock}>Out of Stock</div>
         )}
       </div>
@@ -50,4 +47,5 @@ const HomeProductCard = ({ product, onClick }: HomeProductCardProps) => {
     </div>
   );
 };
+
 export default HomeProductCard;

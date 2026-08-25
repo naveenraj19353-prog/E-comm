@@ -15,7 +15,9 @@ import TenantLoader from "../features/tenant/TenantLoader";
 // AUTH
 // ==========================================================
 import Login from "../pages/Login/Login";
-import Register from "../pages/Register/Register";
+import StorefrontLogin from "../pages/Login/StorefrontLogin";
+import StorefrontRegister from "../pages/Register/StorefrontRegister";
+import LegacyAuthRedirect from "../pages/Login/LegacyAuthRedirect";
 import Logout from "../pages/Logout/Logout";
 // ==========================================================
 // ADMIN
@@ -200,6 +202,14 @@ export const router = createBrowserRouter([
           // /shopsphere/profile
           // --------------------------------------------------
           {
+            path: "login",
+            element: <StorefrontLogin />,
+          },
+          {
+            path: "register",
+            element: <StorefrontRegister />,
+          },
+          {
             path: "profile",
             element: <Profile />,
           },
@@ -215,7 +225,11 @@ export const router = createBrowserRouter([
   // ========================================================
   {
     path: "/register",
-    element: <Register />,
+    element: <LegacyAuthRedirect mode="register" />,
+  },
+  {
+    path: "/login",
+    element: <LegacyAuthRedirect mode="login" />,
   },
   // ========================================================
   // LOGOUT

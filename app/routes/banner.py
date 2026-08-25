@@ -3,6 +3,7 @@ from bson import ObjectId
 from fastapi import APIRouter, Depends, HTTPException
 from app.database.mongo import banners, tenants
 from app.models.banner import CreateBanner, UpdateBanner
+from app.utils.auth_dependencies import admin_tenant_id, require_admin
 router = APIRouter(
     prefix="/banner",
     tags=["Banner"],
@@ -13,10 +14,15 @@ router = APIRouter(
 @router.post("/create")
 def create_banner(
     banner: CreateBanner,
+    current_user: dict = Depends(require_admin),
 ):
     try:
         banner_data = banner.model_dump()
-        tenant_id = banner_data.get("tenantId")
+        tenant_id = admin_tenant_id(
+            current_user,
+            banner_data.get("tenantId"),
+        )
+        banner_data["tenantId"] = tenant_id
         # --------------------------------------------------
         # VALIDATE TENANT
         # --------------------------------------------------
@@ -216,6 +222,7 @@ def get_active_banners(
 def update_banner(
     banner_id: str,
     banner: UpdateBanner,
+    current_user: dict = Depends(require_admin),
 ):
     try:
         # --------------------------------------------------
@@ -240,25 +247,21 @@ def update_banner(
                 status_code=400,
                 detail="No fields provided for update.",
             )
-        # --------------------------------------------------
-        # IF TENANT IS BEING UPDATED,
-        # VALIDATE NEW TENANT
-        # --------------------------------------------------
-        if "tenantId" in update_data:
-            tenant_id = update_data[
-                "tenantId"
-            ]
-            tenant = tenants.find_one(
-                {
-                    "tenantId": tenant_id,
-                    "isActive": True,
-                }
+        update_data.pop("tenantId", None)
+        existing_banner = banners.find_one(
+            {
+                "_id": ObjectId(banner_id),
+            }
+        )
+        if not existing_banner:
+            raise HTTPException(
+                status_code=404,
+                detail="Banner not found.",
             )
-            if not tenant:
-                raise HTTPException(
-                    status_code=404,
-                    detail="Tenant not found or inactive.",
-                )
+        admin_tenant_id(
+            current_user,
+            existing_banner.get("tenantId"),
+        )
         # --------------------------------------------------
         # UPDATED TIME
         # --------------------------------------------------
@@ -320,6 +323,7 @@ def update_banner(
 @router.delete("/delete/{banner_id}")
 def delete_banner(
     banner_id: str,
+    current_user: dict = Depends(require_admin),
 ):
     try:
         # --------------------------------------------------
@@ -335,6 +339,20 @@ def delete_banner(
         # --------------------------------------------------
         # DELETE
         # --------------------------------------------------
+        existing_banner = banners.find_one(
+            {
+                "_id": ObjectId(banner_id),
+            }
+        )
+        if not existing_banner:
+            raise HTTPException(
+                status_code=404,
+                detail="Banner not found.",
+            )
+        admin_tenant_id(
+            current_user,
+            existing_banner.get("tenantId"),
+        )
         result = banners.delete_one(
             {
                 "_id": ObjectId(

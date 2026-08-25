@@ -1,93 +1,46 @@
 from datetime import datetime
 from bson import ObjectId
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from app.database.mongo import products, wishlists
 from app.models.wishlist import WishList
+from app.utils.auth_dependencies import customer_scope, require_customer
+from app.utils.product_serialize import serialize_product
+
 router = APIRouter(
     prefix="/wishlist",
     tags=["Wishlist"],
 )
-# ============================================================
-# Helpers
-# ============================================================
-def get_object_id(
-    value: str,
-    field_name: str,
-) -> ObjectId:
+
+
+def get_object_id(value: str, field_name: str) -> ObjectId:
     if not ObjectId.is_valid(value):
         raise HTTPException(
             status_code=400,
             detail=f"Invalid {field_name}.",
         )
     return ObjectId(value)
-def get_total_stock(product: dict) -> int:
-    inventory = product.get(
-        "inventory",
-        [],
-    )
-    return sum(
-        max(
-            0,
-            int(item.get("stock", 0)),
-        )
-        for item in inventory
-    )
-def get_first_image(product: dict):
-    images = product.get(
-        "images",
-        {},
-    )
-    # New format
-    if isinstance(images, dict):
-        for color_images in images.values():
-            if (
-                isinstance(
-                    color_images,
-                    list,
-                )
-                and color_images
-            ):
-                return color_images[0]
-    # Old format fallback
-    if isinstance(images, list) and images:
-        return images[0]
-    return None
-# ============================================================
-# Add Product To Wishlist
-# ============================================================
+
+
 @router.post("/")
 def add_to_wishlist(
     request: WishList,
+    current_user: dict = Depends(require_customer),
 ):
-    product_object_id = get_object_id(
-        request.productId,
-        "productId",
-    )
-    user_object_id = get_object_id(
-        request.userId,
-        "userId",
-    )
-    # --------------------------------------------------------
-    # Find product
-    # --------------------------------------------------------
+    tenant_id, user_id = customer_scope(current_user)
+    product_object_id = get_object_id(request.productId, "productId")
+    user_object_id = get_object_id(user_id, "userId")
     product = products.find_one(
         {
             "_id": product_object_id,
-            "tenantId": request.tenantId,
+            "tenantId": tenant_id,
             "isActive": True,
         }
     )
     if not product:
-        raise HTTPException(
-            status_code=404,
-            detail="Product not found.",
-        )
-    # --------------------------------------------------------
-    # Check existing
-    # --------------------------------------------------------
+        raise HTTPException(status_code=404, detail="Product not found.")
     existing = wishlists.find_one(
         {
-            "tenantId": request.tenantId,
+            "tenantId": tenant_id,
             "userId": user_object_id,
             "productId": product_object_id,
         }
@@ -97,12 +50,9 @@ def add_to_wishlist(
             status_code=409,
             detail="Product already exists in wishlist.",
         )
-    # --------------------------------------------------------
-    # Insert
-    # --------------------------------------------------------
     wishlists.insert_one(
         {
-            "tenantId": request.tenantId,
+            "tenantId": tenant_id,
             "userId": user_object_id,
             "productId": product_object_id,
             "createdAt": datetime.utcnow(),
@@ -112,21 +62,24 @@ def add_to_wishlist(
         "success": True,
         "message": "Product added to wishlist successfully.",
     }
-# ============================================================
-# Get Wishlist
-# ============================================================
+
+
 @router.get("/{userId}")
 def get_wishlist(
     userId: str,
-    tenantId: str,
+    tenantId: str | None = None,
+    current_user: dict = Depends(require_customer),
 ):
-    user_object_id = get_object_id(
-        userId,
-        "userId",
-    )
+    tenant_id, token_user_id = customer_scope(current_user)
+    if userId != token_user_id:
+        raise HTTPException(
+            status_code=403,
+            detail="You cannot access another user's wishlist.",
+        )
+    user_object_id = get_object_id(token_user_id, "userId")
     wishlist_items = wishlists.find(
         {
-            "tenantId": tenantId,
+            "tenantId": tenant_id,
             "userId": user_object_id,
         }
     )
@@ -135,46 +88,32 @@ def get_wishlist(
         product = products.find_one(
             {
                 "_id": item["productId"],
-                "tenantId": tenantId,
+                "tenantId": tenant_id,
                 "isActive": True,
             }
         )
         if not product:
             continue
-        # ----------------------------------------------------
-        # New inventory structure
-        # ----------------------------------------------------
-        total_stock = get_total_stock(
-            product
-        )
-        # ----------------------------------------------------
-        # New images structure
-        # ----------------------------------------------------
-        image = get_first_image(
-            product
-        )
+        serialized = serialize_product(product)
         data.append(
             {
-                "wishlistId": str(
-                    item["_id"]
-                ),
-                "productId": str(
-                    product["_id"]
-                ),
-                "name": product.get(
-                    "name",
-                    "",
-                ),
-                "price": product.get(
-                    "finalPrice",
+                "wishlistId": str(item["_id"]),
+                "productId": serialized["_id"],
+                "name": serialized.get("name", ""),
+                "price": serialized.get("price", 0),
+                "finalPrice": serialized.get("finalPrice", 0),
+                "discountPercentage": serialized.get(
+                    "discountPercentage",
                     0,
                 ),
-                "image": image,
-                "stock": total_stock,
-                "totalStock": total_stock,
-                "addedAt": item.get(
-                    "createdAt"
-                ),
+                "images": serialized.get("images", {}),
+                "inventory": serialized.get("inventory", []),
+                "stock": serialized.get("totalStock", 0),
+                "totalStock": serialized.get("totalStock", 0),
+                "averageRating": serialized.get("averageRating", 0),
+                "reviewCount": serialized.get("reviewCount", 0),
+                "isActive": serialized.get("isActive", True),
+                "addedAt": item.get("createdAt"),
             }
         )
     return {
@@ -182,26 +121,21 @@ def get_wishlist(
         "count": len(data),
         "data": data,
     }
-# ============================================================
-# Remove Single Product
-# ============================================================
+
+
 @router.delete("/{productId}")
 def remove_from_wishlist(
     productId: str,
-    userId: str,
-    tenantId: str,
+    userId: str | None = None,
+    tenantId: str | None = None,
+    current_user: dict = Depends(require_customer),
 ):
-    product_object_id = get_object_id(
-        productId,
-        "productId",
-    )
-    user_object_id = get_object_id(
-        userId,
-        "userId",
-    )
+    tenant_id, token_user_id = customer_scope(current_user)
+    product_object_id = get_object_id(productId, "productId")
+    user_object_id = get_object_id(token_user_id, "userId")
     result = wishlists.delete_one(
         {
-            "tenantId": tenantId,
+            "tenantId": tenant_id,
             "userId": user_object_id,
             "productId": product_object_id,
         }
@@ -213,25 +147,21 @@ def remove_from_wishlist(
         )
     return {
         "success": True,
-        "message": (
-            "Product removed from wishlist successfully."
-        ),
+        "message": "Product removed from wishlist successfully.",
     }
-# ============================================================
-# Clear Wishlist
-# ============================================================
+
+
 @router.delete("/")
 def clear_wishlist(
-    userId: str,
-    tenantId: str,
+    userId: str | None = None,
+    tenantId: str | None = None,
+    current_user: dict = Depends(require_customer),
 ):
-    user_object_id = get_object_id(
-        userId,
-        "userId",
-    )
+    tenant_id, token_user_id = customer_scope(current_user)
+    user_object_id = get_object_id(token_user_id, "userId")
     result = wishlists.delete_many(
         {
-            "tenantId": tenantId,
+            "tenantId": tenant_id,
             "userId": user_object_id,
         }
     )

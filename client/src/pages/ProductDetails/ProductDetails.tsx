@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 import ProductDetailsView from "./ProductDetailsView";
 import styles from "./ProductDetails.module.css";
 import { useAuth } from "../../features/auth/hooks/useAuth";
+import { useStorefrontTenant } from "../../features/tenant/useTenant";
 import { useCart } from "../../features/cart/hooks/useCart";
 import { useWishlist } from "../../features/wishlist/hooks/useWishlist";
 import { useProductDetails } from "../../features/products/hooks/useProductDetails";
@@ -14,7 +15,7 @@ const ProductDetails = () => {
     productId: string;
   }>();
   const { user, isAuthenticated } = useAuth();
-  const tenantId = user?.tenantId || tenantSlug || "";
+  const { tenantId } = useStorefrontTenant();
   /*
    * PRODUCT
    */

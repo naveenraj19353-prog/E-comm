@@ -57,6 +57,7 @@ export interface Product {
    * may not return totalStock.
    */
   totalStock?: number;
+  stock?: number;
 }
 /* =========================================================
    PRODUCT SEARCH

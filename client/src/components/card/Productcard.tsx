@@ -5,6 +5,7 @@ import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
 import styles from "./Productcard.module.css";
+import { isProductOutOfStock } from "../../features/products/inventory";
 export interface ProductInventory {
   variantId: string;
   color: string;
@@ -145,6 +146,7 @@ export default function ProductCard({
       (item) => item.color === selectedColor && item.size === selectedSize,
     );
   }, [availableInventory, selectedColor, selectedSize]);
+  const isOutOfStock = isProductOutOfStock(product);
   /*
    * =========================================================
    * IMAGES
@@ -343,15 +345,17 @@ export default function ProductCard({
             type="button"
             className={styles.cartButton}
             onClick={handleAddToCart}
-            disabled={isAdding || !selectedVariant}
+            disabled={isAdding || isOutOfStock || !selectedVariant}
           >
             <BagIcon />
             <span>
-              {isAdding
-                ? "Adding..."
-                : !selectedVariant
-                  ? "Out of Stock"
-                  : "Add to Cart"}
+              {isOutOfStock
+                ? "Out of Stock"
+                : isAdding
+                  ? "Adding..."
+                  : !selectedVariant
+                    ? "Select Variant"
+                    : "Add to Cart"}
             </span>
           </button>
         </div>

@@ -5,17 +5,28 @@ import {
 } from "@tanstack/react-query";
 import apiClient from "../../../api/client";
 import type { ProductQueryParams, ProductsResponse } from "../types/type";
+export interface ProductInventoryPayload {
+  variantId: string;
+  color: string;
+  size: string;
+  stock: number;
+}
+
 export interface CreateProductPayload {
   tenantId: string;
   name: string;
   description: string;
   categoryId: string;
+  basePrice?: number;
+  marginPercentage?: number;
   price: number;
   discountPercentage: number;
-  stock: number;
+  finalPrice?: number;
+  stock?: number;
   sizes: string[];
   colors: string[];
-  images: string[];
+  inventory: ProductInventoryPayload[];
+  images: Record<string, string[]>;
 }
 export interface UpdateProductPayload {
   tenantId: string;

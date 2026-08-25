@@ -4,10 +4,9 @@ from app.database.mongo import (
     orders,
     banners,
 )
-def serialize_product(product):
-    """Convert MongoDB product document into JSON-friendly data."""
-    product["_id"] = str(product["_id"])
-    return product
+from app.utils.product_serialize import serialize_product
+
+
 def get_products_by_cursor(cursor):
     """Convert MongoDB cursor to a list."""
     data = []
@@ -120,8 +119,12 @@ def get_home_data(
         products.find(
             {
                 **base_query,
-                "stock": {"$gt": 0},
                 "discountPercentage": {"$gt": 0},
+                "inventory": {
+                    "$elemMatch": {
+                        "stock": {"$gt": 0},
+                    }
+                },
             }
         )
         .sort(
@@ -186,8 +189,7 @@ def get_home_data(
     ]
     sales_cursor = orders.aggregate(sales_pipeline)
     for item in sales_cursor:
-        product = item["product"]
-        product["_id"] = str(product["_id"])
+        product = serialize_product(item["product"])
         product["totalSold"] = item.get(
             "totalSold",
             0,

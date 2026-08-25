@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 import re
 from bson import ObjectId
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from app.database.mongo import products
 from app.models.product import (
     CreateProduct,
@@ -9,13 +9,19 @@ from app.models.product import (
     ProductSearchRequest,
     VariantStockRequest,
 )
+from app.utils.product_serialize import (
+    calculate_total_stock,
+    serialize_product,
+)
+from app.utils.auth_dependencies import (
+    admin_tenant_id,
+    get_optional_user,
+    require_admin,
+)
 router = APIRouter(
     prefix="/product",
     tags=["Product"],
 )
-# =========================================================
-# HELPERS
-# =========================================================
 def calculate_final_price(
     price: float,
     discount_percentage: float,
@@ -26,33 +32,6 @@ def calculate_final_price(
         ),
         2,
     )
-def calculate_total_stock(
-    inventory: list | None,
-) -> int:
-    """
-    Safely calculate total stock.
-    Handles:
-    - missing inventory
-    - None
-    - invalid inventory items
-    - stock stored as int
-    - stock stored as numeric string
-    """
-    if not isinstance(inventory, list):
-        return 0
-    total = 0
-    for item in inventory:
-        if not isinstance(item, dict):
-            continue
-        stock = item.get("stock", 0)
-        try:
-            total += int(stock or 0)
-        except (TypeError, ValueError):
-            continue
-    return total
-# =========================================================
-# IMAGE VALIDATION
-# =========================================================
 def validate_images(
     images: dict,
 ):
@@ -238,102 +217,20 @@ def validate_color_images_against_inventory(
             ),
         )
 # =========================================================
-# SERIALIZE PRODUCT
-# =========================================================
-def serialize_product(
-    product: dict,
-) -> dict:
-    """
-    Convert MongoDB product into API-safe response.
-    Important:
-    We copy the document first so the MongoDB object
-    is not modified directly.
-    """
-    product = dict(product)
-    # -----------------------------------------------------
-    # OBJECT ID
-    # -----------------------------------------------------
-    if "_id" in product:
-        product["_id"] = str(
-            product["_id"]
-        )
-    # -----------------------------------------------------
-    # INVENTORY
-    # -----------------------------------------------------
-    inventory = product.get(
-        "inventory",
-        [],
-    )
-    if not isinstance(inventory, list):
-        inventory = []
-    normalized_inventory = []
-    for item in inventory:
-        if not isinstance(item, dict):
-            continue
-        item = dict(item)
-        # Normalize stock
-        try:
-            item["stock"] = int(
-                item.get("stock", 0) or 0
-            )
-        except (TypeError, ValueError):
-            item["stock"] = 0
-        # Normalize strings
-        if item.get("variantId") is not None:
-            item["variantId"] = str(
-                item["variantId"]
-            )
-        if item.get("color") is not None:
-            item["color"] = str(
-                item["color"]
-            )
-        if item.get("size") is not None:
-            item["size"] = str(
-                item["size"]
-            )
-        normalized_inventory.append(item)
-    product["inventory"] = normalized_inventory
-    # -----------------------------------------------------
-    # TOTAL STOCK
-    # -----------------------------------------------------
-    product["totalStock"] = calculate_total_stock(
-        normalized_inventory
-    )
-    # -----------------------------------------------------
-    # IMAGES
-    # -----------------------------------------------------
-    images = product.get(
-        "images",
-        {},
-    )
-    if not isinstance(images, dict):
-        product["images"] = {}
-    # -----------------------------------------------------
-    # DATETIME
-    # -----------------------------------------------------
-    for field in (
-        "createdAt",
-        "updatedAt",
-    ):
-        value = product.get(field)
-        if isinstance(value, datetime):
-            # FastAPI can serialize datetime,
-            # so leave it unchanged.
-            pass
-    return product
-# =========================================================
-# CREATE PRODUCT
+# IMAGE VALIDATION
 # =========================================================
 @router.post("/create-product")
 def create_product(
     product: CreateProduct,
+    current_user: dict = Depends(require_admin),
 ):
+    tenant_id = admin_tenant_id(current_user, product.tenantId)
     # -----------------------------------------------------
     # DUPLICATE PRODUCT
     # -----------------------------------------------------
     existing = products.find_one(
         {
-            "tenantId": product.tenantId,
+            "tenantId": tenant_id,
             "name": product.name.strip(),
             "categoryId": product.categoryId,
         }
@@ -392,7 +289,7 @@ def create_product(
     # PAYLOAD
     # -----------------------------------------------------
     payload = {
-        "tenantId": product.tenantId,
+        "tenantId": tenant_id,
         "name": product.name.strip(),
         "description": product.description,
         "categoryId": product.categoryId,
@@ -405,6 +302,7 @@ def create_product(
         "finalPrice": final_price,
         "inventory": inventory,
         "totalStock": total_stock,
+        "stock": total_stock,
         "images": images,
         "isActive": True,
         "createdAt": now,
@@ -448,6 +346,7 @@ def get_all_products(
     sortBy: str = "createdAt",
     sortOrder: str = "desc",
     includeInactive: bool = False,
+    current_user: dict | None = Depends(get_optional_user),
 ):
     # -----------------------------------------------------
     # PAGINATION
@@ -480,7 +379,18 @@ def get_all_products(
     # -----------------------------------------------------
     # ACTIVE
     # -----------------------------------------------------
-    if not includeInactive:
+    allow_inactive = False
+    if (
+        includeInactive
+        and current_user
+        and current_user.get("role") in ("admin", "super_admin")
+    ):
+        try:
+            admin_tenant_id(current_user, tenantId)
+            allow_inactive = True
+        except HTTPException:
+            allow_inactive = False
+    if not allow_inactive:
         query["isActive"] = True
     # -----------------------------------------------------
     # CATEGORY
@@ -958,7 +868,7 @@ def get_new_arrivals(
 @router.get("/{id}")
 def get_product(
     id: str,
-    tenantId: str | None = None,
+    tenantId: str,
 ):
     if not ObjectId.is_valid(id):
         raise HTTPException(
@@ -967,10 +877,9 @@ def get_product(
         )
     query = {
         "_id": ObjectId(id),
+        "tenantId": tenantId,
         "isActive": True,
     }
-    if tenantId:
-        query["tenantId"] = tenantId
     try:
         product = products.find_one(
             query
@@ -1003,16 +912,18 @@ def get_product(
 def update_product(
     id: str,
     product: UpdateProduct,
+    current_user: dict = Depends(require_admin),
 ):
     if not ObjectId.is_valid(id):
         raise HTTPException(
             status_code=400,
             detail="Invalid product ID.",
         )
+    tenant_id = admin_tenant_id(current_user, product.tenantId)
     db_product = products.find_one(
         {
             "_id": ObjectId(id),
-            "tenantId": product.tenantId,
+            "tenantId": tenant_id,
         }
     )
     if not db_product:
@@ -1154,7 +1065,7 @@ def update_product(
         result = products.update_one(
             {
                 "_id": ObjectId(id),
-                "tenantId": product.tenantId,
+                "tenantId": tenant_id,
             },
             {
                 "$set": update_data
@@ -1187,6 +1098,7 @@ def update_product(
 def delete_product(
     id: str,
     tenantId: str,
+    current_user: dict = Depends(require_admin),
 ):
     if not ObjectId.is_valid(id):
         raise HTTPException(
@@ -1194,10 +1106,11 @@ def delete_product(
             detail="Invalid product ID.",
         )
     try:
+        scoped_tenant = admin_tenant_id(current_user, tenantId)
         result = products.delete_one(
             {
                 "_id": ObjectId(id),
-                "tenantId": tenantId,
+                "tenantId": scoped_tenant,
             }
         )
     except Exception as e:

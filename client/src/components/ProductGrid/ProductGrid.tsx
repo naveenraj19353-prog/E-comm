@@ -4,6 +4,7 @@ import styles from "./ProductGrid.module.css";
 import { useCart } from "../../features/cart/hooks/useCart";
 import { useWishlist } from "../../features/wishlist/hooks/useWishlist";
 import { useAuth } from "../../features/auth/hooks/useAuth";
+import { useStorefrontTenant } from "../../features/tenant/useTenant";
 import ProductCard from "../ProductCard/UniCard/ProductCard";
 interface ProductGridProps {
   products: Product[];
@@ -12,8 +13,8 @@ const ProductGrid = ({
   products,
 }: ProductGridProps) => {
   const user = useAuth().user;
-  const tenantId =
-    user?.tenantId ?? "";
+  const { tenantId: storeTenantId } = useStorefrontTenant();
+  const tenantId = user?.tenantId || storeTenantId;
   const userId =
     user?._id ?? "";
   // =========================================================

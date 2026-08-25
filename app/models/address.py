@@ -9,8 +9,8 @@ from pydantic import (
 # ============================================================
 class CreateAddress(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=True)
-    tenantId: str = Field(..., min_length=3)
-    userId: str
+    tenantId: Optional[str] = Field(default=None, min_length=3)
+    userId: Optional[str] = None
     fullName: str = Field(..., min_length=3, max_length=100)
     phone: str = Field(..., min_length=10, max_length=15)
     addressLine1: str = Field(..., min_length=5)

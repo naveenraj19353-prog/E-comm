@@ -70,8 +70,10 @@ def get_current_user(
             "userId": str(
                 user["_id"]
             ),
-            "tenantId": user.get(
-                "tenantId"
+            "tenantId": (
+                str(user.get("tenantId")).strip().lower()
+                if user.get("tenantId")
+                else None
             ),
             "name": user.get(
                 "name"
@@ -131,6 +133,60 @@ def get_current_user(
         status_code=401,
         detail="Invalid user role.",
     )
+
+
+optional_security = HTTPBearer(auto_error=False)
+
+
+def get_optional_user(
+    credentials: HTTPAuthorizationCredentials | None = Depends(
+        optional_security
+    ),
+):
+    if credentials is None:
+        return None
+    try:
+        return get_current_user(credentials)
+    except HTTPException:
+        return None
+
+
+def customer_scope(current_user: dict) -> tuple[str, str]:
+    tenant_id = current_user.get("tenantId")
+    user_id = current_user.get("userId")
+    if not tenant_id or not user_id:
+        raise HTTPException(
+            status_code=403,
+            detail="Customer session is invalid.",
+        )
+    return str(tenant_id).strip().lower(), user_id
+
+
+def admin_tenant_id(
+    current_user: dict,
+    requested_tenant_id: str | None = None,
+) -> str:
+    if current_user.get("role") == "super_admin":
+        if not requested_tenant_id or not str(requested_tenant_id).strip():
+            raise HTTPException(
+                status_code=400,
+                detail="tenantId is required.",
+            )
+        return str(requested_tenant_id).strip().lower()
+    token_tenant = current_user.get("tenantId")
+    if not token_tenant:
+        raise HTTPException(
+            status_code=403,
+            detail="Admin must belong to a tenant.",
+        )
+    if requested_tenant_id:
+        requested = str(requested_tenant_id).strip().lower()
+        if requested != token_tenant:
+            raise HTTPException(
+                status_code=403,
+                detail="You cannot access another tenant.",
+            )
+    return token_tenant
 # ==========================================================
 # REQUIRE SUPER ADMIN
 # ==========================================================

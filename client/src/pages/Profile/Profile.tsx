@@ -13,6 +13,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { useProfile } from "../../features/profile/hooks/useProfile";
 import { useAuth } from "../../features/auth/hooks/useAuth";
+import { useStorefrontTenant } from "../../features/tenant/useTenant";
 import styles from "./Profile.module.css";
 import EditProfileModal from "./EditProfileModal";
 import AuthModal from "../../components/Auth/AuthModal/AuthModal";
@@ -35,12 +36,8 @@ const Profile = () => {
   // ==========================================================
   // TENANT / USER
   // ==========================================================
-  const tenantId =
-    user?.tenantId ||
-    localStorage.getItem(
-      "ecommerce_tenantId",
-    ) ||
-    "";
+  const { tenantId, tenantSlug } = useStorefrontTenant();
+  const profileTenantId = user?.tenantId || tenantId;
   const userId =
     user?._id || "";
   // ==========================================================
@@ -53,7 +50,7 @@ const Profile = () => {
     updateProfile,
     isUpdating,
   } = useProfile(
-    tenantId,
+    profileTenantId,
     userId,
   );
   // ==========================================================
@@ -69,10 +66,8 @@ const Profile = () => {
   // CLOSE AUTH MODAL
   // ==========================================================
   const handleClose = () => {
-    if (tenantId) {
-      navigate(
-        `/${tenantId}`,
-      );
+    if (tenantSlug) {
+      navigate(`/${tenantSlug}`);
     } else {
       navigate("/");
     }
@@ -85,26 +80,12 @@ const Profile = () => {
      * Keep tenant ID so we can redirect
      * back to the tenant storefront.
      */
-    if (tenantId) {
-      localStorage.setItem(
-        "ecommerce_tenantId",
-        tenantId,
-      );
+    if (tenantSlug) {
+      localStorage.setItem("ecommerce_tenantSlug", tenantSlug);
     }
-    /*
-     * Clear Redux + localStorage auth
-     */
     logout();
-    /*
-     * Redirect to tenant storefront
-     */
-    if (tenantId) {
-      navigate(
-        `/${tenantId}`,
-        {
-          replace: true,
-        },
-      );
+    if (tenantSlug) {
+      navigate(`/${tenantSlug}`, { replace: true });
     } else {
       navigate(
         "/",

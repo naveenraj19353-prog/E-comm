@@ -46,8 +46,8 @@ const login = async (payload: LoginRequest) => {
   // USER FROM API RESPONSE
   // ==================================================
   const user = {
-    _id: tokenPayload.userId,
-    userId: tokenPayload.userId,
+    _id: response.user?.userId || tokenPayload.userId,
+    userId: response.user?.userId || tokenPayload.userId,
     name:
       response.user?.name ||
       tokenPayload.name ||

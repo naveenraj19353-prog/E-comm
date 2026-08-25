@@ -3,6 +3,7 @@ import { X } from "lucide-react";
 import styles from "./AddressForm.module.css";
 import type { Address } from "../../../../../features/address/types/address.types";
 import { useAppSelector } from "../../../../../app/hooks";
+import { useStorefrontTenant } from "../../../../../features/tenant/useTenant";
 export interface AddressFormData {
   fullName: string;
   phone: string;
@@ -34,8 +35,7 @@ const AddressForm = ({
   onCancel,
 }: AddressFormProps) => {
   const user = useAppSelector((state) => state.auth.user);
-  const tenantSlug = useAppSelector((state) => state.tenant.tenantSlug);
-  const tenantId = tenantSlug?.trim() || "";
+  const { tenantId } = useStorefrontTenant();
   const userId = user?._id || "";
   const [validationError, setValidationError] = useState("");
   const [formData, setFormData] = useState<AddressFormData>(() => ({

@@ -7,8 +7,10 @@ import EmptyCart from "./EmptyCart";
 import CartLoading from "./CartLoading";
 import styles from "./Cart.module.css";
 import { useAuth } from "../../features/auth/hooks/useAuth";
+import { useStorefrontTenant } from "../../features/tenant/useTenant";
 const Cart = () => {
   const user = useAuth().user;
+  const { tenantId, tenantSlug } = useStorefrontTenant();
   const {
     cart,
     grandTotal,
@@ -20,7 +22,7 @@ const Cart = () => {
     updateCart,
     removeFromCart,
     clearCart,
-  } = useCart(user?._id as string, user?.tenantId as string);
+  } = useCart(user?._id as string, user?.tenantId || tenantId);
   if (isLoading) {
     return <CartLoading />;
   }
@@ -51,7 +53,7 @@ const Cart = () => {
         <CartSummary
           cartCount={cartCount}
           grandTotal={grandTotal}
-          tenantId={user?.tenantId as string}
+          tenantId={tenantSlug}
         />
       </div>
     </div>

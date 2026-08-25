@@ -166,8 +166,9 @@ def login(
                 detail="Invalid credentials.",
             )
         token = create_token({
-            # Tenant doesn't have a user ObjectId.
-            # Use tenant MongoDB ID.
+            "userId": str(
+                tenant["_id"]
+            ),
             "tenantId": tenant["tenantId"],
             "tenantMongoId": str(
                 tenant["_id"]
@@ -299,46 +300,4 @@ def forgot_password(
     return {
         "success": True,
         "message": "Password reset link sent successfully.",
-    }
-# ==========================================================
-# CREATE SUPER ADMIN
-# ==========================================================
-@router.post("/create-super-admin")
-def create_super_admin(
-    user: RegisterUser,
-):
-    email = str(
-        user.email
-    ).strip().lower()
-    existing = users.find_one({
-        "email": email
-    })
-    if existing:
-        raise HTTPException(
-            status_code=400,
-            detail="Email already exists.",
-        )
-    now = datetime.utcnow()
-    payload = {
-        "tenantId": None,
-        "name": user.name.strip(),
-        "email": email,
-        "phone": user.phone,
-        "password": hash_password(
-            user.password
-        ),
-        "role": "super_admin",
-        "isActive": True,
-        "createdAt": now,
-        "updatedAt": now,
-    }
-    result = users.insert_one(
-        payload
-    )
-    return {
-        "success": True,
-        "message": "Super Admin created successfully.",
-        "userId": str(
-            result.inserted_id
-        ),
     }

@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Filter, Search, X } from "lucide-react";
-import { useParams, useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import styles from "./ProductsPage.module.css";
 import { useAppDispatch, useAppSelector } from "../../app/hooks";
 import { clearFilters, setFilters } from "../../features/products/productSlice";
-import { setTenantSlug } from "../../features/tenant/tenantSlice";
+import { useStorefrontTenant } from "../../features/tenant/useTenant";
 import Breadcrumb from "../../components/Breadcrumb";
 import ProductFilters from "../../components/ProductFilters";
 import ProductGrid from "../../components/ProductGrid";
@@ -18,18 +18,11 @@ const DEFAULT_MAX_PRICE = 100000;
 const Products = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const dispatch = useAppDispatch();
-  const { tenantSlug } = useParams<{ tenantSlug: string }>();
-  const tenantId = tenantSlug?.toLowerCase() ?? "";
+  const { tenantSlug, tenantId } = useStorefrontTenant();
   const filters = useAppSelector((state) => state.products.filters);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
   const debouncedPriceRange = useDebounce(filters.priceRange, 400);
-  useEffect(() => {
-    if (!tenantSlug) {
-      return;
-    }
-    dispatch(setTenantSlug(tenantSlug.toLowerCase()));
-  }, [tenantSlug, dispatch]);
   const urlSearch = searchParams.get("search") ?? "";
   const urlSortBy = searchParams.get("sortBy") ?? "createdAt";
   const urlSortOrder = searchParams.get("sortOrder") ?? "desc";
@@ -291,7 +284,7 @@ const Products = () => {
           items={[
             {
               label: "Home",
-              href: `/${tenantId}`,
+              href: `/${tenantSlug}`,
             },
             {
               label: "Products",
@@ -326,7 +319,7 @@ const Products = () => {
           items={[
             {
               label: "Home",
-              href: `/${tenantId}`,
+              href: `/${tenantSlug}`,
             },
             {
               label: "Products",
@@ -354,13 +347,13 @@ const Products = () => {
     <div className={styles.page}>
       <Breadcrumb
         items={[
-          {
-            label: "Home",
-            href: `/${tenantId}`,
-          },
-          {
-            label: pageTitle,
-          },
+            {
+              label: "Home",
+              href: `/${tenantSlug}`,
+            },
+            {
+              label: pageTitle,
+            },
         ]}
       />
       <div className={styles.header}>

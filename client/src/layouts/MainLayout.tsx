@@ -1,11 +1,16 @@
 import { Outlet } from "react-router-dom";
 import Navbar from "../components/layout/Header";
 import Footer, { footerData } from "../components/Footer";
-import { useParams } from "react-router-dom";
+import { useStorefrontTenant } from "../features/tenant/useTenant";
+
 const MainLayout = () => {
-  const { tenantSlug } = useParams();
-  console.log("Tenant ID:", tenantSlug);
-  localStorage.setItem("ecommerce_tenantId", tenantSlug || "");
+  const { tenantSlug, tenantId } = useStorefrontTenant();
+  if (tenantSlug) {
+    localStorage.setItem("ecommerce_tenantSlug", tenantSlug);
+  }
+  if (tenantId) {
+    localStorage.setItem("ecommerce_tenantId", tenantId);
+  }
   return (
     <div>
       <Navbar />
@@ -20,4 +25,5 @@ const MainLayout = () => {
     </div>
   );
 };
+
 export default MainLayout;

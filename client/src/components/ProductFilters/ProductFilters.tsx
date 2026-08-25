@@ -14,7 +14,7 @@ const ProductFilters = () => {
   const dispatch = useAppDispatch();
   const tenantId =
     useAppSelector(
-      (state) => state.tenant.currentTenant?.id || state.tenant.tenantSlug,
+      (state) =>  state.tenant.tenantSlug,
     ) ?? "";
   const filters = useAppSelector((state) => state.products.filters);
   console.log(store.getState());
@@ -85,8 +85,8 @@ const ProductFilters = () => {
               <label key={category._id} className={styles.checkbox}>
                 <input
                   type="checkbox"
-                  checked={filters.categories.includes(category.name)}
-                  onChange={() => toggleCategory(category.name)}
+                  checked={filters.categories.includes(category._id)}
+                  onChange={() => toggleCategory(category._id)}
                 />
                 <span>{category.name}</span>
               </label>

@@ -30,14 +30,22 @@ const Wishlist = () => {
       </div>
     );
   }
-  const handleAddToCart = async (productId: string) => {
+  const handleAddToCart = async (
+    productId: string,
+    variantId: string,
+    color: string,
+    size: string,
+  ) => {
     try {
       setAddingProductId(productId);
       await addToCart({
         tenantId: user?.tenantId || "",
         userId: user?._id || "",
         productId,
+        variantId,
         quantity: 1,
+        color,
+        size,
       });
     } catch (error) {
       console.error("Add to cart failed:", error);
@@ -68,14 +76,24 @@ const Wishlist = () => {
         {wishlist.map((item) => {
           const product = {
             _id: item.productId,
+            tenantId: user?.tenantId || "",
             name: item.name,
+            description: "",
+            categoryId: "",
+            categoryName: "",
+            brand: "",
             price: item.price,
-            finalPrice: item.price,
-            discountPercentage: 0,
-            images: [item.image],
-            stock: item.stock,
-            averageRating: 0,
-            reviewCount: 0,
+            finalPrice: item.finalPrice ?? item.price,
+            discountPercentage: item.discountPercentage ?? 0,
+            images: item.images ?? {},
+            inventory: item.inventory ?? [],
+            stock: item.totalStock ?? item.stock,
+            totalStock: item.totalStock ?? item.stock,
+            isActive: item.isActive ?? true,
+            createdAt: item.addedAt,
+            updatedAt: item.addedAt,
+            averageRating: item.averageRating ?? 0,
+            reviewCount: item.reviewCount ?? 0,
           };
           return (
             <ProductCard
@@ -83,7 +101,9 @@ const Wishlist = () => {
               product={product}
               isWishlisted={true}
               onWishlist={handleWishlist}
-              onAddToCart={handleAddToCart}
+              onAddToCart={(productId, variantId, color, size) => {
+                void handleAddToCart(productId, variantId, color, size);
+              }}
               isAdding={addingProductId === item.productId}
             />
           );
