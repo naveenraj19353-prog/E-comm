@@ -10,7 +10,7 @@ import { useProductDetails } from "../../features/products/hooks/useProductDetai
 import { useReviews } from "../../features/reviews/hooks/useReviews";
 import AuthModal from "../../components/Auth/AuthModal/AuthModal";
 const ProductDetails = () => {
-  const { tenantSlug, productId } = useParams<{
+  const { productId } = useParams<{
     tenantSlug: string;
     productId: string;
   }>();
