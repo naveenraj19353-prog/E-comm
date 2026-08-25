@@ -213,7 +213,7 @@ export default function ProductCard({ product, isWishlisted = false, onWishlist,
         
         <div className={styles.priceRow}>
           <span className={styles.finalPrice}>
-            ₹{finalPrice.toLocaleString("en-IN")}
+            ₹{finalPrice?.toLocaleString("en-IN")}
           </span>
           {price > finalPrice && (<span className={styles.originalPrice}>
               ₹{price.toLocaleString("en-IN")}

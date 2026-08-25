@@ -13,6 +13,7 @@ import StorefrontLogin from "../pages/Login/StorefrontLogin";
 import StorefrontRegister from "../pages/Register/StorefrontRegister";
 import LegacyAuthRedirect from "../pages/Login/LegacyAuthRedirect";
 import Logout from "../pages/Logout/Logout";
+import RequireStorefrontAuth from "../features/auth/RequireStorefrontAuth";
 import AdminLayout from "../features/admin/components/AdminLayout";
 import AdminDashboard from "../features/admin/pages/AdminDashboard";
 import AdminTenants from "../features/admin/pages/TenantsPage";
@@ -95,7 +96,11 @@ export const router = createBrowserRouter([
                     },
                     {
                         path: "checkout",
-                        element: <Checkout />,
+                        element: (
+                            <RequireStorefrontAuth>
+                                <Checkout />
+                            </RequireStorefrontAuth>
+                        ),
                     },
                     {
                         path: "login",

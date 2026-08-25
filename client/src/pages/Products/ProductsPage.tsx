@@ -3,7 +3,7 @@ import { Filter, Search, X } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
 import styles from "./ProductsPage.module.css";
 import { useAppDispatch, useAppSelector } from "../../app/hooks";
-import { clearFilters, setFilters } from "../../features/products/productSlice";
+import { clearFilters, setCatalogFilter, setFilters } from "../../features/products/productSlice";
 import { useStorefrontTenant } from "../../features/tenant/useTenant";
 import Breadcrumb from "../../components/Breadcrumb";
 import ProductFilters from "../../components/ProductFilters";
@@ -20,6 +20,9 @@ const Products = () => {
     const dispatch = useAppDispatch();
     const { tenantSlug, tenantId } = useStorefrontTenant();
     const filters = useAppSelector((state) => state.products.filters);
+    const storedCatalogFilter = useAppSelector(
+        (state) => state.products.catalogFilter,
+    );
     const [drawerOpen, setDrawerOpen] = useState(false);
     const loadMoreRef = useRef<HTMLDivElement | null>(null);
     const debouncedPriceRange = useDebounce(filters.priceRange, 400);
@@ -35,6 +38,7 @@ const Products = () => {
             : [];
     const urlColors = searchParams.getAll("colors");
     const urlSizes = searchParams.getAll("sizes");
+    const urlBrands = searchParams.getAll("brands");
     const urlMinPrice = searchParams.get("minPrice");
     const urlMaxPrice = searchParams.get("maxPrice");
     const urlRating = searchParams.get("rating");
@@ -46,6 +50,7 @@ const Products = () => {
             categories: urlCategories,
             colors: urlColors,
             sizes: urlSizes,
+            brands: urlBrands,
             priceRange: [
                 Number.isFinite(minPrice) ? minPrice : DEFAULT_MIN_PRICE,
                 Number.isFinite(maxPrice) ? maxPrice : DEFAULT_MAX_PRICE,
@@ -113,6 +118,8 @@ const Products = () => {
             ? filters.categories
             : undefined;
     const search = urlSearch.trim() || undefined;
+    const catalogPriceMin = storedCatalogFilter?.price.min;
+    const catalogPriceMax = storedCatalogFilter?.price.max;
     const productsQuery = useProducts({
         tenantId,
         limit: 20,
@@ -127,12 +134,25 @@ const Products = () => {
             : filters.sizes.length > 0
                 ? filters.sizes
                 : undefined,
-        minPrice: debouncedPriceRange[0] !== DEFAULT_MIN_PRICE
-            ? debouncedPriceRange[0]
-            : undefined,
-        maxPrice: debouncedPriceRange[1] !== DEFAULT_MAX_PRICE
-            ? debouncedPriceRange[1]
-            : undefined,
+        brands: urlBrands.length > 0
+            ? urlBrands
+            : filters.brands.length > 0
+                ? filters.brands
+                : undefined,
+        minPrice:
+            catalogPriceMin !== undefined &&
+            debouncedPriceRange[0] > catalogPriceMin
+                ? debouncedPriceRange[0]
+                : debouncedPriceRange[0] !== DEFAULT_MIN_PRICE
+                    ? debouncedPriceRange[0]
+                    : undefined,
+        maxPrice:
+            catalogPriceMax !== undefined &&
+            debouncedPriceRange[1] < catalogPriceMax
+                ? debouncedPriceRange[1]
+                : debouncedPriceRange[1] !== DEFAULT_MAX_PRICE
+                    ? debouncedPriceRange[1]
+                    : undefined,
         rating: filters.rating !== null ? filters.rating : undefined,
         search,
         sortBy: urlSortBy as "createdAt" | "price" | "rating" | "discount" | "name",
@@ -140,6 +160,26 @@ const Products = () => {
     });
     const products = productsQuery.data?.pages.flatMap((page) => page.data) ?? [];
     const totalCount = productsQuery.data?.pages[0]?.totalCount ?? 0;
+    const catalogFilter = productsQuery.data?.pages[0]?.filter;
+    useEffect(() => {
+        if (!catalogFilter) {
+            return;
+        }
+        dispatch(setCatalogFilter(catalogFilter));
+        const isUnsetPrice =
+            filters.priceRange[0] === DEFAULT_MIN_PRICE &&
+            filters.priceRange[1] === DEFAULT_MAX_PRICE;
+        if (isUnsetPrice && catalogFilter.price) {
+            dispatch(
+                setFilters({
+                    priceRange: [
+                        catalogFilter.price.min,
+                        Math.max(catalogFilter.price.max, catalogFilter.price.min),
+                    ],
+                }),
+            );
+        }
+    }, [catalogFilter, dispatch]);
     const handleSortChange = (value: string) => {
         switch (value) {
             case "priceAsc":
@@ -195,6 +235,10 @@ const Products = () => {
         params.delete("sizes");
         filters.sizes.forEach((size) => {
             params.append("sizes", size);
+        });
+        params.delete("brands");
+        filters.brands.forEach((brand) => {
+            params.append("brands", brand);
         });
         params.delete("minPrice");
         params.delete("maxPrice");

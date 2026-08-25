@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import { useAppSelector } from "../app/hooks";
 import ProductCardSlider from "../components/card/Productcardslider";
 import DealOfTheDay from "../components/DealOfTheDay/DealOfTheDay";
@@ -9,14 +10,15 @@ import BannerSlider from "../components/banner/BannerSlider";
 import CategorySlider from "../components/CategorySlider/CategorySlider";
 import { useStorefrontTenant } from "../features/tenant/useTenant";
 const Home = () => {
-    const { tenantId } = useStorefrontTenant();
+    const { tenantId, tenantSlug } = useStorefrontTenant();
+    const navigate = useNavigate();
     const user = useAppSelector((state) => state.auth.user);
     const { data: homeData, isLoading, isError, refetch } = useHome(tenantId);
     const { addToCart } = useCart(user?._id as string, tenantId);
     const { wishlist, addToWishlist, removeFromWishlist } = useWishlist(user?._id as string, tenantId);
     const handleWishlist = async (productId: string, isAdding: boolean) => {
         if (!user?._id) {
-            console.log("User is not logged in");
+            navigate(tenantSlug ? `/${tenantSlug}/login` : "/login");
             return;
         }
         try {
@@ -39,7 +41,7 @@ const Home = () => {
     };
     const handleAddToCart = async (productId: string, variantId: string, color: string, size: string) => {
         if (!user?._id) {
-            console.log("User is not logged in");
+            navigate(tenantSlug ? `/${tenantSlug}/login` : "/login");
             return;
         }
         try {

@@ -1,13 +1,21 @@
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import LoginForm from "../../components/Auth/LoginForm/LoginForm";
 import { useAuth } from "../../features/auth/hooks/useAuth";
 import { useStorefrontTenant } from "../../features/tenant/useTenant";
 import styles from "../../styles/Auth.module.css";
 export default function StorefrontLogin() {
     const navigate = useNavigate();
+    const location = useLocation();
     const { tenantId, tenantSlug, tenant } = useStorefrontTenant();
     const { user } = useAuth();
     const handleSuccess = () => {
+        const from =
+            typeof location.state === "object" &&
+            location.state &&
+            "from" in location.state &&
+            typeof location.state.from === "string"
+                ? location.state.from
+                : "";
         const stored = localStorage.getItem("ecommerce_auth");
         if (!stored) {
             navigate(`/${tenantSlug}`, { replace: true });
@@ -27,6 +35,10 @@ export default function StorefrontLogin() {
             }
         }
         catch {
+        }
+        if (from.startsWith(`/${tenantSlug}/`)) {
+            navigate(from, { replace: true });
+            return;
         }
         navigate(`/${tenantSlug}`, { replace: true });
     };

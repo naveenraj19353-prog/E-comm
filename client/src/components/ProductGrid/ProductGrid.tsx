@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import type { Product } from "../../features/products/types";
 import styles from "./ProductGrid.module.css";
 import { useCart } from "../../features/cart/hooks/useCart";
@@ -11,7 +12,8 @@ interface ProductGridProps {
 }
 const ProductGrid = ({ products, }: ProductGridProps) => {
     const user = useAuth().user;
-    const { tenantId: storeTenantId } = useStorefrontTenant();
+    const navigate = useNavigate();
+    const { tenantId: storeTenantId, tenantSlug } = useStorefrontTenant();
     const tenantId = user?.tenantId || storeTenantId;
     const userId = user?._id ?? "";
     const { addToCart } = useCart(userId, tenantId);
@@ -31,7 +33,7 @@ const ProductGrid = ({ products, }: ProductGridProps) => {
     }
     const handleAddToCart = async (productId: string, variantId: string, color: string, size: string) => {
         if (!userId || !tenantId) {
-            console.log("User is not logged in");
+            navigate(tenantSlug ? `/${tenantSlug}/login` : "/login");
             return;
         }
         try {
@@ -57,7 +59,7 @@ const ProductGrid = ({ products, }: ProductGridProps) => {
     };
     const handleWishlist = async (productId: string) => {
         if (!userId || !tenantId) {
-            console.log("User is not logged in");
+            navigate(tenantSlug ? `/${tenantSlug}/login` : "/login");
             return;
         }
         try {

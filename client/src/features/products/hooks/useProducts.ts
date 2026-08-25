@@ -9,6 +9,7 @@ export const useProducts = (params: Omit<ProductQueryParams, "page">) => {
             params.categoryIds ?? [],
             params.colors ?? [],
             params.sizes ?? [],
+            params.brands ?? [],
             params.minPrice ?? null,
             params.maxPrice ?? null,
             params.rating ?? null,

@@ -40,7 +40,7 @@ const Checkout = () => {
     const handlePlaceOrder = async () => {
         try {
             if (!user?._id || !user?.tenantId) {
-                alert("Please login before placing an order.");
+                navigate(tenantSlug ? `/${tenantSlug}/login` : "/login");
                 return;
             }
             if (!selectedAddress) {

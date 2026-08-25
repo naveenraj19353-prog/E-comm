@@ -152,8 +152,8 @@ export default function Navbar() {
           
           {user ? (<button type="button" className={styles.avatar} onClick={() => navigate(`/${tenantSlug}/profile`)}>
               {getInitials(user?.name)}
-            </button>) : (<button type="button" className={styles.iconButton} onClick={() => navigate(`/${tenantSlug}/login`)}>
-              Sign in
+            </button>) : (<button type="button" className={styles.avatar} onClick={() => navigate(`/${tenantSlug}/login`)}>
+              UK
             </button>)}
           
           <button type="button" className={styles.menuButton} onClick={() => setMenuOpen((value) => !value)}>

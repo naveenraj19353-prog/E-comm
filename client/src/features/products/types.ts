@@ -46,12 +46,27 @@ export interface ProductQueryParams {
     categoryIds?: string[];
     colors?: string[];
     sizes?: string[];
+    brands?: string[];
     minPrice?: number;
     maxPrice?: number;
     rating?: number;
     search?: string;
     sortBy?: string;
     sortOrder?: "asc" | "desc";
+}
+export interface ProductFilterCategory {
+    id: string;
+    name: string;
+}
+export interface ProductFilter {
+    brand: string[];
+    color: string[];
+    size: string[];
+    category: ProductFilterCategory[];
+    price: {
+        min: number;
+        max: number;
+    };
 }
 export interface ProductsResponse {
     success: boolean;
@@ -63,6 +78,7 @@ export interface ProductsResponse {
     hasNextPage: boolean;
     hasPreviousPage: boolean;
     data: Product[];
+    filter?: ProductFilter;
 }
 export interface Category {
     _id: string;

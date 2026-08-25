@@ -308,6 +308,143 @@ def create_product(
     }
 
 
+def _clean_filter_values(values) -> list[str]:
+    unique = []
+    seen = set()
+    for value in values or []:
+        text = str(value or "").strip()
+        if not text:
+            continue
+        key = text.lower()
+        if key in seen:
+            continue
+        seen.add(key)
+        unique.append(text)
+    unique.sort(key=str.lower)
+    return unique
+
+
+def get_tenant_product_filters(
+    tenant_id: str,
+    allow_inactive: bool = False,
+) -> dict:
+    match = {"tenantId": tenant_id}
+    if not allow_inactive:
+        match["isActive"] = True
+    empty = {
+        "brand": [],
+        "color": [],
+        "size": [],
+        "category": [],
+        "price": {
+            "min": 0,
+            "max": 0,
+        },
+    }
+    try:
+        result = list(
+            products.aggregate(
+                [
+                    {"$match": match},
+                    {
+                        "$facet": {
+                            "price": [
+                                {
+                                    "$group": {
+                                        "_id": None,
+                                        "min": {"$min": "$finalPrice"},
+                                        "max": {"$max": "$finalPrice"},
+                                    }
+                                }
+                            ],
+                            "brands": [
+                                {
+                                    "$match": {
+                                        "brand": {"$nin": [None, ""]},
+                                    }
+                                },
+                                {"$group": {"_id": "$brand"}},
+                                {"$sort": {"_id": 1}},
+                            ],
+                            "categories": [
+                                {
+                                    "$match": {
+                                        "categoryId": {"$nin": [None, ""]},
+                                    }
+                                },
+                                {
+                                    "$group": {
+                                        "_id": "$categoryId",
+                                        "name": {
+                                            "$first": "$categoryName"
+                                        },
+                                    }
+                                },
+                                {"$sort": {"name": 1}},
+                            ],
+                            "variants": [
+                                {
+                                    "$unwind": {
+                                        "path": "$inventory",
+                                        "preserveNullAndEmptyArrays": False,
+                                    }
+                                },
+                                {
+                                    "$group": {
+                                        "_id": None,
+                                        "colors": {
+                                            "$addToSet": "$inventory.color"
+                                        },
+                                        "sizes": {
+                                            "$addToSet": "$inventory.size"
+                                        },
+                                    }
+                                },
+                            ],
+                        }
+                    },
+                ]
+            )
+        )
+    except Exception as error:
+        print("ERROR building product filters:", repr(error))
+        return empty
+    if not result:
+        return empty
+    facets = result[0]
+    price_row = (facets.get("price") or [{}])[0]
+    variant_row = (facets.get("variants") or [{}])[0]
+    categories = []
+    for item in facets.get("categories") or []:
+        category_id = str(item.get("_id") or "").strip()
+        if not category_id:
+            continue
+        categories.append(
+            {
+                "id": category_id,
+                "name": str(item.get("name") or category_id).strip(),
+            }
+        )
+    min_price = price_row.get("min")
+    max_price = price_row.get("max")
+    if min_price is None:
+        min_price = 0
+    if max_price is None:
+        max_price = min_price
+    return {
+        "brand": _clean_filter_values(
+            [item.get("_id") for item in facets.get("brands") or []]
+        ),
+        "color": _clean_filter_values(variant_row.get("colors")),
+        "size": _clean_filter_values(variant_row.get("sizes")),
+        "category": categories,
+        "price": {
+            "min": round(float(min_price), 2),
+            "max": round(max(float(max_price), float(min_price)), 2),
+        },
+    }
+
+
 @router.get("/get-all-products")
 def get_all_products(
     tenantId: str,
@@ -324,27 +461,104 @@ def get_all_products(
     colors: list[str] | None = Query(
         default=None
     ),
+    brands: list[str] | None = Query(
+        default=None
+    ),
     rating: float | None = None,
     search: str | None = None,
     sortBy: str = "createdAt",
     sortOrder: str = "desc",
     includeInactive: bool = False,
-    current_user: dict | None = Depends(get_optional_user),
+    current_user: dict | None = Depends(
+        get_optional_user
+    ),
 ):
-
 
     page = max(
         page,
         1,
     )
+
     limit = min(
         max(limit, 1),
         100,
     )
+
     skip = (
         page - 1
     ) * limit
 
+    # --------------------------------------------------
+    # CLEAN FILTER VALUES
+    # --------------------------------------------------
+
+    def clean_values(
+        values: list[str] | None,
+    ) -> list[str]:
+
+        result = []
+
+        for value in values or []:
+
+            if value is None:
+                continue
+
+            value = str(
+                value
+            ).strip()
+
+            if not value:
+                continue
+
+            # Support:
+            # brands=Amul,Milkmaid
+            # as well as:
+            # brands=Amul&brands=Milkmaid
+            parts = value.split(",")
+
+            for part in parts:
+
+                part = part.strip()
+
+                if part:
+                    result.append(part)
+
+        # Remove duplicates
+        unique = []
+
+        seen = set()
+
+        for value in result:
+
+            key = value.lower()
+
+            if key not in seen:
+
+                seen.add(key)
+
+                unique.append(value)
+
+        return unique
+
+    categoryIds = clean_values(
+        categoryIds
+    )
+
+    sizes = clean_values(
+        sizes
+    )
+
+    colors = clean_values(
+        colors
+    )
+
+    brands = clean_values(
+        brands
+    )
+
+    # --------------------------------------------------
+    # SEARCH
+    # --------------------------------------------------
 
     search = (
         search.strip()
@@ -352,105 +566,238 @@ def get_all_products(
         else None
     )
 
+    # --------------------------------------------------
+    # BASE QUERY
+    # --------------------------------------------------
 
     query = {
         "tenantId": tenantId,
     }
 
+    # --------------------------------------------------
+    # ACTIVE / INACTIVE
+    # --------------------------------------------------
 
     allow_inactive = False
+
     if (
         includeInactive
         and current_user
-        and current_user.get("role") in ("admin", "super_admin")
+        and current_user.get("role")
+        in (
+            "admin",
+            "super_admin",
+        )
     ):
+
         try:
-            admin_tenant_id(current_user, tenantId)
+
+            admin_tenant_id(
+                current_user,
+                tenantId,
+            )
+
             allow_inactive = True
+
         except HTTPException:
+
             allow_inactive = False
+
     if not allow_inactive:
+
         query["isActive"] = True
 
+    # --------------------------------------------------
+    # CATEGORY FILTER
+    # --------------------------------------------------
 
     if categoryIds:
+
         query["categoryId"] = {
             "$in": categoryIds
         }
 
+    # --------------------------------------------------
+    # BRAND FILTER
+    #
+    # Case insensitive
+    # Supports multiple brands
+    # --------------------------------------------------
+
+    if brands:
+
+        brand_regex = []
+
+        for brand in brands:
+
+            brand_regex.append(
+                {
+                    "$regex": re.escape(
+                        brand
+                    ),
+                    "$options": "i",
+                }
+            )
+
+        if len(brand_regex) == 1:
+
+            query["brand"] = (
+                brand_regex[0]
+            )
+
+        else:
+
+            query["$or"] = (
+                query.get("$or", [])
+                + [
+                    {
+                        "brand": item
+                    }
+                    for item
+                    in brand_regex
+                ]
+            )
+
+    # --------------------------------------------------
+    # PRICE FILTER
+    # --------------------------------------------------
 
     if (
         minPrice is not None
         or maxPrice is not None
     ):
+
         query["finalPrice"] = {}
+
         if minPrice is not None:
-            query["finalPrice"]["$gte"] = (
-                minPrice
-            )
+
+            query["finalPrice"][
+                "$gte"
+            ] = minPrice
+
         if maxPrice is not None:
-            query["finalPrice"]["$lte"] = (
-                maxPrice
+
+            query["finalPrice"][
+                "$lte"
+            ] = maxPrice
+
+    # --------------------------------------------------
+    # INVENTORY FILTER
+    #
+    # IMPORTANT:
+    #
+    # size + color must belong to the
+    # same inventory variant.
+    #
+    # stock must be > 0.
+    # --------------------------------------------------
+
+    inventory_conditions = []
+
+    if sizes:
+
+        size_regex = [
+            {
+                "$regex": re.escape(
+                    size
+                ),
+                "$options": "i",
+            }
+            for size in sizes
+        ]
+
+        if len(size_regex) == 1:
+
+            inventory_conditions.append(
+                {
+                    "size": size_regex[0]
+                }
             )
 
+        else:
 
-    if sizes and colors:
-        query["inventory"] = {
-            "$elemMatch": {
-                "size": {
-                    "$in": sizes
-                },
-                "color": {
-                    "$in": colors
-                },
-                "stock": {
-                    "$gt": 0
-                },
-            }
-        }
-    elif sizes:
-        query["inventory"] = {
-            "$elemMatch": {
-                "size": {
-                    "$in": sizes
-                },
-                "stock": {
-                    "$gt": 0
-                },
-            }
-        }
-    elif colors:
-        query["inventory"] = {
-            "$elemMatch": {
-                "color": {
-                    "$in": colors
-                },
-                "stock": {
-                    "$gt": 0
-                },
-            }
-        }
-    else:
-        query["inventory"] = {
-            "$elemMatch": {
-                "stock": {
-                    "$gt": 0
+            inventory_conditions.append(
+                {
+                    "$or": [
+                        {
+                            "size": item
+                        }
+                        for item
+                        in size_regex
+                    ]
                 }
+            )
+
+    if colors:
+
+        color_regex = [
+            {
+                "$regex": re.escape(
+                    color
+                ),
+                "$options": "i",
+            }
+            for color in colors
+        ]
+
+        if len(color_regex) == 1:
+
+            inventory_conditions.append(
+                {
+                    "color": color_regex[0]
+                }
+            )
+
+        else:
+
+            inventory_conditions.append(
+                {
+                    "$or": [
+                        {
+                            "color": item
+                        }
+                        for item
+                        in color_regex
+                    ]
+                }
+            )
+
+    # Always require stock
+    inventory_conditions.append(
+        {
+            "stock": {
+                "$gt": 0
             }
         }
+    )
 
+    query["inventory"] = {
+        "$elemMatch": {
+            "$and": inventory_conditions
+        }
+    }
+
+    # --------------------------------------------------
+    # RATING
+    # --------------------------------------------------
 
     if rating is not None:
+
         query["averageRating"] = {
             "$gte": rating
         }
 
+    # --------------------------------------------------
+    # SEARCH
+    # --------------------------------------------------
 
     if search:
+
         search_regex = re.escape(
             search
         )
-        query["$or"] = [
+
+        search_conditions = [
             {
                 "name": {
                     "$regex": search_regex,
@@ -471,6 +818,28 @@ def get_all_products(
             },
         ]
 
+        if "$or" in query:
+
+            query["$and"] = [
+                {
+                    "$or": query.pop(
+                        "$or"
+                    )
+                },
+                {
+                    "$or": search_conditions
+                },
+            ]
+
+        else:
+
+            query["$or"] = (
+                search_conditions
+            )
+
+    # --------------------------------------------------
+    # SORT
+    # --------------------------------------------------
 
     allowed_sort_fields = {
         "createdAt": "createdAt",
@@ -479,33 +848,53 @@ def get_all_products(
         "discount": "discountPercentage",
         "name": "name",
     }
-    sort_field = allowed_sort_fields.get(
-        sortBy,
-        "createdAt",
+
+    sort_field = (
+        allowed_sort_fields.get(
+            sortBy,
+            "createdAt",
+        )
     )
+
     sort_order = (
         -1
-        if sortOrder.lower() == "desc"
+        if sortOrder.lower()
+        == "desc"
         else 1
     )
 
+    # --------------------------------------------------
+    # COUNT
+    # --------------------------------------------------
 
     try:
-        total_count = products.count_documents(
-            query
+
+        total_count = (
+            products.count_documents(
+                query
+            )
         )
+
     except Exception as e:
+
         print(
             "ERROR counting products:",
             repr(e),
         )
+
         raise HTTPException(
             status_code=500,
-            detail="Failed to count products.",
+            detail=(
+                "Failed to count products."
+            ),
         )
 
+    # --------------------------------------------------
+    # FETCH PRODUCTS
+    # --------------------------------------------------
 
     try:
+
         cursor = (
             products.find(query)
             .sort(
@@ -515,21 +904,34 @@ def get_all_products(
             .skip(skip)
             .limit(limit)
         )
+
         data = []
+
         for product in cursor:
+
             data.append(
-                serialize_product(product)
+                serialize_product(
+                    product
+                )
             )
+
     except Exception as e:
+
         print(
             "ERROR fetching products:",
             repr(e),
         )
+
         raise HTTPException(
             status_code=500,
-            detail="Failed to fetch products.",
+            detail=(
+                "Failed to fetch products."
+            ),
         )
 
+    # --------------------------------------------------
+    # PAGINATION
+    # --------------------------------------------------
 
     total_pages = (
         (
@@ -542,23 +944,50 @@ def get_all_products(
         else 0
     )
 
+    # --------------------------------------------------
+    # DYNAMIC FILTERS
+    #
+    # IMPORTANT:
+    # These are generated from ALL products
+    # belonging to this tenant.
+    # --------------------------------------------------
+
+    filter_data = (
+        get_tenant_product_filters(
+            tenantId,
+            allow_inactive,
+        )
+    )
+
+    # --------------------------------------------------
+    # RESPONSE
+    # --------------------------------------------------
 
     return {
         "success": True,
+
         "count": len(data),
+
         "totalCount": total_count,
+
         "page": page,
+
         "limit": limit,
+
         "totalPages": total_pages,
+
         "hasNextPage": (
             page < total_pages
         ),
+
         "hasPreviousPage": (
             page > 1
         ),
+
+        "filter": filter_data,
+
         "data": data,
     }
-
 
 @router.post("/search")
 def search_product(
@@ -757,10 +1186,11 @@ def search_product(
             page > 1
         ),
         "data": data,
+        "filter": get_tenant_product_filters(
+            request.tenantId,
+            False,
+        ),
     }
-
-
-@router.get("/new-arrivals")
 def get_new_arrivals(
     tenantId: str,
     limit: int = 10,

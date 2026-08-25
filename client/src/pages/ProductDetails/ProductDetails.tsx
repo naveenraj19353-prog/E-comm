@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import ProductDetailsView from "./ProductDetailsView";
 import styles from "./ProductDetails.module.css";
 import { useAuth } from "../../features/auth/hooks/useAuth";
@@ -8,18 +8,17 @@ import { useCart } from "../../features/cart/hooks/useCart";
 import { useWishlist } from "../../features/wishlist/hooks/useWishlist";
 import { useProductDetails } from "../../features/products/hooks/useProductDetails";
 import { useReviews } from "../../features/reviews/hooks/useReviews";
-import AuthModal from "../../components/Auth/AuthModal/AuthModal";
 const ProductDetails = () => {
+    const navigate = useNavigate();
     const { productId } = useParams<{
         tenantSlug: string;
         productId: string;
     }>();
     const { user, isAuthenticated } = useAuth();
-    const { tenantId } = useStorefrontTenant();
+    const { tenantId, tenantSlug } = useStorefrontTenant();
     const { data: productResponse, isLoading: productLoading, isError: productIsError, } = useProductDetails(productId || "", tenantId);
     const product = productResponse?.data || null;
     const { reviews, isLoading: reviewsLoading, addReview, isCreating: isSubmittingReview, } = useReviews(productId || "", tenantId);
-    const [showAuthModal, setShowAuthModal] = useState(false);
     const [showReviewForm, setShowReviewForm] = useState(false);
     const [reviewRating, setReviewRating] = useState(0);
     const [reviewTitle, setReviewTitle] = useState("");
@@ -30,9 +29,12 @@ const ProductDetails = () => {
     const isWishlisted = product
         ? wishlist.some((item) => item.productId === product._id)
         : false;
+    const requireLogin = () => {
+        navigate(tenantSlug ? `/${tenantSlug}/login` : "/login");
+    };
     const handleAddToCart = async (selectedProductId: string, quantity: number, variantId?: string) => {
         if (!isAuthenticated || !user) {
-            setShowAuthModal(true);
+            requireLogin();
             return;
         }
         if (!variantId) {
@@ -54,7 +56,7 @@ const ProductDetails = () => {
     };
     const handleWishlist = async (selectedProductId: string) => {
         if (!isAuthenticated || !user) {
-            setShowAuthModal(true);
+            requireLogin();
             return;
         }
         try {
@@ -75,13 +77,9 @@ const ProductDetails = () => {
     };
     const handleWriteReview = () => {
         if (!isAuthenticated || !user) {
-            setShowAuthModal(true);
+            requireLogin();
             return;
         }
-        setShowReviewForm(true);
-    };
-    const handleAuthSuccess = () => {
-        setShowAuthModal(false);
         setShowReviewForm(true);
     };
     const handleSubmitReview = async () => {
@@ -89,7 +87,7 @@ const ProductDetails = () => {
             return;
         }
         if (!isAuthenticated || !user) {
-            setShowAuthModal(true);
+            requireLogin();
             return;
         }
         if (reviewRating === 0) {
@@ -140,9 +138,6 @@ const ProductDetails = () => {
         <p>Unable to load this product.</p>
       </div>);
     }
-    return (<>
-      <ProductDetailsView product={product} reviews={reviews} isWishlisted={isWishlisted} isAddingToCart={isAdding} onAddToCart={handleAddToCart} onWishlist={handleWishlist} onWriteReview={handleWriteReview} showReviewForm={showReviewForm} reviewRating={reviewRating} reviewTitle={reviewTitle} reviewComment={reviewComment} onReviewRatingChange={setReviewRating} onReviewTitleChange={setReviewTitle} onReviewCommentChange={setReviewComment} onSubmitReview={handleSubmitReview} isSubmittingReview={isSubmittingReview} reviewsLoading={reviewsLoading}/>
-      {showAuthModal && (<AuthModal tenantId={tenantId} onClose={() => setShowAuthModal(false)} onSuccess={handleAuthSuccess}/>)}
-    </>);
+    return (<ProductDetailsView product={product} reviews={reviews} isWishlisted={isWishlisted} isAddingToCart={isAdding} onAddToCart={handleAddToCart} onWishlist={handleWishlist} onWriteReview={handleWriteReview} showReviewForm={showReviewForm} reviewRating={reviewRating} reviewTitle={reviewTitle} reviewComment={reviewComment} onReviewRatingChange={setReviewRating} onReviewTitleChange={setReviewTitle} onReviewCommentChange={setReviewComment} onSubmitReview={handleSubmitReview} isSubmittingReview={isSubmittingReview} reviewsLoading={reviewsLoading}/>);
 };
 export default ProductDetails;
