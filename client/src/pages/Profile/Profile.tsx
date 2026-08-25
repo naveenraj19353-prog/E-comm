@@ -10,165 +10,518 @@ import {
   Pencil,
   LogOut,
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { useProfile } from "../../features/profile/hooks/useProfile";
+import { useAuth } from "../../features/auth/hooks/useAuth";
+import { useStorefrontTenant } from "../../features/tenant/useTenant";
 import styles from "./Profile.module.css";
 import EditProfileModal from "./EditProfileModal";
-import { useAuth } from "../../features/auth/hooks/useAuth";
+import AuthModal from "../../components/Auth/AuthModal/AuthModal";
 const Profile = () => {
-  const user = useAuth().user;
-  const { profile, isLoading, isError, updateProfile, isUpdating } = useProfile(
-    user?.tenantId as string,
-    user?._id as string,
+  const navigate = useNavigate();
+  // ==========================================================
+  // AUTH
+  // ==========================================================
+  const {
+    user,
+    logout,
+  } = useAuth();
+  // ==========================================================
+  // STATE
+  // ==========================================================
+  const [editOpen, setEditOpen] =
+    useState(false);
+  const [showAuthModal, setShowAuthModal] =
+    useState(!user);
+  // ==========================================================
+  // TENANT / USER
+  // ==========================================================
+  const { tenantId, tenantSlug } = useStorefrontTenant();
+  const profileTenantId = user?.tenantId || tenantId;
+  const userId =
+    user?._id || "";
+  // ==========================================================
+  // PROFILE API
+  // ==========================================================
+  const {
+    profile,
+    isLoading,
+    isError,
+    updateProfile,
+    isUpdating,
+  } = useProfile(
+    profileTenantId,
+    userId,
   );
-  const [editOpen, setEditOpen] = useState(false);
+  // ==========================================================
+  // AUTH SUCCESS
+  // ==========================================================
+  const handleAuthSuccess = () => {
+    setShowAuthModal(false);
+    console.log(
+      "Authentication successful",
+    );
+  };
+  // ==========================================================
+  // CLOSE AUTH MODAL
+  // ==========================================================
+  const handleClose = () => {
+    if (tenantSlug) {
+      navigate(`/${tenantSlug}`);
+    } else {
+      navigate("/");
+    }
+  };
+  // ==========================================================
+  // LOGOUT
+  // ==========================================================
+  const handleLogout = () => {
+    /*
+     * Keep tenant ID so we can redirect
+     * back to the tenant storefront.
+     */
+    if (tenantSlug) {
+      localStorage.setItem("ecommerce_tenantSlug", tenantSlug);
+    }
+    logout();
+    if (tenantSlug) {
+      navigate(`/${tenantSlug}`, { replace: true });
+    } else {
+      navigate(
+        "/",
+        {
+          replace: true,
+        },
+      );
+    }
+  };
+  // ==========================================================
+  // DEBUG
+  // ==========================================================
+  console.log(
+    "PROFILE USER:",
+    user,
+  );
+  console.log(
+    "PROFILE TENANT ID:",
+    tenantId,
+  );
+  console.log(
+    "PROFILE USER ID:",
+    userId,
+  );
+  // ==========================================================
+  // NOT AUTHENTICATED
+  // ==========================================================
+  if (!user) {
+    return (
+      <div className={styles.page}>
+        <div className={styles.container}>
+          {showAuthModal && (
+            <AuthModal
+              tenantId={tenantId}
+              onClose={handleClose}
+              onSuccess={
+                handleAuthSuccess
+              }
+            />
+          )}
+        </div>
+      </div>
+    );
+  }
+  // ==========================================================
+  // LOADING
+  // ==========================================================
   if (isLoading) {
     return (
       <div className={styles.page}>
         <div className={styles.container}>
-          <div className={styles.loading}>Loading profile...</div>
+          <div
+            className={
+              styles.loading
+            }
+          >
+            Loading profile...
+          </div>
         </div>
       </div>
     );
   }
+  // ==========================================================
+  // ERROR / PROFILE NOT FOUND
+  // ==========================================================
   if (isError || !profile) {
     return (
       <div className={styles.page}>
         <div className={styles.container}>
-          <div className={styles.error}>Unable to load profile.</div>
+          <AuthModal
+            tenantId={tenantId}
+            onClose={handleClose}
+            onSuccess={
+              handleAuthSuccess
+            }
+          />
         </div>
       </div>
     );
   }
-  const initial = profile.name?.charAt(0)?.toUpperCase() || "U";
+  // ==========================================================
+  // AVATAR INITIAL
+  // ==========================================================
+  const initial =
+    profile.name
+      ?.charAt(0)
+      ?.toUpperCase() ||
+    "U";
+  // ==========================================================
+  // RENDER
+  // ==========================================================
   return (
     <div className={styles.page}>
       <div className={styles.container}>
-        <div className={styles.pageHeader}>
+        {/* ==================================================
+            PAGE HEADER
+        ================================================== */}
+        <div
+          className={
+            styles.pageHeader
+          }
+        >
           <div>
-            <h1>My Profile</h1>
-            <p>Manage your personal information and account settings.</p>
+            <h1>
+              My Profile
+            </h1>
+            <p>
+              Manage your personal
+              information and
+              account settings.
+            </p>
           </div>
         </div>
-
-        <section className={styles.profileHero}>
-          <div className={styles.avatar}>{initial}</div>
-          <div className={styles.heroInfo}>
-            <h2>{profile.name}</h2>
-            <p>{profile.email}</p>
-            <span className={styles.activeBadge}>
+        {/* ==================================================
+            PROFILE HERO
+        ================================================== */}
+        <section
+          className={
+            styles.profileHero
+          }
+        >
+          {/* AVATAR */}
+          <div
+            className={
+              styles.avatar
+            }
+          >
+            {initial}
+          </div>
+          {/* USER INFO */}
+          <div
+            className={
+              styles.heroInfo
+            }
+          >
+            <h2>
+              {profile.name}
+            </h2>
+            <p>
+              {profile.email}
+            </p>
+            <span
+              className={
+                styles.activeBadge
+              }
+            >
               <span />
               Active account
             </span>
           </div>
+          {/* EDIT */}
           <button
-            className={styles.editButton}
-            onClick={() => setEditOpen(true)}
+            className={
+              styles.editButton
+            }
+            onClick={() =>
+              setEditOpen(true)
+            }
           >
-            <Pencil size={16} />
+            <Pencil
+              size={16}
+            />
             Edit Profile
           </button>
         </section>
-
-        <section className={styles.card}>
-          <div className={styles.cardHeader}>
+        {/* ==================================================
+            PERSONAL INFORMATION
+        ================================================== */}
+        <section
+          className={styles.card}
+        >
+          <div
+            className={
+              styles.cardHeader
+            }
+          >
             <div>
-              <h3>Personal Information</h3>
-              <p>Your basic account information.</p>
+              <h3>
+                Personal Information
+              </h3>
+              <p>
+                Your basic account
+                information.
+              </p>
             </div>
             <User size={20} />
           </div>
-          <div className={styles.infoGrid}>
-            <div className={styles.infoItem}>
-              <div className={styles.icon}>
-                <User size={18} />
+          <div
+            className={
+              styles.infoGrid
+            }
+          >
+            {/* NAME */}
+            <div
+              className={
+                styles.infoItem
+              }
+            >
+              <div
+                className={
+                  styles.icon
+                }
+              >
+                <User
+                  size={18}
+                />
               </div>
               <div>
-                <span>Full Name</span>
-                <strong>{profile.name || "Not provided"}</strong>
+                <span>
+                  Full Name
+                </span>
+                <strong>
+                  {profile.name ||
+                    "Not provided"}
+                </strong>
               </div>
             </div>
-            <div className={styles.infoItem}>
-              <div className={styles.icon}>
-                <Mail size={18} />
+            {/* EMAIL */}
+            <div
+              className={
+                styles.infoItem
+              }
+            >
+              <div
+                className={
+                  styles.icon
+                }
+              >
+                <Mail
+                  size={18}
+                />
               </div>
               <div>
-                <span>Email</span>
-                <strong>{profile.email}</strong>
+                <span>
+                  Email
+                </span>
+                <strong>
+                  {profile.email}
+                </strong>
               </div>
             </div>
-            <div className={styles.infoItem}>
-              <div className={styles.icon}>
-                <Phone size={18} />
+            {/* PHONE */}
+            <div
+              className={
+                styles.infoItem
+              }
+            >
+              <div
+                className={
+                  styles.icon
+                }
+              >
+                <Phone
+                  size={18}
+                />
               </div>
               <div>
-                <span>Phone</span>
-                <strong>{profile.phone || "Not provided"}</strong>
+                <span>
+                  Phone
+                </span>
+                <strong>
+                  {profile.phone ||
+                    "Not provided"}
+                </strong>
               </div>
             </div>
-            <div className={styles.infoItem}>
-              <div className={styles.icon}>
-                <ShieldCheck size={18} />
+            {/* ACCOUNT STATUS */}
+            <div
+              className={
+                styles.infoItem
+              }
+            >
+              <div
+                className={
+                  styles.icon
+                }
+              >
+                <ShieldCheck
+                  size={18}
+                />
               </div>
               <div>
-                <span>Account Status</span>
-                <strong>{profile.isActive ? "Active" : "Inactive"}</strong>
+                <span>
+                  Account Status
+                </span>
+                <strong>
+                  {profile.isActive
+                    ? "Active"
+                    : "Inactive"}
+                </strong>
               </div>
             </div>
           </div>
         </section>
-
-        <section className={styles.quickGrid}>
-          <button className={styles.quickCard}>
-            <div className={styles.quickIcon}>
-              <Package size={22} />
+        {/* ==================================================
+            QUICK ACTIONS
+        ================================================== */}
+        <section
+          className={
+            styles.quickGrid
+          }
+        >
+          {/* ORDERS */}
+          <button
+            className={
+              styles.quickCard
+            }
+          >
+            <div
+              className={
+                styles.quickIcon
+              }
+            >
+              <Package
+                size={22}
+              />
             </div>
             <div>
-              <strong>My Orders</strong>
-              <span>View your orders</span>
+              <strong>
+                My Orders
+              </strong>
+              <span>
+                View your orders
+              </span>
             </div>
           </button>
-          <button className={styles.quickCard}>
-            <div className={styles.quickIcon}>
-              <MapPin size={22} />
+          {/* ADDRESSES */}
+          <button
+            className={
+              styles.quickCard
+            }
+          >
+            <div
+              className={
+                styles.quickIcon
+              }
+            >
+              <MapPin
+                size={22}
+              />
             </div>
             <div>
-              <strong>Addresses</strong>
-              <span>Manage delivery addresses</span>
+              <strong>
+                Addresses
+              </strong>
+              <span>
+                Manage delivery
+                addresses
+              </span>
             </div>
           </button>
-          <button className={styles.quickCard}>
-            <div className={styles.quickIcon}>
-              <Heart size={22} />
+          {/* WISHLIST */}
+          <button
+            className={
+              styles.quickCard
+            }
+          >
+            <div
+              className={
+                styles.quickIcon
+              }
+            >
+              <Heart
+                size={22}
+              />
             </div>
             <div>
-              <strong>Wishlist</strong>
-              <span>View saved products</span>
+              <strong>
+                Wishlist
+              </strong>
+              <span>
+                View saved
+                products
+              </span>
             </div>
           </button>
-          <button className={styles.quickCard}>
-            <div className={styles.quickIcon}>
-              <ShieldCheck size={22} />
+          {/* SECURITY */}
+          <button
+            className={
+              styles.quickCard
+            }
+          >
+            <div
+              className={
+                styles.quickIcon
+              }
+            >
+              <ShieldCheck
+                size={22}
+              />
             </div>
             <div>
-              <strong>Security</strong>
-              <span>Password & security</span>
+              <strong>
+                Security
+              </strong>
+              <span>
+                Password & security
+              </span>
             </div>
           </button>
         </section>
-
-        <button className={styles.logoutButton}>
-          <LogOut size={17} />
+        {/* ==================================================
+            LOGOUT
+        ================================================== */}
+        <button
+          className={
+            styles.logoutButton
+          }
+          onClick={
+            handleLogout
+          }
+        >
+          <LogOut
+            size={17}
+          />
           Sign Out
         </button>
       </div>
-
+      {/* ==================================================
+          EDIT PROFILE MODAL
+      ================================================== */}
       {editOpen && (
         <EditProfileModal
           profile={profile}
-          isUpdating={isUpdating}
-          onClose={() => setEditOpen(false)}
-          onSubmit={async (data) => {
-            await updateProfile(data);
+          isUpdating={
+            isUpdating
+          }
+          onClose={() =>
+            setEditOpen(false)
+          }
+          onSubmit={async (
+            data,
+          ) => {
+            await updateProfile(
+              data,
+            );
             setEditOpen(false);
           }}
         />

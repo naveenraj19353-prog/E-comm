@@ -1,5 +1,4 @@
 import { useInfiniteQuery, type QueryKey } from "@tanstack/react-query";
-
 export function useInfiniteApiQuery<TData>(
   queryKey: QueryKey,
   queryFn: (pageParam: number) => Promise<TData>,

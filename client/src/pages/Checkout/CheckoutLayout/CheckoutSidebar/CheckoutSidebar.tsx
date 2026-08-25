@@ -38,7 +38,6 @@ const CheckoutSidebar = ({
             {items.length} {items.length === 1 ? "item" : "items"}
           </span>
         </div>
-
         {items.length > 0 && (
           <div className={styles.items}>
             {items.map((item) => (
@@ -63,7 +62,6 @@ const CheckoutSidebar = ({
           </div>
         )}
         <div className={styles.divider} />
-
         <div className={styles.priceDetails}>
           <div className={styles.priceRow}>
             <span>Subtotal</span>
@@ -93,7 +91,6 @@ const CheckoutSidebar = ({
           )}
         </div>
         <div className={styles.divider} />
-
         <div className={styles.total}>
           <div>
             <span>Total</span>
@@ -101,7 +98,6 @@ const CheckoutSidebar = ({
           </div>
           <strong>{formatPrice(total)}</strong>
         </div>
-
         <button
           type="button"
           className={styles.placeOrder}
@@ -111,14 +107,12 @@ const CheckoutSidebar = ({
           {isPlacingOrder ? "Placing Order..." : "Place Order"}
           {!isPlacingOrder && <ChevronRight size={18} />}
         </button>
-
         <div className={styles.secure}>
           <Lock size={14} />
           <span>Secure and encrypted checkout</span>
           <Check size={14} />
         </div>
       </div>
-
       <div className={styles.trustCard}>
         <div className={styles.trustItem}>
           <Truck size={18} />

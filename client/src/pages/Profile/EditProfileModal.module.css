@@ -8,7 +8,6 @@
   justify-content: center;
   padding: 1.25rem;
 }
-
 .modal {
   width: min(31.25rem, 100%);
   background: var(--surface);
@@ -16,7 +15,6 @@
   box-shadow: 0 1.25rem 3.75rem rgba(0, 0, 0, 0.18);
   overflow: hidden;
 }
-
 .header {
   display: flex;
   justify-content: space-between;
@@ -24,19 +22,16 @@
   padding: 1.375rem 1.5rem;
   border-bottom: 0.0625rem solid var(--border);
 }
-
 .header h2 {
   margin: 0;
   color: var(--text);
   font-size: 1.3125rem;
 }
-
 .header p {
   margin: 0.3125rem 0 0;
   color: var(--text);
   font-size: 0.875rem;
 }
-
 .closeButton {
   border: 0;
   background: transparent;
@@ -49,19 +44,15 @@
   justify-content: center;
   border-radius: 0.5rem;
 }
-
 .closeButton:hover {
   background: var(--background);
 }
-
 .form {
   padding: 1.5rem;
 }
-
 .field {
   margin-bottom: 1.25rem;
 }
-
 .field label {
   display: block;
   margin-bottom: 0.4375rem;
@@ -69,7 +60,6 @@
   font-size: 0.875rem;
   font-weight: 600;
 }
-
 .field input {
   width: 100%;
   box-sizing: border-box;
@@ -81,28 +71,23 @@
   background: var(--surface);
   outline: none;
 }
-
 .field input:focus {
   border-color: var(--primary);
 }
-
 .field input:disabled {
   background: var(--background);
   color: var(--text);
   cursor: not-allowed;
 }
-
 .field small {
   display: block;
   margin-top: 0.3125rem;
   color: var(--text);
   font-size: 0.75rem;
 }
-
 .inputWrapper {
   position: relative;
 }
-
 .inputWrapper svg {
   position: absolute;
   left: 0.8125rem;
@@ -110,11 +95,9 @@
   transform: translateY(-50%);
   color: var(--text);
 }
-
 .inputWrapper input {
   padding-left: 2.5rem;
 }
-
 .error {
   padding: 0.6875rem 0.8125rem;
   border-radius: 0.5rem;
@@ -123,14 +106,12 @@
   font-size: 0.8125rem;
   margin-bottom: 1.125rem;
 }
-
 .actions {
   display: flex;
   justify-content: flex-end;
   gap: 0.625rem;
   padding-top: 0.3125rem;
 }
-
 .cancelButton,
 .saveButton {
   border: 0;
@@ -139,32 +120,26 @@
   font-weight: 600;
   cursor: pointer;
 }
-
 .cancelButton {
   background: var(--background);
   color: var(--text);
 }
-
 .saveButton {
   background: var(--primary);
   color: var(--text-white);
 }
-
 .saveButton:hover {
   background: var(--secondary);
 }
-
 .saveButton:disabled,
 .cancelButton:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
-
 @media (max-width: 31.25rem) {
   .actions {
     flex-direction: column-reverse;
   }
-
   .actions button {
     width: 100%;
   }

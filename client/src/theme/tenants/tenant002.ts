@@ -15,7 +15,6 @@ export const themes = {
       textWhite: "#FFFFFF",
     },
   },
-
   TENANT002: {
     tenantId: "TENANT002",
     name: "MegaMart",
@@ -32,7 +31,6 @@ export const themes = {
       textWhite: "#FFFFFF",
     },
   },
-
   TENANT003: {
     tenantId: "TENANT003",
     name: "UrbanCart",
@@ -49,7 +47,6 @@ export const themes = {
       textWhite: "#FFFFFF",
     },
   },
-
   DEFAULT: {
     tenantId: "DEFAULT",
     name: "Default",

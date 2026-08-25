@@ -46,7 +46,6 @@ export default function Footer() {
             </a>
           </div>
         </div>
-
         <div className={styles.linkColumns}>
           {FOOTER_COLUMNS.map((col) => (
             <div key={col.heading} className={styles.linkColumn}>

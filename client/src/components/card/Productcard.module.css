@@ -10,7 +10,6 @@
     box-shadow 0.3s ease,
     border-color 0.3s ease;
 }
-
 .card:hover {
   transform: translateY(-0.25rem);
   border-color: var(--border);
@@ -18,15 +17,12 @@
     0 0.75rem 1.875rem rgba(31, 42, 38, 0.1),
     0 0.1875rem 0.5rem rgba(31, 42, 38, 0.04);
 }
-
 .inactive {
   opacity: 0.65;
 }
-
 /* =========================================================
    IMAGE CONTAINER
 ========================================================= */
-
 .imageContainer {
   position: relative;
   width: 100%;
@@ -34,23 +30,19 @@
   background: var(--background);
   aspect-ratio: 1 / 1;
 }
-
 /* =========================================================
    SWIPER
 ========================================================= */
-
 .productSwiper {
   width: 100%;
   height: 100%;
 }
-
 .productSlide {
   position: relative;
   width: 100%;
   height: 100%;
   overflow: hidden;
 }
-
 .productImage {
   display: block;
   width: 100%;
@@ -60,15 +52,12 @@
     transform 0.6s ease,
     filter 0.3s ease;
 }
-
 .card:hover .productImage {
   transform: scale(1.035);
 }
-
 /* =========================================================
    GRADIENT
 ========================================================= */
-
 .gradient {
   position: absolute;
   left: 0;
@@ -77,7 +66,6 @@
   height: 38%;
   z-index: 2;
   pointer-events: none;
-
   background: linear-gradient(
     to top,
     rgba(15, 23, 20, 0.62),
@@ -85,222 +73,165 @@
     transparent
   );
 }
-
 /* =========================================================
    DISCOUNT
 ========================================================= */
-
 .discount {
   position: absolute;
   top: 0.75rem;
   left: 0.75rem;
   z-index: 10;
-
   padding: 0.375rem 0.5625rem;
-
   border-radius: 0.4375rem;
-
   background: var(--surface);
   color: var(--danger);
-
   font-size: 0.6875rem;
   font-weight: 800;
   letter-spacing: 0.03em;
-
   box-shadow: 0 0.1875rem 0.625rem rgba(0, 0, 0, 0.08);
 }
-
 /* =========================================================
    WISHLIST
 ========================================================= */
-
 .wishlist {
   position: absolute;
   top: 0.75rem;
   right: 0.75rem;
   z-index: 20;
-
   display: flex;
   align-items: center;
   justify-content: center;
-
   width: 2.375rem;
   height: 2.375rem;
   padding: 0;
-
   border: 0.0625rem solid rgba(255, 255, 255, 0.65);
   border-radius: 50%;
-
   background: rgba(255, 255, 255, 0.92);
   color: var(--text);
-
   cursor: pointer;
-
   backdrop-filter: blur(0.5rem);
-
   box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.1);
-
   transition:
     transform 0.2s ease,
     background 0.2s ease,
     color 0.2s ease;
 }
-
 .wishlist:hover {
   transform: scale(1.08);
   background: var(--surface);
   color: var(--danger);
 }
-
 .wishlistActive {
   background: var(--surface);
   color: var(--danger);
 }
-
 /* =========================================================
    SWIPER ARROWS
 ========================================================= */
-
 .sliderArrow {
   position: absolute;
   top: 50%;
   z-index: 15;
-
   display: flex;
   align-items: center;
   justify-content: center;
-
   width: 2.125rem;
   height: 2.125rem;
   padding: 0;
-
   border: 0.0625rem solid rgba(255, 255, 255, 0.7);
   border-radius: 50%;
-
   background: rgba(255, 255, 255, 0.9);
   color: var(--text);
-
   cursor: pointer;
-
   opacity: 0;
   transform: translateY(-50%) scale(0.9);
-
   backdrop-filter: blur(0.5rem);
-
   box-shadow: 0 0.3125rem 0.9375rem rgba(0, 0, 0, 0.12);
-
   transition:
     opacity 0.25s ease,
     transform 0.25s ease,
     background 0.2s ease,
     color 0.2s ease;
 }
-
 .card:hover .sliderArrow {
   opacity: 1;
   transform: translateY(-50%) scale(1);
 }
-
 .sliderArrow:hover {
   background: var(--primary);
   color: var(--text-white);
   transform: translateY(-50%) scale(1.08);
 }
-
 .leftArrow {
   left: 0.625rem;
 }
-
 .rightArrow {
   right: 0.625rem;
 }
-
 /* =========================================================
    SWIPER PAGINATION
 ========================================================= */
-
 .productSwiper :global(.swiper-pagination) {
   bottom: 0.625rem;
   z-index: 12;
-
   display: flex;
   justify-content: center;
   align-items: center;
-
   gap: 0.25rem;
 }
-
 .productSwiper :global(.swiper-pagination-bullet) {
   width: 0.375rem;
   height: 0.375rem;
-
   margin: 0 !important;
-
   opacity: 0.65;
   background: var(--text-white);
-
   transition:
     width 0.25s ease,
     opacity 0.25s ease,
     transform 0.25s ease;
 }
-
 .productSwiper :global(.swiper-pagination-bullet-active) {
   width: 1.125rem;
   opacity: 1;
   border-radius: 0.625rem;
 }
-
 /* =========================================================
    RATING
 ========================================================= */
-
 .rating {
   position: absolute;
   left: 0.75rem;
   bottom: 0.75rem;
   z-index: 10;
-
   display: flex;
   align-items: center;
   gap: 0.3125rem;
-
   padding: 0.375rem 0.5625rem;
-
   border-radius: 0.5rem;
-
   background: rgba(255, 255, 255, 0.94);
   color: var(--text);
-
   font-size: 0.6875rem;
   font-weight: 700;
-
   box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.1);
-
   backdrop-filter: blur(0.5rem);
 }
-
 .rating svg {
   color: var(--warning);
 }
-
 .ratingSeparator {
   width: 0.0625rem;
   height: 0.75rem;
   background: var(--border);
 }
-
 /* =========================================================
    ADD TO CART
 ========================================================= */
-
 .cartContainer {
   position: absolute;
   right: 0.75rem;
   bottom: 0.75rem;
   z-index: 10;
 }
-
 .cartButton {
   display: flex;
   align-items: center;
@@ -315,219 +246,210 @@
   font-family: inherit;
   font-size: 0.75rem;
   font-weight: 700;
-
   cursor: pointer;
-
   box-shadow: 0 0.3125rem 0.875rem rgba(0, 0, 0, 0.16);
-
   transition:
     background 0.2s ease,
     transform 0.2s ease,
     box-shadow 0.2s ease;
 }
-
 .cartButton:hover {
   background: var(--secondary);
   transform: translateY(-0.125rem);
   box-shadow: 0 0.5rem 1.125rem rgba(0, 0, 0, 0.2);
 }
-
 .cartButton:active {
   transform: translateY(0);
 }
-
 /* =========================================================
    NO IMAGE
 ========================================================= */
-
 .noImage {
   display: flex;
   align-items: center;
   justify-content: center;
-
   width: 100%;
   height: 100%;
-
   background: var(--background);
   color: var(--text);
-
   font-size: 0.8125rem;
   font-weight: 600;
 }
-
 /* =========================================================
    PRODUCT INFO
 ========================================================= */
-
 .info {
   padding: 0.9375rem 0.9375rem 1.0625rem;
 }
-
 .name {
   margin: 0;
-
   color: var(--text);
-
   font-size: 0.9375rem;
   font-weight: 700;
-
   line-height: 1.4;
-
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
-
   overflow: hidden;
-
   min-height: 2.625rem;
 }
-
 .sizes {
   margin: 0.4375rem 0 0;
-
   color: var(--text);
   opacity: 0.65;
-
   font-size: 0.75rem;
-
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
-
 /* =========================================================
    PRICE
 ========================================================= */
-
 .priceRow {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-
   gap: 0.5rem;
-
   margin-top: 0.75rem;
 }
-
 .finalPrice {
   color: var(--primary);
-
   font-size: 1.0625rem;
   font-weight: 800;
 }
-
 .originalPrice {
   color: var(--text);
   opacity: 0.55;
-
   font-size: 0.75rem;
   font-weight: 500;
-
   text-decoration: line-through;
 }
-
 .discountPill {
   padding: 0.25rem 0.4375rem;
-
   border-radius: 0.375rem;
-
   background: color-mix(in srgb, var(--primary) 10%, var(--surface));
-
   color: var(--primary);
-
   font-size: 0.625rem;
   font-weight: 800;
 }
-
 /* =========================================================
    RESPONSIVE
 ========================================================= */
-
 @media (max-width: 56.25rem) {
   .card {
     border-radius: 0.9375rem;
   }
-
   .info {
     padding: 0.8125rem;
   }
-
   .name {
     font-size: 0.875rem;
   }
-
   .finalPrice {
     font-size: 1rem;
   }
 }
-
 @media (max-width: 40rem) {
   .sliderArrow {
     width: 1.875rem;
     height: 1.875rem;
-
     opacity: 1;
-
     transform: translateY(-50%);
   }
-
   .card:hover .sliderArrow {
     transform: translateY(-50%);
   }
-
   .leftArrow {
     left: 0.4375rem;
   }
-
   .rightArrow {
     right: 0.4375rem;
   }
-
   .wishlist {
     width: 2.125rem;
     height: 2.125rem;
-
     top: 0.5625rem;
     right: 0.5625rem;
   }
-
   .discount {
     top: 0.5625rem;
     left: 0.5625rem;
   }
-
   .rating {
     left: 0.5625rem;
     bottom: 0.5625rem;
   }
-
   .cartContainer {
     right: 0.5625rem;
     bottom: 0.5625rem;
   }
-
   .cartButton {
     height: 2.125rem;
     padding: 0 0.625rem;
     font-size: 0.6875rem;
   }
-
   .info {
     padding: 0.75rem;
   }
 }
-
 @media (max-width: 26.25rem) {
   .cartButton span {
     display: none;
   }
-
   .cartButton {
     width: 2.125rem;
     padding: 0;
   }
-
   .rating {
     padding: 0.3125rem 0.4375rem;
   }
+}
+/* =========================================================
+   COLOR / SIZE OPTIONS
+========================================================= */
+.colorSection {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  margin-top: 0.75rem;
+  min-width: 0;
+}
+.colorLabel {
+  flex-shrink: 0;
+  color: var(--text);
+  opacity: 0.65;
+  font-size: 0.6875rem;
+  font-weight: 700;
+}
+.colorOptions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+}
+.colorButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.75rem;
+  height: 1.75rem;
+  padding: 0.1875rem;
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  border: none
+}
+.colorButton:hover {
+  transform: scale(1.08);
+}
+.colorButtonActive {
+  border: none
+  /* box-shadow:
+    0 0 0 0.125rem var(--surface),
+    0 0 0 0.1875rem var(--primary); */
+}
+.colorDot {
+  display: block;
+  width: 1rem;
+  height: 1rem;
 }

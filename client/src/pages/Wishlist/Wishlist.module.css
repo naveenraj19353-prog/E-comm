@@ -5,11 +5,9 @@
   padding: 2.375rem 1.75rem 3.75rem;
   box-sizing: border-box;
 }
-
 .header {
   margin-bottom: 1.75rem;
 }
-
 .eyebrow {
   display: flex;
   align-items: center;
@@ -21,7 +19,6 @@
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
-
 .header h1 {
   margin: 0;
   color: var(--text);
@@ -30,19 +27,16 @@
   font-weight: 750;
   letter-spacing: -0.03em;
 }
-
 .header p {
   margin: 0.5rem 0 0;
   color: var(--secondary);
   font-size: 0.875rem;
 }
-
 .grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 1.25rem;
 }
-
 .card {
   overflow: hidden;
   background: var(--surface);
@@ -53,13 +47,11 @@
     box-shadow 0.25s ease,
     border-color 0.25s ease;
 }
-
 .card:hover {
   transform: translateY(-0.25rem);
   border-color: var(--border);
   box-shadow: 0 1rem 2.1875rem rgba(26, 42, 34, 0.08);
 }
-
 .imageWrapper {
   position: relative;
   width: 100%;
@@ -67,7 +59,6 @@
   overflow: hidden;
   background: var(--background);
 }
-
 .image {
   width: 100%;
   height: 100%;
@@ -75,11 +66,9 @@
   object-fit: cover;
   transition: transform 0.45s ease;
 }
-
 .card:hover .image {
   transform: scale(1.05);
 }
-
 .removeIcon {
   position: absolute;
   top: 0.75rem;
@@ -99,17 +88,14 @@
     transform 0.2s ease,
     background 0.2s ease;
 }
-
 .removeIcon:hover {
   transform: scale(1.08);
   background: var(--surface);
 }
-
 .removeIcon:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
-
 .inStock,
 .outOfStock {
   position: absolute;
@@ -120,21 +106,17 @@
   font-size: 0.625rem;
   font-weight: 700;
 }
-
 .inStock {
   background: var(--success);
   color: var(--text-white);
 }
-
 .outOfStock {
   background: var(--danger);
   color: var(--text-white);
 }
-
 .content {
   padding: 1.0625rem;
 }
-
 .content h2 {
   min-height: 2.75rem;
   margin: 0 0 0.5625rem;
@@ -147,19 +129,16 @@
   -webkit-line-clamp: 2;
   overflow: hidden;
 }
-
 .priceRow {
   display: flex;
   align-items: center;
   margin-bottom: 0.625rem;
 }
-
 .priceRow strong {
   color: var(--primary);
   font-size: 1.125rem;
   font-weight: 750;
 }
-
 .stockInfo {
   display: flex;
   align-items: center;
@@ -168,13 +147,11 @@
   color: var(--secondary);
   font-size: 0.6875rem;
 }
-
 .actions {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 2.625rem;
   gap: 0.5rem;
 }
-
 .cartButton {
   height: 2.625rem;
   display: flex;
@@ -192,21 +169,17 @@
     background 0.2s ease,
     transform 0.2s ease;
 }
-
 .cartButton:hover:not(:disabled) {
   background: var(--primary);
   opacity: 0.9;
 }
-
 .cartButton:active:not(:disabled) {
   transform: translateY(0.0625rem);
 }
-
 .cartButton:disabled {
   opacity: 0.45;
   cursor: not-allowed;
 }
-
 .deleteButton {
   height: 2.625rem;
   display: flex;
@@ -221,17 +194,14 @@
     background 0.2s ease,
     border-color 0.2s ease;
 }
-
 .deleteButton:hover:not(:disabled) {
   background: var(--background);
   border-color: var(--danger);
 }
-
 .deleteButton:disabled {
   opacity: 0.45;
   cursor: not-allowed;
 }
-
 .empty {
   min-height: 65vh;
   display: flex;
@@ -241,7 +211,6 @@
   padding: 3.125rem 1.25rem;
   text-align: center;
 }
-
 .emptyIcon {
   width: 5.25rem;
   height: 5.25rem;
@@ -253,14 +222,12 @@
   background: var(--background);
   color: var(--danger);
 }
-
 .empty h1 {
   margin: 0;
   color: var(--text);
   font-size: 1.5625rem;
   font-weight: 750;
 }
-
 .empty p {
   max-width: 23.75rem;
   margin: 0.5625rem 0 1.375rem;
@@ -268,7 +235,6 @@
   font-size: 0.875rem;
   line-height: 1.6;
 }
-
 .shopButton {
   height: 2.75rem;
   display: flex;
@@ -286,16 +252,13 @@
     background 0.2s ease,
     transform 0.2s ease;
 }
-
 .shopButton:hover {
   background: var(--primary);
   opacity: 0.9;
 }
-
 .shopButton:active {
   transform: translateY(0.0625rem);
 }
-
 .loading {
   min-height: 60vh;
   display: flex;
@@ -306,51 +269,41 @@
   color: var(--secondary);
   font-size: 0.8125rem;
 }
-
 .loading svg {
   color: var(--primary);
 }
-
 @media (max-width: 68.75rem) {
   .grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
-
 @media (max-width: 50rem) {
   .container {
     padding: 1.75rem 1.25rem 2.8125rem;
   }
-
   .grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
-
 @media (max-width: 32.5rem) {
   .container {
     padding: 1.5rem 1rem 2.5rem;
   }
-
   .header h1 {
     font-size: 1.625rem;
   }
-
   .grid {
     grid-template-columns: 1fr;
     gap: 1rem;
   }
-
   .imageWrapper {
     height: 17.5rem;
   }
 }
-
 @media (max-width: 22.5rem) {
   .imageWrapper {
     height: 15rem;
   }
-
   .content {
     padding: 0.875rem;
   }

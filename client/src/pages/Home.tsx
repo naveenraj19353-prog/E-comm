@@ -7,17 +7,19 @@ import { useCart } from "../features/cart/hooks/useCart";
 import { useWishlist } from "../features/wishlist/hooks/useWishlist";
 import BannerSlider from "../components/banner/BannerSlider";
 import CategorySlider from "../components/CategorySlider/CategorySlider";
-import { store } from "../app/store";
+import { useStorefrontTenant } from "../features/tenant/useTenant";
 const Home = () => {
-  const tenantSlug = useAppSelector((state) => state.tenant.tenantSlug);
+  const { tenantId } = useStorefrontTenant();
   const user = useAppSelector((state) => state.auth.user);
-  const tenantId = tenantSlug;
   const { data: homeData, isLoading, isError, refetch } = useHome(tenantId);
   const { addToCart } = useCart(user?._id as string, tenantId);
-  const { addToWishlist, removeFromWishlist } = useWishlist(
+  const { wishlist, addToWishlist, removeFromWishlist } = useWishlist(
     user?._id as string,
     tenantId,
   );
+  // =========================================================
+  // WISHLIST
+  // =========================================================
   const handleWishlist = async (productId: string, isAdding: boolean) => {
     if (!user?._id) {
       console.log("User is not logged in");
@@ -27,7 +29,7 @@ const Home = () => {
       if (isAdding) {
         await addToWishlist({
           tenantId,
-          userId: user?._id,
+          userId: user._id,
           productId,
         });
         console.log("Product added to wishlist");
@@ -39,26 +41,45 @@ const Home = () => {
       console.error("Wishlist operation failed:", error);
     }
   };
-  const handleAddToCart = async (productId: string) => {
+  // =========================================================
+  // ADD TO CART
+  // =========================================================
+  const handleAddToCart = async (
+    productId: string,
+    variantId: string,
+    color: string,
+    size: string,
+  ) => {
     if (!user?._id) {
       console.log("User is not logged in");
       return;
     }
     try {
-      await addToCart({
+      const payload = {
         tenantId,
-        userId: user?._id,
+        userId: user._id,
         productId,
+        variantId,
         quantity: 1,
-      });
+        color,
+        size,
+      };
+      console.log("ADD TO CART PAYLOAD:", payload);
+      await addToCart(payload);
       console.log("Product added to cart");
     } catch (error) {
       console.error("Add to cart failed:", error);
     }
   };
+  // =========================================================
+  // LOADING
+  // =========================================================
   if (isLoading) {
     return <div className={styles.loading}>Loading store...</div>;
   }
+  // =========================================================
+  // ERROR
+  // =========================================================
   if (isError) {
     return (
       <div className={styles.error}>
@@ -72,23 +93,26 @@ const Home = () => {
   }
   const {
     banners = [],
-    // categories = [],
     trendingProducts = [],
     bestDiscountProducts = [],
     mostSellingProducts = [],
     newArrivals = [],
     topRatedProducts = [],
     dealOfTheDay = [],
-    // brands = [],
   } = homeData;
-
-  console.log(store.getState());
+  // =========================================================
+  // CHECK WISHLIST
+  // =========================================================
+  const isProductWishlisted = (productId: string) => {
+    return wishlist?.some((item) => item.productId === productId);
+  };
   return (
     <main className={styles.home}>
+      {/* BANNER */}
       <section className={styles.bannerSection}>
         <BannerSlider banners={banners} />
       </section>
-
+      {/* CATEGORY */}
       <section>
         <CategorySlider
           tenantId={tenantId}
@@ -97,6 +121,7 @@ const Home = () => {
           }}
         />
       </section>
+      {/* TRENDING */}
       <section className={styles.productSection}>
         <ProductCardSlider
           title="Trending Products"
@@ -105,7 +130,7 @@ const Home = () => {
           onQuickAdd={handleAddToCart}
         />
       </section>
-
+      {/* BEST DISCOUNTS */}
       <section className={styles.productSection}>
         <ProductCardSlider
           title="Best Discounts"
@@ -114,7 +139,7 @@ const Home = () => {
           onQuickAdd={handleAddToCart}
         />
       </section>
-
+      {/* MOST SELLING */}
       {mostSellingProducts.length > 0 && (
         <section className={styles.productSection}>
           <ProductCardSlider
@@ -125,7 +150,7 @@ const Home = () => {
           />
         </section>
       )}
-
+      {/* NEW ARRIVALS */}
       <section className={styles.productSection}>
         <ProductCardSlider
           title="New Arrivals"
@@ -134,7 +159,7 @@ const Home = () => {
           onQuickAdd={handleAddToCart}
         />
       </section>
-
+      {/* TOP RATED */}
       <section className={styles.productSection}>
         <ProductCardSlider
           title="Top Rated Products"
@@ -143,10 +168,15 @@ const Home = () => {
           onQuickAdd={handleAddToCart}
         />
       </section>
-
+      {/* DEAL OF THE DAY */}
       {dealOfTheDay.length > 0 && (
         <section className={styles.productSection}>
-          <DealOfTheDay products={dealOfTheDay} />
+          <DealOfTheDay
+            products={dealOfTheDay}
+            isWishlisted={isProductWishlisted}
+            onToggleWishlist={handleWishlist}
+            onQuickAdd={handleAddToCart}
+          />
         </section>
       )}
     </main>

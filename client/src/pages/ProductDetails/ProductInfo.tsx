@@ -1,50 +1,124 @@
-import { useState } from "react";
-import { Heart, ShoppingBag, Star, Minus, Plus } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import {
+  Heart,
+  ShoppingBag,
+  Star,
+  Minus,
+  Plus,
+} from "lucide-react";
 import styles from "./ProductDetails.module.css";
-import type { Product } from "../../features/products/types";
+import type {
+  Product,
+  ProductInventory,
+} from "../../features/products/types";
 interface ProductInfoProps {
   product: Product;
+  selectedColor: string;
+  selectedSize: string;
+  availableSizes: string[];
+  selectedVariant?: ProductInventory;
+  onColorChange: (color: string) => void;
+  onSizeChange: (size: string) => void;
   isWishlisted: boolean;
   isAddingToCart: boolean;
-  onAddToCart: (productId: string, quantity: number) => void | Promise<void>;
-  onWishlist: (productId: string) => void | Promise<void>;
+  onAddToCart: (
+    productId: string,
+    quantity: number,
+    variantId?: string,
+  ) => void | Promise<void>;
+  onWishlist: (
+    productId: string,
+  ) => void | Promise<void>;
 }
 const ProductInfo = ({
   product,
+  selectedColor,
+  selectedSize,
+  availableSizes,
+  selectedVariant,
+  onColorChange,
+  onSizeChange,
   isWishlisted,
   isAddingToCart,
   onAddToCart,
   onWishlist,
 }: ProductInfoProps) => {
-  const [selectedColor, setSelectedColor] = useState(product.colors?.[0] || "");
-  const [selectedSize, setSelectedSize] = useState(product.sizes?.[0] || "");
   const [quantity, setQuantity] = useState(1);
+  /*
+   * Colors that actually exist in inventory
+   */
+  const availableColors = useMemo(() => {
+    const colors = new Set<string>();
+    product.inventory?.forEach((item) => {
+      if (item.stock > 0) {
+        colors.add(item.color);
+      }
+    });
+    return Array.from(colors);
+  }, [product.inventory]);
+  /*
+   * Reset quantity when variant changes
+   */
+  useEffect(() => {
+    setQuantity(1);
+  }, [selectedColor, selectedSize]);
+  /*
+   * Current stock
+   */
+  const currentStock = selectedVariant?.stock || 0;
+  /*
+   * Increase quantity
+   */
   const increaseQuantity = () => {
-    setQuantity((value) => Math.min(value + 1, product.stock));
+    setQuantity((value) =>
+      Math.min(value + 1, currentStock),
+    );
   };
+  /*
+   * Decrease quantity
+   */
   const decreaseQuantity = () => {
-    setQuantity((value) => Math.max(1, value - 1));
+    setQuantity((value) =>
+      Math.max(1, value - 1),
+    );
+  };
+  /*
+   * Handle color change
+   */
+  const handleColorChange = (color: string) => {
+    onColorChange(color);
   };
   return (
     <div className={styles.info}>
-      {}
-      <div className={styles.category}>{product.categoryId}</div>
-      {}
-      <h1 className={styles.title}>{product.name}</h1>
-      {}
+      {/* CATEGORY */}
+      <div className={styles.category}>
+        {product.categoryName ||
+          product.categoryId}
+      </div>
+      {/* TITLE */}
+      <h1 className={styles.title}>
+        {product.name}
+      </h1>
+      {/* RATING */}
       <div className={styles.ratingRow}>
         <div className={styles.stars}>
-          {Array.from({ length: 5 }, (_, index) => (
-            <Star
-              key={index}
-              size={17}
-              fill={
-                index < Math.round(product.averageRating)
-                  ? "currentColor"
-                  : "none"
-              }
-            />
-          ))}
+          {Array.from(
+            { length: 5 },
+            (_, index) => (
+              <Star
+                key={index}
+                size={17}
+                fill={
+                  index <
+                  Math.round(
+                    product.averageRating,
+                  )
+                    ? "currentColor"
+                    : "none"
+                }
+              />
+            ),
+          )}
         </div>
         <strong className={styles.ratingValue}>
           {product.averageRating.toFixed(1)}
@@ -53,15 +127,23 @@ const ProductInfo = ({
           ({product.reviewCount} reviews)
         </span>
       </div>
-      {}
+      {/* PRICE */}
       <div className={styles.priceSection}>
         <span className={styles.currentPrice}>
-          ₹{product.finalPrice.toLocaleString("en-IN")}
+          ₹
+          {product.finalPrice.toLocaleString(
+            "en-IN",
+          )}
         </span>
         {product.discountPercentage > 0 && (
           <>
-            <span className={styles.originalPrice}>
-              ₹{product.price.toLocaleString("en-IN")}
+            <span
+              className={styles.originalPrice}
+            >
+              ₹
+              {product.price.toLocaleString(
+                "en-IN",
+              )}
             </span>
             <span className={styles.discount}>
               {product.discountPercentage}% OFF
@@ -69,51 +151,75 @@ const ProductInfo = ({
           </>
         )}
       </div>
-      {}
-      <p className={styles.description}>{product.description}</p>
+      {/* DESCRIPTION */}
+      <p className={styles.description}>
+        {product.description}
+      </p>
       <div className={styles.divider} />
-      {}
-      {product.colors?.length > 0 && (
+      {/* =========================
+          COLOR
+      ========================= */}
+      {availableColors.length > 0 && (
         <div className={styles.optionGroup}>
           <div className={styles.optionHeading}>
             <span>Color</span>
-            <strong>{selectedColor}</strong>
+            <strong>
+              {selectedColor}
+            </strong>
           </div>
           <div className={styles.colorOptions}>
-            {product.colors.map((color) => (
+            {availableColors.map((color) => (
               <button
                 key={color}
                 type="button"
                 className={`${styles.colorOption} ${
-                  selectedColor === color ? styles.optionSelected : ""
+                  selectedColor === color
+                    ? styles.optionSelected
+                    : ""
                 }`}
-                onClick={() => setSelectedColor(color)}
+                onClick={() =>
+                  handleColorChange(color)
+                }
               >
-                <span className={styles.colorDot} />
+                <span
+                  className={styles.colorDot}
+                  style={{
+                    backgroundColor: color.toLowerCase(),
+                  }}
+                />
                 {color}
               </button>
             ))}
           </div>
         </div>
       )}
-      {}
-      {product.sizes?.length > 0 && (
+      {/* =========================
+          SIZE
+      ========================= */}
+      {availableSizes.length > 0 && (
         <div className={styles.optionGroup}>
           <div className={styles.optionHeading}>
             <span>Size</span>
-            <button type="button" className={styles.sizeGuide}>
+            <button
+              type="button"
+              className={styles.sizeGuide}
+            >
               Size Guide
             </button>
           </div>
           <div className={styles.sizeOptions}>
-            {product.sizes.map((size) => (
+            {availableSizes.map((size) => (
               <button
                 key={size}
                 type="button"
                 className={`${styles.sizeOption} ${
-                  selectedSize === size ? styles.optionSelected : ""
+                  selectedSize === size
+                    ? styles.optionSelected
+                    : ""
                 }`}
-                onClick={() => setSelectedSize(size)}
+                onClick={() =>
+                  onSizeChange(size)
+                }
               >
                 {size}
               </button>
@@ -121,18 +227,24 @@ const ProductInfo = ({
           </div>
         </div>
       )}
-      {}
+      {/* =========================
+          STOCK
+      ========================= */}
       <div
         className={
-          product.stock > 0 ? styles.stockAvailable : styles.stockUnavailable
+          currentStock > 0
+            ? styles.stockAvailable
+            : styles.stockUnavailable
         }
       >
         <span />
-        {product.stock > 0
-          ? `${product.stock} items available`
+        {currentStock > 0
+          ? `${currentStock} items available`
           : "Out of stock"}
       </div>
-      {}
+      {/* =========================
+          ACTIONS
+      ========================= */}
       <div className={styles.actionRow}>
         <div className={styles.quantityControl}>
           <button
@@ -145,7 +257,9 @@ const ProductInfo = ({
           <span>{quantity}</span>
           <button
             type="button"
-            disabled={quantity >= product.stock}
+            disabled={
+              quantity >= currentStock
+            }
             onClick={increaseQuantity}
           >
             <Plus size={15} />
@@ -154,21 +268,48 @@ const ProductInfo = ({
         <button
           type="button"
           className={styles.addToCart}
-          disabled={product.stock <= 0 || isAddingToCart}
-          onClick={() => onAddToCart(product._id, quantity)}
+          disabled={
+            currentStock <= 0 ||
+            !selectedVariant ||
+            isAddingToCart
+          }
+          onClick={() =>
+            onAddToCart(
+              product._id,
+              quantity,
+              selectedVariant?.variantId,
+            )
+          }
         >
           <ShoppingBag size={18} />
-          {isAddingToCart ? "Adding..." : "Add to Cart"}
+          {isAddingToCart
+            ? "Adding..."
+            : "Add to Cart"}
         </button>
         <button
           type="button"
           className={`${styles.wishlistButton} ${
-            isWishlisted ? styles.wishlistActive : ""
+            isWishlisted
+              ? styles.wishlistActive
+              : ""
           }`}
-          onClick={() => onWishlist(product._id)}
-          aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
+          onClick={() =>
+            onWishlist(product._id)
+          }
+          aria-label={
+            isWishlisted
+              ? "Remove from wishlist"
+              : "Add to wishlist"
+          }
         >
-          <Heart size={20} fill={isWishlisted ? "currentColor" : "none"} />
+          <Heart
+            size={20}
+            fill={
+              isWishlisted
+                ? "currentColor"
+                : "none"
+            }
+          />
         </button>
       </div>
     </div>

@@ -4,11 +4,9 @@
   background: #f6f8f7;
   color: #1f2a26;
 }
-
 /* =====================================================
    HEADER
 ===================================================== */
-
 .header {
   display: flex;
   align-items: flex-end;
@@ -16,11 +14,9 @@
   gap: 1.5rem;
   margin-bottom: 1.75rem;
 }
-
 .header > div:first-child {
   min-width: 0;
 }
-
 .backButton {
   display: inline-flex;
   align-items: center;
@@ -35,11 +31,9 @@
   cursor: pointer;
   transition: color 0.2s ease;
 }
-
 .backButton:hover {
   color: #2f6b52;
 }
-
 .eyebrow {
   display: block;
   margin-bottom: 0.4375rem;
@@ -49,7 +43,6 @@
   letter-spacing: 0.12em;
   text-transform: uppercase;
 }
-
 .header h1 {
   margin: 0;
   font-size: 2rem;
@@ -58,19 +51,16 @@
   letter-spacing: -0.03em;
   color: #17211d;
 }
-
 .header p {
   margin: 0.5rem 0 0;
   color: #6c7973;
   font-size: 0.875rem;
   line-height: 1.6;
 }
-
 .header p strong {
   color: #2a3832;
   font-weight: 700;
 }
-
 .addButton {
   display: inline-flex;
   align-items: center;
@@ -91,30 +81,25 @@
     transform 0.2s ease,
     box-shadow 0.2s ease;
 }
-
 .addButton:hover {
   background: #275c46;
   transform: translateY(-0.0625rem);
   box-shadow: 0 0.5rem 1.125rem rgba(47, 107, 82, 0.2);
 }
-
 .addButton span {
   font-size: 1.25rem;
   line-height: 1;
   font-weight: 400;
 }
-
 /* =====================================================
    SUMMARY
 ===================================================== */
-
 .summaryGrid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 1rem;
   margin-bottom: 1.5rem;
 }
-
 .summaryCard {
   display: flex;
   align-items: center;
@@ -126,7 +111,6 @@
   background: #ffffff;
   box-shadow: 0 0.125rem 0.5rem rgba(27, 42, 35, 0.035);
 }
-
 .summaryIcon {
   display: flex;
   align-items: center;
@@ -140,11 +124,9 @@
   font-size: 1.125rem;
   font-weight: 700;
 }
-
 .summaryCard > div {
   min-width: 0;
 }
-
 .summaryCard > div > span {
   display: block;
   margin-bottom: 0.3125rem;
@@ -152,7 +134,6 @@
   font-size: 0.75rem;
   font-weight: 600;
 }
-
 .summaryCard strong {
   display: block;
   color: #1e2924;
@@ -160,11 +141,9 @@
   line-height: 1.1;
   font-weight: 750;
 }
-
 /* =====================================================
    TOOLBAR
 ===================================================== */
-
 .toolbar {
   display: flex;
   align-items: center;
@@ -172,12 +151,10 @@
   gap: 0.875rem;
   margin-bottom: 1rem;
 }
-
 .search {
   position: relative;
   width: 22.5rem;
 }
-
 .search > span {
   position: absolute;
   top: 50%;
@@ -187,7 +164,6 @@
   font-size: 1.125rem;
   pointer-events: none;
 }
-
 .search input {
   width: 100%;
   height: 2.75rem;
@@ -203,20 +179,16 @@
     box-shadow 0.2s ease;
   box-sizing: border-box;
 }
-
 .search input::placeholder {
   color: #9aa49f;
 }
-
 .search input:focus {
   border-color: #78a58e;
   box-shadow: 0 0 0 0.1875rem rgba(47, 107, 82, 0.09);
 }
-
 /* =====================================================
    TABLE CARD
 ===================================================== */
-
 .tableCard {
   overflow: hidden;
   border: 0.0625rem solid #e4e9e6;
@@ -224,7 +196,6 @@
   background: #ffffff;
   box-shadow: 0 0.1875rem 0.75rem rgba(25, 40, 33, 0.04);
 }
-
 .tableHeader {
   display: flex;
   align-items: center;
@@ -233,34 +204,28 @@
   padding: 1.25rem 1.375rem;
   border-bottom: 0.0625rem solid #edf0ee;
 }
-
 .tableHeader h2 {
   margin: 0 0 0.25rem;
   color: #202b26;
   font-size: 1.0625rem;
   font-weight: 750;
 }
-
 .tableHeader span {
   color: #7a8680;
   font-size: 0.8125rem;
 }
-
 /* =====================================================
    TABLE
 ===================================================== */
-
 .tableWrapper {
   width: 100%;
   overflow-x: auto;
 }
-
 .tableWrapper table {
   width: 100%;
   min-width: 65.625rem;
   border-collapse: collapse;
 }
-
 .tableWrapper th {
   height: 2.875rem;
   padding: 0 1.125rem;
@@ -274,7 +239,6 @@
   text-transform: uppercase;
   white-space: nowrap;
 }
-
 .tableWrapper td {
   padding: 0.9375rem 1.125rem;
   border-bottom: 0.0625rem solid #eef1ef;
@@ -282,30 +246,24 @@
   font-size: 0.8125rem;
   vertical-align: middle;
 }
-
 .tableWrapper tbody tr {
   transition: background 0.15s ease;
 }
-
 .tableWrapper tbody tr:hover {
   background: #fbfcfb;
 }
-
 .tableWrapper tbody tr:last-child td {
   border-bottom: 0;
 }
-
 /* =====================================================
    PRODUCT
 ===================================================== */
-
 .product {
   display: flex;
   align-items: center;
   gap: 0.75rem;
   min-width: 14.375rem;
 }
-
 .productImage {
   display: flex;
   align-items: center;
@@ -321,21 +279,18 @@
   font-size: 1.0625rem;
   font-weight: 750;
 }
-
 .productImage img {
   display: block;
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
-
 .productInfo {
   display: flex;
   flex-direction: column;
   min-width: 0;
   gap: 0.25rem;
 }
-
 .productInfo strong {
   max-width: 14.375rem;
   overflow: hidden;
@@ -345,17 +300,14 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-
 .productInfo span {
   color: #9aa39f;
   color: #909b95;
   font-size: 0.6875rem;
 }
-
 /* =====================================================
    CATEGORY
 ===================================================== */
-
 .category {
   display: inline-flex;
   align-items: center;
@@ -367,34 +319,28 @@
   font-size: 0.6875rem;
   font-weight: 700;
 }
-
 /* =====================================================
    PRICE
 ===================================================== */
-
 .price {
   display: flex;
   flex-direction: column;
   gap: 0.1875rem;
   white-space: nowrap;
 }
-
 .price strong {
   color: #26332d;
   font-size: 0.8125rem;
   font-weight: 750;
 }
-
 .price span {
   color: #a0aaa5;
   font-size: 0.6875rem;
   text-decoration: line-through;
 }
-
 /* =====================================================
    STOCK
 ===================================================== */
-
 .stock,
 .lowStock,
 .outOfStock {
@@ -407,26 +353,21 @@
   font-size: 0.6875rem;
   font-weight: 750;
 }
-
 .stock {
   background: #edf7f0;
   color: #28734d;
 }
-
 .lowStock {
   background: #fff5df;
   color: #a36a00;
 }
-
 .outOfStock {
   background: #fff0f0;
   color: #bd4444;
 }
-
 /* =====================================================
    STATUS
 ===================================================== */
-
 .active,
 .inactive {
   display: inline-flex;
@@ -436,36 +377,29 @@
   font-weight: 650;
   white-space: nowrap;
 }
-
 .active {
   color: #28734d;
 }
-
 .inactive {
   color: #a15a5a;
 }
-
 .statusDot {
   width: 0.4375rem;
   height: 0.4375rem;
   border-radius: 50%;
   background: currentColor;
 }
-
 /* =====================================================
    DATE
 ===================================================== */
-
 .date {
   color: #727f78;
   font-size: 0.75rem;
   white-space: nowrap;
 }
-
 /* =====================================================
    EDIT BUTTON
 ===================================================== */
-
 .editButton {
   min-width: 3.625rem;
   height: 2rem;
@@ -481,16 +415,13 @@
     background 0.2s ease,
     border-color 0.2s ease;
 }
-
 .editButton:hover {
   border-color: #b9d0c2;
   background: #f0f6f2;
 }
-
 /* =====================================================
    EMPTY STATE
 ===================================================== */
-
 .emptyState {
   display: flex;
   align-items: center;
@@ -500,7 +431,6 @@
   padding: 2.5rem 1.25rem;
   text-align: center;
 }
-
 .emptyIcon {
   display: flex;
   align-items: center;
@@ -513,13 +443,11 @@
   color: #2f6b52;
   font-size: 1.5625rem;
 }
-
 .emptyState h3 {
   margin: 0 0 0.4375rem;
   color: #26322d;
   font-size: 1.0625rem;
 }
-
 .emptyState p {
   max-width: 22.5rem;
   margin: 0 0 1.25rem;
@@ -527,7 +455,6 @@
   font-size: 0.8125rem;
   line-height: 1.6;
 }
-
 .emptyButton {
   height: 2.5rem;
   padding: 0 1rem;
@@ -539,11 +466,9 @@
   font-weight: 700;
   cursor: pointer;
 }
-
 /* =====================================================
    PAGINATION
 ===================================================== */
-
 .pagination {
   display: flex;
   align-items: center;
@@ -552,14 +477,12 @@
   padding: 0.9375rem 1.25rem;
   border-top: 0.0625rem solid #edf0ee;
 }
-
 .pagination span {
   min-width: 5.625rem;
   color: #68756e;
   font-size: 0.75rem;
   text-align: center;
 }
-
 .pagination button {
   height: 2.125rem;
   padding: 0 0.75rem;
@@ -571,21 +494,17 @@
   font-weight: 650;
   cursor: pointer;
 }
-
 .pagination button:hover:not(:disabled) {
   border-color: #b9cfc2;
   background: #f5f8f6;
 }
-
 .pagination button:disabled {
   cursor: not-allowed;
   opacity: 0.45;
 }
-
 /* =====================================================
    STATES
 ===================================================== */
-
 .loading,
 .error,
 .state {
@@ -600,55 +519,43 @@
   color: #6e7b74;
   font-size: 0.875rem;
 }
-
 .error {
   color: #b34c4c;
 }
-
 /* =====================================================
    RESPONSIVE
 ===================================================== */
-
 @media (max-width: 68.75rem) {
   .page {
     padding: 1.625rem 1.5rem 2.5rem;
   }
-
   .summaryGrid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
-
 @media (max-width: 47.5rem) {
   .page {
     padding: 1.25rem 1rem 2rem;
   }
-
   .header {
     align-items: flex-start;
     flex-direction: column;
   }
-
   .header h1 {
     font-size: 1.6875rem;
   }
-
   .addButton {
     width: 100%;
   }
-
   .summaryGrid {
     grid-template-columns: 1fr;
   }
-
   .toolbar {
     width: 100%;
   }
-
   .search {
     width: 100%;
   }
-
   .tableHeader {
     padding: 1.0625rem;
   }
@@ -656,7 +563,6 @@
 /* ================================
    TOOLBAR
 ================================ */
-
 .toolbar {
   display: flex;
   align-items: center;
@@ -667,7 +573,6 @@
   border: 0.0625rem solid #e7e9e8;
   border-radius: 0.875rem;
 }
-
 .search {
   position: relative;
   display: flex;
@@ -680,20 +585,17 @@
   border-radius: 0.625rem;
   transition: all 0.2s ease;
 }
-
 .search:focus-within {
   background: #ffffff;
   border-color: #2f6b52;
   box-shadow: 0 0 0 0.1875rem rgba(47, 107, 82, 0.08);
 }
-
 .searchIcon {
   margin-left: 0.875rem;
   color: #718078;
   font-size: 1.3125rem;
   line-height: 1;
 }
-
 .search input {
   width: 100%;
   height: 100%;
@@ -704,11 +606,9 @@
   color: #1f2a26;
   font-size: 0.875rem;
 }
-
 .search input::placeholder {
   color: #8a9690;
 }
-
 .clearSearch {
   position: absolute;
   right: 0.625rem;
@@ -722,20 +622,16 @@
   font-size: 1.0625rem;
   line-height: 1.25rem;
 }
-
 .clearSearch:hover {
   background: #dce5df;
 }
-
 /* ================================
    SELECT
 ================================ */
-
 .selectWrapper {
   position: relative;
   flex-shrink: 0;
 }
-
 .select {
   appearance: none;
   min-width: 10.625rem;
@@ -761,28 +657,23 @@
   cursor: pointer;
   transition: all 0.2s ease;
 }
-
 .select:hover {
   border-color: #b9c8bf;
   background-color: #ffffff;
 }
-
 .select:focus {
   border-color: #2f6b52;
   background-color: #ffffff;
   box-shadow: 0 0 0 0.1875rem rgba(47, 107, 82, 0.08);
 }
-
 .select option {
   background: #ffffff;
   color: #1f2a26;
   padding: 0.625rem;
 }
-
 /* ================================
    CLEAR FILTER
 ================================ */
-
 .clearButton {
   height: 2.75rem;
   padding: 0 1rem;
@@ -796,16 +687,13 @@
   white-space: nowrap;
   transition: all 0.2s ease;
 }
-
 .clearButton:hover {
   background: #eaf2ed;
   border-color: #2f6b52;
 }
-
 /* ================================
    ACTIVE FILTERS
 ================================ */
-
 .activeFilters {
   display: flex;
   align-items: center;
@@ -816,7 +704,6 @@
   color: #68766f;
   font-size: 0.8125rem;
 }
-
 .filterTag {
   display: inline-flex;
   align-items: center;
@@ -827,16 +714,13 @@
   font-size: 0.75rem;
   font-weight: 600;
 }
-
 /* ================================
    STOCK
 ================================ */
-
 .stock {
   color: #34423b;
   font-weight: 600;
 }
-
 .lowStock {
   display: inline-flex;
   align-items: center;
@@ -846,11 +730,9 @@
   color: #b56a00;
   font-weight: 700;
 }
-
 /* ================================
    EMPTY STATE BUTTON
 ================================ */
-
 .emptyClearButton {
   margin-top: 0.75rem;
   padding: 0.5625rem 0.9375rem;
@@ -862,45 +744,36 @@
   font-weight: 600;
   cursor: pointer;
 }
-
 .emptyClearButton:hover {
   background: #24563f;
 }
-
 /* ================================
    RESPONSIVE
 ================================ */
-
 @media (max-width: 56.25rem) {
   .toolbar {
     flex-wrap: wrap;
   }
-
   .search {
     width: 100%;
     flex-basis: 100%;
   }
-
   .selectWrapper {
     flex: 1;
   }
-
   .select {
     width: 100%;
   }
 }
-
 @media (max-width: 37.5rem) {
   .toolbar {
     padding: 0.75rem;
     gap: 0.625rem;
   }
-
   .selectWrapper {
     width: 100%;
     flex-basis: 100%;
   }
-
   .clearButton {
     width: 100%;
   }
@@ -911,7 +784,6 @@
   gap: 0.5rem;
   white-space: nowrap;
 }
-
 .editButton,
 .deleteButton {
   height: 2rem;
@@ -922,31 +794,26 @@
   cursor: pointer;
   transition: all 0.2s ease;
 }
-
 .editButton {
   min-width: 3.4375rem;
   border: 0.0625rem solid #dce5df;
   background: #ffffff;
   color: #2f6b52;
 }
-
 .editButton:hover {
   border-color: #b9d0c2;
   background: #f0f6f2;
 }
-
 .deleteButton {
   min-width: 3.875rem;
   border: 0.0625rem solid #f0d6d6;
   background: #fffafa;
   color: #bd4b4b;
 }
-
 .deleteButton:hover {
   border-color: #e4b5b5;
   background: #fff0f0;
 }
-
 .modalOverlay {
   position: fixed;
   inset: 0;
@@ -958,7 +825,6 @@
   background: rgba(20, 31, 26, 0.48);
   backdrop-filter: blur(0.1875rem);
 }
-
 .modal {
   width: min(45rem, 100%);
   max-height: calc(100vh - 3rem);
@@ -968,7 +834,6 @@
   background: #ffffff;
   box-shadow: 0 1.25rem 3.75rem rgba(20, 35, 28, 0.2);
 }
-
 .modalHeader {
   display: flex;
   align-items: flex-start;
@@ -977,7 +842,6 @@
   padding: 1.375rem 1.5rem;
   border-bottom: 0.0625rem solid #edf0ee;
 }
-
 .modalEyebrow {
   display: block;
   margin-bottom: 0.3125rem;
@@ -987,14 +851,12 @@
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }
-
 .modalHeader h2 {
   margin: 0;
   color: #1f2a26;
   font-size: 1.3125rem;
   font-weight: 750;
 }
-
 .modalClose {
   display: flex;
   align-items: center;
@@ -1008,31 +870,26 @@
   font-size: 1.375rem;
   cursor: pointer;
 }
-
 .modalClose:hover {
   background: #e9eeeb;
   color: #2f6b52;
 }
-
 .formGrid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 1rem;
   padding: 1.5rem;
 }
-
 .formGroup {
   display: flex;
   flex-direction: column;
   gap: 0.4375rem;
 }
-
 .formGroup label {
   color: #46544d;
   font-size: 0.75rem;
   font-weight: 700;
 }
-
 .formGroup input,
 .formGroup textarea {
   width: 100%;
@@ -1048,28 +905,23 @@
     border-color 0.2s ease,
     box-shadow 0.2s ease;
 }
-
 .formGroup input {
   height: 2.625rem;
   padding: 0 0.75rem;
 }
-
 .formGroup textarea {
   min-height: 5.625rem;
   padding: 0.6875rem 0.75rem;
   resize: vertical;
 }
-
 .formGroup input:focus,
 .formGroup textarea:focus {
   border-color: #2f6b52;
   box-shadow: 0 0 0 0.1875rem rgba(47, 107, 82, 0.08);
 }
-
 .fullWidth {
   grid-column: 1 / -1;
 }
-
 .activeToggle {
   display: inline-flex;
   align-items: center;
@@ -1079,13 +931,11 @@
   font-weight: 650;
   cursor: pointer;
 }
-
 .activeToggle input {
   width: 1rem;
   height: 1rem;
   accent-color: #2f6b52;
 }
-
 .modalFooter {
   display: flex;
   justify-content: flex-end;
@@ -1094,7 +944,6 @@
   border-top: 0.0625rem solid #edf0ee;
   background: #fafbfa;
 }
-
 .cancelButton,
 .saveButton {
   min-height: 2.5rem;
@@ -1104,33 +953,27 @@
   font-weight: 700;
   cursor: pointer;
 }
-
 .cancelButton {
   border: 0.0625rem solid #dfe5e2;
   background: #ffffff;
   color: #53615a;
 }
-
 .cancelButton:hover {
   background: #f4f6f5;
 }
-
 .saveButton {
   border: 0;
   background: #2f6b52;
   color: #ffffff;
 }
-
 .saveButton:hover:not(:disabled) {
   background: #275c46;
 }
-
 .saveButton:disabled,
 .confirmDeleteButton:disabled {
   cursor: not-allowed;
   opacity: 0.6;
 }
-
 .deleteModal {
   width: min(26.25rem, 100%);
   padding: 1.875rem;
@@ -1139,7 +982,6 @@
   text-align: center;
   box-shadow: 0 1.25rem 3.75rem rgba(20, 35, 28, 0.2);
 }
-
 .deleteIcon {
   display: flex;
   align-items: center;
@@ -1153,24 +995,20 @@
   font-size: 1.4375rem;
   font-weight: 800;
 }
-
 .deleteModal h2 {
   margin: 0 0 0.5625rem;
   color: #26322d;
   font-size: 1.25rem;
 }
-
 .deleteModal p {
   margin: 0 auto 0.5rem;
   color: #6e7b74;
   font-size: 0.8125rem;
   line-height: 1.6;
 }
-
 .deleteModal p strong {
   color: #2c3932;
 }
-
 .deleteWarning {
   display: block;
   margin-bottom: 1.375rem;
@@ -1178,13 +1016,11 @@
   font-size: 0.75rem;
   font-weight: 600;
 }
-
 .deleteActions {
   display: flex;
   justify-content: center;
   gap: 0.625rem;
 }
-
 .confirmDeleteButton {
   min-height: 2.5rem;
   padding: 0 1rem;
@@ -1196,50 +1032,226 @@
   font-weight: 700;
   cursor: pointer;
 }
-
 .confirmDeleteButton:hover:not(:disabled) {
   background: #a83f3f;
 }
-
 @media (max-width: 37.5rem) {
   .modalOverlay {
     padding: 0.75rem;
   }
-
   .modal {
     max-height: calc(100vh - 1.5rem);
   }
-
   .formGrid {
     grid-template-columns: 1fr;
     padding: 1.125rem;
   }
-
   .fullWidth {
     grid-column: auto;
   }
-
   .modalHeader {
     padding: 1.125rem;
   }
-
   .modalFooter {
     padding: 0.9375rem 1.125rem;
   }
-
   .modalFooter button {
     flex: 1;
   }
-
   .deleteModal {
     padding: 1.5rem;
   }
-
   .deleteActions {
     flex-direction: column;
   }
-
   .deleteActions button {
     width: 100%;
   }
+}
+.imagePreviewGrid {
+  display: grid;
+  grid-template-columns: repeat(
+    auto-fill,
+    minmax(120px, 1fr)
+  );
+  gap: 14px;
+  margin-top: 16px;
+}
+.imagePreview {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  border: 1px solid var(--border, #e5e7eb);
+  border-radius: 12px;
+  overflow: hidden;
+  background: #f8fafc;
+}
+.imagePreview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.removeImageButton {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(220, 38, 38, 0.95);
+  color: #ffffff;
+  font-size: 18px;
+  line-height: 28px;
+  text-align: center;
+  cursor: pointer;
+  padding: 0;
+}
+.removeImageButton:hover {
+  background: #b91c1c;
+}
+.imageNumber {
+  position: absolute;
+  left: 6px;
+  bottom: 6px;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.65);
+  color: #ffffff;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.hiddenFileInput {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+.imageUploadBox {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  min-height: 64px;
+  margin-top: 8px;
+  padding: 10px 12px;
+  box-sizing: border-box;
+  border: 1px dashed #d1d5db;
+  border-radius: 10px;
+  background: #f9fafb;
+}
+.chooseImageButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 40px;
+  padding: 0 16px;
+  border: none;
+  border-radius: 8px;
+  background: var(--primary, #2f6b52);
+  color: #ffffff;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    background-color 0.2s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+.chooseImageButton:hover {
+  background: var(--secondary, #4c8a6d);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
+  transform: translateY(-1px);
+}
+.chooseImageButton:active {
+  transform: translateY(0);
+}
+.uploadIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  font-size: 18px;
+  font-weight: 700;
+}
+.imageUploadText {
+  color: #6b7280;
+  font-size: 12px;
+  white-space: nowrap;
+}
+.imagePreviewGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: 16px;
+}
+.imagePreview {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  overflow: hidden;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #f8fafc;
+}
+.imagePreview img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.removeImageButton {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: #ef2f2f;
+  color: #ffffff;
+  font-size: 18px;
+  font-weight: 500;
+  line-height: 1;
+  cursor: pointer;
+  z-index: 2;
+}
+.removeImageButton:hover {
+  background: #dc2626;
+}
+.imageNumber {
+  position: absolute;
+  bottom: 6px;
+  left: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 5px;
+  box-sizing: border-box;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.65);
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 600;
 }

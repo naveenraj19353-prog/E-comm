@@ -10,12 +10,10 @@
   cursor: pointer;
   border: 0.0625rem solid var(--border);
 }
-
 .card:hover {
   transform: translateY(-0.5rem);
   box-shadow: 0 0.9375rem 2.5rem rgba(0, 0, 0, 0.08);
 }
-
 .discount {
   position: absolute;
   left: 1rem;
@@ -28,7 +26,6 @@
   font-weight: 600;
   z-index: 2;
 }
-
 .wishlist {
   position: absolute;
   right: 1rem;
@@ -50,35 +47,29 @@
     transform 0.3s ease;
   z-index: 2;
 }
-
 .wishlist:hover {
   background: var(--danger);
   color: var(--text-white);
   transform: scale(1.06);
 }
-
 .imageWrapper {
   background: var(--background);
   aspect-ratio: 1;
   overflow: hidden;
 }
-
 .image {
   width: 100%;
   height: 100%;
   object-fit: cover;
   transition: transform 0.4s ease;
 }
-
 .card:hover .image {
   transform: scale(1.08);
 }
-
 .content {
   padding: 1.125rem;
   background: var(--surface);
 }
-
 .content h3 {
   margin: 0;
   color: var(--text-black);
@@ -88,7 +79,6 @@
   height: 3rem;
   overflow: hidden;
 }
-
 .rating {
   display: flex;
   align-items: center;
@@ -97,30 +87,25 @@
   color: var(--text);
   font-size: 0.875rem;
 }
-
 .rating svg {
   color: var(--warning);
 }
-
 .price {
   display: flex;
   align-items: center;
   gap: 0.75rem;
   margin-bottom: 1.125rem;
 }
-
 .current {
   color: var(--primary);
   font-size: 1.25rem;
   font-weight: 700;
 }
-
 .old {
   color: var(--text);
   text-decoration: line-through;
   opacity: 0.55;
 }
-
 .cartBtn {
   width: 100%;
   height: 2.875rem;
@@ -139,21 +124,17 @@
     background 0.3s ease,
     transform 0.2s ease;
 }
-
 .cartBtn:hover {
   background: var(--secondary);
   transform: translateY(-0.0625rem);
 }
-
 .cartBtn:active {
   transform: translateY(0);
 }
-
 .wishlisted {
   color: var(--danger);
   background: var(--background);
 }
-
 .wishlisted:hover {
   background: var(--danger);
   color: var(--text-white);

@@ -9,8 +9,19 @@ import type { Product } from "../../features/products/types";
 interface ProductCardSliderProps {
   title: string;
   products?: Product[];
-  onToggleWishlist?: (productId: string, isAdding: boolean) => void;
-  onQuickAdd?: (productId: string) => void;
+  onToggleWishlist?: (
+    productId: string,
+    isAdding: boolean,
+  ) => void;
+  isWishlisted?: (
+    productId: string,
+  ) => boolean;
+  onQuickAdd?: (
+    productId: string,
+    variantId: string,
+    color: string,
+    size: string,
+  ) => void;
   slidesPerView?: number;
 }
 export default function ProductCardSlider({
@@ -20,7 +31,6 @@ export default function ProductCardSlider({
   onQuickAdd,
   slidesPerView,
 }: ProductCardSliderProps) {
-  // const uid = useId().replace(/:/g, "");
   const prevRef = useRef<HTMLButtonElement | null>(null);
   const nextRef = useRef<HTMLButtonElement | null>(null);
   if (products.length === 0) {
@@ -71,7 +81,6 @@ export default function ProductCardSlider({
         modules={[Navigation, FreeMode, Autoplay]}
         onBeforeInit={(swiper) => {
           const navigation = swiper.params.navigation;
-
           if (navigation && typeof navigation !== "boolean") {
             navigation.prevEl = prevRef.current;
             navigation.nextEl = nextRef.current;
@@ -95,8 +104,12 @@ export default function ProductCardSlider({
           <SwiperSlide key={product._id} className={styles.slide}>
             <ProductCard
               product={product}
-              onToggleWishlist={onToggleWishlist}
-              onQuickAdd={onQuickAdd}
+              onWishlist={(productId, isAdding) => {
+                onToggleWishlist?.(productId, isAdding);
+              }}
+              onAddToCart={(productId, variantId, color, size) => {
+                onQuickAdd?.(productId, variantId, color, size);
+              }}
             />
           </SwiperSlide>
         ))}

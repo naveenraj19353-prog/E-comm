@@ -4,15 +4,12 @@
   gap: 2rem;
   padding: 3.75rem 0;
 }
-
 .left {
   position: relative;
   overflow: hidden;
   min-height: 29.375rem;
   padding: 2.625rem;
-
   border-radius: 1.5rem;
-
   background:
     radial-gradient(
       circle at 90% 10%,
@@ -24,264 +21,193 @@
       color-mix(in srgb, var(--primary) 75%, #000000),
       var(--primary)
     );
-
   color: var(--text-white);
-
   display: flex;
   flex-direction: column;
   justify-content: center;
 }
-
 .left::after {
   content: "";
-
   position: absolute;
-
   width: 11.25rem;
   height: 11.25rem;
-
   right: -4.375rem;
   bottom: -4.375rem;
-
   border-radius: 50%;
-
   background: rgba(255, 255, 255, 0.08);
 }
-
 .tag {
   position: relative;
   z-index: 1;
-
   width: fit-content;
-
   padding: 0.4375rem 0.8125rem;
   margin-bottom: 1.375rem;
-
   border-radius: 62.4375rem;
-
   background: rgba(255, 255, 255, 0.14);
   border: 0.0625rem solid rgba(255, 255, 255, 0.18);
-
   font-size: 0.75rem;
   font-weight: 700;
 }
-
 .left h2 {
   position: relative;
   z-index: 1;
-
   margin: 0 0 1.125rem;
-
   color: var(--text-white);
-
   font-size: 2.625rem;
   line-height: 1.05;
   font-weight: 800;
   letter-spacing: -0.0938rem;
 }
-
 .left p {
   position: relative;
   z-index: 1;
-
   max-width: 18.125rem;
-
   margin: 0;
-
   color: rgba(255, 255, 255, 0.82);
-
   font-size: 0.875rem;
   line-height: 1.65;
 }
-
 .button {
   position: relative;
   z-index: 1;
-
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 0.75rem;
-
   width: 100%;
   height: 3.125rem;
-
   margin-top: 1.75rem;
-
   border: none;
   border-radius: 0.625rem;
-
   background: var(--surface);
   color: var(--primary);
-
   font-size: 0.875rem;
   font-weight: 700;
-
   cursor: pointer;
-
   transition:
     transform 0.2s ease,
     box-shadow 0.2s ease,
     background 0.2s ease;
 }
-
 .button:hover {
   transform: translateY(-0.125rem);
-
   box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.15);
 }
-
 .button span {
   font-size: 1.125rem;
 }
-
 .right {
   min-width: 0;
   padding: 0.25rem 0;
 }
-
 .sliderHeader {
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
-
   margin-bottom: 1.125rem;
 }
-
 .eyebrow {
   display: block;
-
   margin-bottom: 0.3125rem;
-
   color: var(--primary);
-
   font-size: 0.625rem;
   font-weight: 800;
   letter-spacing: 0.0938rem;
 }
-
 .sliderHeader h3 {
   margin: 0;
-
   color: var(--text);
-
   font-size: 1.375rem;
   font-weight: 700;
 }
-
 .arrows {
   display: flex;
   gap: 0.5rem;
 }
-
 .arrowButton {
   width: 2.25rem;
   height: 2.25rem;
-
   border: 0.0625rem solid var(--border);
   border-radius: 50%;
-
   background: var(--surface);
   color: var(--text);
-
   display: flex;
   align-items: center;
   justify-content: center;
-
   cursor: pointer;
-
   transition:
     background 0.2s ease,
     color 0.2s ease,
     border-color 0.2s ease,
     transform 0.2s ease;
 }
-
 .arrowButton:hover {
   background: var(--primary);
   border-color: var(--primary);
   color: var(--text-white);
-
   transform: translateY(-0.0625rem);
 }
-
 .swiper {
   width: 100%;
   padding: 0.25rem 0.125rem 0.75rem;
 }
-
 .swiper :global(.swiper-slide) {
   height: auto;
 }
-
 @media (max-width: 68.75rem) {
   .section {
     grid-template-columns: 18.75rem minmax(0, 1fr);
     gap: 1.5rem;
   }
-
   .left {
     padding: 2rem;
   }
-
   .left h2 {
     font-size: 2.25rem;
   }
 }
-
 @media (max-width: 56.25rem) {
   .section {
     grid-template-columns: 1fr;
   }
-
   .left {
     min-height: auto;
     padding: 2.25rem;
   }
-
   .left p {
     max-width: 31.25rem;
   }
-
   .button {
     max-width: 16.25rem;
   }
 }
-
 @media (max-width: 37.5rem) {
   .section {
     gap: 1.25rem;
     padding: 2.5rem 0;
   }
-
   .left {
     padding: 1.75rem;
     border-radius: 1.25rem;
   }
-
   .left h2 {
     font-size: 2rem;
   }
-
   .sliderHeader h3 {
     font-size: 1.125rem;
   }
-
   .arrowButton {
     width: 2rem;
     height: 2rem;
   }
 }
-
 @media (max-width: 26.25rem) {
   .left {
     padding: 1.5rem;
   }
-
   .left h2 {
     font-size: 1.8125rem;
   }
-
   .button {
     max-width: none;
   }

@@ -1,175 +1,382 @@
 from datetime import datetime
-
 from bson import ObjectId
-from fastapi import APIRouter, HTTPException
-
-from app.database.mongo import banners
+from fastapi import APIRouter, Depends, HTTPException
+from app.database.mongo import banners, tenants
 from app.models.banner import CreateBanner, UpdateBanner
-
-
+from app.utils.auth_dependencies import admin_tenant_id, require_admin
 router = APIRouter(
     prefix="/banner",
     tags=["Banner"],
 )
-
-
+# ==========================================================
+# CREATE BANNER
+# ==========================================================
 @router.post("/create")
-def create_banner(banner: CreateBanner):
-
-    banner_data = banner.model_dump()
-
-    now = datetime.utcnow()
-
-    banner_data["createdAt"] = now
-    banner_data["updatedAt"] = now
-
-    result = banners.insert_one(banner_data)
-
-    return {
-        "message": "Banner created successfully",
-        "bannerId": str(result.inserted_id),
-    }
-
-
-@router.get("/get-all")
-def get_banners(tenantId: str):
-
-    banner_list = banners.find(
-        {
-            "tenantId": tenantId,
-        }
-    ).sort(
-        "priority",
-        1,
-    )
-
-    data = []
-
-    for banner in banner_list:
-
-        banner["_id"] = str(banner["_id"])
-
-        data.append(banner)
-
-    return {
-        "data": data,
-        "count": len(data),
-    }
-
-
-@router.get("/active")
-def get_active_banners(tenantId: str):
-
-    now = datetime.utcnow()
-
-    query = {
-        "tenantId": tenantId,
-        "isActive": True,
-        "$or": [
+def create_banner(
+    banner: CreateBanner,
+    current_user: dict = Depends(require_admin),
+):
+    try:
+        banner_data = banner.model_dump()
+        tenant_id = admin_tenant_id(
+            current_user,
+            banner_data.get("tenantId"),
+        )
+        banner_data["tenantId"] = tenant_id
+        # --------------------------------------------------
+        # VALIDATE TENANT
+        # --------------------------------------------------
+        if not tenant_id:
+            raise HTTPException(
+                status_code=400,
+                detail="tenantId is required.",
+            )
+        tenant = tenants.find_one(
             {
-                "startDate": None,
-            },
-            {
-                "startDate": {
-                    "$lte": now,
-                },
-            },
-        ],
-        "$and": [
-            {
-                "$or": [
-                    {
-                        "endDate": None,
-                    },
-                    {
-                        "endDate": {
-                            "$gte": now,
-                        },
-                    },
-                ]
+                "tenantId": tenant_id,
+                "isActive": True,
             }
-        ],
-    }
-
-    banner_list = banners.find(query).sort(
-        "priority",
-        1,
-    )
-
-    data = []
-
-    for banner in banner_list:
-
-        banner["_id"] = str(banner["_id"])
-
-        data.append(banner)
-
-    return {
-        "data": data,
-    }
-
-
+        )
+        if not tenant:
+            raise HTTPException(
+                status_code=404,
+                detail="Tenant not found or inactive.",
+            )
+        # --------------------------------------------------
+        # TIMESTAMP
+        # --------------------------------------------------
+        now = datetime.utcnow()
+        banner_data["createdAt"] = now
+        banner_data["updatedAt"] = now
+        # --------------------------------------------------
+        # CREATE
+        # --------------------------------------------------
+        result = banners.insert_one(
+            banner_data
+        )
+        return {
+            "success": True,
+            "message": "Banner created successfully.",
+            "bannerId": str(
+                result.inserted_id
+            ),
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(
+            "CREATE BANNER ERROR:",
+            str(e),
+        )
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to create banner.",
+        )
+# ==========================================================
+# GET ALL BANNERS
+# ==========================================================
+@router.get("/get-all")
+def get_banners(
+    tenantId: str,
+):
+    try:
+        # --------------------------------------------------
+        # VALIDATE TENANT
+        # --------------------------------------------------
+        tenant = tenants.find_one(
+            {
+                "tenantId": tenantId,
+                "isActive": True,
+            }
+        )
+        if not tenant:
+            raise HTTPException(
+                status_code=404,
+                detail="Tenant not found or inactive.",
+            )
+        # --------------------------------------------------
+        # GET BANNERS
+        # --------------------------------------------------
+        banner_list = banners.find(
+            {
+                "tenantId": tenantId,
+            }
+        ).sort(
+            "priority",
+            1,
+        )
+        data = []
+        for banner in banner_list:
+            banner["_id"] = str(
+                banner["_id"]
+            )
+            data.append(
+                banner
+            )
+        return {
+            "success": True,
+            "data": data,
+            "count": len(data),
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(
+            "GET BANNERS ERROR:",
+            str(e),
+        )
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to fetch banners.",
+        )
+# ==========================================================
+# GET ACTIVE BANNERS
+# ==========================================================
+@router.get("/active")
+def get_active_banners(
+    tenantId: str,
+):
+    try:
+        # --------------------------------------------------
+        # VALIDATE TENANT
+        # --------------------------------------------------
+        tenant = tenants.find_one(
+            {
+                "tenantId": tenantId,
+                "isActive": True,
+            }
+        )
+        if not tenant:
+            raise HTTPException(
+                status_code=404,
+                detail="Tenant not found or inactive.",
+            )
+        # --------------------------------------------------
+        # CURRENT TIME
+        # --------------------------------------------------
+        now = datetime.utcnow()
+        # --------------------------------------------------
+        # ACTIVE BANNER QUERY
+        # --------------------------------------------------
+        query = {
+            "tenantId": tenantId,
+            "isActive": True,
+            "$or": [
+                {
+                    "startDate": None,
+                },
+                {
+                    "startDate": {
+                        "$lte": now,
+                    },
+                },
+            ],
+            "$and": [
+                {
+                    "$or": [
+                        {
+                            "endDate": None,
+                        },
+                        {
+                            "endDate": {
+                                "$gte": now,
+                            },
+                        },
+                    ]
+                }
+            ],
+        }
+        banner_list = banners.find(
+            query
+        ).sort(
+            "priority",
+            1,
+        )
+        data = []
+        for banner in banner_list:
+            banner["_id"] = str(
+                banner["_id"]
+            )
+            data.append(
+                banner
+            )
+        return {
+            "success": True,
+            "data": data,
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(
+            "GET ACTIVE BANNERS ERROR:",
+            str(e),
+        )
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to fetch active banners.",
+        )
+# ==========================================================
+# UPDATE BANNER
+# ==========================================================
 @router.put("/update/{banner_id}")
 def update_banner(
     banner_id: str,
     banner: UpdateBanner,
+    current_user: dict = Depends(require_admin),
 ):
-
-    if not ObjectId.is_valid(banner_id):
-        raise HTTPException(
-            status_code=400,
-            detail="Invalid banner ID",
+    try:
+        # --------------------------------------------------
+        # VALIDATE BANNER ID
+        # --------------------------------------------------
+        if not ObjectId.is_valid(
+            banner_id
+        ):
+            raise HTTPException(
+                status_code=400,
+                detail="Invalid banner ID.",
+            )
+        # --------------------------------------------------
+        # GET UPDATE DATA
+        # --------------------------------------------------
+        update_data = banner.model_dump(
+            exclude_unset=True,
+            exclude_none=True,
         )
-
-    update_data = {
-        key: value
-        for key, value in banner.model_dump().items()
-        if value is not None
-    }
-
-    update_data["updatedAt"] = datetime.utcnow()
-
-    result = banners.update_one(
-        {
-            "_id": ObjectId(banner_id),
-        },
-        {
-            "$set": update_data,
-        },
-    )
-
-    if result.matched_count == 0:
-        raise HTTPException(
-            status_code=404,
-            detail="Banner not found",
+        if not update_data:
+            raise HTTPException(
+                status_code=400,
+                detail="No fields provided for update.",
+            )
+        update_data.pop("tenantId", None)
+        existing_banner = banners.find_one(
+            {
+                "_id": ObjectId(banner_id),
+            }
         )
-
-    return {
-        "message": "Banner updated successfully",
-    }
-
-
-@router.delete("/delete/{banner_id}")
-def delete_banner(banner_id: str):
-
-    if not ObjectId.is_valid(banner_id):
-        raise HTTPException(
-            status_code=400,
-            detail="Invalid banner ID",
+        if not existing_banner:
+            raise HTTPException(
+                status_code=404,
+                detail="Banner not found.",
+            )
+        admin_tenant_id(
+            current_user,
+            existing_banner.get("tenantId"),
         )
-
-    result = banners.delete_one(
-        {
-            "_id": ObjectId(banner_id),
+        # --------------------------------------------------
+        # UPDATED TIME
+        # --------------------------------------------------
+        update_data[
+            "updatedAt"
+        ] = datetime.utcnow()
+        # --------------------------------------------------
+        # UPDATE
+        # --------------------------------------------------
+        result = banners.update_one(
+            {
+                "_id": ObjectId(
+                    banner_id
+                ),
+            },
+            {
+                "$set": update_data,
+            },
+        )
+        if result.matched_count == 0:
+            raise HTTPException(
+                status_code=404,
+                detail="Banner not found.",
+            )
+        # --------------------------------------------------
+        # GET UPDATED BANNER
+        # --------------------------------------------------
+        updated_banner = banners.find_one(
+            {
+                "_id": ObjectId(
+                    banner_id
+                ),
+            }
+        )
+        updated_banner[
+            "_id"
+        ] = str(
+            updated_banner["_id"]
+        )
+        return {
+            "success": True,
+            "message": "Banner updated successfully.",
+            "data": updated_banner,
         }
-    )
-
-    if result.deleted_count == 0:
-        raise HTTPException(
-            status_code=404,
-            detail="Banner not found",
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(
+            "UPDATE BANNER ERROR:",
+            str(e),
         )
-
-    return {
-        "message": "Banner deleted successfully",
-    }
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to update banner.",
+        )
+# ==========================================================
+# DELETE BANNER
+# ==========================================================
+@router.delete("/delete/{banner_id}")
+def delete_banner(
+    banner_id: str,
+    current_user: dict = Depends(require_admin),
+):
+    try:
+        # --------------------------------------------------
+        # VALIDATE ID
+        # --------------------------------------------------
+        if not ObjectId.is_valid(
+            banner_id
+        ):
+            raise HTTPException(
+                status_code=400,
+                detail="Invalid banner ID.",
+            )
+        # --------------------------------------------------
+        # DELETE
+        # --------------------------------------------------
+        existing_banner = banners.find_one(
+            {
+                "_id": ObjectId(banner_id),
+            }
+        )
+        if not existing_banner:
+            raise HTTPException(
+                status_code=404,
+                detail="Banner not found.",
+            )
+        admin_tenant_id(
+            current_user,
+            existing_banner.get("tenantId"),
+        )
+        result = banners.delete_one(
+            {
+                "_id": ObjectId(
+                    banner_id
+                ),
+            }
+        )
+        if result.deleted_count == 0:
+            raise HTTPException(
+                status_code=404,
+                detail="Banner not found.",
+            )
+        return {
+            "success": True,
+            "message": "Banner deleted successfully.",
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(
+            "DELETE BANNER ERROR:",
+            str(e),
+        )
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to delete banner.",
+        )

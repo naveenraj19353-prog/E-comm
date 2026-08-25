@@ -1,56 +1,45 @@
 .section {
   padding: 5rem 0;
 }
-
 .header {
   text-align: center;
   margin-bottom: 3.125rem;
 }
-
 .header h2 {
   margin: 0 0 0.625rem;
   color: var(--text, #1f2a26);
   font-size: 2.375rem;
   font-weight: 700;
 }
-
 .header p {
   margin: 0;
   color: var(--text, #666);
   opacity: 0.7;
   font-size: 0.9375rem;
 }
-
 :global(.swiper) {
   padding-bottom: 3.75rem;
 }
-
 :global(.swiper-button-next),
 :global(.swiper-button-prev) {
   color: var(--primary, #2f6b52);
 }
-
 :global(.swiper-pagination-bullet-active) {
   background: var(--primary, #2f6b52);
 }
-
 @media (max-width: 48rem) {
   .section {
     padding: 3.4375rem 0;
   }
-
   .header {
     margin-bottom: 2.1875rem;
   }
-
   .header h2 {
     font-size: 1.75rem;
   }
-
   .header p {
     font-size: 0.875rem;
   }
-
   :global(.swiper) {
     padding-bottom: 2.8125rem;
   }

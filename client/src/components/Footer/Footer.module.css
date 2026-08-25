@@ -3,7 +3,6 @@
   color: var(--text-white);
   margin-top: 5rem;
 }
-
 .container {
   max-width: 87.5rem;
   margin: auto;
@@ -12,25 +11,21 @@
   grid-template-columns: 2fr 1fr 1fr 1fr;
   gap: 3.125rem;
 }
-
 .brand h2 {
   margin-bottom: 1rem;
   font-size: 2rem;
   color: var(--text-white);
 }
-
 .brand p {
   color: var(--text-white);
   opacity: 0.75;
   line-height: 1.8;
   margin-bottom: 1.5625rem;
 }
-
 .socials {
   display: flex;
   gap: 1rem;
 }
-
 .socials svg {
   color: var(--text-white);
   cursor: pointer;
@@ -38,27 +33,22 @@
     color 0.3s ease,
     transform 0.3s ease;
 }
-
 .socials svg:hover {
   color: var(--primary);
   transform: translateY(-0.125rem);
 }
-
 h3 {
   margin-bottom: 1.25rem;
   color: var(--text-white);
 }
-
 ul {
   list-style: none;
   padding: 0;
   margin: 0;
 }
-
 li {
   margin-bottom: 0.75rem;
 }
-
 a {
   color: var(--text-white);
   opacity: 0.75;
@@ -67,12 +57,10 @@ a {
     color 0.3s ease,
     opacity 0.3s ease;
 }
-
 a:hover {
   color: var(--primary);
   opacity: 1;
 }
-
 .bottom {
   text-align: center;
   padding: 1.5rem;
@@ -80,19 +68,16 @@ a:hover {
   color: var(--text-white);
   opacity: 0.55;
 }
-
 @media (max-width: 62rem) {
   .container {
     grid-template-columns: repeat(2, 1fr);
   }
 }
-
 @media (max-width: 37.5rem) {
   .container {
     grid-template-columns: 1fr;
     text-align: center;
   }
-
   .socials {
     justify-content: center;
   }

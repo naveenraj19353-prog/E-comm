@@ -1,28 +1,34 @@
 from app.models.coupon import ApplyCoupon, CreateCoupon
-from fastapi import APIRouter, HTTPException
-from app.database.mongo import carts, products, addresses, coupons
+from fastapi import APIRouter, Depends, HTTPException
+from app.database.mongo import coupons
 from datetime import datetime
+from app.utils.auth_dependencies import (
+    admin_tenant_id,
+    customer_scope,
+    require_admin,
+    require_customer,
+)
 
 router = APIRouter(prefix="/coupon", tags=["Coupon"])
 
 
 @router.post("/create-coupon")
-def create_coupon(request: CreateCoupon):
-
+def create_coupon(
+    request: CreateCoupon,
+    current_user: dict = Depends(require_admin),
+):
+    tenant_id = admin_tenant_id(current_user, request.tenantId)
     existing = coupons.find_one(
-        {"tenantId": request.tenantId, "code": request.code.upper()}
+        {"tenantId": tenant_id, "code": request.code.upper()}
     )
-
     if existing:
         raise HTTPException(status_code=409, detail="Coupon already exists.")
-
     if request.endDate <= request.startDate:
         raise HTTPException(
             status_code=400, detail="End date must be after start date."
         )
-
     coupon = {
-        "tenantId": request.tenantId,
+        "tenantId": tenant_id,
         "code": request.code.upper(),
         "description": request.description,
         "discountType": request.discountType,
@@ -37,9 +43,7 @@ def create_coupon(request: CreateCoupon):
         "createdAt": datetime.utcnow(),
         "updatedAt": datetime.utcnow(),
     }
-
     result = coupons.insert_one(coupon)
-
     return {
         "success": True,
         "couponId": str(result.inserted_id),
@@ -48,17 +52,28 @@ def create_coupon(request: CreateCoupon):
 
 
 @router.post("/apply-coupon")
-def apply_coupon(request: ApplyCoupon):
-
+def apply_coupon(
+    request: ApplyCoupon,
+    current_user: dict = Depends(require_customer),
+):
+    tenant_id, _user_id = customer_scope(current_user)
     coupon = coupons.find_one(
         {
-            "tenantId": request.tenantId,
+            "tenantId": tenant_id,
             "code": request.couponCode.upper(),
             "isActive": True,
         }
     )
-
     if not coupon:
         raise HTTPException(status_code=404, detail="Invalid coupon.")
-
-    return {"success": True, "coupon": coupon}
+    return {
+        "success": True,
+        "coupon": {
+            "code": coupon.get("code"),
+            "description": coupon.get("description"),
+            "discountType": coupon.get("discountType"),
+            "discountValue": coupon.get("discountValue"),
+            "minimumOrderAmount": coupon.get("minimumOrderAmount"),
+            "maximumDiscount": coupon.get("maximumDiscount"),
+        },
+    }

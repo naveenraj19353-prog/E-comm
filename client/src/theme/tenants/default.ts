@@ -10,5 +10,4 @@ const defaultTheme = {
     border: "#D9E5F5",
   },
 };
-
 export default defaultTheme;

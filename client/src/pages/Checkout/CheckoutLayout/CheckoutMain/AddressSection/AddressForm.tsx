@@ -1,12 +1,9 @@
 import { useState } from "react";
 import { X } from "lucide-react";
-
 import styles from "./AddressForm.module.css";
-
 import type { Address } from "../../../../../features/address/types/address.types";
-
 import { useAppSelector } from "../../../../../app/hooks";
-
+import { useStorefrontTenant } from "../../../../../features/tenant/useTenant";
 export interface AddressFormData {
   fullName: string;
   phone: string;
@@ -21,7 +18,6 @@ export interface AddressFormData {
   tenantId: string;
   userId: string;
 }
-
 interface AddressFormProps {
   initialData?: Address;
   isEditing?: boolean;
@@ -30,7 +26,6 @@ interface AddressFormProps {
   onSubmit: (data: AddressFormData) => Promise<void>;
   onCancel: () => void;
 }
-
 const AddressForm = ({
   initialData,
   isEditing = false,
@@ -40,15 +35,9 @@ const AddressForm = ({
   onCancel,
 }: AddressFormProps) => {
   const user = useAppSelector((state) => state.auth.user);
-
-  const tenantSlug = useAppSelector((state) => state.tenant.tenantSlug);
-
-  const tenantId = tenantSlug?.trim() || "";
-
+  const { tenantId } = useStorefrontTenant();
   const userId = user?._id || "";
-
   const [validationError, setValidationError] = useState("");
-
   const [formData, setFormData] = useState<AddressFormData>(() => ({
     fullName: initialData?.fullName || "",
     phone: initialData?.phone || "",
@@ -63,7 +52,6 @@ const AddressForm = ({
     tenantId,
     userId,
   }));
-
   const handleChange = (
     field: keyof AddressFormData,
     value: string | boolean,
@@ -72,105 +60,76 @@ const AddressForm = ({
       ...previous,
       [field]: value,
     }));
-
     if (validationError) {
       setValidationError("");
     }
   };
-
   const validateForm = () => {
     if (formData.fullName.trim().length < 3) {
       return "Please enter your full name.";
     }
-
     if (
       formData.phone.trim().length < 10 ||
       formData.phone.trim().length > 15
     ) {
       return "Please enter a valid phone number.";
     }
-
     if (formData.addressLine1.trim().length < 5) {
       return "Please enter a valid address.";
     }
-
     if (!formData.city.trim()) {
       return "Please enter your city.";
     }
-
     if (!formData.state.trim()) {
       return "Please enter your state.";
     }
-
     if (!formData.country.trim()) {
       return "Please enter your country.";
     }
-
     if (!formData.postalCode.trim()) {
       return "Please enter your postal code.";
     }
-
     if (!tenantId) {
       return "Tenant information is missing.";
     }
-
     if (!userId) {
       return "User information is missing.";
     }
-
     return "";
   };
-
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-
     const errorMessage = validateForm();
-
     if (errorMessage) {
       setValidationError(errorMessage);
       return;
     }
-
     try {
       await onSubmit({
         ...formData,
-
         fullName: formData.fullName.trim(),
-
         phone: formData.phone.trim(),
-
         addressLine1: formData.addressLine1.trim(),
-
         addressLine2: formData.addressLine2?.trim() || "",
-
         city: formData.city.trim(),
-
         state: formData.state.trim(),
-
         country: formData.country.trim(),
-
         postalCode: formData.postalCode.trim(),
-
         tenantId,
-
         userId,
       });
     } catch (submitError) {
       console.error("Address form submission failed:", submitError);
     }
   };
-
   return (
     <div className={styles.formWrapper}>
       <div className={styles.formHeader}>
         <div>
           <span className={styles.eyebrow}>DELIVERY ADDRESS</span>
-
           <h3>{isEditing ? "Edit Address" : "Add New Address"}</h3>
-
           <p>Enter the address where your order should be delivered.</p>
         </div>
-
         <button
           type="button"
           className={styles.closeButton}
@@ -181,11 +140,9 @@ const AddressForm = ({
           <X size={19} />
         </button>
       </div>
-
       {(validationError || error) && (
         <div className={styles.error}>{validationError || error}</div>
       )}
-
       <form className={styles.form} onSubmit={handleSubmit}>
         <div className={styles.grid}>
           <div className={styles.field}>
@@ -193,7 +150,6 @@ const AddressForm = ({
               Full Name
               <span className={styles.required}>*</span>
             </label>
-
             <input
               id="fullName"
               type="text"
@@ -203,13 +159,11 @@ const AddressForm = ({
               disabled={loading}
             />
           </div>
-
           <div className={styles.field}>
             <label htmlFor="phone">
               Phone Number
               <span className={styles.required}>*</span>
             </label>
-
             <input
               id="phone"
               type="tel"
@@ -219,12 +173,10 @@ const AddressForm = ({
               disabled={loading}
             />
           </div>
-
           <div className={`${styles.field} ${styles.fullWidth}`}>
             <label htmlFor="addressLine1">
               Address Line 1<span className={styles.required}>*</span>
             </label>
-
             <input
               id="addressLine1"
               type="text"
@@ -236,12 +188,10 @@ const AddressForm = ({
               disabled={loading}
             />
           </div>
-
           <div className={`${styles.field} ${styles.fullWidth}`}>
             <label htmlFor="addressLine2">
               Address Line 2<span className={styles.optional}>Optional</span>
             </label>
-
             <input
               id="addressLine2"
               type="text"
@@ -253,13 +203,11 @@ const AddressForm = ({
               disabled={loading}
             />
           </div>
-
           <div className={styles.field}>
             <label htmlFor="city">
               City
               <span className={styles.required}>*</span>
             </label>
-
             <input
               id="city"
               type="text"
@@ -269,13 +217,11 @@ const AddressForm = ({
               disabled={loading}
             />
           </div>
-
           <div className={styles.field}>
             <label htmlFor="state">
               State
               <span className={styles.required}>*</span>
             </label>
-
             <input
               id="state"
               type="text"
@@ -285,13 +231,11 @@ const AddressForm = ({
               disabled={loading}
             />
           </div>
-
           <div className={styles.field}>
             <label htmlFor="country">
               Country
               <span className={styles.required}>*</span>
             </label>
-
             <input
               id="country"
               type="text"
@@ -301,13 +245,11 @@ const AddressForm = ({
               disabled={loading}
             />
           </div>
-
           <div className={styles.field}>
             <label htmlFor="postalCode">
               Postal Code
               <span className={styles.required}>*</span>
             </label>
-
             <input
               id="postalCode"
               type="text"
@@ -319,11 +261,9 @@ const AddressForm = ({
               disabled={loading}
             />
           </div>
-
           <div className={`${styles.field} ${styles.fullWidth}`}>
             <div className={styles.typeSection}>
               <label className={styles.typeLabel}>Address Type</label>
-
               <div className={styles.typeOptions}>
                 {(["Home", "Office", "Other"] as const).map((type) => (
                   <button
@@ -343,7 +283,6 @@ const AddressForm = ({
               </div>
             </div>
           </div>
-
           <div className={`${styles.fullWidth} ${styles.defaultRow}`}>
             <input
               id="isDefault"
@@ -355,10 +294,8 @@ const AddressForm = ({
               }
               disabled={loading}
             />
-
             <label htmlFor="isDefault">Set as default address</label>
           </div>
-
           <div className={`${styles.fullWidth} ${styles.actions}`}>
             <button
               type="button"
@@ -368,7 +305,6 @@ const AddressForm = ({
             >
               Cancel
             </button>
-
             <button
               type="submit"
               className={styles.saveButton}
@@ -386,5 +322,4 @@ const AddressForm = ({
     </div>
   );
 };
-
 export default AddressForm;

@@ -4,11 +4,9 @@
   background: #f6f8f7;
   color: #1f2a26;
 }
-
 /* =====================================================
      STATE
   ===================================================== */
-
 .state {
   min-height: 31.25rem;
   display: flex;
@@ -19,18 +17,15 @@
   color: #5b6a63;
   text-align: center;
 }
-
 .state h2 {
   margin: 0;
   color: #1f2a26;
   font-size: 1.5rem;
 }
-
 .state p {
   margin: 0;
   font-size: 0.875rem;
 }
-
 .spinner {
   width: 2rem;
   height: 2rem;
@@ -39,17 +34,14 @@
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
-
 @keyframes spin {
   to {
     transform: rotate(360deg);
   }
 }
-
 /* =====================================================
      HEADER
   ===================================================== */
-
 .header {
   display: flex;
   align-items: flex-end;
@@ -57,11 +49,9 @@
   gap: 1.875rem;
   margin-bottom: 1.75rem;
 }
-
 .header > div:first-child {
   min-width: 0;
 }
-
 .backButton {
   display: inline-flex;
   align-items: center;
@@ -76,11 +66,9 @@
   cursor: pointer;
   transition: color 0.2s ease;
 }
-
 .backButton:hover {
   color: #2f6b52;
 }
-
 .eyebrow {
   display: block;
   margin-bottom: 0.5rem;
@@ -90,7 +78,6 @@
   letter-spacing: 0.12em;
   text-transform: uppercase;
 }
-
 .header h1 {
   margin: 0;
   color: #18231f;
@@ -99,20 +86,17 @@
   font-weight: 750;
   letter-spacing: -0.025em;
 }
-
 .header p {
   margin: 0.5rem 0 0;
   color: #68766f;
   font-size: 0.9375rem;
 }
-
 .headerActions {
   display: flex;
   align-items: center;
   gap: 0.625rem;
   flex-shrink: 0;
 }
-
 .editButton,
 .productsButton {
   height: 2.625rem;
@@ -126,38 +110,31 @@
     border-color 0.2s ease,
     transform 0.2s ease;
 }
-
 .editButton {
   border: 0.0625rem solid #d7dfdb;
   background: #ffffff;
   color: #33423b;
 }
-
 .editButton:hover {
   background: #f1f5f3;
   border-color: #c5d2cb;
 }
-
 .productsButton {
   border: 0.0625rem solid #2f6b52;
   background: #2f6b52;
   color: #ffffff;
 }
-
 .productsButton:hover {
   background: #285d47;
   border-color: #285d47;
 }
-
 .editButton:active,
 .productsButton:active {
   transform: translateY(0.0625rem);
 }
-
 /* =====================================================
      STATUS
   ===================================================== */
-
 .statusCard {
   display: flex;
   align-items: center;
@@ -169,19 +146,16 @@
   background: #ffffff;
   box-shadow: 0 0.125rem 0.5rem rgba(31, 42, 38, 0.03);
 }
-
 .statusInfo {
   display: flex;
   align-items: center;
   gap: 1.125rem;
 }
-
 .statusLabel {
   color: #65736c;
   font-size: 0.8125rem;
   font-weight: 600;
 }
-
 .active,
 .inactive {
   display: inline-flex;
@@ -192,28 +166,23 @@
   font-size: 0.75rem;
   font-weight: 700;
 }
-
 .active {
   background: #e8f4ed;
   color: #27704d;
 }
-
 .inactive {
   background: #fbeaea;
   color: #a63d3d;
 }
-
 .statusDot {
   width: 0.4375rem;
   height: 0.4375rem;
   border-radius: 50%;
   background: currentColor;
 }
-
 /* =====================================================
      SECTION
   ===================================================== */
-
 .section {
   margin-bottom: 1.5rem;
   padding: 1.5rem;
@@ -222,11 +191,9 @@
   background: #ffffff;
   box-shadow: 0 0.125rem 0.625rem rgba(31, 42, 38, 0.03);
 }
-
 .sectionHeader {
   margin-bottom: 1.375rem;
 }
-
 .sectionEyebrow {
   display: block;
   margin-bottom: 0.3125rem;
@@ -235,30 +202,25 @@
   font-weight: 800;
   letter-spacing: 0.12em;
 }
-
 .sectionHeader h2 {
   margin: 0;
   color: #1d2924;
   font-size: 1.25rem;
   font-weight: 720;
 }
-
 .sectionHeader p {
   margin: 0.375rem 0 0;
   color: #728078;
   font-size: 0.8125rem;
 }
-
 /* =====================================================
      INFORMATION GRID
   ===================================================== */
-
 .infoGrid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0.875rem;
 }
-
 .infoCard {
   min-height: 5.375rem;
   padding: 1.0625rem 1.125rem;
@@ -266,7 +228,6 @@
   border-radius: 0.625rem;
   background: #fafcfb;
 }
-
 .infoCard span {
   display: block;
   margin-bottom: 0.5rem;
@@ -274,7 +235,6 @@
   font-size: 0.75rem;
   font-weight: 600;
 }
-
 .infoCard strong {
   display: block;
   overflow: hidden;
@@ -284,11 +244,9 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-
 /* =====================================================
      STORE PREVIEW
   ===================================================== */
-
 .storeCard {
   display: flex;
   align-items: center;
@@ -299,7 +257,6 @@
   border-radius: 0.75rem;
   background: #fafcfb;
 }
-
 .storeLogo {
   width: 3.75rem;
   height: 3.75rem;
@@ -315,36 +272,30 @@
   font-size: 1.4375rem;
   font-weight: 800;
 }
-
 .storeLogo img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
-
 .storeInfo {
   min-width: 0;
   flex: 1;
 }
-
 .storeInfo h3 {
   margin: 0;
   color: #26332d;
   font-size: 1.0625rem;
   font-weight: 720;
 }
-
 .storeInfo p {
   margin: 0.25rem 0;
   color: #6d7b74;
   font-size: 0.8125rem;
 }
-
 .storeInfo span {
   color: #8a9690;
   font-size: 0.75rem;
 }
-
 .viewStoreButton {
   height: 2.5rem;
   padding: 0 1rem;
@@ -357,22 +308,18 @@
   cursor: pointer;
   transition: all 0.2s ease;
 }
-
 .viewStoreButton:hover {
   border-color: #2f6b52;
   background: #eef6f1;
 }
-
 /* =====================================================
      ACTIONS
   ===================================================== */
-
 .actionsGrid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.875rem;
 }
-
 .actionCard {
   display: flex;
   align-items: center;
@@ -390,14 +337,12 @@
     transform 0.2s ease,
     box-shadow 0.2s ease;
 }
-
 .actionCard:hover {
   border-color: #b9cdbf;
   background: #fbfdfc;
   box-shadow: 0 0.3125rem 0.9375rem rgba(31, 42, 38, 0.05);
   transform: translateY(-0.0625rem);
 }
-
 .actionIcon {
   width: 2.625rem;
   height: 2.625rem;
@@ -411,12 +356,10 @@
   font-size: 1.125rem;
   font-weight: 700;
 }
-
 .actionCard > div:nth-child(2) {
   min-width: 0;
   flex: 1;
 }
-
 .actionCard strong {
   display: block;
   margin-bottom: 0.25rem;
@@ -424,102 +367,81 @@
   font-size: 0.875rem;
   font-weight: 720;
 }
-
 .actionCard span {
   display: block;
   color: #77847e;
   font-size: 0.75rem;
   line-height: 1.45;
 }
-
 .actionCard b {
   color: #8a9791;
   font-size: 1.0625rem;
 }
-
 /* =====================================================
      RESPONSIVE
   ===================================================== */
-
 @media (max-width: 62.5rem) {
   .page {
     padding: 1.625rem 1.5rem 3.125rem;
   }
-
   .infoGrid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
-
 @media (max-width: 47.5rem) {
   .page {
     padding: 1.25rem 1rem 2.5rem;
   }
-
   .header {
     align-items: flex-start;
     flex-direction: column;
   }
-
   .headerActions {
     width: 100%;
   }
-
   .editButton,
   .productsButton {
     flex: 1;
   }
-
   .header h1 {
     font-size: 1.75rem;
   }
-
   .statusCard {
     padding: 1rem 1.125rem;
   }
-
   .infoGrid {
     grid-template-columns: 1fr;
   }
-
   .actionsGrid {
     grid-template-columns: 1fr;
   }
-
   .storeCard {
     align-items: flex-start;
     flex-wrap: wrap;
   }
-
   .viewStoreButton {
     width: 100%;
   }
 }
-
 @media (max-width: 30rem) {
   .section {
     padding: 1.125rem;
   }
-
   .headerActions {
     flex-direction: column;
   }
-
   .editButton,
   .productsButton {
     width: 100%;
   }
-
   .statusInfo {
     align-items: flex-start;
     flex-direction: column;
     gap: 0.5rem;
   }
-
   .storeCard {
     gap: 0.8125rem;
   }
-
   .storeLogo {
     width: 3.25rem;
     height: 3.25rem;

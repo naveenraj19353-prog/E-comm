@@ -1,37 +1,27 @@
 import { useState } from "react";
 import { type SubmitEvent } from "react";
 import { useNavigate } from "react-router-dom";
-
 import styles from "../styles/CreateTenant.module.css";
 import { useCreateTenant } from "../hooks/useTenants";
-
 export default function CreateTenant() {
   const navigate = useNavigate();
-
   const createTenantMutation = useCreateTenant();
-
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
   const [logo, setLogo] = useState("");
   const [theme, setTheme] = useState("green");
-
   const [error, setError] = useState("");
-
   const handleSubmit = async (event: SubmitEvent<HTMLFormElement>) => {
     event.preventDefault();
-
     setError("");
-
     if (!name.trim()) {
       setError("Tenant name is required.");
       return;
     }
-
     if (!slug.trim()) {
       setError("Tenant slug is required.");
       return;
     }
-
     try {
       const response = await createTenantMutation.mutateAsync({
         name: name.trim(),
@@ -39,21 +29,16 @@ export default function CreateTenant() {
         logo: logo.trim(),
         theme,
       });
-
       const createdTenant = response.data;
-
       navigate(`/admin/tenants/${createdTenant.tenantId}`);
     } catch (error: unknown) {
       console.error("Create tenant failed:", error);
-
       setError("Failed to create tenant.");
     }
   };
-
   return (
     <div className={styles.page}>
       {/* HEADER */}
-
       <div className={styles.header}>
         <div>
           <button
@@ -63,37 +48,27 @@ export default function CreateTenant() {
           >
             ← Back to Tenants
           </button>
-
           <span className={styles.eyebrow}>PLATFORM</span>
-
           <h1>Create Tenant</h1>
-
           <p>Create a new store on the OmniStore platform.</p>
         </div>
       </div>
-
       {/* FORM */}
-
       <form className={styles.formCard} onSubmit={handleSubmit}>
         <div className={styles.formHeader}>
           <div>
             <h2>Tenant Information</h2>
-
             <p>Enter the basic information for the new tenant.</p>
           </div>
-
           <div className={styles.newBadge}>New Tenant</div>
         </div>
-
         <div className={styles.formBody}>
           {/* NAME */}
-
           <div className={styles.field}>
             <label htmlFor="tenant-name">
               Tenant Name
               <span>*</span>
             </label>
-
             <input
               id="tenant-name"
               type="text"
@@ -102,15 +77,12 @@ export default function CreateTenant() {
               placeholder="Example: Fashion Hub"
             />
           </div>
-
           {/* SLUG */}
-
           <div className={styles.field}>
             <label htmlFor="tenant-slug">
               Store Slug
               <span>*</span>
             </label>
-
             <input
               id="tenant-slug"
               type="text"
@@ -125,15 +97,11 @@ export default function CreateTenant() {
               }
               placeholder="fashion-hub"
             />
-
             <small>Store URL: /{slug || "fashion-hub"}</small>
           </div>
-
           {/* LOGO */}
-
           <div className={styles.field}>
             <label htmlFor="tenant-logo">Logo URL</label>
-
             <input
               id="tenant-logo"
               type="text"
@@ -141,37 +109,26 @@ export default function CreateTenant() {
               onChange={(event) => setLogo(event.target.value)}
               placeholder="https://example.com/logo.png"
             />
-
             <small>Optional. You can add a logo later.</small>
           </div>
-
           {/* THEME */}
-
           <div className={styles.field}>
             <label htmlFor="tenant-theme">Theme</label>
-
             <select
               id="tenant-theme"
               value={theme}
               onChange={(event) => setTheme(event.target.value)}
             >
               <option value="green">Green</option>
-
               <option value="blue">Blue</option>
-
               <option value="purple">Purple</option>
-
               <option value="orange">Orange</option>
-
               <option value="dark">Dark</option>
             </select>
           </div>
-
           {/* PREVIEW */}
-
           <div className={styles.preview}>
             <div className={styles.previewHeader}>Preview</div>
-
             <div className={styles.previewBody}>
               <div className={styles.previewLogo}>
                 {logo ? (
@@ -182,22 +139,16 @@ export default function CreateTenant() {
                   "O"
                 )}
               </div>
-
               <div>
                 <strong>{name || "Tenant Name"}</strong>
-
                 <span>/{slug || "tenant-slug"}</span>
               </div>
             </div>
           </div>
-
           {/* ERROR */}
-
           {error && <div className={styles.error}>{error}</div>}
         </div>
-
         {/* FOOTER */}
-
         <div className={styles.formFooter}>
           <button
             type="button"
@@ -207,7 +158,6 @@ export default function CreateTenant() {
           >
             Cancel
           </button>
-
           <button
             type="submit"
             className={styles.saveButton}

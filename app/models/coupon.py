@@ -1,8 +1,6 @@
 from pydantic import BaseModel, Field
 from typing import Literal
 from datetime import datetime
-
-
 class CreateCoupon(BaseModel):
     tenantId: str
     code: str
@@ -14,8 +12,6 @@ class CreateCoupon(BaseModel):
     usageLimit: int = 0
     startDate: datetime
     endDate: datetime
-
-
 class ApplyCoupon(BaseModel):
     tenantId: str
     userId: str

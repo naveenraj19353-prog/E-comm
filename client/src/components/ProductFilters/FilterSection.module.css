@@ -2,7 +2,6 @@
   border-bottom: 0.0625rem solid var(--border);
   padding: 1.125rem 0;
 }
-
 .header {
   width: 100%;
   display: flex;
@@ -15,15 +14,12 @@
   font-size: 0.9375rem;
   font-weight: 600;
 }
-
 .icon {
   transition: 0.25s;
 }
-
 .rotate {
   transform: rotate(180deg);
 }
-
 .content {
   margin-top: 1rem;
 }

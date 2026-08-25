@@ -1,7 +1,8 @@
+from typing import Optional
 from pydantic import BaseModel, StrictStr
 
 
 class WishList(BaseModel):
-    tenantId: StrictStr
-    userId: str
+    tenantId: Optional[StrictStr] = None
+    userId: Optional[str] = None
     productId: str

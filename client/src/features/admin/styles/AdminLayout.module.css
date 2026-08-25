@@ -1,492 +1,334 @@
 /* =========================================================
    ADMIN LAYOUT
 ========================================================= */
-
 .layout {
   min-height: 100vh;
   display: flex;
-
   background: #f6f8f7;
   color: #1f2a26;
 }
-
 /* =========================================================
      SIDEBAR
   ========================================================= */
-
 .sidebar {
   width: 15.625rem;
   min-width: 15.625rem;
   height: 100vh;
-
   display: flex;
   flex-direction: column;
-
   position: sticky;
   top: 0;
-
   background: #ffffff;
   border-right: 0.0625rem solid #e5e9e7;
 }
-
 /* =========================================================
      LOGO
   ========================================================= */
-
 .logo {
   height: 4.5rem;
-
   display: flex;
   align-items: center;
-
   gap: 0.6875rem;
-
   padding: 0 1.375rem;
-
   border-bottom: 0.0625rem solid #eef1ef;
 }
-
 .logoMark {
   width: 2.375rem;
   height: 2.375rem;
-
   display: flex;
   align-items: center;
   justify-content: center;
-
   flex-shrink: 0;
-
   border-radius: 0.625rem;
-
   background: #2f6b52;
   color: #ffffff;
-
   font-size: 1rem;
   font-weight: 700;
 }
-
 .logo h2 {
   margin: 0;
-
   color: #1f2a26;
-
   font-size: 1.0625rem;
   font-weight: 700;
   line-height: 1.2;
 }
-
 .logo span {
   display: block;
-
   margin-top: 0.1875rem;
-
   color: #8a9690;
-
   font-size: 0.625rem;
   font-weight: 500;
 }
-
 /* =========================================================
      NAVIGATION
   ========================================================= */
-
 .navigation {
   flex: 1;
-
   padding: 1.375rem 0.875rem;
-
   overflow-y: auto;
 }
-
 .navItem {
   width: 100%;
-
   min-height: 2.625rem;
-
   display: flex;
   align-items: center;
-
   gap: 0.75rem;
-
   padding: 0 0.75rem;
-
   margin-bottom: 0.3125rem;
-
   border: none;
   border-radius: 0.5625rem;
-
   background: transparent;
-
   color: #66736c;
-
   font-family: inherit;
   font-size: 0.8125rem;
   font-weight: 500;
-
   text-decoration: none;
-
   text-align: left;
-
   cursor: pointer;
-
   transition:
     background 0.2s ease,
     color 0.2s ease;
 }
-
 .navItem span {
   width: 1.25rem;
-
   display: flex;
   align-items: center;
   justify-content: center;
-
   color: #8a9690;
-
   font-size: 1rem;
 }
-
 .navItem:hover {
   background: #f0f5f2;
-
   color: #2f6b52;
 }
-
 .navItem:hover span {
   color: #2f6b52;
 }
-
 /* Active navigation */
-
 .active {
   background: #e8f1ec;
-
   color: #2f6b52;
-
   font-weight: 600;
 }
-
 .active span {
   color: #2f6b52;
 }
-
 /* =========================================================
      SECTION TITLE
   ========================================================= */
-
 .sectionTitle {
   margin: 1.625rem 0.625rem 0.625rem;
-
   color: #9aa49f;
-
   font-size: 0.625rem;
   font-weight: 700;
-
   letter-spacing: 0.12em;
-
   text-transform: uppercase;
 }
-
 /* =========================================================
      SIDEBAR BOTTOM
   ========================================================= */
-
 .sidebarBottom {
   padding: 0.9375rem;
-
   border-top: 0.0625rem solid #eef1ef;
 }
-
 /* =========================================================
      ADMIN USER
   ========================================================= */
-
 .adminUser {
   display: flex;
   align-items: center;
-
   gap: 0.625rem;
-
   padding: 0.625rem;
-
   margin-bottom: 0.625rem;
-
   border-radius: 0.625rem;
-
   background: #f7f9f8;
 }
-
 .avatar {
   width: 2.25rem;
   height: 2.25rem;
-
   display: flex;
   align-items: center;
   justify-content: center;
-
   flex-shrink: 0;
-
   border-radius: 50%;
-
   background: #2f6b52;
-
   color: #ffffff;
-
   font-size: 0.6875rem;
   font-weight: 700;
 }
-
 .adminUser div:last-child {
   min-width: 0;
-
   display: flex;
   flex-direction: column;
 }
-
 .adminUser strong {
   overflow: hidden;
-
   color: #1f2a26;
-
   font-size: 0.75rem;
   font-weight: 600;
-
   white-space: nowrap;
   text-overflow: ellipsis;
 }
-
 .adminUser span {
   margin-top: 0.125rem;
-
   color: #8a9690;
-
   font-size: 0.625rem;
 }
-
 /* =========================================================
      LOGOUT
   ========================================================= */
-
 .logoutButton {
   width: 100%;
-
   height: 2.25rem;
-
   border: 0.0625rem solid #e5e9e7;
   border-radius: 0.5rem;
-
   background: #ffffff;
-
   color: #68756e;
-
   font-family: inherit;
   font-size: 0.75rem;
   font-weight: 500;
-
   cursor: pointer;
-
   transition:
     background 0.2s ease,
     color 0.2s ease,
     border-color 0.2s ease;
 }
-
 .logoutButton:hover {
   border-color: #e5caca;
-
   background: #fff7f7;
-
   color: #b64b4b;
 }
-
 /* =========================================================
      MAIN
   ========================================================= */
-
 .main {
   flex: 1;
-
   min-width: 0;
-
   display: flex;
   flex-direction: column;
 }
-
 /* =========================================================
      HEADER
   ========================================================= */
-
 .header {
   height: 4.5rem;
-
   display: flex;
   align-items: center;
   justify-content: space-between;
-
   padding: 0 1.875rem;
-
   background: #ffffff;
-
   border-bottom: 0.0625rem solid #e5e9e7;
-
   position: sticky;
   top: 0;
-
   z-index: 20;
 }
-
 .headerLabel {
   display: block;
-
   margin-bottom: 0.25rem;
-
   color: #8a9690;
-
   font-size: 0.5625rem;
   font-weight: 700;
-
   letter-spacing: 0.13em;
 }
-
 .header h1 {
   margin: 0;
-
   color: #1f2a26;
-
   font-size: 1.1875rem;
   font-weight: 700;
 }
-
 /* =========================================================
      HEADER RIGHT
   ========================================================= */
-
 .headerRight {
   display: flex;
   align-items: center;
-
   gap: 0.75rem;
 }
-
 .iconButton {
   width: 2.375rem;
   height: 2.375rem;
-
   display: flex;
   align-items: center;
   justify-content: center;
-
   padding: 0;
-
   border: 0.0625rem solid #e4e9e6;
   border-radius: 0.5625rem;
-
   background: #ffffff;
-
   color: #66736c;
-
   font-size: 1.0625rem;
-
   cursor: pointer;
-
   transition:
     background 0.2s ease,
     color 0.2s ease;
 }
-
 .iconButton:hover {
   background: #f0f5f2;
-
   color: #2f6b52;
 }
-
 .headerAvatar {
   width: 2.25rem;
   height: 2.25rem;
-
   display: flex;
   align-items: center;
   justify-content: center;
-
   border-radius: 50%;
-
   background: #e8f1ec;
-
   color: #2f6b52;
-
   font-size: 0.6875rem;
   font-weight: 700;
 }
-
 /* =========================================================
      CONTENT
   ========================================================= */
-
 .content {
   flex: 1;
-
   padding: 1.875rem;
-
   min-width: 0;
 }
-
 /* =========================================================
      RESPONSIVE
   ========================================================= */
-
 @media (max-width: 56.25rem) {
   .sidebar {
     width: 13.75rem;
     min-width: 13.75rem;
   }
-
   .header {
     padding: 0 1.375rem;
   }
-
   .content {
     padding: 1.375rem;
   }
 }
-
 @media (max-width: 43.75rem) {
   .sidebar {
     width: 12.5rem;
     min-width: 12.5rem;
   }
-
   .logo {
     padding: 0 1rem;
   }
-
   .navigation {
     padding: 1.125rem 0.625rem;
   }
-
   .header {
     height: 4rem;
-
     padding: 0 1rem;
   }
-
   .content {
     padding: 1.125rem 0.875rem;
   }
 }
-
 @media (max-width: 35rem) {
   .sidebar {
     display: none;
   }
-
   .header {
     padding: 0 0.9375rem;
   }
-
   .content {
     padding: 1rem 0.75rem;
   }
-
   .header h1 {
     font-size: 1.0625rem;
   }

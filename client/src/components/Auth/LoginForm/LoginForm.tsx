@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import styles from "../AuthModal/AuthModal.module.css";
 import { useAuth } from "../../../features/auth/hooks/useAuth";
+import axios from "axios";
 interface LoginFormProps {
   tenantId: string;
   onSuccess: () => void;
@@ -21,37 +22,34 @@ const LoginForm = ({
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     setError("");
-
     if (!email.trim()) {
       setError("Please enter your email.");
       return;
     }
-
     if (!password) {
       setError("Please enter your password.");
       return;
     }
-
     try {
       setLoading(true);
-
       const response = await login({
         tenantId,
         email: email.trim(),
         password,
       });
-
       if (!response.success) {
         setError("Unable to login.");
         return;
       }
-
       onSuccess();
     } catch (error: unknown) {
-      console.error("Login failed:", error);
-
-      if (error instanceof Error) {
-        setError(error.message || "Invalid email or password.");
+      if (axios.isAxiosError(error)) {
+        const detail = error.response?.data?.detail;
+        setError(
+          typeof detail === "string"
+            ? detail
+            : "Invalid email or password.",
+        );
       } else {
         setError("Invalid email or password.");
       }

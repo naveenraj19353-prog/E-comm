@@ -23,7 +23,6 @@
     "Segoe UI",
     sans-serif;
 }
-
 .authCard {
   width: 100%;
   max-width: 27.5rem;
@@ -33,14 +32,12 @@
   border-radius: 1.25rem;
   box-shadow: 0 1.25rem 3.75rem rgba(31, 42, 38, 0.08);
 }
-
 .brand {
   display: flex;
   align-items: center;
   gap: 0.75rem;
   margin-bottom: 2.625rem;
 }
-
 .brandIcon {
   width: 2.75rem;
   height: 2.75rem;
@@ -54,28 +51,23 @@
   font-weight: 800;
   letter-spacing: 0.0313rem;
 }
-
 .brand div:last-child {
   display: flex;
   flex-direction: column;
   gap: 0.125rem;
 }
-
 .brand strong {
   color: var(--text);
   font-size: 1.0625rem;
   line-height: 1.2;
 }
-
 .brand span {
   color: var(--secondary);
   font-size: 0.75rem;
 }
-
 .heading {
   margin-bottom: 1.75rem;
 }
-
 .eyebrow {
   display: inline-block;
   margin-bottom: 0.625rem;
@@ -84,7 +76,6 @@
   font-weight: 800;
   letter-spacing: 0.0875rem;
 }
-
 .heading h1 {
   margin: 0 0 0.5625rem;
   color: var(--text);
@@ -92,14 +83,12 @@
   line-height: 1.15;
   font-weight: 750;
 }
-
 .heading p {
   margin: 0;
   color: var(--secondary);
   font-size: 0.875rem;
   line-height: 1.6;
 }
-
 .error {
   display: flex;
   align-items: center;
@@ -113,7 +102,6 @@
   font-size: 0.8125rem;
   line-height: 1.4;
 }
-
 .error span {
   width: 1.25rem;
   height: 1.25rem;
@@ -127,31 +115,26 @@
   font-size: 0.75rem;
   font-weight: 800;
 }
-
 .form {
   display: flex;
   flex-direction: column;
   gap: 1.3125rem;
 }
-
 .field {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
 }
-
 .field label {
   color: var(--text);
   font-size: 0.8125rem;
   font-weight: 650;
 }
-
 .labelRow {
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
-
 .forgotButton {
   padding: 0;
   border: 0;
@@ -161,11 +144,9 @@
   font-size: 0.75rem;
   font-weight: 600;
 }
-
 .forgotButton:hover {
   text-decoration: underline;
 }
-
 .field input {
   width: 100%;
   box-sizing: border-box;
@@ -181,29 +162,23 @@
     border-color 0.2s,
     box-shadow 0.2s;
 }
-
 .field input::placeholder {
   color: var(--secondary);
 }
-
 .field input:focus {
   border-color: var(--primary);
   box-shadow: 0 0 0 0.1875rem color-mix(in srgb, var(--primary) 10%, transparent);
 }
-
 .field input:disabled {
   cursor: not-allowed;
   background: var(--background);
 }
-
 .passwordWrapper {
   position: relative;
 }
-
 .passwordWrapper input {
   padding-right: 4.375rem;
 }
-
 .passwordToggle {
   position: absolute;
   top: 50%;
@@ -217,7 +192,6 @@
   font-size: 0.75rem;
   font-weight: 700;
 }
-
 .loginButton {
   height: 3.125rem;
   display: flex;
@@ -237,18 +211,15 @@
     transform 0.2s,
     box-shadow 0.2s;
 }
-
 .loginButton:hover:not(:disabled) {
   background: var(--primary);
   box-shadow: 0 0.5rem 1.25rem color-mix(in srgb, var(--primary) 20%, transparent);
   transform: translateY(-0.0625rem);
 }
-
 .loginButton:disabled {
   cursor: not-allowed;
   opacity: 0.7;
 }
-
 .spinner {
   width: 0.9375rem;
   height: 0.9375rem;
@@ -257,7 +228,6 @@
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
 }
-
 .security {
   display: flex;
   align-items: center;
@@ -268,7 +238,6 @@
   border-radius: 0.625rem;
   background: var(--background);
 }
-
 .lock {
   width: 1.875rem;
   height: 1.875rem;
@@ -282,50 +251,41 @@
   font-size: 0.8125rem;
   font-weight: 800;
 }
-
 .security div {
   display: flex;
   flex-direction: column;
   gap: 0.125rem;
 }
-
 .security strong {
   color: var(--text);
   font-size: 0.75rem;
 }
-
 .security div span {
   color: var(--secondary);
   font-size: 0.6875rem;
 }
-
 .footer {
   margin: 1.625rem 0 0;
   color: var(--secondary);
   text-align: center;
   font-size: 0.6875rem;
 }
-
 @keyframes spin {
   to {
     transform: translateY(-50%) rotate(360deg);
   }
 }
-
 @media (max-width: 32.5rem) {
   .authPage {
     padding: 1.25rem 0.875rem;
   }
-
   .authCard {
     padding: 1.875rem 1.375rem;
     border-radius: 1rem;
   }
-
   .brand {
     margin-bottom: 2rem;
   }
-
   .heading h1 {
     font-size: 1.75rem;
   }

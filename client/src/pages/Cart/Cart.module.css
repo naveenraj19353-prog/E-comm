@@ -5,7 +5,6 @@
   padding: 2.375rem 1.75rem 3.75rem;
   box-sizing: border-box;
 }
-
 .header {
   display: flex;
   align-items: flex-end;
@@ -13,7 +12,6 @@
   gap: 1.25rem;
   margin-bottom: 1.5rem;
 }
-
 .eyebrow {
   display: flex;
   align-items: center;
@@ -25,7 +23,6 @@
   text-transform: uppercase;
   letter-spacing: 0.08em;
 }
-
 .header h1 {
   margin: 0;
   color: var(--text);
@@ -34,14 +31,12 @@
   font-weight: 750;
   letter-spacing: -0.03em;
 }
-
 .header p {
   margin: 0.5rem 0 0;
   color: var(--text);
   opacity: 0.7;
   font-size: 0.875rem;
 }
-
 .clearCart {
   display: inline-flex;
   align-items: center;
@@ -55,17 +50,14 @@
   cursor: pointer;
   transition: opacity 0.2s ease;
 }
-
 .clearCart:hover {
   opacity: 0.7;
   text-decoration: underline;
 }
-
 .clearCart:disabled {
   opacity: 0.45;
   cursor: not-allowed;
 }
-
 .deliveryBanner {
   display: flex;
   align-items: center;
@@ -76,7 +68,6 @@
   border-radius: 0.75rem;
   background: var(--background);
 }
-
 .deliveryIcon {
   width: 2.125rem;
   height: 2.125rem;
@@ -88,37 +79,31 @@
   background: var(--surface);
   color: var(--primary);
 }
-
 .deliveryBanner div:last-child {
   display: flex;
   flex-direction: column;
   gap: 0.125rem;
 }
-
 .deliveryBanner strong {
   color: var(--primary);
   font-size: 0.8125rem;
 }
-
 .deliveryBanner span {
   color: var(--text);
   opacity: 0.7;
   font-size: 0.75rem;
 }
-
 .layout {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 22.5rem;
   gap: 1.5rem;
   align-items: start;
 }
-
 .items {
   display: flex;
   flex-direction: column;
   gap: 0.875rem;
 }
-
 .item {
   display: grid;
   grid-template-columns: 7.875rem minmax(0, 1fr) auto;
@@ -133,13 +118,11 @@
     box-shadow 0.2s ease,
     transform 0.2s ease;
 }
-
 .item:hover {
   border-color: var(--primary);
   box-shadow: 0 0.625rem 1.875rem rgba(26, 42, 34, 0.06);
   transform: translateY(-0.0625rem);
 }
-
 .imageWrapper {
   width: 7.875rem;
   height: 7.875rem;
@@ -147,7 +130,6 @@
   border-radius: 0.875rem;
   background: var(--background);
 }
-
 .image {
   width: 100%;
   height: 100%;
@@ -155,15 +137,12 @@
   object-fit: cover;
   transition: transform 0.4s ease;
 }
-
 .item:hover .image {
   transform: scale(1.045);
 }
-
 .details {
   min-width: 0;
 }
-
 .details h2 {
   margin: 0 0 0.5rem;
   color: var(--text);
@@ -175,20 +154,17 @@
   -webkit-line-clamp: 2;
   overflow: hidden;
 }
-
 .price {
   margin: 0 0 1.125rem;
   color: var(--primary);
   font-size: 1.0625rem;
   font-weight: 750;
 }
-
 .actions {
   display: flex;
   align-items: center;
   gap: 1rem;
 }
-
 .quantity {
   display: flex;
   align-items: center;
@@ -198,7 +174,6 @@
   overflow: hidden;
   background: var(--surface);
 }
-
 .quantity button {
   width: 2.125rem;
   height: 100%;
@@ -211,16 +186,13 @@
   cursor: pointer;
   transition: background 0.2s ease;
 }
-
 .quantity button:hover:not(:disabled) {
   background: var(--border);
 }
-
 .quantity button:disabled {
   opacity: 0.35;
   cursor: not-allowed;
 }
-
 .quantity span {
   min-width: 2.375rem;
   text-align: center;
@@ -228,7 +200,6 @@
   font-size: 0.8125rem;
   font-weight: 700;
 }
-
 .remove {
   display: inline-flex;
   align-items: center;
@@ -241,17 +212,14 @@
   font-weight: 600;
   cursor: pointer;
 }
-
 .remove:hover {
   color: var(--danger);
   text-decoration: underline;
 }
-
 .remove:disabled {
   opacity: 0.45;
   cursor: not-allowed;
 }
-
 .subtotal {
   min-width: 6.5625rem;
   display: flex;
@@ -259,20 +227,17 @@
   align-items: flex-end;
   gap: 0.3125rem;
 }
-
 .subtotal span {
   color: var(--text);
   opacity: 0.65;
   font-size: 0.6875rem;
 }
-
 .subtotal strong {
   color: var(--text);
   font-size: 1rem;
   font-weight: 750;
   white-space: nowrap;
 }
-
 .summary {
   position: sticky;
   top: 5.625rem;
@@ -282,21 +247,18 @@
   background: var(--surface);
   box-shadow: 0 0.625rem 2.1875rem rgba(26, 42, 34, 0.05);
 }
-
 .summaryHeader {
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-bottom: 1.5rem;
 }
-
 .summaryHeader h2 {
   margin: 0;
   color: var(--text);
   font-size: 1.125rem;
   font-weight: 700;
 }
-
 .summaryHeader span {
   padding: 0.3125rem 0.5625rem;
   border-radius: 62.4375rem;
@@ -306,13 +268,11 @@
   font-size: 0.6875rem;
   font-weight: 600;
 }
-
 .summaryRows {
   display: flex;
   flex-direction: column;
   gap: 0.875rem;
 }
-
 .summaryRow {
   display: flex;
   align-items: center;
@@ -321,55 +281,46 @@
   opacity: 0.8;
   font-size: 0.875rem;
 }
-
 .summaryRow span:last-child {
   color: var(--text);
   font-weight: 600;
 }
-
 .free {
   color: var(--success);
   font-size: 0.75rem;
   font-weight: 750 !important;
 }
-
 .divider {
   height: 0.0625rem;
   margin: 1.25rem 0;
   background: var(--border);
 }
-
 .total {
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-bottom: 1.375rem;
 }
-
 .total div {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
 }
-
 .total span {
   color: var(--text);
   font-size: 0.9375rem;
   font-weight: 700;
 }
-
 .total small {
   color: var(--text);
   opacity: 0.65;
   font-size: 0.625rem;
 }
-
 .total strong {
   color: var(--text);
   font-size: 1.375rem;
   font-weight: 800;
 }
-
 .checkout {
   width: 100%;
   height: 3.125rem;
@@ -389,16 +340,13 @@
     transform 0.2s ease,
     box-shadow 0.2s ease;
 }
-
 .checkout:hover {
   background: var(--primary);
   box-shadow: 0 0.5rem 1.25rem rgba(47, 107, 82, 0.18);
 }
-
 .checkout:active {
   transform: translateY(0.0625rem);
 }
-
 .secure {
   display: flex;
   align-items: center;
@@ -409,14 +357,12 @@
   opacity: 0.7;
   font-size: 0.6875rem;
 }
-
 .secureDot {
   width: 0.375rem;
   height: 0.375rem;
   border-radius: 50%;
   background: var(--success);
 }
-
 .empty {
   min-height: 65vh;
   display: flex;
@@ -426,7 +372,6 @@
   padding: 3.125rem 1.25rem;
   text-align: center;
 }
-
 .emptyIcon {
   width: 5.125rem;
   height: 5.125rem;
@@ -438,14 +383,12 @@
   background: var(--background);
   color: var(--primary);
 }
-
 .empty h1 {
   margin: 0;
   color: var(--text);
   font-size: 1.5625rem;
   font-weight: 750;
 }
-
 .empty p {
   max-width: 22.5rem;
   margin: 0.5625rem 0 1.375rem;
@@ -454,7 +397,6 @@
   font-size: 0.875rem;
   line-height: 1.6;
 }
-
 .shopButton {
   display: flex;
   align-items: center;
@@ -469,11 +411,9 @@
   font-weight: 650;
   cursor: pointer;
 }
-
 .shopButton:hover {
   background: var(--primary);
 }
-
 .loading {
   min-height: 60vh;
   display: flex;
@@ -485,7 +425,6 @@
   opacity: 0.75;
   font-size: 0.8125rem;
 }
-
 .loader {
   width: 3rem;
   height: 3rem;
@@ -496,102 +435,81 @@
   background: var(--background);
   color: var(--primary);
 }
-
 @media (max-width: 59.375rem) {
   .layout {
     grid-template-columns: 1fr;
   }
-
   .summary {
     position: static;
   }
 }
-
 @media (max-width: 40.625rem) {
   .container {
     padding: 1.5rem 1rem 2.5rem;
   }
-
   .header {
     align-items: flex-start;
   }
-
   .header h1 {
     font-size: 1.625rem;
   }
-
   .deliveryBanner {
     margin-bottom: 1rem;
   }
-
   .item {
     grid-template-columns: 5.5rem minmax(0, 1fr);
     gap: 0.875rem;
     padding: 0.75rem;
   }
-
   .imageWrapper {
     width: 5.5rem;
     height: 5.5rem;
   }
-
   .subtotal {
     grid-column: 2;
     min-width: 0;
     align-items: flex-start;
     margin-top: -0.25rem;
   }
-
   .actions {
     flex-wrap: wrap;
     gap: 0.625rem;
   }
-
   .summary {
     padding: 1.125rem;
   }
 }
-
 @media (max-width: 26.25rem) {
   .header {
     flex-direction: column;
     gap: 0.625rem;
   }
-
   .header h1 {
     font-size: 1.4375rem;
   }
-
   .clearCart {
     align-self: flex-start;
   }
-
   .item {
     grid-template-columns: 4.5rem minmax(0, 1fr);
   }
-
   .imageWrapper {
     width: 4.5rem;
     height: 4.5rem;
   }
-
   .details h2 {
     font-size: 0.875rem;
   }
-
   .price {
     margin-bottom: 0.75rem;
     font-size: 0.9375rem;
   }
-
   .quantity {
     height: 2.125rem;
   }
-
   .quantity button {
     width: 1.9375rem;
   }
-
   .quantity span {
     min-width: 2rem;
   }

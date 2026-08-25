@@ -3,8 +3,21 @@ export interface WishlistItem {
   productId: string;
   name: string;
   price: number;
-  image: string;
+  finalPrice?: number;
+  discountPercentage?: number;
+  image?: string;
+  images?: Record<string, string[]>;
+  inventory?: {
+    variantId: string;
+    color: string;
+    size: string;
+    stock: number;
+  }[];
   stock: number;
+  totalStock?: number;
+  averageRating?: number;
+  reviewCount?: number;
+  isActive?: boolean;
   addedAt: string;
 }
 export interface WishlistResponse {

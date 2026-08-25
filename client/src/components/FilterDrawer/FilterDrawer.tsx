@@ -19,7 +19,6 @@ const FilterDrawer = ({
         onClick={onClose}
         aria-hidden="true"
       />
-
       <aside
         className={`${styles.drawer} ${open ? styles.drawerOpen : ""}`}
         aria-hidden={!open}
@@ -39,9 +38,7 @@ const FilterDrawer = ({
             <X size={20} />
           </button>
         </div>
-
         <div className={styles.content}>{children}</div>
-
         <div className={styles.footer}>
           <button
             type="button"
