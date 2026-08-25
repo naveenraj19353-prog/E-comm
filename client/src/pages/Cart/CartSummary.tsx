@@ -2,14 +2,13 @@ import { ArrowRight } from "lucide-react";
 import styles from "./Cart.module.css";
 import { useNavigate } from "react-router-dom";
 interface CartSummaryProps {
-  cartCount: number;
-  grandTotal: number;
-  tenantId: string;
+    cartCount: number;
+    grandTotal: number;
+    tenantId: string;
 }
 const CartSummary = ({ cartCount, grandTotal, tenantId }: CartSummaryProps) => {
-  const navigate = useNavigate();
-  return (
-    <aside className={styles.summary}>
+    const navigate = useNavigate();
+    return (<aside className={styles.summary}>
       <div className={styles.summaryHeader}>
         <h2>Order Summary</h2>
         <span>
@@ -26,7 +25,7 @@ const CartSummary = ({ cartCount, grandTotal, tenantId }: CartSummaryProps) => {
           <span className={styles.free}>FREE</span>
         </div>
       </div>
-      <div className={styles.divider} />
+      <div className={styles.divider}/>
       <div className={styles.total}>
         <div>
           <span>Total</span>
@@ -34,19 +33,14 @@ const CartSummary = ({ cartCount, grandTotal, tenantId }: CartSummaryProps) => {
         </div>
         <strong>₹{grandTotal.toLocaleString("en-IN")}</strong>
       </div>
-      <button
-        type="button"
-        className={styles.checkout}
-        onClick={() => navigate(`/${tenantId}/checkout`)}
-      >
+      <button type="button" className={styles.checkout} onClick={() => navigate(`/${tenantId}/checkout`)}>
         Proceed To Checkout
-        <ArrowRight size={18} />
+        <ArrowRight size={18}/>
       </button>
       <div className={styles.secure}>
-        <span className={styles.secureDot} />
+        <span className={styles.secureDot}/>
         Secure checkout
       </div>
-    </aside>
-  );
+    </aside>);
 };
 export default CartSummary;

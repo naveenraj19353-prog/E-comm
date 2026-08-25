@@ -20,9 +20,7 @@
 .inactive {
   opacity: 0.65;
 }
-/* =========================================================
-   IMAGE CONTAINER
-========================================================= */
+
 .imageContainer {
   position: relative;
   width: 100%;
@@ -30,9 +28,7 @@
   background: var(--background);
   aspect-ratio: 1 / 1;
 }
-/* =========================================================
-   SWIPER
-========================================================= */
+
 .productSwiper {
   width: 100%;
   height: 100%;
@@ -55,9 +51,7 @@
 .card:hover .productImage {
   transform: scale(1.035);
 }
-/* =========================================================
-   GRADIENT
-========================================================= */
+
 .gradient {
   position: absolute;
   left: 0;
@@ -73,9 +67,7 @@
     transparent
   );
 }
-/* =========================================================
-   DISCOUNT
-========================================================= */
+
 .discount {
   position: absolute;
   top: 0.75rem;
@@ -90,9 +82,7 @@
   letter-spacing: 0.03em;
   box-shadow: 0 0.1875rem 0.625rem rgba(0, 0, 0, 0.08);
 }
-/* =========================================================
-   WISHLIST
-========================================================= */
+
 .wishlist {
   position: absolute;
   top: 0.75rem;
@@ -125,9 +115,7 @@
   background: var(--surface);
   color: var(--danger);
 }
-/* =========================================================
-   SWIPER ARROWS
-========================================================= */
+
 .sliderArrow {
   position: absolute;
   top: 50%;
@@ -168,9 +156,7 @@
 .rightArrow {
   right: 0.625rem;
 }
-/* =========================================================
-   SWIPER PAGINATION
-========================================================= */
+
 .productSwiper :global(.swiper-pagination) {
   bottom: 0.625rem;
   z-index: 12;
@@ -195,9 +181,7 @@
   opacity: 1;
   border-radius: 0.625rem;
 }
-/* =========================================================
-   RATING
-========================================================= */
+
 .rating {
   position: absolute;
   left: 0.75rem;
@@ -223,9 +207,7 @@
   height: 0.75rem;
   background: var(--border);
 }
-/* =========================================================
-   ADD TO CART
-========================================================= */
+
 .cartContainer {
   position: absolute;
   right: 0.75rem;
@@ -261,9 +243,7 @@
 .cartButton:active {
   transform: translateY(0);
 }
-/* =========================================================
-   NO IMAGE
-========================================================= */
+
 .noImage {
   display: flex;
   align-items: center;
@@ -275,9 +255,7 @@
   font-size: 0.8125rem;
   font-weight: 600;
 }
-/* =========================================================
-   PRODUCT INFO
-========================================================= */
+
 .info {
   padding: 0.9375rem 0.9375rem 1.0625rem;
 }
@@ -302,9 +280,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
-/* =========================================================
-   PRICE
-========================================================= */
+
 .priceRow {
   display: flex;
   align-items: center;
@@ -332,9 +308,7 @@
   font-size: 0.625rem;
   font-weight: 800;
 }
-/* =========================================================
-   RESPONSIVE
-========================================================= */
+
 @media (max-width: 56.25rem) {
   .card {
     border-radius: 0.9375rem;
@@ -404,9 +378,7 @@
     padding: 0.3125rem 0.4375rem;
   }
 }
-/* =========================================================
-   COLOR / SIZE OPTIONS
-========================================================= */
+
 .colorSection {
   display: flex;
   align-items: center;
@@ -444,9 +416,7 @@
 }
 .colorButtonActive {
   border: none
-  /* box-shadow:
-    0 0 0 0.125rem var(--surface),
-    0 0 0 0.1875rem var(--primary); */
+
 }
 .colorDot {
   display: block;

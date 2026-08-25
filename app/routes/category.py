@@ -8,21 +8,8 @@ router = APIRouter(
     prefix="/categories",
     tags=["Categories"]
 )
-# categories.update_many(
-#     {"tenantId": {"$exists": True}},
-#     [
-#         {
-#             "$set": {
-#                 "tenantId": {
-#                     "$toLower": "$tenantId"
-#                 }
-#             }
-#         }
-#     ],
-# )
-# ==================================================
-# CREATE CATEGORY
-# ==================================================
+
+
 @router.post("/")
 def create_category(
     category: CreateCategory,
@@ -56,9 +43,8 @@ def create_category(
         "message": "Category created successfully.",
         "categoryId": str(result.inserted_id)
     }
-# ==================================================
-# GET ALL CATEGORIES
-# ==================================================
+
+
 @router.get("/")
 def get_all_categories(tenantId: str):
     data = []
@@ -78,9 +64,8 @@ def get_all_categories(tenantId: str):
         "count": len(data),
         "data": data
     }
-# ==================================================
-# GET CATEGORY BY ID
-# ==================================================
+
+
 @router.get("/{id}")
 def get_category_by_id(
     id: str,
@@ -110,9 +95,8 @@ def get_category_by_id(
         "success": True,
         "data": category
     }
-# ==================================================
-# UPDATE CATEGORY
-# ==================================================
+
+
 @router.put("/{id}")
 def update_category(
     id: str,
@@ -164,9 +148,8 @@ def update_category(
         "message": "Category updated successfully.",
         "data": updated
     }
-# ==================================================
-# DELETE CATEGORY
-# ==================================================
+
+
 @router.delete("/{id}")
 def delete_category(
     id: str,

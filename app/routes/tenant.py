@@ -12,10 +12,8 @@ router = APIRouter(
     prefix="/tenants",
     tags=["Tenants"],
 )
-# ==========================================================
-# CREATE TENANT
-# SUPER ADMIN ONLY
-# ==========================================================
+
+
 @router.post("/")
 def create_tenant(
     tenant: CreateTenant,
@@ -26,9 +24,8 @@ def create_tenant(
         name = tenant.name.strip()
         slug = tenant.slug.strip().lower()
         email = str(tenant.email).strip().lower()
-        # --------------------------------------------------
-        # CHECK TENANT ID
-        # --------------------------------------------------
+
+
         existing_tenant = tenants.find_one({
             "tenantId": tenant_id
         })
@@ -37,9 +34,8 @@ def create_tenant(
                 status_code=400,
                 detail="Tenant ID already exists.",
             )
-        # --------------------------------------------------
-        # CHECK SLUG
-        # --------------------------------------------------
+
+
         existing_slug = tenants.find_one({
             "slug": slug
         })
@@ -48,9 +44,8 @@ def create_tenant(
                 status_code=400,
                 detail="Tenant slug already exists.",
             )
-        # --------------------------------------------------
-        # CHECK EMAIL
-        # --------------------------------------------------
+
+
         existing_email = tenants.find_one({
             "email": email
         })
@@ -59,19 +54,16 @@ def create_tenant(
                 status_code=400,
                 detail="Tenant email already exists.",
             )
-        # --------------------------------------------------
-        # PASSWORD HASH
-        # --------------------------------------------------
+
+
         hashed_password = hash_password(
             tenant.password
         )
-        # --------------------------------------------------
-        # TIMESTAMP
-        # --------------------------------------------------
+
+
         now = datetime.utcnow()
-        # --------------------------------------------------
-        # PAYLOAD
-        # --------------------------------------------------
+
+
         payload = {
             "tenantId": tenant_id,
             "name": name,
@@ -84,16 +76,13 @@ def create_tenant(
             "createdAt": now,
             "updatedAt": now,
         }
-        # --------------------------------------------------
-        # INSERT
-        # --------------------------------------------------
+
+
         result = tenants.insert_one(
             payload
         )
-        # --------------------------------------------------
-        # RESPONSE
-        # NEVER RETURN PASSWORD
-        # --------------------------------------------------
+
+
         response_data = {
             **payload,
             "_id": str(result.inserted_id),
@@ -120,27 +109,18 @@ def create_tenant(
             status_code=500,
             detail="Failed to create tenant.",
         )
-# ==========================================================
-# GET TENANTS
-#
-# SUPER ADMIN
-#     -> ALL TENANTS
-#
-# ADMIN
-#     -> ONLY OWN TENANT
-# ==========================================================
+
+
 @router.get("/")
 def get_tenants(
     current_user: dict = Depends(require_admin),
 ):
-    # ------------------------------------------------------
-    # SUPER ADMIN
-    # ------------------------------------------------------
+
+
     if current_user.get("role") == "super_admin":
         query = {}
-    # ------------------------------------------------------
-    # TENANT ADMIN
-    # ------------------------------------------------------
+
+
     else:
         tenant_id = current_user.get(
             "tenantId"
@@ -164,7 +144,7 @@ def get_tenants(
         tenant["_id"] = str(
             tenant["_id"]
         )
-        # Never expose password
+
         tenant.pop(
             "password",
             None,
@@ -177,24 +157,16 @@ def get_tenants(
         "count": len(data),
         "data": data,
     }
-# ==========================================================
-# GET TENANT BY TENANT ID
-#
-# SUPER ADMIN
-#     -> ANY TENANT
-#
-# ADMIN
-#     -> OWN TENANT ONLY
-# ==========================================================
+
+
 @router.get("/tenant-id/{tenant_id}")
 def get_tenant_by_tenant_id(
     tenant_id: str,
     current_user: dict = Depends(require_admin),
 ):
     tenant_id = tenant_id.strip().lower()
-    # ------------------------------------------------------
-    # ADMIN CANNOT ACCESS OTHER TENANT
-    # ------------------------------------------------------
+
+
     if current_user.get("role") != "super_admin":
         if current_user.get("tenantId") != tenant_id:
             raise HTTPException(
@@ -221,10 +193,8 @@ def get_tenant_by_tenant_id(
         "success": True,
         "data": tenant,
     }
-# ==========================================================
-# GET TENANT BY SLUG
-# PUBLIC
-# ==========================================================
+
+
 @router.get("/slug/{slug}")
 def get_tenant_by_slug(
     slug: str,
@@ -250,9 +220,8 @@ def get_tenant_by_slug(
         "success": True,
         "data": tenant,
     }
-# ==========================================================
-# GET TENANT BY MONGODB ID
-# ==========================================================
+
+
 @router.get("/{id}")
 def get_tenant_by_id(
     id: str,
@@ -273,9 +242,8 @@ def get_tenant_by_id(
             status_code=404,
             detail="Tenant not found.",
         )
-    # ------------------------------------------------------
-    # TENANT ADMIN CAN ONLY ACCESS OWN TENANT
-    # ------------------------------------------------------
+
+
     if current_user.get("role") != "super_admin":
         if current_user.get("tenantId") != tenant.get(
             "tenantId"
@@ -295,10 +263,8 @@ def get_tenant_by_id(
         "success": True,
         "data": tenant,
     }
-# ==========================================================
-# UPDATE TENANT
-# SUPER ADMIN ONLY
-# ==========================================================
+
+
 @router.put("/{id}")
 def update_tenant(
     id: str,
@@ -322,9 +288,8 @@ def update_tenant(
             status_code=400,
             detail="No fields provided for update.",
         )
-    # ------------------------------------------------------
-    # NORMALIZE
-    # ------------------------------------------------------
+
+
     if "name" in update_data:
         update_data["name"] = (
             update_data["name"].strip()
@@ -341,9 +306,8 @@ def update_tenant(
             .strip()
             .lower()
         )
-    # ------------------------------------------------------
-    # CHECK SLUG
-    # ------------------------------------------------------
+
+
     if "slug" in update_data:
         existing = tenants.find_one({
             "slug": update_data["slug"],
@@ -356,9 +320,8 @@ def update_tenant(
                 status_code=400,
                 detail="Tenant slug already exists.",
             )
-    # ------------------------------------------------------
-    # CHECK EMAIL
-    # ------------------------------------------------------
+
+
     if "email" in update_data:
         existing = tenants.find_one({
             "email": update_data["email"],
@@ -371,20 +334,17 @@ def update_tenant(
                 status_code=400,
                 detail="Tenant email already exists.",
             )
-    # ------------------------------------------------------
-    # HASH NEW PASSWORD
-    # ------------------------------------------------------
+
+
     if "password" in update_data:
         update_data["password"] = hash_password(
             update_data["password"]
         )
-    # ------------------------------------------------------
-    # UPDATED TIME
-    # ------------------------------------------------------
+
+
     update_data["updatedAt"] = datetime.utcnow()
-    # ------------------------------------------------------
-    # UPDATE
-    # ------------------------------------------------------
+
+
     result = tenants.update_one(
         {
             "_id": object_id
@@ -413,10 +373,8 @@ def update_tenant(
         "message": "Tenant updated successfully.",
         "data": updated,
     }
-# ==========================================================
-# DELETE TENANT
-# SUPER ADMIN ONLY
-# ==========================================================
+
+
 @router.delete("/{id}")
 def delete_tenant(
     id: str,

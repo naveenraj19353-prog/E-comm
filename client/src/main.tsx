@@ -9,15 +9,13 @@ import ThemeProvider from "./theme/tenants/ThemeProvider";
 import "./styles/globals.css";
 import "./index.css";
 const queryClient = new QueryClient();
-console.log(store.getState(), queryClient)
-ReactDOM.createRoot(document.getElementById("root")!).render(
-  <React.StrictMode>
+console.log(store.getState(), queryClient);
+ReactDOM.createRoot(document.getElementById("root")!).render(<React.StrictMode>
     <Provider store={store}>
       <QueryClientProvider client={queryClient}>
         <ThemeProvider>
-          <RouterProvider router={router} />
+          <RouterProvider router={router}/>
         </ThemeProvider>
       </QueryClientProvider>
     </Provider>
-  </React.StrictMode>,
-);
+  </React.StrictMode>);

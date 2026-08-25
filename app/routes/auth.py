@@ -17,9 +17,8 @@ router = APIRouter(
     prefix="/auth",
     tags=["Authentication"],
 )
-# ==========================================================
-# REGISTER CUSTOMER
-# ==========================================================
+
+
 @router.post("/register")
 def register(
     user: RegisterUser,
@@ -28,9 +27,8 @@ def register(
     email = str(
         user.email
     ).strip().lower()
-    # ------------------------------------------------------
-    # CHECK TENANT
-    # ------------------------------------------------------
+
+
     tenant = tenants.find_one({
         "tenantId": tenant_id,
         "isActive": True,
@@ -40,9 +38,8 @@ def register(
             status_code=404,
             detail="Tenant not found or inactive.",
         )
-    # ------------------------------------------------------
-    # CHECK CUSTOMER
-    # ------------------------------------------------------
+
+
     existing = users.find_one({
         "tenantId": tenant_id,
         "email": email,
@@ -52,9 +49,8 @@ def register(
             status_code=400,
             detail="Email already exists.",
         )
-    # ------------------------------------------------------
-    # CREATE CUSTOMER
-    # ------------------------------------------------------
+
+
     now = datetime.utcnow()
     payload = {
         "tenantId": tenant_id,
@@ -79,13 +75,8 @@ def register(
             result.inserted_id
         ),
     }
-# ==========================================================
-# LOGIN
-#
-# SUPER ADMIN
-# TENANT ADMIN
-# CUSTOMER
-# ==========================================================
+
+
 @router.post("/login")
 def login(
     user: LoginUser,
@@ -93,11 +84,8 @@ def login(
     email = str(
         user.email
     ).strip().lower()
-    # ======================================================
-    # SUPER ADMIN LOGIN
-    #
-    # tenantId = null
-    # ======================================================
+
+
     if not user.tenantId:
         existing = users.find_one({
             "email": email,
@@ -145,11 +133,8 @@ def login(
                 "role": "super_admin",
             },
         }
-    # ======================================================
-    # TENANT LOGIN
-    #
-    # Tenant credentials are stored in tenants collection
-    # ======================================================
+
+
     tenant_id = user.tenantId.strip().lower()
     tenant = tenants.find_one({
         "tenantId": tenant_id,
@@ -191,9 +176,8 @@ def login(
                 "role": "admin",
             },
         }
-    # ======================================================
-    # CUSTOMER LOGIN
-    # ======================================================
+
+
     existing = users.find_one({
         "tenantId": tenant_id,
         "email": email,
@@ -244,9 +228,8 @@ def login(
             "role": "customer",
         },
     }
-# ==========================================================
-# FORGOT PASSWORD
-# ==========================================================
+
+
 @router.post("/forgot-password")
 def forgot_password(
     user: ForgotPasswordRequest,

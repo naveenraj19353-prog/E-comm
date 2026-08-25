@@ -11,9 +11,8 @@ from app.utils.jwt_handler import (
     ALGORITHM,
 )
 security = HTTPBearer()
-# ==========================================================
-# GET CURRENT USER
-# ==========================================================
+
+
 def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(
         security
@@ -35,9 +34,8 @@ def get_current_user(
             },
         )
     role = payload.get("role")
-    # ======================================================
-    # SUPER ADMIN / CUSTOMER
-    # ======================================================
+
+
     if role in [
         "super_admin",
         "customer",
@@ -92,9 +90,8 @@ def get_current_user(
                 False,
             ),
         }
-    # ======================================================
-    # TENANT ADMIN
-    # ======================================================
+
+
     if role == "admin":
         tenant_id = payload.get(
             "tenantId"
@@ -187,9 +184,8 @@ def admin_tenant_id(
                 detail="You cannot access another tenant.",
             )
     return token_tenant
-# ==========================================================
-# REQUIRE SUPER ADMIN
-# ==========================================================
+
+
 def require_super_admin(
     current_user: dict = Depends(
         get_current_user
@@ -210,13 +206,8 @@ def require_super_admin(
             detail="Invalid Super Admin account.",
         )
     return current_user
-# ==========================================================
-# REQUIRE ADMIN
-#
-# Allows:
-# super_admin
-# tenant admin
-# ==========================================================
+
+
 def require_admin(
     current_user: dict = Depends(
         get_current_user
@@ -233,9 +224,8 @@ def require_admin(
             detail="Admin access required.",
         )
     return current_user
-# ==========================================================
-# REQUIRE TENANT ADMIN
-# ==========================================================
+
+
 def require_tenant_admin(
     current_user: dict = Depends(
         get_current_user
@@ -256,9 +246,8 @@ def require_tenant_admin(
             detail="Admin must belong to a tenant.",
         )
     return current_user
-# ==========================================================
-# REQUIRE CUSTOMER
-# ==========================================================
+
+
 def require_customer(
     current_user: dict = Depends(
         get_current_user

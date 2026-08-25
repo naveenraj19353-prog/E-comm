@@ -1,9 +1,8 @@
 from fastapi import APIRouter, HTTPException, Query
 from app.services.home_service import get_home_data
 router = APIRouter(prefix="/home", tags=["Home"])
-# ============================================================
-# GET HOME PAGE DATA
-# ============================================================
+
+
 @router.get("/")
 def get_home(
     tenantId: str,
@@ -11,15 +10,13 @@ def get_home(
     categoryLimit: int = Query(default=12, ge=1, le=50),
 ):
     try:
-        # ----------------------------------------------------
-        # Get all Home page sections
-        # ----------------------------------------------------
+
+
         data = get_home_data(
             tenant_id=tenantId, product_limit=productLimit, category_limit=categoryLimit
         )
-        # ----------------------------------------------------
-        # Return response
-        # ----------------------------------------------------
+
+
         return {
             "success": True,
             "message": "Home data fetched successfully.",

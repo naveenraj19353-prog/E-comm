@@ -1,8 +1,7 @@
 from typing import Optional
 from pydantic import BaseModel, EmailStr, Field
-# ==========================================================
-# CREATE TENANT
-# ==========================================================
+
+
 class CreateTenant(BaseModel):
     tenantId: str = Field(
         ...,
@@ -27,9 +26,8 @@ class CreateTenant(BaseModel):
         min_length=6,
         max_length=128,
     )
-# ==========================================================
-# UPDATE TENANT
-# ==========================================================
+
+
 class UpdateTenant(BaseModel):
     name: Optional[str] = Field(
         default=None,

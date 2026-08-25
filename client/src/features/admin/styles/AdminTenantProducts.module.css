@@ -4,9 +4,7 @@
   background: #f6f8f7;
   color: #1f2a26;
 }
-/* =====================================================
-   HEADER
-===================================================== */
+
 .header {
   display: flex;
   align-items: flex-end;
@@ -91,9 +89,7 @@
   line-height: 1;
   font-weight: 400;
 }
-/* =====================================================
-   SUMMARY
-===================================================== */
+
 .summaryGrid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -141,9 +137,7 @@
   line-height: 1.1;
   font-weight: 750;
 }
-/* =====================================================
-   TOOLBAR
-===================================================== */
+
 .toolbar {
   display: flex;
   align-items: center;
@@ -186,9 +180,7 @@
   border-color: #78a58e;
   box-shadow: 0 0 0 0.1875rem rgba(47, 107, 82, 0.09);
 }
-/* =====================================================
-   TABLE CARD
-===================================================== */
+
 .tableCard {
   overflow: hidden;
   border: 0.0625rem solid #e4e9e6;
@@ -214,9 +206,7 @@
   color: #7a8680;
   font-size: 0.8125rem;
 }
-/* =====================================================
-   TABLE
-===================================================== */
+
 .tableWrapper {
   width: 100%;
   overflow-x: auto;
@@ -255,9 +245,7 @@
 .tableWrapper tbody tr:last-child td {
   border-bottom: 0;
 }
-/* =====================================================
-   PRODUCT
-===================================================== */
+
 .product {
   display: flex;
   align-items: center;
@@ -305,9 +293,7 @@
   color: #909b95;
   font-size: 0.6875rem;
 }
-/* =====================================================
-   CATEGORY
-===================================================== */
+
 .category {
   display: inline-flex;
   align-items: center;
@@ -319,9 +305,7 @@
   font-size: 0.6875rem;
   font-weight: 700;
 }
-/* =====================================================
-   PRICE
-===================================================== */
+
 .price {
   display: flex;
   flex-direction: column;
@@ -338,9 +322,7 @@
   font-size: 0.6875rem;
   text-decoration: line-through;
 }
-/* =====================================================
-   STOCK
-===================================================== */
+
 .stock,
 .lowStock,
 .outOfStock {
@@ -365,9 +347,7 @@
   background: #fff0f0;
   color: #bd4444;
 }
-/* =====================================================
-   STATUS
-===================================================== */
+
 .active,
 .inactive {
   display: inline-flex;
@@ -389,17 +369,13 @@
   border-radius: 50%;
   background: currentColor;
 }
-/* =====================================================
-   DATE
-===================================================== */
+
 .date {
   color: #727f78;
   font-size: 0.75rem;
   white-space: nowrap;
 }
-/* =====================================================
-   EDIT BUTTON
-===================================================== */
+
 .editButton {
   min-width: 3.625rem;
   height: 2rem;
@@ -419,9 +395,7 @@
   border-color: #b9d0c2;
   background: #f0f6f2;
 }
-/* =====================================================
-   EMPTY STATE
-===================================================== */
+
 .emptyState {
   display: flex;
   align-items: center;
@@ -466,9 +440,7 @@
   font-weight: 700;
   cursor: pointer;
 }
-/* =====================================================
-   PAGINATION
-===================================================== */
+
 .pagination {
   display: flex;
   align-items: center;
@@ -502,9 +474,7 @@
   cursor: not-allowed;
   opacity: 0.45;
 }
-/* =====================================================
-   STATES
-===================================================== */
+
 .loading,
 .error,
 .state {
@@ -522,9 +492,7 @@
 .error {
   color: #b34c4c;
 }
-/* =====================================================
-   RESPONSIVE
-===================================================== */
+
 @media (max-width: 68.75rem) {
   .page {
     padding: 1.625rem 1.5rem 2.5rem;
@@ -560,9 +528,7 @@
     padding: 1.0625rem;
   }
 }
-/* ================================
-   TOOLBAR
-================================ */
+
 .toolbar {
   display: flex;
   align-items: center;
@@ -625,9 +591,7 @@
 .clearSearch:hover {
   background: #dce5df;
 }
-/* ================================
-   SELECT
-================================ */
+
 .selectWrapper {
   position: relative;
   flex-shrink: 0;
@@ -671,9 +635,7 @@
   color: #1f2a26;
   padding: 0.625rem;
 }
-/* ================================
-   CLEAR FILTER
-================================ */
+
 .clearButton {
   height: 2.75rem;
   padding: 0 1rem;
@@ -691,9 +653,7 @@
   background: #eaf2ed;
   border-color: #2f6b52;
 }
-/* ================================
-   ACTIVE FILTERS
-================================ */
+
 .activeFilters {
   display: flex;
   align-items: center;
@@ -714,9 +674,7 @@
   font-size: 0.75rem;
   font-weight: 600;
 }
-/* ================================
-   STOCK
-================================ */
+
 .stock {
   color: #34423b;
   font-weight: 600;
@@ -730,9 +688,7 @@
   color: #b56a00;
   font-weight: 700;
 }
-/* ================================
-   EMPTY STATE BUTTON
-================================ */
+
 .emptyClearButton {
   margin-top: 0.75rem;
   padding: 0.5625rem 0.9375rem;
@@ -747,9 +703,7 @@
 .emptyClearButton:hover {
   background: #24563f;
 }
-/* ================================
-   RESPONSIVE
-================================ */
+
 @media (max-width: 56.25rem) {
   .toolbar {
     flex-wrap: wrap;

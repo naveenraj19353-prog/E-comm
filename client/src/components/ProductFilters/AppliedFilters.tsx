@@ -3,11 +3,18 @@ import { useSearchParams } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../../app/hooks";
 import { setFilters, clearFilters } from "../../features/products/productSlice";
 import styles from "./AppliedFilters.module.css";
+
 const AppliedFilters = () => {
   const dispatch = useAppDispatch();
   const [searchParams, setSearchParams] = useSearchParams();
   const filters = useAppSelector((state) => state.products.filters);
+  const catalogFilter = useAppSelector((state) => state.products.catalogFilter);
   const search = searchParams.get("search") ?? "";
+  const priceMin = catalogFilter?.price?.min ?? 0;
+  const priceMax = catalogFilter?.price?.max ?? 100000;
+  const categoryName = (categoryId: string) =>
+    catalogFilter?.category.find((item) => item.id === categoryId)?.name ||
+    categoryId;
   const removeSearch = () => {
     const params = new URLSearchParams(searchParams);
     params.delete("search");
@@ -66,6 +73,21 @@ const AppliedFilters = () => {
     );
     setSearchParams(params);
   };
+  const removeBrand = (brand: string) => {
+    const params = new URLSearchParams(searchParams);
+    const brands = params.getAll("brands").filter((item) => item !== brand);
+    params.delete("brands");
+    brands.forEach((item) => {
+      params.append("brands", item);
+    });
+    params.set("page", "1");
+    dispatch(
+      setFilters({
+        brands,
+      }),
+    );
+    setSearchParams(params);
+  };
   const removeRating = () => {
     const params = new URLSearchParams(searchParams);
     params.delete("rating");
@@ -84,7 +106,7 @@ const AppliedFilters = () => {
     params.set("page", "1");
     dispatch(
       setFilters({
-        priceRange: [0, 100000],
+        priceRange: [priceMin, priceMax],
       }),
     );
     setSearchParams(params);
@@ -94,12 +116,13 @@ const AppliedFilters = () => {
     setSearchParams({});
   };
   const hasPriceFilter =
-    filters.priceRange[0] !== 0 || filters.priceRange[1] !== 100000;
+    filters.priceRange[0] > priceMin || filters.priceRange[1] < priceMax;
   const hasFilters =
     Boolean(search) ||
     filters.categories.length > 0 ||
     filters.colors.length > 0 ||
     filters.sizes.length > 0 ||
+    filters.brands.length > 0 ||
     filters.rating !== null ||
     hasPriceFilter;
   if (!hasFilters) {
@@ -121,7 +144,7 @@ const AppliedFilters = () => {
             className={styles.chip}
             onClick={() => removeCategory(category)}
           >
-            {category}
+            {categoryName(category)}
             <X size={14} />
           </button>
         ))}
@@ -144,6 +167,17 @@ const AppliedFilters = () => {
             onClick={() => removeSize(size)}
           >
             Size: {size}
+            <X size={14} />
+          </button>
+        ))}
+        {filters.brands.map((brand) => (
+          <button
+            type="button"
+            key={`brand-${brand}`}
+            className={styles.chip}
+            onClick={() => removeBrand(brand)}
+          >
+            {brand}
             <X size={14} />
           </button>
         ))}

@@ -8,9 +8,8 @@ router = APIRouter(
     prefix="/banner",
     tags=["Banner"],
 )
-# ==========================================================
-# CREATE BANNER
-# ==========================================================
+
+
 @router.post("/create")
 def create_banner(
     banner: CreateBanner,
@@ -23,9 +22,8 @@ def create_banner(
             banner_data.get("tenantId"),
         )
         banner_data["tenantId"] = tenant_id
-        # --------------------------------------------------
-        # VALIDATE TENANT
-        # --------------------------------------------------
+
+
         if not tenant_id:
             raise HTTPException(
                 status_code=400,
@@ -42,15 +40,13 @@ def create_banner(
                 status_code=404,
                 detail="Tenant not found or inactive.",
             )
-        # --------------------------------------------------
-        # TIMESTAMP
-        # --------------------------------------------------
+
+
         now = datetime.utcnow()
         banner_data["createdAt"] = now
         banner_data["updatedAt"] = now
-        # --------------------------------------------------
-        # CREATE
-        # --------------------------------------------------
+
+
         result = banners.insert_one(
             banner_data
         )
@@ -72,17 +68,15 @@ def create_banner(
             status_code=500,
             detail="Failed to create banner.",
         )
-# ==========================================================
-# GET ALL BANNERS
-# ==========================================================
+
+
 @router.get("/get-all")
 def get_banners(
     tenantId: str,
 ):
     try:
-        # --------------------------------------------------
-        # VALIDATE TENANT
-        # --------------------------------------------------
+
+
         tenant = tenants.find_one(
             {
                 "tenantId": tenantId,
@@ -94,9 +88,8 @@ def get_banners(
                 status_code=404,
                 detail="Tenant not found or inactive.",
             )
-        # --------------------------------------------------
-        # GET BANNERS
-        # --------------------------------------------------
+
+
         banner_list = banners.find(
             {
                 "tenantId": tenantId,
@@ -129,17 +122,15 @@ def get_banners(
             status_code=500,
             detail="Failed to fetch banners.",
         )
-# ==========================================================
-# GET ACTIVE BANNERS
-# ==========================================================
+
+
 @router.get("/active")
 def get_active_banners(
     tenantId: str,
 ):
     try:
-        # --------------------------------------------------
-        # VALIDATE TENANT
-        # --------------------------------------------------
+
+
         tenant = tenants.find_one(
             {
                 "tenantId": tenantId,
@@ -151,13 +142,11 @@ def get_active_banners(
                 status_code=404,
                 detail="Tenant not found or inactive.",
             )
-        # --------------------------------------------------
-        # CURRENT TIME
-        # --------------------------------------------------
+
+
         now = datetime.utcnow()
-        # --------------------------------------------------
-        # ACTIVE BANNER QUERY
-        # --------------------------------------------------
+
+
         query = {
             "tenantId": tenantId,
             "isActive": True,
@@ -215,9 +204,8 @@ def get_active_banners(
             status_code=500,
             detail="Failed to fetch active banners.",
         )
-# ==========================================================
-# UPDATE BANNER
-# ==========================================================
+
+
 @router.put("/update/{banner_id}")
 def update_banner(
     banner_id: str,
@@ -225,9 +213,8 @@ def update_banner(
     current_user: dict = Depends(require_admin),
 ):
     try:
-        # --------------------------------------------------
-        # VALIDATE BANNER ID
-        # --------------------------------------------------
+
+
         if not ObjectId.is_valid(
             banner_id
         ):
@@ -235,9 +222,8 @@ def update_banner(
                 status_code=400,
                 detail="Invalid banner ID.",
             )
-        # --------------------------------------------------
-        # GET UPDATE DATA
-        # --------------------------------------------------
+
+
         update_data = banner.model_dump(
             exclude_unset=True,
             exclude_none=True,
@@ -262,15 +248,13 @@ def update_banner(
             current_user,
             existing_banner.get("tenantId"),
         )
-        # --------------------------------------------------
-        # UPDATED TIME
-        # --------------------------------------------------
+
+
         update_data[
             "updatedAt"
         ] = datetime.utcnow()
-        # --------------------------------------------------
-        # UPDATE
-        # --------------------------------------------------
+
+
         result = banners.update_one(
             {
                 "_id": ObjectId(
@@ -286,9 +270,8 @@ def update_banner(
                 status_code=404,
                 detail="Banner not found.",
             )
-        # --------------------------------------------------
-        # GET UPDATED BANNER
-        # --------------------------------------------------
+
+
         updated_banner = banners.find_one(
             {
                 "_id": ObjectId(
@@ -317,18 +300,16 @@ def update_banner(
             status_code=500,
             detail="Failed to update banner.",
         )
-# ==========================================================
-# DELETE BANNER
-# ==========================================================
+
+
 @router.delete("/delete/{banner_id}")
 def delete_banner(
     banner_id: str,
     current_user: dict = Depends(require_admin),
 ):
     try:
-        # --------------------------------------------------
-        # VALIDATE ID
-        # --------------------------------------------------
+
+
         if not ObjectId.is_valid(
             banner_id
         ):
@@ -336,9 +317,8 @@ def delete_banner(
                 status_code=400,
                 detail="Invalid banner ID.",
             )
-        # --------------------------------------------------
-        # DELETE
-        # --------------------------------------------------
+
+
         existing_banner = banners.find_one(
             {
                 "_id": ObjectId(banner_id),

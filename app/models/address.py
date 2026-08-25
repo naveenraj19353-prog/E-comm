@@ -4,9 +4,8 @@ from pydantic import (
     ConfigDict,
     Field,
 )
-# ============================================================
-# CREATE ADDRESS
-# ============================================================
+
+
 class CreateAddress(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=True)
     tenantId: Optional[str] = Field(default=None, min_length=3)
@@ -21,9 +20,8 @@ class CreateAddress(BaseModel):
     postalCode: str = Field(..., min_length=4, max_length=10)
     addressType: str = Field(..., pattern="^(Home|Office|Other)$")
     isDefault: bool = False
-# ============================================================
-# UPDATE ADDRESS
-# ============================================================
+
+
 class UpdateAddress(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=True)
     tenantId: str = Field(..., min_length=3)

@@ -40,9 +40,7 @@
   font-size: 0.875rem;
   line-height: 1.5;
 }
-/* =========================================================
-   ACTIONS
-========================================================= */
+
 .actions {
   display: flex;
   align-items: center;
@@ -78,9 +76,7 @@
 .filterBtn:active {
   transform: translateY(0.0625rem);
 }
-/* =========================================================
-   MAIN CONTENT
-========================================================= */
+
 .content {
   display: grid;
   grid-template-columns: 17.5rem minmax(0, 1fr);
@@ -104,9 +100,7 @@
   width: 100%;
   min-width: 0;
 }
-/* =========================================================
-   SEARCH
-========================================================= */
+
 .clearSearchButton {
   width: 1.75rem;
   height: 1.75rem;
@@ -159,9 +153,7 @@
 .searchInfo button:hover {
   color: var(--secondary);
 }
-/* =========================================================
-   LOADING
-========================================================= */
+
 .loading {
   width: 100%;
   min-height: 25rem;
@@ -227,9 +219,7 @@
     background-position: -200% 0;
   }
 }
-/* =========================================================
-   EMPTY STATE
-========================================================= */
+
 .emptyState {
   min-height: 22.5rem;
   display: flex;
@@ -286,9 +276,7 @@
 .clearFiltersButton:active {
   transform: translateY(0);
 }
-/* =========================================================
-   ERROR
-========================================================= */
+
 .error {
   width: 100%;
   min-height: 25rem;
@@ -330,9 +318,7 @@
 .errorState button:hover {
   background: var(--secondary);
 }
-/* =========================================================
-   LOAD MORE
-========================================================= */
+
 .loadMore {
   width: 100%;
   min-height: 5rem;
@@ -351,9 +337,7 @@
   opacity: 0.45;
   font-size: 0.875rem;
 }
-/* =========================================================
-   RESPONSIVE
-========================================================= */
+
 @media (max-width: 75rem) {
   .content {
     grid-template-columns: 15.625rem minmax(0, 1fr);
