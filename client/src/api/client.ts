@@ -1,4 +1,5 @@
 import axios from "axios";
+import { getStoredAccessToken } from "../features/auth/token";
 const apiClient = axios.create({
     baseURL: "http://127.0.0.1:8000",
     headers: {
@@ -6,17 +7,9 @@ const apiClient = axios.create({
     },
 });
 apiClient.interceptors.request.use((config) => {
-    const stored = localStorage.getItem("ecommerce_auth");
-    if (stored) {
-        try {
-            const auth = JSON.parse(stored);
-            if (auth.accessToken) {
-                config.headers.Authorization = `Bearer ${auth.accessToken}`;
-            }
-        }
-        catch (error) {
-            console.error("Invalid auth storage", error);
-        }
+    const accessToken = getStoredAccessToken();
+    if (accessToken) {
+        config.headers.Authorization = `Bearer ${accessToken}`;
     }
     return config;
 });

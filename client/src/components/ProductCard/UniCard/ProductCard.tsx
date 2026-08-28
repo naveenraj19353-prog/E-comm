@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { Heart, ShoppingCart, Star } from "lucide-react";
 import styles from "./ProductCard.module.css";
 import { isProductOutOfStock, } from "../../../features/products/inventory";
+import { useProductNavigation } from "../../../features/products/hooks/useProductNavigation";
 import type { Product, ProductInventory, } from "../../../features/products/types";
 interface ProductCardProps {
     product: Product;
@@ -11,6 +12,7 @@ interface ProductCardProps {
     isAdding?: boolean;
 }
 const ProductCard = ({ product, isWishlisted = false, onWishlist, onAddToCart, isAdding = false, }: ProductCardProps) => {
+    const { goToProduct } = useProductNavigation();
     const availableInventory = useMemo<ProductInventory[]>(() => {
         return (product.inventory ?? []).filter((item) => item.stock > 0 &&
             item.color?.trim() &&
@@ -105,9 +107,17 @@ const ProductCard = ({ product, isWishlisted = false, onWishlist, onAddToCart, i
     };
     const hasRating = typeof product.averageRating === "number" &&
         product.averageRating > 0;
+    const handleCardClick = () => {
+        goToProduct(product._id);
+    };
     return (<div className={`${styles.card} ${!product.isActive
             ? styles.inactive
-            : ""}`}>
+            : ""}`} onClick={handleCardClick} role="link" tabIndex={0} onKeyDown={(event) => {
+            if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                handleCardClick();
+            }
+        }}>
       
       {product.discountPercentage > 0 && (<span className={styles.discount}>
           -{product.discountPercentage}%

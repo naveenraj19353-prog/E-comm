@@ -1,6 +1,7 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import LoginForm from "../../components/Auth/LoginForm/LoginForm";
 import { useAuth } from "../../features/auth/hooks/useAuth";
+import { getStoredAccessToken, getUserFromAccessToken, } from "../../features/auth/token";
 import { useStorefrontTenant } from "../../features/tenant/useTenant";
 import styles from "../../styles/Auth.module.css";
 export default function StorefrontLogin() {
@@ -16,25 +17,21 @@ export default function StorefrontLogin() {
             typeof location.state.from === "string"
                 ? location.state.from
                 : "";
-        const stored = localStorage.getItem("ecommerce_auth");
-        if (!stored) {
+        const token = getStoredAccessToken();
+        const loggedInUser = token
+            ? getUserFromAccessToken(token)
+            : null;
+        if (!loggedInUser) {
             navigate(`/${tenantSlug}`, { replace: true });
             return;
         }
-        try {
-            const parsed = JSON.parse(stored);
-            const role = parsed?.user?.role;
-            const adminTenantId = parsed?.user?.tenantId;
-            if (role === "super_admin") {
-                navigate("/admin", { replace: true });
-                return;
-            }
-            if (role === "admin" && adminTenantId) {
-                navigate(`/admin/tenants/${adminTenantId}`, { replace: true });
-                return;
-            }
+        if (loggedInUser.role === "super_admin") {
+            navigate("/admin", { replace: true });
+            return;
         }
-        catch {
+        if (loggedInUser.role === "admin" && loggedInUser.tenantId) {
+            navigate(`/admin/tenants/${loggedInUser.tenantId}`, { replace: true });
+            return;
         }
         if (from.startsWith(`/${tenantSlug}/`)) {
             navigate(from, { replace: true });

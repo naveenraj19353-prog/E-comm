@@ -86,7 +86,7 @@ const Home = () => {
       
       <section>
         <CategorySlider tenantId={tenantId} onCategoryClick={(category) => {
-            console.log("Selected category:", category);
+            navigate(`/${tenantSlug}/products?categoryIds=${encodeURIComponent(category._id || category.name)}`);
         }}/>
       </section>
       

@@ -5,6 +5,7 @@
   background: var(--surface);
   border: 0.0625rem solid var(--border);
   border-radius: 1.125rem;
+  cursor: pointer;
   transition:
     transform 0.25s ease,
     box-shadow 0.25s ease,

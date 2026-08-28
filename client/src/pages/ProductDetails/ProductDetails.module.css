@@ -121,10 +121,9 @@
   position: absolute;
   left: calc(100% + 1.25rem);
   top: 0;
-  width: 28.125rem;
-  height: 28.125rem;
+  width: 32rem;
+  height: 32rem;
   background-repeat: no-repeat;
-  background-size: 200% 200%;
   background-color: var(--surface);
   border: 0.0625rem solid var(--border);
   border-radius: 0.75rem;

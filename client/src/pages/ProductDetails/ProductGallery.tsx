@@ -6,6 +6,7 @@ interface ProductGalleryProps {
     product: Product;
     selectedColor?: string;
 }
+const ZOOM_SCALE = 300;
 const ProductGallery = ({ product, selectedColor, }: ProductGalleryProps) => {
     const [selectedImage, setSelectedImage] = useState(0);
     const [zoomVisible, setZoomVisible] = useState(false);
@@ -47,6 +48,7 @@ const ProductGallery = ({ product, selectedColor, }: ProductGalleryProps) => {
         {zoomVisible && (<div className={styles.zoomPreview} style={{
                 backgroundImage: `url("${currentImage}")`,
                 backgroundPosition: `${zoomPosition.x}% ${zoomPosition.y}%`,
+                backgroundSize: `${ZOOM_SCALE}% ${ZOOM_SCALE}%`,
             }}/>)}
       </div>
       

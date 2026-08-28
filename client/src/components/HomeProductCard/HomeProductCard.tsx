@@ -1,14 +1,28 @@
 import styles from "./HomeProductCard.module.css";
 import { getFirstProductImage, isProductOutOfStock, } from "../../features/products/inventory";
+import { useProductNavigation } from "../../features/products/hooks/useProductNavigation";
 import type { Product } from "../../features/products/types";
 interface HomeProductCardProps {
     product: Product;
     onClick?: () => void;
 }
 const HomeProductCard = ({ product, onClick }: HomeProductCardProps) => {
+    const { goToProduct } = useProductNavigation();
     const image = getFirstProductImage(product.images);
     const outOfStock = isProductOutOfStock(product);
-    return (<div className={styles.card} onClick={onClick}>
+    const handleClick = () => {
+        if (onClick) {
+            onClick();
+            return;
+        }
+        goToProduct(product._id);
+    };
+    return (<div className={styles.card} onClick={handleClick} role="link" tabIndex={0} onKeyDown={(event) => {
+            if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                handleClick();
+            }
+        }}>
       <div className={styles.imageWrapper}>
         <img src={image} alt={product.name} className={styles.image}/>
         {product.discountPercentage > 0 && (<span className={styles.discount}>

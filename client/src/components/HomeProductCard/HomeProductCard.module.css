@@ -6,6 +6,7 @@
   border: 0.0625rem solid var(--border, #e7e9e8);
   border-radius: 0.75rem;
   overflow: hidden;
+  cursor: pointer;
   transition:
     transform 0.25s ease,
     box-shadow 0.25s ease;

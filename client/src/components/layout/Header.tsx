@@ -71,8 +71,11 @@ export default function Navbar() {
         if (!tenantSlug) {
             return;
         }
-        const categoryId = category.categoryId || category.slug || category.name;
-        navigate(`/${tenantSlug}/products?category=${encodeURIComponent(categoryId)}`);
+        const categoryId = category.categoryId ||
+            category._id ||
+            category.slug ||
+            category.name;
+        navigate(`/${tenantSlug}/products?categoryIds=${encodeURIComponent(categoryId)}`);
         setMenuOpen(false);
         setSearchOpen(false);
     };
@@ -106,8 +109,8 @@ export default function Navbar() {
       <div className={styles.container}>
         
         <button type="button" className={styles.logo} onClick={handleHome}>
-          <span className={styles.logoIcon}>LT</span>
-          <span className={styles.logoText}>Lunar Tech</span>
+          <span className={styles.logoIcon}>{getInitials(tenantSlug)}</span>
+          <span className={styles.logoText}>{tenantSlug}</span>
         </button>
         
         <nav className={styles.navLinks} aria-label="Primary navigation">

@@ -7,7 +7,7 @@
   border-radius: 1rem;
   position: sticky;
   top: 5.625rem;
-  max-height: calc(100vh - 6.875rem);
+  /* max-height: calc(100vh - 6.875rem); */
   overflow-y: auto;
   overflow-x: hidden;
   scrollbar-width: thin;

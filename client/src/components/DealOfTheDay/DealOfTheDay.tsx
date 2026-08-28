@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import { useRef } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Autoplay } from "swiper/modules";
@@ -7,6 +8,7 @@ import styles from "./DealOfTheDay.module.css";
 import Countdown from "./Countdown";
 import ProductCard from "../sliders/ProductSlider/ProductCard";
 import type { Product } from "../../features/products/types";
+import { useStorefrontTenant } from "../../features/tenant/useTenant";
 interface DealOfTheDayProps {
     products: Product[];
     isWishlisted?: (productId: string) => boolean;
@@ -14,6 +16,8 @@ interface DealOfTheDayProps {
     onQuickAdd?: (productId: string, variantId: string, color: string, size: string) => void;
 }
 const DealOfTheDay = ({ products, isWishlisted, onToggleWishlist, onQuickAdd, }: DealOfTheDayProps) => {
+    const navigate = useNavigate();
+    const { tenantSlug } = useStorefrontTenant();
     const prevRef = useRef<HTMLButtonElement | null>(null);
     const nextRef = useRef<HTMLButtonElement | null>(null);
     if (!products.length) {
@@ -32,7 +36,11 @@ const DealOfTheDay = ({ products, isWishlisted, onToggleWishlist, onQuickAdd, }:
           exclusive deals.
         </p>
         <Countdown />
-        <button type="button" className={styles.button}>
+        <button type="button" className={styles.button} onClick={() => {
+            if (tenantSlug) {
+                navigate(`/${tenantSlug}/products`);
+            }
+        }}>
           Shop Now
           <span>→</span>
         </button>

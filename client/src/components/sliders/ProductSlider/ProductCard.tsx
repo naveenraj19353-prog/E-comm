@@ -2,6 +2,7 @@ import { Heart, ShoppingCart, Star } from "lucide-react";
 import styles from "./ProductCard.module.css";
 import type { Product } from "../../../features/products/types";
 import { getFirstProductImage, isProductOutOfStock, } from "../../../features/products/inventory";
+import { useProductNavigation } from "../../../features/products/hooks/useProductNavigation";
 interface ProductCardProps {
     product: Product;
     isWishlisted?: boolean;
@@ -10,6 +11,7 @@ interface ProductCardProps {
     isAdding?: boolean;
 }
 const ProductCard = ({ product, isWishlisted = false, onWishlist, onAddToCart, isAdding = false, }: ProductCardProps) => {
+    const { goToProduct } = useProductNavigation();
     const outOfStock = isProductOutOfStock(product);
     const image = getFirstProductImage(product.images);
     const handleWishlist = (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -27,7 +29,15 @@ const ProductCard = ({ product, isWishlisted = false, onWishlist, onAddToCart, i
         }
         onAddToCart?.(product._id, variant.variantId, variant.color, variant.size);
     };
-    return (<div className={styles.card}>
+    const handleCardClick = () => {
+        goToProduct(product._id);
+    };
+    return (<div className={styles.card} onClick={handleCardClick} role="link" tabIndex={0} onKeyDown={(event) => {
+            if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                handleCardClick();
+            }
+        }}>
       {product.discountPercentage > 0 && (<span className={styles.discount}>-{product.discountPercentage}%</span>)}
       <button type="button" className={`${styles.wishlist} ${isWishlisted ? styles.wishlisted : ""}`} onClick={handleWishlist} aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}>
         <Heart size={18} fill={isWishlisted ? "currentColor" : "none"}/>
