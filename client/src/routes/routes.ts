@@ -5,4 +5,5 @@ export const routes = {
     cart: (tenant: string) => `/${tenant}/cart`,
     wishlist: (tenant: string) => `/${tenant}/wishlist`,
     profile: (tenant: string) => `/${tenant}/profile`,
+    customize: (tenant: string) => `/${tenant}/customize`,
 };

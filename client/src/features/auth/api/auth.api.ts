@@ -2,7 +2,6 @@ import apiClient from "../../../api/client";
 import type { LoginRequest, LoginResponse, RegisterRequest, RegisterResponse, } from "../types";
 export const loginApi = async (payload: LoginRequest): Promise<LoginResponse> => {
     const response = await apiClient.post("/auth/login", payload);
-    console.log("LOGIN API RESPONSE:", response.data);
     return response.data;
 };
 export const registerApi = async (payload: RegisterRequest): Promise<RegisterResponse> => {

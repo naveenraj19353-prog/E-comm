@@ -2,6 +2,7 @@ import apiClient from "../../../api/client";
 export interface CreatePaymentOrderRequest {
     tenantId: string;
     userId: string;
+    addressId: string;
     couponCode?: string | null;
 }
 export interface CreatePaymentOrderResponse {

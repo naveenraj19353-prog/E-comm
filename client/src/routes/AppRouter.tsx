@@ -14,6 +14,7 @@ import StorefrontRegister from "../pages/Register/StorefrontRegister";
 import LegacyAuthRedirect from "../pages/Login/LegacyAuthRedirect";
 import Logout from "../pages/Logout/Logout";
 import RequireStorefrontAuth from "../features/auth/RequireStorefrontAuth";
+import RequireStoreAdminAuth from "../features/auth/RequireStoreAdminAuth";
 import AdminLayout from "../features/admin/components/AdminLayout";
 import AdminDashboard from "../features/admin/pages/AdminDashboard";
 import AdminTenants from "../features/admin/pages/TenantsPage";
@@ -22,6 +23,7 @@ import EditTenant from "../features/admin/pages/EditTenant";
 import CreateTenant from "../features/admin/pages/CreateTenant";
 import AdminTenantProducts from "../features/admin/pages/AdminTenantProducts";
 import CreateProduct from "../features/admin/pages/CreateProduct";
+import ThemeCustomizer from "../pages/ThemeCustomizer/ThemeCustomizer";
 import NotFound from "../pages/NotFound";
 export const router = createBrowserRouter([
     {
@@ -71,6 +73,14 @@ export const router = createBrowserRouter([
         path: "/:tenantSlug",
         element: <TenantLoader />,
         children: [
+            {
+                path: "customize",
+                element: (
+                    <RequireStoreAdminAuth>
+                        <ThemeCustomizer />
+                    </RequireStoreAdminAuth>
+                ),
+            },
             {
                 element: <MainLayout />,
                 children: [

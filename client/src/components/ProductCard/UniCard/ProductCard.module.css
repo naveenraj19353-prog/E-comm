@@ -4,7 +4,7 @@
   overflow: hidden;
   background: var(--surface);
   border: 0.0625rem solid var(--border);
-  border-radius: 1.125rem;
+  border-radius: var(--layout-card-radius, 1.125rem);
   cursor: pointer;
   transition:
     transform 0.25s ease,
@@ -44,7 +44,6 @@
 .wishlist {
   position: absolute;
   top: 0.75rem;
-  right: 0.75rem;
   z-index: 10;
   width: 2.375rem;
   height: 2.375rem;
@@ -64,6 +63,16 @@
     color 0.2s ease,
     background 0.2s ease;
 }
+
+.wishlistRight {
+  right: 0.75rem;
+  left: auto;
+}
+
+.wishlistLeft {
+  left: 0.75rem;
+  right: auto;
+}
 .wishlist:hover {
   transform: scale(1.08);
   color: var(--danger);
@@ -79,7 +88,7 @@
 .imageWrapper {
   position: relative;
   width: 100%;
-  height: 15.3125rem;
+  aspect-ratio: var(--layout-product-image-ratio, 4 / 5);
   overflow: hidden;
   background: var(--background);
 }

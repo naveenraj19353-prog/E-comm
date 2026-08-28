@@ -1,6 +1,4 @@
 .navbar {
-  position: sticky;
-  top: 0;
   z-index: 100;
   width: 100%;
   background: var(--surface);
@@ -12,14 +10,99 @@
     BlinkMacSystemFont,
     sans-serif;
 }
+
+.navbarSticky {
+  position: sticky;
+  top: 0;
+}
+
+.navbarStatic {
+  position: relative;
+}
 .container {
-  max-width: 80rem;
+  width: 100%;
+  max-width: var(--layout-page-max-width, 90%);
   height: 4rem;
   margin: 0 auto;
   padding: 0 1.5rem;
   display: flex;
   align-items: center;
   gap: 1.5rem;
+  position: relative;
+}
+
+.logoLeft {
+  justify-content: flex-start;
+}
+
+.logoCenter {
+  justify-content: space-between;
+}
+
+.logoCenter .logo {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+}
+
+.logoCenter .navLinks {
+  flex: 1;
+  min-width: 0;
+}
+
+.logoCenter .rightSection {
+  margin-left: auto;
+  z-index: 3;
+}
+
+.searchRight .rightSection {
+  margin-left: auto;
+}
+
+.searchCenter .searchSlotCenter {
+  flex: 1;
+  max-width: 24rem;
+  margin: 0 auto;
+}
+
+.searchCenter .rightSection {
+  margin-left: 0;
+}
+
+.searchCenter.navHidden .rightSection {
+  margin-left: auto;
+}
+
+.searchAfterLogo .searchSlotInline {
+  width: 15rem;
+  flex-shrink: 0;
+}
+
+.searchCenter .rightSection > .searchWrapper,
+.searchAfterLogo .rightSection > .searchWrapper {
+  display: none;
+}
+
+.navHidden .navLinks {
+  display: none !important;
+}
+
+.navAlignLeft .navLinks {
+  justify-content: flex-start;
+}
+
+.navAlignCenter .navLinks {
+  justify-content: center;
+}
+
+.navAlignCenter:not(.searchCenter):not(.logoCenter) .navLinks {
+  flex: 1;
+}
+
+.searchCenter.navAlignCenter .navLinks,
+.logoCenter.navAlignCenter .navLinks {
+  flex: 1;
 }
 .logo {
   display: flex;
@@ -90,6 +173,11 @@
   gap: 0.875rem;
   margin-left: auto;
   flex-shrink: 0;
+}
+
+.searchCenter .rightSection,
+.searchAfterLogo .rightSection {
+  margin-left: auto;
 }
 .searchWrapper {
   display: flex;

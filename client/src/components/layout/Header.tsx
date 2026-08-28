@@ -1,12 +1,14 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ShoppingCart } from "lucide-react";
+import { ShoppingCart, Palette } from "lucide-react";
 import styles from "../../styles/navBar.module.css";
 import { useCart } from "../../features/cart/hooks/useCart";
 import { useWishlist } from "../../features/wishlist/hooks/useWishlist";
 import { useAuth } from "../../features/auth/hooks/useAuth";
 import { useCategory } from "../../features/products/hooks/useCategory";
 import { useStorefrontTenant } from "../../features/tenant/useTenant";
+import { useLayoutSettings } from "../../theme/useThemeSettings";
+import { useCanManageStoreLayout } from "../../features/auth/useCanManageStoreLayout";
 interface Category {
     _id?: string;
     categoryId?: string;
@@ -27,6 +29,8 @@ export default function Navbar() {
     }>();
     const { user } = useAuth();
     const catalogTenantId = useStorefrontTenant().tenantId;
+    const layoutSettings = useLayoutSettings();
+    const canManageLayout = useCanManageStoreLayout();
     const { data: categoryResponse, isLoading: categoriesLoading } = useCategory(catalogTenantId);
     const { cartCount } = useCart(user?._id as string, user?.tenantId as string);
     const { wishlistCount } = useWishlist(user?._id as string, user?.tenantId as string);
@@ -105,29 +109,26 @@ export default function Navbar() {
             window.removeEventListener("keydown", handleKeyDown);
         };
     }, []);
-    return (<header className={styles.navbar}>
-      <div className={styles.container}>
-        
-        <button type="button" className={styles.logo} onClick={handleHome}>
-          <span className={styles.logoIcon}>{getInitials(tenantSlug)}</span>
-          <span className={styles.logoText}>{tenantSlug}</span>
-        </button>
-        
-        <nav className={styles.navLinks} aria-label="Primary navigation">
-          {categoriesLoading ? (<span className={styles.navLink}>Loading...</span>) : (visibleCategories.map((category) => {
-            const key = category._id ||
-                category.categoryId ||
-                category.slug ||
-                category.name;
-            return (<button key={key} type="button" className={styles.navLink} onClick={() => handleCategoryClick(category)}>
-                  {category.name}
-                </button>);
-        }))}
-        </nav>
-        
-        <div className={styles.rightSection}>
-          
-          <div className={styles.searchWrapper}>
+    const headerLayoutClass = [
+        styles.container,
+        layoutSettings.headerLogoPosition === "center" ? styles.logoCenter : styles.logoLeft,
+        layoutSettings.headerSearchPosition === "center"
+            ? styles.searchCenter
+            : layoutSettings.headerSearchPosition === "after-logo"
+                ? styles.searchAfterLogo
+                : styles.searchRight,
+        layoutSettings.showHeaderCategories
+            ? layoutSettings.headerNavAlignment === "center"
+                ? styles.navAlignCenter
+                : styles.navAlignLeft
+            : styles.navHidden,
+    ].join(" ");
+    const searchPosition = layoutSettings.headerSearchPosition;
+    const renderDesktopSearch = (slotClassName?: string) => {
+        if (!layoutSettings.showHeaderSearch) {
+            return null;
+        }
+        return (<div className={`${styles.searchWrapper} ${slotClassName || ""}`}>
             <SearchIcon className={styles.searchIcon}/>
             <input type="text" value={searchValue} onChange={(event) => setSearchValue(event.target.value)} onKeyDown={(event) => {
             if (event.key === "Enter") {
@@ -137,12 +138,50 @@ export default function Navbar() {
             <button type="button" className={styles.searchButton} onClick={handleSearch}>
               <SearchIcon />
             </button>
-          </div>
+          </div>);
+    };
+    return (<header className={`${styles.navbar} ${layoutSettings.stickyHeader ? styles.navbarSticky : styles.navbarStatic}`}>
+      <div className={headerLayoutClass}>
+        
+        <button type="button" className={styles.logo} onClick={handleHome}>
+          <span className={styles.logoIcon}>{getInitials(tenantSlug)}</span>
+          <span className={styles.logoText}>{tenantSlug}</span>
+        </button>
+        
+        {searchPosition === "after-logo" && renderDesktopSearch(styles.searchSlotInline)}
+
+        {layoutSettings.showHeaderCategories && (<nav className={styles.navLinks} aria-label="Primary navigation">
+          {categoriesLoading ? (<span className={styles.navLink}>Loading...</span>) : (visibleCategories.map((category) => {
+            const key = category._id ||
+                category.categoryId ||
+                category.slug ||
+                category.name;
+            return (<button key={key} type="button" className={styles.navLink} onClick={() => handleCategoryClick(category)}>
+                  {category.name}
+                </button>);
+        }))}
+        </nav>)}
+        
+        {searchPosition === "center" && renderDesktopSearch(styles.searchSlotCenter)}
+
+        <div className={styles.rightSection}>
           
-          <button type="button" className={styles.iconButton} onClick={() => setSearchOpen((value) => !value)}>
+          {searchPosition === "right" && renderDesktopSearch()}
+          
+          {layoutSettings.showHeaderSearch && (<button type="button" className={styles.iconButton} onClick={() => setSearchOpen((value) => !value)}>
             <SearchIcon />
-          </button>
+          </button>)}
           
+          {canManageLayout && (<button
+            type="button"
+            className={styles.iconButton}
+            onClick={() => navigate(`/${tenantSlug}/customize`)}
+            aria-label="Open layout studio"
+            title="Layout studio"
+          >
+            <Palette size={20} />
+          </button>)}
+
           <button type="button" className={styles.iconButton} onClick={() => navigate(`/${tenantSlug}/wishlist`)}>
             <HeartIcon />
             {wishlistCount > 0 && (<span className={styles.badge}>{wishlistCount}</span>)}
@@ -204,6 +243,12 @@ export default function Navbar() {
         </nav>
         
         <div className={styles.mobileMenuFooter}>
+          {canManageLayout && (<button type="button" onClick={() => {
+            navigate(`/${tenantSlug}/customize`);
+            setMenuOpen(false);
+        }}>
+            Layout studio
+          </button>)}
           <button type="button" onClick={() => {
             navigate(`/${tenantSlug}/wishlist`);
             setMenuOpen(false);

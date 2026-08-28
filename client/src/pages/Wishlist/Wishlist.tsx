@@ -2,6 +2,8 @@ import { useState } from "react";
 import { Heart } from "lucide-react";
 import { useWishlist } from "../../features/wishlist/hooks/useWishlist";
 import { useCart } from "../../features/cart/hooks/useCart";
+import { useLayoutSettings } from "../../theme/useThemeSettings";
+import PageLoader from "../../components/PageLoader";
 import styles from "./Wishlist.module.css";
 import ProductCard from "../../components/ProductCard/UniCard/ProductCard";
 import { useAuth } from "../../features/auth/hooks/useAuth";
@@ -10,11 +12,9 @@ const Wishlist = () => {
     const { wishlist, wishlistCount, isLoading, removeFromWishlist } = useWishlist(user?._id as string, user?.tenantId as string);
     const { addToCart } = useCart(user?._id as string, user?.tenantId as string);
     const [addingProductId, setAddingProductId] = useState<string | null>(null);
+    const layoutSettings = useLayoutSettings();
     if (isLoading) {
-        return (<div className={styles.loading}>
-        <Heart size={28}/>
-        <span>Loading your wishlist...</span>
-      </div>);
+        return <PageLoader message="Loading your wishlist..." />;
     }
     if (wishlist.length === 0) {
         return (<div className={styles.empty}>
@@ -64,7 +64,7 @@ const Wishlist = () => {
           {wishlistCount} {wishlistCount === 1 ? "product" : "products"} saved
         </p>
       </div>
-      <div className={styles.grid}>
+      <div className={`${styles.grid} ${layoutSettings.productViewMode === "list" ? styles.listView : ""}`}>
         {wishlist.map((item) => {
             const product = {
                 _id: item.productId,

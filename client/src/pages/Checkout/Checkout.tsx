@@ -6,6 +6,7 @@ import { useAuth } from "../../features/auth/hooks/useAuth";
 import { useStorefrontTenant } from "../../features/tenant/useTenant";
 import { usePayment } from "../../features/payment/hooks/usePayment";
 import CheckoutHeader from "./CheckoutHeader/CheckoutHeader";
+import PageLoader from "../../components/PageLoader";
 import CheckoutLayout from "./CheckoutLayout/CheckoutLayout";
 import CheckoutMain from "./CheckoutLayout/CheckoutMain/CheckoutMain";
 import AddressSection from "./CheckoutLayout/CheckoutMain/AddressSection/AddressSection";
@@ -16,6 +17,7 @@ import styles from "./Checkout.module.css";
 import type { Address } from "../../features/address/types/address.types";
 import type { DeliveryOption } from "./CheckoutLayout/CheckoutMain/DeliveryMethod/DeliveryMethod";
 import type { PaymentMethodType } from "./CheckoutLayout/CheckoutMain/PaymentMethod/PaymentMethod";
+import { RAZORPAY_KEY_ID } from "../../constants/api";
 const Checkout = () => {
     const navigate = useNavigate();
     const { Razorpay } = useRazorpay();
@@ -55,15 +57,19 @@ const Checkout = () => {
                 alert("Razorpay SDK is not loaded.");
                 return;
             }
+            if (!RAZORPAY_KEY_ID) {
+                alert("Payment is not configured. Please contact support.");
+                return;
+            }
             setIsProcessing(true);
             const orderData = await createOrder({
                 tenantId: user.tenantId,
                 userId: user._id,
+                addressId: selectedAddress._id,
                 couponCode: null,
             });
-            console.log("Razorpay order created:", orderData);
             const options = {
-                key: import.meta.env.VITE_RAZORPAY_KEY_ID,
+                key: RAZORPAY_KEY_ID,
                 amount: orderData.amountInPaise,
                 currency: "INR" as const,
                 name: "OmniStore",
@@ -86,7 +92,6 @@ const Checkout = () => {
                     razorpay_signature: string;
                 }) => {
                     try {
-                        console.log("Razorpay payment response:", paymentResponse);
                         const verifyData = await verifyPayment({
                             tenantId: user.tenantId as string,
                             userId: user._id,
@@ -95,7 +100,6 @@ const Checkout = () => {
                             razorpaySignature: paymentResponse.razorpay_signature,
                             couponCode: null,
                         });
-                        console.log("Payment verified:", verifyData);
                         alert("Payment successful! Order placed.");
                         if (verifyData.orderId && tenantSlug) {
                             navigate(`/${tenantSlug}`);
@@ -113,7 +117,6 @@ const Checkout = () => {
                 },
                 modal: {
                     ondismiss: () => {
-                        console.log("Razorpay checkout closed.");
                         setIsProcessing(false);
                     },
                 },
@@ -128,17 +131,7 @@ const Checkout = () => {
         }
     };
     if (isLoading) {
-        return (<div className={styles.page}>
-        <div className={styles.container}>
-          <CheckoutHeader />
-          <div style={{
-                padding: "60px 0",
-                textAlign: "center",
-            }}>
-            Loading checkout...
-          </div>
-        </div>
-      </div>);
+        return <PageLoader message="Loading checkout..." />;
     }
     return (<div className={styles.page}>
       <div className={styles.container}>

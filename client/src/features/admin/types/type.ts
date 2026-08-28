@@ -1,3 +1,7 @@
+import type { StorefrontLayout } from "../../../theme/types";
+
+export type { StorefrontLayout };
+
 export interface Tenant {
     _id: string;
     tenantId: string;
@@ -5,9 +9,54 @@ export interface Tenant {
     slug: string;
     logo: string;
     theme: string;
+    themeColors?: ThemeColors | null;
+    layoutSettings?: LayoutSettings | null;
     isActive: boolean;
     createdAt: string;
     updatedAt: string;
+}
+
+export interface ThemeColors {
+    primary?: string;
+    secondary?: string;
+    background?: string;
+    surface?: string;
+    border?: string;
+    textBlack?: string;
+    textWhite?: string;
+    success?: string;
+    warning?: string;
+    danger?: string;
+}
+
+export interface LayoutSettings {
+    productGridColumns?: number;
+    cardStyle?: "rounded" | "soft" | "sharp";
+    sectionSpacing?: "compact" | "comfortable" | "spacious";
+    homeBannerStyle?: "full" | "contained";
+    showHomeBanner?: boolean;
+    showDealOfTheDay?: boolean;
+    showTestimonials?: boolean;
+    showCategorySlider?: boolean;
+    showProductRating?: boolean;
+    showQuickAddOnCard?: boolean;
+    showDiscountBadge?: boolean;
+    showHeaderSearch?: boolean;
+    showHeaderCategories?: boolean;
+    headerLogoPosition?: "left" | "center";
+    headerSearchPosition?: "right" | "center" | "after-logo";
+    headerNavAlignment?: "left" | "center";
+    wishlistIconPosition?: "left" | "right";
+    stickyHeader?: boolean;
+    footerLayout?: "full" | "compact" | "minimal";
+    showFooterSocial?: boolean;
+    showFooterLinks?: boolean;
+    productCardImageRatio?: "square" | "portrait" | "landscape";
+    pageWidth?: "narrow" | "standard" | "wide";
+    productListingLayout?: "sidebar-left" | "sidebar-right" | "filters-top";
+    productViewMode?: "grid" | "list";
+    productDetailLayout?: "gallery-left" | "gallery-right" | "stacked";
+    cartLayout?: "split" | "stacked";
 }
 export interface TenantResponse {
     success: boolean;
@@ -32,7 +81,32 @@ export interface UpdateTenantPayload {
     slug?: string;
     logo?: string;
     theme?: string;
+    themeColors?: ThemeColors;
+    layoutSettings?: LayoutSettings;
     isActive?: boolean;
+}
+
+export interface UpdateTenantThemePayload {
+    theme?: string;
+    themeColors?: ThemeColors;
+    layoutSettings?: LayoutSettings;
+    footerContent?: FooterContent;
+}
+
+export interface FooterLink {
+    label: string;
+    href: string;
+}
+
+export interface FooterSection {
+    title: string;
+    links: FooterLink[];
+}
+
+export interface FooterContent {
+    companyName?: string;
+    description?: string;
+    sections?: FooterSection[];
 }
 export interface Product {
     _id: string;

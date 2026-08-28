@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import PageLoader from "../../components/PageLoader";
 import ProductDetailsView from "./ProductDetailsView";
 import styles from "./ProductDetails.module.css";
 import { useAuth } from "../../features/auth/hooks/useAuth";
@@ -127,10 +128,7 @@ const ProductDetails = () => {
         }
     };
     if (productLoading) {
-        return (<div className={styles.state}>
-        <div className={styles.loader}/>
-        <p>Loading product...</p>
-      </div>);
+        return <PageLoader message="Loading product..." />;
     }
     if (productIsError || !product) {
         return (<div className={styles.state}>

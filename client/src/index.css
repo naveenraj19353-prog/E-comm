@@ -7,11 +7,23 @@
 }
 html {
   scroll-behavior: smooth;
+  --layout-grid-columns: 4;
+  --layout-card-radius: 0.625rem;
+  --layout-grid-gap: 1.5rem;
+  --layout-section-gap: 2.25rem;
+  --layout-banner-radius: 0;
+  --layout-page-max-width: 90%;
+  --layout-product-image-ratio: 4 / 5;
 }
 body {
+  width: 100%;
   background: var(--background);
   color: var(--text);
   font-family: Inter, "Segoe UI", sans-serif;
+}
+#root {
+  width: 100%;
+  min-height: 100vh;
 }
 img {
   display: block;

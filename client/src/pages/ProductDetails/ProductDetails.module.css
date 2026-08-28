@@ -1,8 +1,8 @@
 .page {
   width: 100%;
-  max-width: 80rem;
+  max-width: var(--layout-page-max-width, 90%);
   margin: 0 auto;
-  padding: 2.5rem 2rem 5rem;
+  padding: 2.5rem clamp(1rem, 3vw, 2rem) 5rem;
   box-sizing: border-box;
   color: var(--text);
 }
@@ -14,6 +14,23 @@
     minmax(25rem, 0.95fr);
   gap: 4.375rem;
   align-items: start;
+}
+
+.detailGalleryRight {
+  grid-template-columns: minmax(25rem, 0.95fr) minmax(0, 1.05fr);
+}
+
+.detailGalleryRight > :first-child {
+  order: 2;
+}
+
+.detailGalleryRight > :last-child {
+  order: 1;
+}
+
+.detailStacked {
+  grid-template-columns: 1fr;
+  gap: 2rem;
 }
 
 .gallery {

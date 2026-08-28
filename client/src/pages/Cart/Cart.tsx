@@ -5,6 +5,7 @@ import CartItem from "./CartItem";
 import CartSummary from "./CartSummary";
 import EmptyCart from "./EmptyCart";
 import CartLoading from "./CartLoading";
+import { useLayoutSettings } from "../../theme/useThemeSettings";
 import styles from "./Cart.module.css";
 import { useAuth } from "../../features/auth/hooks/useAuth";
 import { useStorefrontTenant } from "../../features/tenant/useTenant";
@@ -12,6 +13,7 @@ const Cart = () => {
     const user = useAuth().user;
     const { tenantId, tenantSlug } = useStorefrontTenant();
     const { cart, grandTotal, cartCount, isLoading, isUpdating, isRemoving, isClearing, updateCart, removeFromCart, clearCart, } = useCart(user?._id as string, user?.tenantId || tenantId);
+    const layoutSettings = useLayoutSettings();
     if (isLoading) {
         return <CartLoading />;
     }
@@ -21,7 +23,7 @@ const Cart = () => {
     return (<div className={styles.container}>
       <CartHeader cartCount={cartCount} onClearCart={clearCart} isClearing={isClearing}/>
       <FreeDeliveryBanner />
-      <div className={styles.layout}>
+      <div className={`${styles.layout} ${layoutSettings.cartLayout === "stacked" ? styles.layoutStacked : styles.layoutSplit}`}>
         <div className={styles.items}>
           {cart.map((item) => (<CartItem key={item.productId} item={item} isUpdating={isUpdating} isRemoving={isRemoving} onUpdateQuantity={updateCart} onRemove={removeFromCart}/>))}
         </div>

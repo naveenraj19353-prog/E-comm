@@ -3,6 +3,7 @@ import { Heart, ShoppingCart, Star } from "lucide-react";
 import styles from "./ProductCard.module.css";
 import { isProductOutOfStock, } from "../../../features/products/inventory";
 import { useProductNavigation } from "../../../features/products/hooks/useProductNavigation";
+import { useLayoutSettings } from "../../../theme/useThemeSettings";
 import type { Product, ProductInventory, } from "../../../features/products/types";
 interface ProductCardProps {
     product: Product;
@@ -12,6 +13,7 @@ interface ProductCardProps {
     isAdding?: boolean;
 }
 const ProductCard = ({ product, isWishlisted = false, onWishlist, onAddToCart, isAdding = false, }: ProductCardProps) => {
+    const layoutSettings = useLayoutSettings();
     const { goToProduct } = useProductNavigation();
     const availableInventory = useMemo<ProductInventory[]>(() => {
         return (product.inventory ?? []).filter((item) => item.stock > 0 &&
@@ -110,27 +112,19 @@ const ProductCard = ({ product, isWishlisted = false, onWishlist, onAddToCart, i
     const handleCardClick = () => {
         goToProduct(product._id);
     };
-    return (<div className={`${styles.card} ${!product.isActive
-            ? styles.inactive
-            : ""}`} onClick={handleCardClick} role="link" tabIndex={0} onKeyDown={(event) => {
+    return (<div className={`${styles.card} ${!product.isActive ? styles.inactive : ""}`} onClick={handleCardClick} role="link" tabIndex={0} onKeyDown={(event) => {
             if (event.key === "Enter" || event.key === " ") {
                 event.preventDefault();
                 handleCardClick();
             }
         }}>
       
-      {product.discountPercentage > 0 && (<span className={styles.discount}>
+      {layoutSettings.showDiscountBadge && product.discountPercentage > 0 && (<span className={styles.discount}>
           -{product.discountPercentage}%
         </span>)}
       
-      <button type="button" className={`${styles.wishlist} ${isWishlisted
-            ? styles.wishlisted
-            : ""}`} onClick={handleWishlist} aria-label={isWishlisted
-            ? "Remove from wishlist"
-            : "Add to wishlist"}>
-        <Heart size={18} fill={isWishlisted
-            ? "currentColor"
-            : "none"}/>
+      <button type="button" className={`${styles.wishlist} ${layoutSettings.wishlistIconPosition === "left" ? styles.wishlistLeft : styles.wishlistRight} ${isWishlisted ? styles.wishlisted : ""}`} onClick={handleWishlist} aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}>
+        <Heart size={18} fill={isWishlisted ? "currentColor" : "none"}/>
       </button>
       
       <div className={styles.imageWrapper}>
@@ -146,7 +140,7 @@ const ProductCard = ({ product, isWishlisted = false, onWishlist, onAddToCart, i
         
         <h3>{product.name}</h3>
         
-        {hasRating && (<div className={styles.rating}>
+        {layoutSettings.showProductRating && hasRating && (<div className={styles.rating}>
             <Star size={14} fill="#fbbf24" stroke="#fbbf24"/>
             <span>
               {product.averageRating.toFixed(1)}
@@ -205,9 +199,7 @@ const ProductCard = ({ product, isWishlisted = false, onWishlist, onAddToCart, i
             </span>)}
         </div>
         
-        <button type="button" className={styles.cartBtn} onClick={handleAddToCart} disabled={isOutOfStock ||
-            !selectedVariant ||
-            isAdding}>
+        {layoutSettings.showQuickAddOnCard && (<button type="button" className={styles.cartBtn} onClick={handleAddToCart} disabled={isOutOfStock || !selectedVariant || isAdding}>
           <ShoppingCart size={18}/>
           {isOutOfStock
             ? "Out Of Stock"
@@ -216,7 +208,7 @@ const ProductCard = ({ product, isWishlisted = false, onWishlist, onAddToCart, i
                 : !selectedVariant
                     ? "Select Variant"
                     : "Add To Cart"}
-        </button>
+        </button>)}
       </div>
     </div>);
 };

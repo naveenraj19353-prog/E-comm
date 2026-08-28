@@ -11,3 +11,5 @@ export interface FooterProps {
     description: string;
     sections: FooterSection[];
 }
+
+export type FooterContent = FooterProps;

@@ -5,6 +5,7 @@ import styles from "./ProductsPage.module.css";
 import { useAppDispatch, useAppSelector } from "../../app/hooks";
 import { clearFilters, setCatalogFilter, setFilters } from "../../features/products/productSlice";
 import { useStorefrontTenant } from "../../features/tenant/useTenant";
+import PageLoader from "../../components/PageLoader";
 import Breadcrumb from "../../components/Breadcrumb";
 import ProductFilters from "../../components/ProductFilters";
 import ProductGrid from "../../components/ProductGrid";
@@ -14,10 +15,12 @@ import AppliedFilters from "../../components/ProductFilters/AppliedFilters";
 import { useProducts } from "../../features/products/hooks/useProducts";
 import { useDebounce } from "../../hooks/useDebounce";
 import { DEFAULT_MAX_PRICE, DEFAULT_MIN_PRICE, getApiPriceBounds, isActivePriceFilter, } from "../../features/products/filterUtils";
+import { useLayoutSettings } from "../../theme/useThemeSettings";
 const Products = () => {
     const [searchParams, setSearchParams] = useSearchParams();
     const dispatch = useAppDispatch();
     const { tenantSlug, tenantId } = useStorefrontTenant();
+    const layoutSettings = useLayoutSettings();
     const filters = useAppSelector((state) => state.products.filters);
     const storedCatalogFilter = useAppSelector(
         (state) => state.products.catalogFilter,
@@ -275,33 +278,7 @@ const Products = () => {
         setSearchParams(params);
     };
     if (productsQuery.isLoading) {
-        return (<div className={styles.page}>
-        <Breadcrumb items={[
-                {
-                    label: "Home",
-                    href: `/${tenantSlug}`,
-                },
-                {
-                    label: "Products",
-                },
-            ]}/>
-        <div className={styles.header}>
-          <div>
-            <h1>Products</h1>
-            <p>Loading products...</p>
-          </div>
-        </div>
-        <div className={styles.loadingGrid}>
-          {Array.from({
-                length: 8,
-            }).map((_, index) => (<div key={index} className={styles.skeletonCard}>
-              <div className={styles.skeletonImage}/>
-              <div className={styles.skeletonLine}/>
-              <div className={styles.skeletonLineShort}/>
-              <div className={styles.skeletonPrice}/>
-            </div>))}
-        </div>
-      </div>);
+        return <PageLoader message="Loading products..." />;
     }
     if (productsQuery.isError) {
         return (<div className={styles.page}>
@@ -370,10 +347,10 @@ const Products = () => {
           </button>
         </div>)}
       <AppliedFilters />
-      <div className={styles.content}>
-        <aside className={styles.sidebar}>
+      <div className={`${styles.content} ${styles[`listing_${layoutSettings.productListingLayout}`]}`}>
+        {layoutSettings.productListingLayout !== "filters-top" && (<aside className={styles.sidebar}>
           <ProductFilters />
-        </aside>
+        </aside>)}
         <main className={styles.products}>
           {products.length === 0 ? (<div className={styles.emptyState}>
               <div className={styles.emptyIcon}>
