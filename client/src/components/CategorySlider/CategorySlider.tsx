@@ -5,9 +5,22 @@ interface CategorySliderProps {
     tenantId: string;
     onCategoryClick?: (category: Category) => void;
 }
-const VISIBLE_COUNT = 5;
-const SLIDE_COUNT = 3;
+const DESKTOP_VISIBLE_COUNT = 5;
+const DESKTOP_SLIDE_COUNT = 3;
+const MOBILE_MEDIA_QUERY = "(max-width: 37.5rem)";
 const AUTO_SLIDE_INTERVAL = 3000;
+
+function useIsMobileCategorySlider() {
+    const [isMobile, setIsMobile] = useState(() => window.matchMedia(MOBILE_MEDIA_QUERY).matches);
+    useEffect(() => {
+        const mediaQuery = window.matchMedia(MOBILE_MEDIA_QUERY);
+        const handleChange = () => setIsMobile(mediaQuery.matches);
+        mediaQuery.addEventListener("change", handleChange);
+        return () => mediaQuery.removeEventListener("change", handleChange);
+    }, []);
+    return isMobile;
+}
+
 export default function CategorySlider({ tenantId, onCategoryClick, }: CategorySliderProps) {
     const [categories, setCategories] = useState<Category[]>([]);
     const [loading, setLoading] = useState(true);
@@ -15,6 +28,9 @@ export default function CategorySlider({ tenantId, onCategoryClick, }: CategoryS
     const [currentIndex, setCurrentIndex] = useState(0);
     const [isHovered, setIsHovered] = useState(false);
     const sliderRef = useRef<HTMLDivElement>(null);
+    const isMobile = useIsMobileCategorySlider();
+    const visibleCount = isMobile ? 1 : DESKTOP_VISIBLE_COUNT;
+    const slideCount = isMobile ? 1 : DESKTOP_SLIDE_COUNT;
     useEffect(() => {
         if (!tenantId) {
             return;
@@ -47,10 +63,9 @@ export default function CategorySlider({ tenantId, onCategoryClick, }: CategoryS
             mounted = false;
         };
     }, [tenantId]);
-    const maxIndex = Math.max(0, categories.length - VISIBLE_COUNT);
-    const moveToIndex = (index: number) => {
-        const nextIndex = Math.max(0, Math.min(index, maxIndex));
-        setCurrentIndex(nextIndex);
+    const maxIndex = Math.max(0, categories.length - visibleCount);
+
+    const scrollToIndex = (index: number) => {
         const slider = sliderRef.current;
         if (!slider) {
             return;
@@ -59,55 +74,55 @@ export default function CategorySlider({ tenantId, onCategoryClick, }: CategoryS
         if (!card) {
             return;
         }
-        const cardWidth = card.offsetWidth;
-        const gap = 20;
+        const gapValue = Number.parseFloat(getComputedStyle(slider).columnGap || getComputedStyle(slider).gap || "0");
+        const gap = Number.isFinite(gapValue) ? gapValue : 0;
         slider.scrollTo({
-            left: nextIndex * (cardWidth + gap),
+            left: index * (card.offsetWidth + gap),
             behavior: "smooth",
         });
     };
+
+    const moveToIndex = (index: number) => {
+        const nextIndex = Math.max(0, Math.min(index, maxIndex));
+        setCurrentIndex(nextIndex);
+        scrollToIndex(nextIndex);
+    };
+
+    useEffect(() => {
+        setCurrentIndex((previousIndex) => Math.min(previousIndex, maxIndex));
+    }, [maxIndex]);
+
     const handlePrevious = () => {
         if (currentIndex === 0) {
             moveToIndex(maxIndex);
             return;
         }
-        moveToIndex(Math.max(0, currentIndex - SLIDE_COUNT));
+        moveToIndex(Math.max(0, currentIndex - slideCount));
     };
     const handleNext = () => {
         if (currentIndex >= maxIndex) {
             moveToIndex(0);
             return;
         }
-        moveToIndex(Math.min(maxIndex, currentIndex + SLIDE_COUNT));
+        moveToIndex(Math.min(maxIndex, currentIndex + slideCount));
     };
     useEffect(() => {
-        if (loading || categories.length <= VISIBLE_COUNT || isHovered) {
+        if (loading || categories.length <= visibleCount || isHovered) {
             return;
         }
         const interval = window.setInterval(() => {
             setCurrentIndex((previousIndex) => {
                 const nextIndex = previousIndex >= maxIndex
                     ? 0
-                    : Math.min(maxIndex, previousIndex + SLIDE_COUNT);
-                const slider = sliderRef.current;
-                if (slider) {
-                    const card = slider.querySelector(`.${styles.categoryCard}`) as HTMLElement | null;
-                    if (card) {
-                        const cardWidth = card.offsetWidth;
-                        const gap = 20;
-                        slider.scrollTo({
-                            left: nextIndex * (cardWidth + gap),
-                            behavior: "smooth",
-                        });
-                    }
-                }
+                    : Math.min(maxIndex, previousIndex + slideCount);
+                scrollToIndex(nextIndex);
                 return nextIndex;
             });
         }, AUTO_SLIDE_INTERVAL);
         return () => {
             window.clearInterval(interval);
         };
-    }, [loading, categories.length, maxIndex, isHovered]);
+    }, [loading, categories.length, maxIndex, isHovered, slideCount, visibleCount]);
     if (loading) {
         return (<section className={styles.section}>
         <div className={styles.header}>
@@ -197,13 +212,13 @@ export default function CategorySlider({ tenantId, onCategoryClick, }: CategoryS
             </button>))}
         </div>
       </div>
-      {categories.length > VISIBLE_COUNT && (<div className={styles.bottomBar}>
+      {categories.length > visibleCount && (<div className={styles.bottomBar}>
           <div className={styles.progress}>
             {Array.from({
-                length: Math.ceil(categories.length / SLIDE_COUNT),
+                length: Math.ceil(categories.length / slideCount),
             }).map((_, index) => {
-                const active = Math.floor(currentIndex / SLIDE_COUNT) === index;
-                return (<button key={index} type="button" className={`${styles.progressDot} ${active ? styles.progressDotActive : ""}`} onClick={() => moveToIndex(Math.min(index * SLIDE_COUNT, maxIndex))} aria-label={`Go to category group ${index + 1}`}/>);
+                const active = Math.floor(currentIndex / slideCount) === index;
+                return (<button key={index} type="button" className={`${styles.progressDot} ${active ? styles.progressDotActive : ""}`} onClick={() => moveToIndex(Math.min(index * slideCount, maxIndex))} aria-label={`Go to category group ${index + 1}`}/>);
             })}
           </div>
           <span className={styles.autoText}>

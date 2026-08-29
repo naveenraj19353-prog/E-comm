@@ -7,6 +7,7 @@ import { useHome } from "../features/home/hooks/useHome";
 import styles from "./Home.module.css";
 import { useCart } from "../features/cart/hooks/useCart";
 import { useWishlist } from "../features/wishlist/hooks/useWishlist";
+import { useNavigateToLogin } from "../features/auth/hooks/useNavigateToLogin";
 import BannerSlider from "../components/banner/BannerSlider";
 import CategorySlider from "../components/CategorySlider/CategorySlider";
 import { useStorefrontTenant } from "../features/tenant/useTenant";
@@ -17,13 +18,14 @@ const Home = () => {
     const { tenantId, tenantSlug } = useStorefrontTenant();
     const layoutSettings = useLayoutSettings();
     const navigate = useNavigate();
+    const navigateToLogin = useNavigateToLogin();
     const user = useAppSelector((state) => state.auth.user);
     const { data: homeData, isLoading, isError, refetch } = useHome(tenantId);
     const { addToCart } = useCart(user?._id as string, tenantId);
     const { wishlist, addToWishlist, removeFromWishlist } = useWishlist(user?._id as string, tenantId);
     const handleWishlist = async (productId: string, isAdding: boolean) => {
         if (!user?._id) {
-            navigate(tenantSlug ? `/${tenantSlug}/login` : "/login");
+            navigateToLogin();
             return;
         }
         try {
@@ -46,7 +48,7 @@ const Home = () => {
     };
     const handleAddToCart = async (productId: string, variantId: string, color: string, size: string) => {
         if (!user?._id) {
-            navigate(tenantSlug ? `/${tenantSlug}/login` : "/login");
+            navigateToLogin();
             return;
         }
         try {

@@ -5,6 +5,7 @@ import { useCart } from "../../features/cart/hooks/useCart";
 import { useAuth } from "../../features/auth/hooks/useAuth";
 import { useStorefrontTenant } from "../../features/tenant/useTenant";
 import { usePayment } from "../../features/payment/hooks/usePayment";
+import { useNavigateToLogin } from "../../features/auth/hooks/useNavigateToLogin";
 import CheckoutHeader from "./CheckoutHeader/CheckoutHeader";
 import PageLoader from "../../components/PageLoader";
 import CheckoutLayout from "./CheckoutLayout/CheckoutLayout";
@@ -23,6 +24,7 @@ const Checkout = () => {
     const { Razorpay } = useRazorpay();
     const { user } = useAuth();
     const { tenantSlug } = useStorefrontTenant();
+    const navigateToLogin = useNavigateToLogin();
     const { cart, grandTotal, isLoading } = useCart(user?._id as string, user?.tenantId as string);
     const { createOrder, verifyPayment, isCreatingOrder, isVerifyingPayment } = usePayment();
     const [selectedAddress, setSelectedAddress] = useState<Address | null>(null);
@@ -42,7 +44,7 @@ const Checkout = () => {
     const handlePlaceOrder = async () => {
         try {
             if (!user?._id || !user?.tenantId) {
-                navigate(tenantSlug ? `/${tenantSlug}/login` : "/login");
+                navigateToLogin();
                 return;
             }
             if (!selectedAddress) {

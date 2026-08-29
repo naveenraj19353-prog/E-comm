@@ -6,6 +6,7 @@ import { useCart } from "../../features/cart/hooks/useCart";
 import { useWishlist } from "../../features/wishlist/hooks/useWishlist";
 import { useAuth } from "../../features/auth/hooks/useAuth";
 import { useStorefrontTenant } from "../../features/tenant/useTenant";
+import { useNavigateToLogin } from "../../features/auth/hooks/useNavigateToLogin";
 import { useLayoutSettings } from "../../theme/useThemeSettings";
 import ProductCard from "../ProductCard/UniCard/ProductCard";
 interface ProductGridProps {
@@ -15,6 +16,7 @@ const ProductGrid = ({ products, }: ProductGridProps) => {
     const layoutSettings = useLayoutSettings();
     const user = useAuth().user;
     const navigate = useNavigate();
+    const navigateToLogin = useNavigateToLogin();
     const { tenantId: storeTenantId, tenantSlug } = useStorefrontTenant();
     const tenantId = user?.tenantId || storeTenantId;
     const userId = user?._id ?? "";
@@ -35,7 +37,7 @@ const ProductGrid = ({ products, }: ProductGridProps) => {
     }
     const handleAddToCart = async (productId: string, variantId: string, color: string, size: string) => {
         if (!userId || !tenantId) {
-            navigate(tenantSlug ? `/${tenantSlug}/login` : "/login");
+            navigateToLogin();
             return;
         }
         try {
@@ -61,7 +63,7 @@ const ProductGrid = ({ products, }: ProductGridProps) => {
     };
     const handleWishlist = async (productId: string) => {
         if (!userId || !tenantId) {
-            navigate(tenantSlug ? `/${tenantSlug}/login` : "/login");
+            navigateToLogin();
             return;
         }
         try {

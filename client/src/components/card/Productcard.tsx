@@ -188,7 +188,7 @@ export default function ProductCard({ product, isWishlisted = false, onWishlist,
         <h3 className={styles.name}>{name}</h3>
         
         {availableColors.length > 0 && (<div className={styles.colorSection}>
-            <span className={styles.colorLabel}>Color:</span>
+            <span className={styles.optionLabel}>Color:</span>
             <div className={styles.colorOptions}>
               {availableColors.map((color) => (<button key={color} type="button" className={`${styles.colorButton} ${selectedColor === color ? styles.colorButtonActive : ""}`} onClick={(event) => handleColorChange(event, color)} aria-label={`Select ${color}`} title={color}>
                   <span className={styles.colorDot} style={{
@@ -199,26 +199,13 @@ export default function ProductCard({ product, isWishlisted = false, onWishlist,
             </div>
           </div>)}
         
-        {availableSizes.length > 0 && (<div className={styles.colorSection}>
-            <span className={styles.colorLabel}>Size:</span>
-            <div className={styles.colorOptions}>
-              {availableSizes.map((size) => (<button key={size} type="button" className={`${styles.colorButton} ${selectedSize === size ? styles.colorButtonActive : ""}`} onClick={(event) => handleSizeChange(event, size)} aria-label={`Select size ${size}`}>
-                  <span style={{
-                    fontSize: "12px",
-                    fontWeight: 600,
-                }}>
-                    {size}
-                  </span>
+        {availableSizes.length > 0 && (<div className={styles.sizeSection}>
+            <span className={styles.optionLabel}>Size:</span>
+            <div className={styles.sizeOptions}>
+              {availableSizes.map((size) => (<button key={size} type="button" className={`${styles.sizeButton} ${selectedSize === size ? styles.sizeButtonActive : ""}`} onClick={(event) => handleSizeChange(event, size)} aria-label={`Select size ${size}`}>
+                  {size}
                 </button>))}
             </div>
-          </div>)}
-        
-        {selectedVariant && (<div style={{
-                fontSize: "11px",
-                marginTop: "4px",
-                opacity: 0.7,
-            }}>
-            {selectedVariant.color} / {selectedVariant.size}
           </div>)}
         
         <div className={styles.priceRow}>

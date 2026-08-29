@@ -5,6 +5,7 @@ import styles from "../../styles/navBar.module.css";
 import { useCart } from "../../features/cart/hooks/useCart";
 import { useWishlist } from "../../features/wishlist/hooks/useWishlist";
 import { useAuth } from "../../features/auth/hooks/useAuth";
+import { useNavigateToLogin } from "../../features/auth/hooks/useNavigateToLogin";
 import { useCategory } from "../../features/products/hooks/useCategory";
 import { useStorefrontTenant } from "../../features/tenant/useTenant";
 import { useLayoutSettings } from "../../theme/useThemeSettings";
@@ -24,6 +25,7 @@ const getInitials = (name?: string) => {
 };
 export default function Navbar() {
     const navigate = useNavigate();
+    const navigateToLogin = useNavigateToLogin();
     const { tenantSlug } = useParams<{
         tenantSlug: string;
     }>();
@@ -194,7 +196,7 @@ export default function Navbar() {
           
           {user ? (<button type="button" className={styles.avatar} onClick={() => navigate(`/${tenantSlug}/profile`)}>
               {getInitials(user?.name)}
-            </button>) : (<button type="button" className={styles.avatar} onClick={() => navigate(`/${tenantSlug}/login`)}>
+            </button>) : (<button type="button" className={styles.avatar} onClick={() => navigateToLogin()}>
               UK
             </button>)}
           
@@ -262,9 +264,12 @@ export default function Navbar() {
             Cart
           </button>
           <button type="button" onClick={() => {
-            navigate(user
-                ? `/${tenantSlug}/profile`
-                : `/${tenantSlug}/login`);
+            if (user) {
+                navigate(`/${tenantSlug}/profile`);
+            }
+            else {
+                navigateToLogin();
+            }
             setMenuOpen(false);
         }}>
             {user ? "Account" : "Sign in"}

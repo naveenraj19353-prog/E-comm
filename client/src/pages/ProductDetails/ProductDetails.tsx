@@ -7,6 +7,7 @@ import { useAuth } from "../../features/auth/hooks/useAuth";
 import { useStorefrontTenant } from "../../features/tenant/useTenant";
 import { useCart } from "../../features/cart/hooks/useCart";
 import { useWishlist } from "../../features/wishlist/hooks/useWishlist";
+import { useNavigateToLogin } from "../../features/auth/hooks/useNavigateToLogin";
 import { useProductDetails } from "../../features/products/hooks/useProductDetails";
 import { useReviews } from "../../features/reviews/hooks/useReviews";
 const ProductDetails = () => {
@@ -17,6 +18,7 @@ const ProductDetails = () => {
     }>();
     const { user, isAuthenticated } = useAuth();
     const { tenantId, tenantSlug } = useStorefrontTenant();
+    const navigateToLogin = useNavigateToLogin();
     const { data: productResponse, isLoading: productLoading, isError: productIsError, } = useProductDetails(productId || "", tenantId);
     const product = productResponse?.data || null;
     const { reviews, isLoading: reviewsLoading, addReview, isCreating: isSubmittingReview, } = useReviews(productId || "", tenantId);
@@ -31,7 +33,7 @@ const ProductDetails = () => {
         ? wishlist.some((item) => item.productId === product._id)
         : false;
     const requireLogin = () => {
-        navigate(tenantSlug ? `/${tenantSlug}/login` : "/login");
+        navigateToLogin();
     };
     const handleAddToCart = async (selectedProductId: string, quantity: number, variantId?: string) => {
         if (!isAuthenticated || !user) {
