@@ -113,6 +113,21 @@
   color: #89948e;
   font-size: 0.6875rem;
 }
+.sectionTitle {
+  margin: 0.25rem 0 0;
+  color: #26332e;
+  font-size: 0.9375rem;
+  font-weight: 700;
+}
+.sectionHint {
+  margin: 0.25rem 0 0;
+  color: #7b8781;
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
+.fullWidth {
+  grid-column: 1 / -1;
+}
 .preview {
   grid-column: 1 / -1;
   overflow: hidden;
@@ -163,6 +178,9 @@
 .previewBody span {
   color: #7b8781;
   font-size: 0.75rem;
+}
+.previewBody span + span {
+  margin-top: 0.125rem;
 }
 .error {
   grid-column: 1 / -1;

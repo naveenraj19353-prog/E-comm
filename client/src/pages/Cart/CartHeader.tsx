@@ -7,7 +7,7 @@ interface CartHeaderProps {
 }
 const CartHeader = ({ cartCount, isClearing, onClearCart, }: CartHeaderProps) => {
     return (<div className={styles.header}>
-      <div>
+      <div className={styles.headerMain}>
         <div className={styles.eyebrow}>
           <ShoppingBag size={15}/>
           Your Bag
@@ -16,10 +16,10 @@ const CartHeader = ({ cartCount, isClearing, onClearCart, }: CartHeaderProps) =>
         <p>
           {cartCount} {cartCount === 1 ? "item" : "items"} in your cart
         </p>
+        <button type="button" className={styles.clearCart} onClick={onClearCart} disabled={isClearing}>
+          {isClearing ? "Clearing..." : "Clear Cart"}
+        </button>
       </div>
-      <button type="button" className={styles.clearCart} onClick={onClearCart} disabled={isClearing}>
-        {isClearing ? "Clearing..." : "Clear Cart"}
-      </button>
     </div>);
 };
 export default CartHeader;

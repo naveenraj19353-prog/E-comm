@@ -29,7 +29,6 @@ const CartSummary = ({ cartCount, grandTotal, tenantId }: CartSummaryProps) => {
       <div className={styles.total}>
         <div>
           <span>Total</span>
-          <small>Inclusive of all taxes</small>
         </div>
         <strong>₹{grandTotal.toLocaleString("en-IN")}</strong>
       </div>

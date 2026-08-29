@@ -7,7 +7,7 @@ export const useCanManageStoreLayout = (): boolean => {
     return Boolean(
         isAuthenticated &&
         user &&
-        (user.role === "super_admin" ||
-            (user.role === "admin" && user.tenantId === tenantId)),
+        (user?.role === "super_admin" ||
+            (user?.role === "admin" && user?.tenantId === tenantId)),
     );
 };

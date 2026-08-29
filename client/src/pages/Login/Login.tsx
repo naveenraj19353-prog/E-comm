@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import styles from "../../styles/Auth.module.css";
 import { useAuth } from "../../features/auth/hooks/useAuth";
 
@@ -125,9 +125,9 @@ export default function Login() {
               <label htmlFor="password">
                 Password
               </label>
-              <button type="button" className={styles.forgotButton}>
+              <Link to="/admin/forgot-password" className={styles.forgotButton}>
                 Forgot password?
-              </button>
+              </Link>
             </div>
             <div className={styles.passwordWrapper}>
               <input id="password" type={showPassword

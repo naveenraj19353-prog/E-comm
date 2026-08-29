@@ -22,15 +22,19 @@ export default function ProductCardSlider({ title, products = [], onToggleWishli
     }
     const defaultBreakpoints = {
         0: {
-            slidesPerView: 1,
+            slidesPerView: 1.08,
             spaceBetween: 12,
         },
-        560: {
-            slidesPerView: 3,
+        640: {
+            slidesPerView: 2,
             spaceBetween: 14,
         },
         900: {
-            slidesPerView: 4.2,
+            slidesPerView: 2.5,
+            spaceBetween: 16,
+        },
+        1024: {
+            slidesPerView: 3,
             spaceBetween: 16,
         },
         1280: {

@@ -1,9 +1,8 @@
 import type { FooterContent, LayoutSettings, StorefrontLayout, ThemeColors, ThemeDraft } from "./types";
-import { DEFAULT_LAYOUT_SETTINGS, DEFAULT_THEME_COLORS, buildDefaultStorefrontLayout } from "./types";
+import { DEFAULT_LAYOUT_SETTINGS, buildDefaultStorefrontLayout } from "./types";
 import { buildDefaultFooterContent } from "./footerDefaults";
-import { themePresets, type ThemePresetName } from "./themePresets";
-import { themes } from "./tenants/tenant002";
 import { getThemePreviewDraft, type ThemePreviewDraft } from "./themeStorage";
+import { resolveThemeColors } from "./resolveThemeColors";
 
 interface FooterContentSource {
     companyName?: string;
@@ -24,16 +23,6 @@ interface TenantThemeSource {
     footerContent?: FooterContentSource | null;
     storefrontLayout?: StorefrontLayout | null;
 }
-
-const isPresetName = (value: string): value is ThemePresetName => value in themePresets;
-
-const mergeColors = (...sources: Array<Partial<ThemeColors> | null | undefined>): ThemeColors => ({
-    ...DEFAULT_THEME_COLORS,
-    ...sources.reduce<Partial<ThemeColors>>((accumulator, source) => ({
-        ...accumulator,
-        ...source,
-    }), {}),
-});
 
 const mergeLayout = (...sources: Array<Partial<LayoutSettings> | null | undefined>): LayoutSettings => ({
     ...DEFAULT_LAYOUT_SETTINGS,
@@ -95,22 +84,14 @@ export const resolveThemeDraft = (
     const themeKey = preview?.theme
         ?? apiLayout.theme
         ?? tenant?.theme
-        ?? tenant?.tenantId
-        ?? slug
         ?? "green";
 
-    const presetColors = isPresetName(themeKey)
-        ? themePresets[themeKey]
-        : themes[themeKey as keyof typeof themes]?.colors
-            ?? themes[tenant?.tenantId as keyof typeof themes]?.colors
-            ?? themes.DEFAULT.colors;
+    const savedThemeColors = preview?.themeColors
+        ?? tenant?.storefrontLayout?.themeColors
+        ?? apiLayout.themeColors
+        ?? tenant?.themeColors;
 
-    const themeColors = mergeColors(
-        presetColors,
-        apiLayout.themeColors,
-        tenant?.themeColors,
-        preview?.themeColors,
-    );
+    const themeColors = resolveThemeColors(themeKey, savedThemeColors);
 
     const layoutSettings = mergeLayout(
         apiLayout.layoutSettings,

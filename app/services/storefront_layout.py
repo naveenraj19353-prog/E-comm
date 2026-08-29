@@ -14,6 +14,37 @@ DEFAULT_THEME_COLORS: dict[str, str] = {
     "danger": "#DC2626",
 }
 
+THEME_PRESET_COLORS: dict[str, dict[str, str]] = {
+    "green": DEFAULT_THEME_COLORS,
+    "blue": {
+        **DEFAULT_THEME_COLORS,
+        "primary": "#2563EB",
+        "secondary": "#3B82F6",
+    },
+    "purple": {
+        **DEFAULT_THEME_COLORS,
+        "primary": "#7C3AED",
+        "secondary": "#8B5CF6",
+    },
+    "orange": {
+        **DEFAULT_THEME_COLORS,
+        "primary": "#EA580C",
+        "secondary": "#F97316",
+        "background": "#FFFBEB",
+        "border": "#FDE68A",
+    },
+    "dark": {
+        **DEFAULT_THEME_COLORS,
+        "primary": "#22C55E",
+        "secondary": "#16A34A",
+        "background": "#0F172A",
+        "surface": "#1E293B",
+        "border": "#334155",
+        "textBlack": "#F8FAFC",
+        "textWhite": "#0F172A",
+    },
+}
+
 DEFAULT_LAYOUT_SETTINGS: dict[str, Any] = {
     "productGridColumns": 4,
     "cardStyle": "rounded",
@@ -101,6 +132,26 @@ def _merge_dict(base: dict[str, Any], override: dict[str, Any] | None) -> dict[s
     return merged
 
 
+def _pick_color_overrides(
+    saved_colors: dict[str, Any],
+    baseline: dict[str, str] | None = None,
+) -> dict[str, str]:
+    baseline = baseline or DEFAULT_THEME_COLORS
+    overrides: dict[str, str] = {}
+    for key, value in saved_colors.items():
+        if value is not None and baseline.get(key) != value:
+            overrides[key] = value
+    return overrides
+
+
+def _resolve_theme_colors(saved_theme: str, saved_colors: dict[str, Any] | None) -> dict[str, str]:
+    preset = THEME_PRESET_COLORS.get(saved_theme, DEFAULT_THEME_COLORS)
+    if not saved_colors:
+        return deepcopy(preset)
+    overrides = _pick_color_overrides(saved_colors)
+    return _merge_dict(preset, overrides)
+
+
 def build_storefront_layout(tenant: dict[str, Any] | None) -> dict[str, Any]:
     tenant = tenant or {}
     saved_theme = tenant.get("theme") or "green"
@@ -108,7 +159,7 @@ def build_storefront_layout(tenant: dict[str, Any] | None) -> dict[str, Any]:
     saved_layout = tenant.get("layoutSettings") or {}
     saved_footer = tenant.get("footerContent") or {}
 
-    theme_colors = _merge_dict(DEFAULT_THEME_COLORS, saved_colors)
+    theme_colors = _resolve_theme_colors(saved_theme, saved_colors)
     layout_settings = _merge_dict(DEFAULT_LAYOUT_SETTINGS, saved_layout)
     footer_content = _build_footer_content(tenant)
 

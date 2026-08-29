@@ -1,0 +1,317 @@
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.summaryGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.summaryCard {
+  padding: 0.875rem 1rem;
+  border: 0.0625rem solid var(--border);
+  border-radius: 0.75rem;
+  background: var(--surface);
+}
+
+.summaryCard span {
+  display: block;
+  color: var(--text);
+  opacity: 0.65;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.summaryCard strong {
+  display: block;
+  margin-top: 0.375rem;
+  color: var(--text);
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
+.paymentValue {
+  text-transform: capitalize;
+}
+
+.status {
+  display: inline-flex;
+  padding: 0.1875rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.6875rem !important;
+  font-weight: 700 !important;
+  text-transform: uppercase;
+}
+
+.status_confirmed,
+.status_processing {
+  background: color-mix(in srgb, var(--primary) 12%, var(--surface));
+  color: var(--primary);
+}
+
+.status_shipped {
+  background: color-mix(in srgb, var(--warning) 14%, var(--surface));
+  color: var(--warning);
+}
+
+.status_delivered {
+  background: color-mix(in srgb, var(--success) 14%, var(--surface));
+  color: var(--success);
+}
+
+.status_cancelled {
+  background: color-mix(in srgb, var(--danger) 12%, var(--surface));
+  color: var(--danger);
+}
+
+.section {
+  padding: 1.125rem 1.25rem;
+  border: 0.0625rem solid var(--border);
+  border-radius: 0.875rem;
+  background: var(--surface);
+}
+
+.section h2 {
+  display: flex;
+  align-items: center;
+  gap: 0.4375rem;
+  margin: 0 0 0.875rem;
+  color: var(--text);
+  font-size: 0.9375rem;
+  font-weight: 700;
+}
+
+.section h2 svg {
+  color: var(--primary);
+  opacity: 0.85;
+}
+
+.textBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3125rem;
+  color: var(--text);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
+
+.textBlock strong {
+  font-size: 0.875rem;
+}
+
+.items {
+  display: flex;
+  flex-direction: column;
+}
+
+.item {
+  display: grid;
+  grid-template-columns: 3.75rem minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 0.75rem;
+  padding: 0.875rem 0;
+}
+
+.itemDivider {
+  border-bottom: 0.0625rem solid var(--border);
+}
+
+.imageWrap {
+  width: 3.75rem;
+  height: 3.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: 0.625rem;
+  background: var(--background);
+  color: var(--primary);
+}
+
+.imageWrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.itemDetails {
+  min-width: 0;
+}
+
+.itemDetails strong {
+  display: block;
+  color: var(--text);
+  font-size: 0.875rem;
+}
+
+.itemDetails span {
+  display: block;
+  margin-top: 0.25rem;
+  color: var(--text);
+  opacity: 0.65;
+  font-size: 0.75rem;
+}
+
+.itemPrice {
+  color: var(--text);
+  font-size: 0.875rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.twoCol {
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: 1rem;
+}
+
+.priceRows {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.priceRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  color: var(--text);
+  font-size: 0.8125rem;
+}
+
+.priceRow strong {
+  font-size: 0.8125rem;
+  font-weight: 650;
+}
+
+.discount {
+  color: var(--success) !important;
+}
+
+.totalRow {
+  padding-top: 0.625rem;
+  margin-top: 0.25rem;
+  border-top: 0.0625rem solid var(--border);
+}
+
+.totalRow span,
+.totalRow strong {
+  font-size: 0.9375rem;
+  font-weight: 750;
+}
+
+.metaList {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: 0.75rem;
+}
+
+.metaItem span {
+  display: block;
+  color: var(--text);
+  opacity: 0.65;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.metaItem code {
+  display: block;
+  margin-top: 0.3125rem;
+  padding: 0.4375rem 0.625rem;
+  border-radius: 0.4375rem;
+  background: var(--background);
+  color: var(--text);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.6875rem;
+  word-break: break-all;
+}
+
+/* Admin dashboard variant — fixed palette for admin shell */
+.admin {
+  --border: #e5ebe7;
+  --surface: #ffffff;
+  --background: #f8faf9;
+  --text: #1f2a26;
+  --primary: #2f6b52;
+  --success: #047857;
+  --warning: #c2410c;
+  --danger: #b91c1c;
+}
+
+.admin .summaryCard,
+.admin .section {
+  box-shadow: 0 0.125rem 0.5rem rgba(31, 42, 38, 0.04);
+}
+
+.admin .summaryCard strong {
+  font-size: 0.9375rem;
+}
+
+.admin .status_confirmed,
+.admin .status_processing {
+  background: #edf7f0;
+  color: #2f6b52;
+}
+
+.admin .status_shipped {
+  background: #fff7ed;
+  color: #c2410c;
+}
+
+.admin .status_delivered {
+  background: #ecfdf5;
+  color: #047857;
+}
+
+.admin .status_cancelled {
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+.admin .paymentValue {
+  color: #047857;
+  text-transform: uppercase;
+  font-size: 0.75rem !important;
+}
+
+@media (max-width: 56rem) {
+  .summaryGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .twoCol {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 40rem) {
+  .summaryGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .item {
+    grid-template-columns: 3.25rem minmax(0, 1fr);
+    grid-template-areas:
+      "image details"
+      "image price";
+  }
+
+  .imageWrap {
+    grid-area: image;
+  }
+
+  .itemDetails {
+    grid-area: details;
+  }
+
+  .itemPrice {
+    grid-area: price;
+  }
+}

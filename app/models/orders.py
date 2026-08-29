@@ -1,11 +1,23 @@
 from pydantic import BaseModel, Field, StrictStr
-from typing import List, Optional
+from typing import List, Literal, Optional
+
+OrderStatus = Literal[
+    "confirmed",
+    "processing",
+    "shipped",
+    "delivered",
+    "cancelled",
+]
+
+
 class OrderItem(BaseModel):
     productId: StrictStr
     name: str
     price: float
     quantity: int = Field(gt=0)
     subtotal: float
+
+
 class CreateOrder(BaseModel):
     tenantId: StrictStr
     userId: StrictStr
@@ -17,3 +29,7 @@ class CreateOrder(BaseModel):
     addressId: Optional[str] = None
     paymentStatus: str = "paid"
     orderStatus: str = "confirmed"
+
+
+class UpdateOrderStatus(BaseModel):
+    orderStatus: OrderStatus
