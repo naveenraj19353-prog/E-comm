@@ -69,13 +69,21 @@ app.include_router(tenant_router)
 app.include_router(super_admin_router)
 
 
-def _database_status() -> str:
+def _database_status() -> tuple[str, str | None]:
     try:
         client.admin.command("ping")
-        return "connected"
+        return "connected", None
     except PyMongoError as error:
         logger.error("Database health check failed: %s", error)
-        return "disconnected"
+        message = str(error)
+        hint = None
+        if "TLSV1_ALERT_INTERNAL_ERROR" in message:
+            hint = (
+                "Atlas blocked the connection. In MongoDB Atlas → Network Access, "
+                "add 0.0.0.0/0 (and ::/0), wait 2–3 minutes, redeploy Render. "
+                "Use a mongodb+srv:// URI with URL-encoded password."
+            )
+        return "disconnected", hint
 
 
 @app.get("/healthcheck")
@@ -90,9 +98,12 @@ def healthcheck():
 @app.get("/health")
 @app.head("/health")
 def health():
-    database_status = _database_status()
+    database_status, database_hint = _database_status()
     overall = "UP" if database_status == "connected" else "DEGRADED"
-    return {
+    payload = {
         "status": overall,
         "database": database_status,
     }
+    if database_hint:
+        payload["databaseHint"] = database_hint
+    return payload

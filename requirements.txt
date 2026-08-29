@@ -1,7 +1,8 @@
 fastapi
 uvicorn[standard]
-pymongo[srv]>=4.6
-dnspython
+pymongo[srv]>=4.10
+dnspython>=2.6
+certifi>=2024.7.4
 python-dotenv
 python-jose[cryptography]
 passlib[bcrypt]
@@ -11,4 +12,3 @@ email-validator
 pydantic
 razorpay
 requests
-certifi
