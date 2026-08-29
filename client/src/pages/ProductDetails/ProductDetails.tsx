@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import PageLoader from "../../components/PageLoader";
 import ProductDetailsView from "./ProductDetailsView";
 import styles from "./ProductDetails.module.css";
@@ -11,13 +11,12 @@ import { useNavigateToLogin } from "../../features/auth/hooks/useNavigateToLogin
 import { useProductDetails } from "../../features/products/hooks/useProductDetails";
 import { useReviews } from "../../features/reviews/hooks/useReviews";
 const ProductDetails = () => {
-    const navigate = useNavigate();
     const { productId } = useParams<{
         tenantSlug: string;
         productId: string;
     }>();
     const { user, isAuthenticated } = useAuth();
-    const { tenantId, tenantSlug } = useStorefrontTenant();
+    const { tenantId } = useStorefrontTenant();
     const navigateToLogin = useNavigateToLogin();
     const { data: productResponse, isLoading: productLoading, isError: productIsError, } = useProductDetails(productId || "", tenantId);
     const product = productResponse?.data || null;

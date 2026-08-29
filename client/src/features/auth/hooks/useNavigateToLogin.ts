@@ -2,9 +2,8 @@ import { useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
     getLoginLocationState,
-    getReturnPath,
     getStorefrontLoginPath,
-    readLoginReturnPath,
+    resolveLoginReturnPath,
 } from "../loginRedirect";
 import { useStorefrontTenant } from "../../tenant/useTenant";
 
@@ -14,12 +13,9 @@ export function useNavigateToLogin() {
     const { tenantSlug } = useStorefrontTenant();
 
     return useCallback((returnPath?: string) => {
-        const from =
-            returnPath ||
-            readLoginReturnPath(location.state) ||
-            getReturnPath(location);
+        const from = resolveLoginReturnPath(returnPath, location, location.state);
         navigate(getStorefrontLoginPath(tenantSlug), {
             state: getLoginLocationState(from),
         });
-    }, [navigate, location, tenantSlug]);
+    }, [location, navigate, tenantSlug]);
 }

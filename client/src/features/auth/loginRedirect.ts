@@ -1,4 +1,5 @@
 import type { Location } from "react-router-dom";
+import type { User } from "./types";
 
 export type LoginLocationState = {
     from?: string;
@@ -46,4 +47,31 @@ export function resolveStorefrontReturnPath(from: string | undefined, tenantSlug
 
 export function getLoginLocationState(from: string, message?: string): LoginLocationState {
     return message ? { from, message } : { from };
+}
+
+export function resolvePostLoginPath(
+    user: User | null,
+    from: string,
+    tenantSlug: string,
+): string {
+    if (!user) {
+        return `/${tenantSlug}`;
+    }
+    if (user.role === "super_admin") {
+        return "/admin";
+    }
+    if (user.role === "admin" && user.tenantId) {
+        return `/admin/tenants/${user.tenantId}`;
+    }
+    return resolveStorefrontReturnPath(from, tenantSlug);
+}
+
+export function resolveLoginReturnPath(
+    returnPath: string | undefined,
+    location: Pick<Location, "pathname" | "search" | "hash">,
+    state: unknown,
+): string {
+    return returnPath ||
+        readLoginReturnPath(state) ||
+        getReturnPath(location);
 }
