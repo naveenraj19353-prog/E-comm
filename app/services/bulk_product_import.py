@@ -42,6 +42,13 @@ def _find_existing_product(
         )
         if existing:
             return existing
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                f"Product with productId '{item.productId}' "
+                "was not found for this tenant."
+            ),
+        )
 
     return products.find_one(
         {

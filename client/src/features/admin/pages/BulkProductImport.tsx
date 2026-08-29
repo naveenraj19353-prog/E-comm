@@ -1,4 +1,4 @@
-import { ChangeEvent, useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState, type ChangeEvent } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useBulkImportProducts } from "../hooks/useBulkImportProducts";
 import { useTenantByTenantId } from "../hooks/useTenants";

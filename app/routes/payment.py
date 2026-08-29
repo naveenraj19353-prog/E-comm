@@ -307,18 +307,29 @@ async def webhook(request: Request):
         )
         return {"success": True, "status": "fulfilled", "orderId": result.get("orderId")}
     except HTTPException as error:
-        if error.status_code == 409 and "still being processed" in str(error.detail):
-            return {"success": True, "status": "processing"}
+        detail = str(error.detail)
+        transient = (
+            error.status_code == 409
+            and "still being processed" in detail.lower()
+        ) or (
+            error.status_code == 400
+            and detail == "Payment order was not found."
+        )
+        if transient:
+            raise HTTPException(
+                status_code=503,
+                detail=detail,
+            ) from error
         if error.status_code in {400, 409}:
             logger.warning(
-                "Webhook fulfillment handled with status %s: %s",
+                "Webhook fulfillment terminal failure with status %s: %s",
                 error.status_code,
-                error.detail,
+                detail,
             )
             return {
                 "success": True,
-                "status": "handled",
-                "detail": error.detail,
+                "status": "terminal",
+                "detail": detail,
             }
         raise
     except Exception:

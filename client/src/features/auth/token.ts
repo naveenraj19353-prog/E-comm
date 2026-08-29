@@ -75,6 +75,7 @@ export const getStoredAccessToken = (): string | null => {
             }
         }
         catch {
+            console.log("error")
         }
         localStorage.removeItem(STORAGE_KEY);
         return null;

@@ -1,9 +1,8 @@
 import axios from "axios";
+import { store } from "../app/store";
 import { API_BASE_URL } from "../constants/api";
-import {
-    clearStoredAccessToken,
-    getStoredAccessToken,
-} from "../features/auth/token";
+import { logout } from "../features/auth/authSlice";
+import { getStoredAccessToken } from "../features/auth/token";
 
 const apiClient = axios.create({
     baseURL: API_BASE_URL,
@@ -24,7 +23,7 @@ apiClient.interceptors.response.use(
     (response) => response,
     (error) => {
         if (error.response?.status === 401) {
-            clearStoredAccessToken();
+            store.dispatch(logout());
         }
         return Promise.reject(error);
     },
