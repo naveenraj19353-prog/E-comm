@@ -3,6 +3,7 @@ from app.services.home_service import get_home_data
 router = APIRouter(prefix="/home", tags=["Home"])
 
 
+@router.get("")
 @router.get("/")
 def get_home(
     tenantId: str,
