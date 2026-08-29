@@ -12,7 +12,7 @@ export const searchProducts = async (payload: ProductSearchRequest) => {
     return response.data;
 };
 export const getCategory = async (tenantId: string) => {
-    const response = await apiClient.get("/categories", {
+    const response = await apiClient.get("/categories/", {
         params: {
             tenantId,
         },
