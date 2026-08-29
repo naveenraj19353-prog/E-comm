@@ -71,10 +71,13 @@ export interface SingleTenantResponse {
     data: Tenant;
 }
 export interface CreateTenantPayload {
+    tenantId: string;
     name: string;
     slug: string;
     logo?: string;
     theme?: string;
+    email: string;
+    password: string;
 }
 export interface UpdateTenantPayload {
     name?: string;

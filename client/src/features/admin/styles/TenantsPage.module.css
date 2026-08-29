@@ -211,6 +211,10 @@
 }
 
 .empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
   padding: 4.375rem 1.25rem;
   text-align: center;
 }
