@@ -10,8 +10,15 @@ def _split_csv(value: str | None) -> list[str]:
     return [item.strip() for item in value.split(",") if item.strip()]
 
 
-MONGO_URI = os.getenv("MONGO_URI")
-DATABASE_NAME = os.getenv("DATABASE_NAME")
+def _env(name: str) -> str | None:
+    value = os.getenv(name)
+    if value is None:
+        return None
+    return value.strip().strip('"').strip("'")
+
+
+MONGO_URI = _env("MONGO_URI")
+DATABASE_NAME = _env("DATABASE_NAME")
 
 SECRET_KEY = os.getenv("SECRET_KEY")
 RAZORPAY_KEY_ID = os.getenv("RAZORPAY_KEY_ID")

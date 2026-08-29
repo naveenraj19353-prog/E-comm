@@ -8,7 +8,8 @@ validate_required_settings()
 
 def _mongo_client_kwargs(uri: str) -> dict:
     options: dict = {
-        "serverSelectionTimeoutMS": 10000,
+        "serverSelectionTimeoutMS": 30000,
+        "connectTimeoutMS": 20000,
         "retryWrites": True,
     }
     if uri.startswith("mongodb+srv://") or "tls=true" in uri.lower():
