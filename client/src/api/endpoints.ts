@@ -1,6 +1,9 @@
 /**
  * Central registry of backend API paths (relative to API_BASE_URL).
- * Match prefixes/routes defined in app/routes/*.py.
+ * Must stay aligned with app/routes/*.py (see app/routes/README.md).
+ *
+ * After changing backend routes or frontend API calls, run from client/:
+ *   npm run check:api
  */
 export const API_ENDPOINTS = {
     HEALTH: "/health",
