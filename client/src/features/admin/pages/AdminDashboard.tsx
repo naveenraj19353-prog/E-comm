@@ -86,7 +86,7 @@ export default function AdminDashboard() {
                                 {tenant.logo ? (
                                     <img src={tenant.logo} alt={tenant.name} />
                                 ) : (
-                                    tenant.name.charAt(0).toUpperCase()
+                                    tenant?.name?.charAt(0).toUpperCase()
                                 )}
                             </div>
                             <div className={styles.tenantInfo}>
