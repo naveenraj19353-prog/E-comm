@@ -120,7 +120,7 @@ export default function AdminTenant() {
         </div>
         <div className={styles.storeCard}>
           <div className={styles.storeLogo}>
-            {tenant.logo ? (<img src={tenant.logo} alt={tenant.name}/>) : (tenant.name.charAt(0).toUpperCase())}
+            {tenant.logo ? (<img src={tenant.logo} alt={tenant.name}/>) : (tenant?.name?.charAt(0).toUpperCase())}
           </div>
           <div className={styles.storeInfo}>
             <h3>{tenant.name}</h3>

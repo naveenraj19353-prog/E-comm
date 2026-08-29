@@ -141,7 +141,7 @@ export default function ProductsPage() {
                     <td>
                       <div className={styles.product}>
                         <div className={styles.productImage}>
-                          {product.images?.[0] ? (<img src={product.images[0]} alt={product.name}/>) : (<span>{product.name.charAt(0).toUpperCase()}</span>)}
+                          {product.images?.[0] ? (<img src={product.images[0]} alt={product.name}/>) : (<span>{product?.name?.charAt(0).toUpperCase()}</span>)}
                         </div>
                         <div className={styles.productInfo}>
                           <strong>{product.name}</strong>
