@@ -26,7 +26,12 @@ import CreateProduct from "../features/admin/pages/CreateProduct";
 import BulkProductImport from "../features/admin/pages/BulkProductImport";
 import ThemeCustomizer from "../pages/ThemeCustomizer/ThemeCustomizer";
 import NotFound from "../pages/NotFound";
+import Welcome from "../pages/Welcome";
 export const router = createBrowserRouter([
+    {
+        path: "/",
+        element: <Welcome />,
+    },
     {
         path: "/admin/login",
         element: <Login />,
