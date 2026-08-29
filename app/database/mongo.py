@@ -1,9 +1,15 @@
+import certifi
 from pymongo import MongoClient
+
 from app.config import DATABASE_NAME, MONGO_URI, validate_required_settings
 
 validate_required_settings()
 
-client = MongoClient(MONGO_URI)
+client = MongoClient(
+    MONGO_URI,
+    tlsCAFile=certifi.where(),
+    serverSelectionTimeoutMS=10000,
+)
 db = client[DATABASE_NAME]
 
 users = db["users"]

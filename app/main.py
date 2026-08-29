@@ -32,8 +32,11 @@ logger = logging.getLogger(__name__)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    ensure_indexes()
-    logger.info("Database indexes ensured.")
+    try:
+        ensure_indexes()
+        logger.info("Database indexes ensured.")
+    except PyMongoError as error:
+        logger.error("Database index setup failed: %s", error)
     yield
 
 
