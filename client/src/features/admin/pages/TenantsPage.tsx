@@ -81,7 +81,7 @@ export default function TenantsPage() {
                                                     {tenant.logo ? (
                                                         <img src={tenant.logo} alt={tenant.name} />
                                                     ) : (
-                                                        tenant.name.charAt(0).toUpperCase()
+                                                        tenant?.name?.charAt(0).toUpperCase()
                                                     )}
                                                 </div>
                                                 <Link to={`/admin/tenants/${tenant.tenantId}`}>
