@@ -1,4 +1,5 @@
 import apiClient from "../../../api/client";
+import { API_ENDPOINTS } from "../../../api/endpoints";
 import type { WishlistResponse } from "../types";
 export interface AddToWishlistRequest {
     tenantId: string;
@@ -6,11 +7,11 @@ export interface AddToWishlistRequest {
     productId: string;
 }
 export const addToWishlist = async (payload: AddToWishlistRequest) => {
-    const response = await apiClient.post("/wishlist/", payload);
+    const response = await apiClient.post(API_ENDPOINTS.WISHLIST.ADD, payload);
     return response.data;
 };
 export const getWishlist = async (userId: string, tenantId: string): Promise<WishlistResponse> => {
-    const response = await apiClient.get(`/wishlist/${userId}`, {
+    const response = await apiClient.get(API_ENDPOINTS.WISHLIST.byUserId(userId), {
         params: {
             tenantId,
         },
@@ -18,7 +19,7 @@ export const getWishlist = async (userId: string, tenantId: string): Promise<Wis
     return response.data;
 };
 export const removeFromWishlist = async (productId: string, userId: string, tenantId: string) => {
-    const response = await apiClient.delete(`/wishlist/${productId}`, {
+    const response = await apiClient.delete(API_ENDPOINTS.WISHLIST.byProductId(productId), {
         params: {
             userId,
             tenantId,
@@ -27,7 +28,7 @@ export const removeFromWishlist = async (productId: string, userId: string, tena
     return response.data;
 };
 export const clearWishlist = async (userId: string, tenantId: string) => {
-    const response = await apiClient.delete("/wishlist/", {
+    const response = await apiClient.delete(API_ENDPOINTS.WISHLIST.CLEAR, {
         params: {
             userId,
             tenantId,

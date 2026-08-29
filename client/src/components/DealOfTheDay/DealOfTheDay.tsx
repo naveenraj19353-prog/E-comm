@@ -6,7 +6,7 @@ import "swiper/css";
 import "swiper/css/navigation";
 import styles from "./DealOfTheDay.module.css";
 import Countdown from "./Countdown";
-import ProductCard from "../sliders/ProductSlider/ProductCard";
+import ProductCard from "../Sliders/ProductSlider/ProductCard";
 import type { Product } from "../../features/products/types";
 import { useStorefrontTenant } from "../../features/tenant/useTenant";
 interface DealOfTheDayProps {

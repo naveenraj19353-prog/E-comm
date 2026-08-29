@@ -1,4 +1,4 @@
-import type { Banner } from "../../../components/banner/BannerSlider";
+import type { Banner } from "../../../components/Banner/BannerSlider";
 import type { Product } from "../../products/types";
 export interface HomeCategory {
     id: string;

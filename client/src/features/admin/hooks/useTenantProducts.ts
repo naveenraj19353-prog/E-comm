@@ -1,6 +1,7 @@
 import { useInfiniteQuery, useMutation, useQueryClient, } from "@tanstack/react-query";
 import apiClient from "../../../api/client";
-import type { ProductQueryParams, ProductsResponse } from "../types/type";
+import { API_ENDPOINTS } from "../../../api/endpoints";
+import type { ProductQueryParams, ProductsResponse } from "../types/types";
 export interface ProductInventoryPayload {
     variantId: string;
     color: string;
@@ -45,7 +46,7 @@ interface UpdateProductMutationPayload {
     payload: UpdateProductPayload;
 }
 const getProducts = async (params: ProductQueryParams): Promise<ProductsResponse> => {
-    const response = await apiClient.get("/product/get-all-products", {
+    const response = await apiClient.get(API_ENDPOINTS.PRODUCT.GET_ALL, {
         params,
         paramsSerializer: {
             indexes: null,
@@ -86,7 +87,7 @@ export const useCreateProduct = () => {
     const queryClient = useQueryClient();
     return useMutation({
         mutationFn: async (payload: CreateProductPayload) => {
-            const response = await apiClient.post("/product/create-product", payload);
+            const response = await apiClient.post(API_ENDPOINTS.PRODUCT.CREATE, payload);
             return response.data;
         },
         onSuccess: (_, variables) => {
@@ -103,7 +104,7 @@ export const useUpdateProduct = () => {
     const queryClient = useQueryClient();
     return useMutation({
         mutationFn: async ({ productId, payload, }: UpdateProductMutationPayload) => {
-            const response = await apiClient.put(`/product/${productId}`, payload);
+            const response = await apiClient.put(API_ENDPOINTS.PRODUCT.byId(productId), payload);
             return response.data;
         },
         onSuccess: (_, variables) => {
@@ -120,7 +121,7 @@ export const useDeleteProduct = () => {
     const queryClient = useQueryClient();
     return useMutation({
         mutationFn: async ({ productId, tenantId }: DeleteProductPayload) => {
-            const response = await apiClient.delete(`/product/${productId}`, {
+            const response = await apiClient.delete(API_ENDPOINTS.PRODUCT.byId(productId), {
                 params: {
                     tenantId,
                 },

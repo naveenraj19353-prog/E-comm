@@ -1,4 +1,5 @@
 import apiClient from "../../../api/client";
+import { API_ENDPOINTS } from "../../../api/endpoints";
 export interface Category {
     _id: string;
     tenantId: string;
@@ -15,6 +16,8 @@ interface CategoryResponse {
     data: Category[];
 }
 export async function getCategories(tenantId: string): Promise<Category[]> {
-    const response = await apiClient.get<CategoryResponse>(`/categories/?tenantId=${tenantId}`);
+    const response = await apiClient.get<CategoryResponse>(API_ENDPOINTS.CATEGORIES.LIST, {
+        params: { tenantId },
+    });
     return response.data.data;
 }

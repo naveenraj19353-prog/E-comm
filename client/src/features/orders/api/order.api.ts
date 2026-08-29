@@ -1,4 +1,5 @@
 import apiClient from "../../../api/client";
+import { API_ENDPOINTS } from "../../../api/endpoints";
 import type {
     Order,
     OrderResponse,
@@ -8,12 +9,12 @@ import type {
 } from "../types/order.types";
 
 export const getUserOrders = async (userId: string): Promise<Order[]> => {
-    const response = await apiClient.get<OrdersResponse>(`/orders/${userId}`);
+    const response = await apiClient.get<OrdersResponse>(API_ENDPOINTS.ORDERS.byUserId(userId));
     return response.data?.data ?? [];
 };
 
 export const getOrderDetail = async (orderId: string): Promise<Order> => {
-    const response = await apiClient.get<OrderResponse>(`/orders/detail/${orderId}`);
+    const response = await apiClient.get<OrderResponse>(API_ENDPOINTS.ORDERS.detail(orderId));
     if (!response.data?.order) {
         throw new Error("Order not found.");
     }
@@ -24,7 +25,7 @@ export const getAdminOrderDetail = async (
     orderId: string,
     tenantId: string,
 ): Promise<Order> => {
-    const response = await apiClient.get<OrderResponse>(`/orders/admin/detail/${orderId}`, {
+    const response = await apiClient.get<OrderResponse>(API_ENDPOINTS.ORDERS.adminDetail(orderId), {
         params: { tenantId },
     });
     if (!response.data?.order) {
@@ -34,7 +35,7 @@ export const getAdminOrderDetail = async (
 };
 
 export const getAdminOrders = async (tenantId: string): Promise<Order[]> => {
-    const response = await apiClient.get<OrdersResponse>("/orders/admin/list", {
+    const response = await apiClient.get<OrdersResponse>(API_ENDPOINTS.ORDERS.ADMIN_LIST, {
         params: { tenantId },
     });
     return response.data?.data ?? [];
@@ -46,7 +47,7 @@ export const updateAdminOrderStatus = async (
     payload: UpdateOrderStatusPayload,
 ): Promise<Order> => {
     const response = await apiClient.patch<{ success: boolean; order: Order }>(
-        `/orders/admin/${orderId}/status`,
+        API_ENDPOINTS.ORDERS.adminStatus(orderId),
         payload,
         { params: { tenantId } },
     );

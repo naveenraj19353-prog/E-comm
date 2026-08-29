@@ -1,7 +1,7 @@
 import styles from "./CategorySlider.module.css";
 import type { Category } from "../../features/home/api/category.api";
-import { CategoryArrow } from "./categorySliderIcons";
-import { formatCategoryName } from "./categorySlider.utils";
+import { CategoryArrow } from "./CategorySliderIcons";
+import { formatCategoryName } from "./CategorySlider.utils";
 import { useCategorySlider } from "./useCategorySlider";
 
 interface CategorySliderProps {
