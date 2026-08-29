@@ -196,15 +196,15 @@ const AddressForm = ({ initialData, isEditing = false, loading = false, error = 
             <label htmlFor="isDefault">Set as default address</label>
           </div>
           <div className={`${styles.fullWidth} ${styles.actions}`}>
-            <button type="button" className={styles.cancelButton} onClick={onCancel} disabled={loading}>
-              Cancel
-            </button>
             <button type="submit" className={styles.saveButton} disabled={loading}>
               {loading
             ? "Saving..."
             : isEditing
                 ? "Update Address"
                 : "Save Address"}
+            </button>
+            <button type="button" className={styles.cancelButton} onClick={onCancel} disabled={loading}>
+              Cancel
             </button>
           </div>
         </div>

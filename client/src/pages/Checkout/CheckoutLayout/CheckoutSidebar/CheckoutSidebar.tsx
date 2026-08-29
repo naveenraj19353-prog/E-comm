@@ -35,13 +35,15 @@ const CheckoutSidebar = ({ items = [], subtotal = 0, deliveryCharge = 0, discoun
                   <img src={item.image} alt={item.name} className={styles.image}/>
                   <span className={styles.quantity}>{item.quantity}</span>
                 </div>
-                <div className={styles.itemDetails}>
-                  <h3>{item.name}</h3>
-                  <span>Qty: {item.quantity}</span>
+                <div className={styles.itemContent}>
+                  <div className={styles.itemDetails}>
+                    <h3>{item.name}</h3>
+                    <span>Qty: {item.quantity}</span>
+                  </div>
+                  <strong className={styles.itemPrice}>
+                    {formatPrice(item.price * item.quantity)}
+                  </strong>
                 </div>
-                <strong className={styles.itemPrice}>
-                  {formatPrice(item.price * item.quantity)}
-                </strong>
               </div>))}
           </div>)}
         <div className={styles.divider}/>

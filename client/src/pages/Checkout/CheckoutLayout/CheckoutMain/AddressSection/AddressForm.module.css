@@ -241,33 +241,78 @@
   transform: none;
 }
 @media (max-width: 40rem) {
-  .form {
+  .formWrapper {
     padding: 1.125rem;
+    border: 0.0625rem solid var(--border);
     border-radius: 0.875rem;
+    background: var(--surface);
+    box-shadow:
+      0 0.125rem 0.375rem rgba(15, 23, 42, 0.04),
+      0 0.5rem 1.25rem rgba(15, 23, 42, 0.05);
+    box-sizing: border-box;
   }
+
+  .formHeader {
+    margin-bottom: 1rem;
+  }
+
   .formHeader h3 {
     font-size: 1.1875rem;
+    line-height: 1.25;
   }
+
+  .formHeader p {
+    font-size: 0.8125rem;
+  }
+
+  .form {
+    padding: 1rem;
+    border: 0.0625rem solid var(--border);
+    border-radius: 0.75rem;
+    background: var(--background);
+    box-sizing: border-box;
+  }
+
   .grid {
-    grid-template-columns: 1fr;
-    gap: 0.9375rem;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.875rem;
+    min-width: 0;
   }
+
   .fullWidth {
     grid-column: auto;
   }
+
+  .field {
+    min-width: 0;
+  }
+
+  .field input {
+    min-width: 0;
+    height: 2.875rem;
+    font-size: 1rem;
+  }
+
   .typeOptions {
     gap: 0.5rem;
   }
+
   .typeButton {
     flex: 1;
     min-width: 0;
   }
+
   .actions {
-    flex-direction: column-reverse;
+    flex-direction: column;
     align-items: stretch;
+    gap: 0.625rem;
+    padding-top: 1rem;
+    border-top: none;
   }
+
   .cancelButton,
   .saveButton {
     width: 100%;
+    height: 3rem;
   }
 }
