@@ -69,19 +69,28 @@ app.include_router(tenant_router)
 app.include_router(super_admin_router)
 
 
+def _database_status() -> str:
+    try:
+        client.admin.command("ping")
+        return "connected"
+    except PyMongoError as error:
+        logger.error("Database health check failed: %s", error)
+        return "disconnected"
+
+
+@app.get("/healthcheck")
+@app.head("/healthcheck")
+def healthcheck():
+    """Lightweight liveness probe for Render (no database call)."""
+    return {"status": "ok"}
+
+
 @app.get("/")
 @app.head("/")
 @app.get("/health")
 @app.head("/health")
-@app.get("/healthcheck")
-@app.head("/healthcheck")
 def health():
-    database_status = "disconnected"
-    try:
-        client.admin.command("ping")
-        database_status = "connected"
-    except PyMongoError as error:
-        logger.error("Database health check failed: %s", error)
+    database_status = _database_status()
     overall = "UP" if database_status == "connected" else "DEGRADED"
     return {
         "status": overall,
