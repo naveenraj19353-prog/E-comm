@@ -1,5 +1,5 @@
 import { Outlet } from "react-router-dom";
-import Navbar from "../components/layout/Header";
+import Navbar from "../components/Layout/Header";
 import Footer from "../components/Footer";
 import ProductChatbot from "../components/ProductChatbot/ProductChatbot";
 import { useStorefrontTenant } from "../features/tenant/useTenant";

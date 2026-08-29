@@ -3,8 +3,8 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, FreeMode, Autoplay } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/navigation";
-import ProductCard from "./Productcard";
-import styles from "./Productcardslider.module.css";
+import ProductCard from "./ProductCard";
+import styles from "./ProductCardSlider.module.css";
 import type { Product } from "../../features/products/types";
 interface ProductCardSliderProps {
     title: string;

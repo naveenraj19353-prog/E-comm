@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import type { ProductInventory } from "./Productcard";
+import type { ProductInventory } from "./ProductCard";
 
 export function useProductVariantSelection(inventory: ProductInventory[] = []) {
     const availableInventory = useMemo(() => {

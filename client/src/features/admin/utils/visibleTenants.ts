@@ -1,4 +1,4 @@
-import type { Tenant } from "../types/type";
+import type { Tenant } from "../types/types";
 
 interface TenantViewer {
     role?: string;

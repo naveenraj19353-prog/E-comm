@@ -1,6 +1,6 @@
 import { createTenant, deleteTenant, getTenantByTenantId, getTenants, updateTenant, } from "../api/tenant.api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import type { CreateTenantPayload, UpdateTenantPayload } from "../types/type";
+import type { CreateTenantPayload, UpdateTenantPayload } from "../types/types";
 export const TENANTS_QUERY_KEY = ["tenants"];
 export const useTenants = () => {
     return useQuery({

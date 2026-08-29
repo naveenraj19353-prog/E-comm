@@ -1,16 +1,16 @@
 import { useNavigate } from "react-router-dom";
-import PageLoader from "../components/PageLoader";
-import ProductCardSlider from "../components/card/Productcardslider";
-import DealOfTheDay from "../components/DealOfTheDay/DealOfTheDay";
-import { useHome } from "../features/home/hooks/useHome";
+import PageLoader from "../../components/PageLoader";
+import ProductCardSlider from "../../components/HomeProductSlider/ProductCardSlider";
+import DealOfTheDay from "../../components/DealOfTheDay/DealOfTheDay";
+import { useHome } from "../../features/home/hooks/useHome";
 import styles from "./Home.module.css";
-import BannerSlider from "../components/banner/BannerSlider";
-import CategorySlider from "../components/CategorySlider/CategorySlider";
-import { useStorefrontTenant } from "../features/tenant/useTenant";
-import { useLayoutSettings } from "../theme/useThemeSettings";
-import Testimonials from "../components/Testimonials/Testimonials";
-import { testimonials as dummyTestimonials } from "../components/Testimonials/dummyTestimonials";
-import { useStorefrontProductActions } from "../features/storefront/hooks/useStorefrontProductActions";
+import BannerSlider from "../../components/Banner/BannerSlider";
+import CategorySlider from "../../components/CategorySlider/CategorySlider";
+import { useStorefrontTenant } from "../../features/tenant/useTenant";
+import { useLayoutSettings } from "../../theme/useThemeSettings";
+import Testimonials from "../../components/Testimonials/Testimonials";
+import { testimonials as dummyTestimonials } from "../../components/Testimonials/dummyTestimonials";
+import { useStorefrontProductActions } from "../../features/storefront/hooks/useStorefrontProductActions";
 
 const Home = () => {
     const { tenantId, tenantSlug } = useStorefrontTenant();

@@ -1,4 +1,5 @@
 import apiClient from "../../../api/client";
+import { API_ENDPOINTS } from "../../../api/endpoints";
 import type { DeliveryMethodType } from "../../checkout/api/checkout.api";
 
 export interface CreatePaymentOrderRequest {
@@ -28,10 +29,10 @@ export interface VerifyPaymentResponse {
     orderId: string;
 }
 export const createPaymentOrder = async (payload: CreatePaymentOrderRequest): Promise<CreatePaymentOrderResponse> => {
-    const response = await apiClient.post("/payments/create-order", payload);
+    const response = await apiClient.post(API_ENDPOINTS.PAYMENTS.CREATE_ORDER, payload);
     return response.data;
 };
 export const verifyPayment = async (payload: VerifyPaymentRequest): Promise<VerifyPaymentResponse> => {
-    const response = await apiClient.post("/payments/verify", payload);
+    const response = await apiClient.post(API_ENDPOINTS.PAYMENTS.VERIFY, payload);
     return response.data;
 };

@@ -1,4 +1,5 @@
 import apiClient from "../../../api/client";
+import { API_ENDPOINTS } from "../../../api/endpoints";
 
 export type DeliveryMethodType = "standard" | "express";
 
@@ -73,7 +74,7 @@ export const previewCheckout = async (
     payload: CheckoutPreviewRequest,
 ): Promise<CheckoutPreviewData> => {
     const response = await apiClient.post<CheckoutPreviewResponse>(
-        "/checkout/",
+        API_ENDPOINTS.CHECKOUT.PREVIEW,
         {
             tenantId: payload.tenantId,
             userId: payload.userId,
@@ -91,7 +92,7 @@ export const placeCodOrder = async (
     payload: PlaceCodOrderRequest,
 ): Promise<PlaceCodOrderResponse> => {
     const response = await apiClient.post<PlaceCodOrderResponse>(
-        "/orders/cod",
+        API_ENDPOINTS.ORDERS.COD,
         {
             tenantId: payload.tenantId,
             userId: payload.userId,

@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import apiClient from "../../../api/client";
+import { API_ENDPOINTS } from "../../../api/endpoints";
 import type { BulkProductDraft } from "../utils/bulkProductImport";
 import { buildBulkImportPayload } from "../utils/bulkProductImport";
 
@@ -27,7 +28,7 @@ export const useBulkImportProducts = () => {
         }) => {
             const payload = buildBulkImportPayload(tenantId, products);
             const response = await apiClient.post<BulkImportResponse>(
-                "/product/bulk-import",
+                API_ENDPOINTS.PRODUCT.BULK_IMPORT,
                 payload,
             );
             return response.data;

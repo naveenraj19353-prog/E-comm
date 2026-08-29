@@ -4,10 +4,10 @@ import { Autoplay, Navigation, Pagination } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
-import styles from "./Productcard.module.css";
+import styles from "./ProductCard.module.css";
 import { isProductOutOfStock } from "../../features/products/inventory";
 import { useProductNavigation } from "../../features/products/hooks/useProductNavigation";
-import { getColorValue } from "./productCard.utils";
+import { getColorValue } from "./ProductCard.utils";
 import { ArrowIcon, BagIcon, HeartIcon, StarIcon } from "./ProductCardIcons";
 import { useProductVariantSelection } from "./useProductVariantSelection";
 

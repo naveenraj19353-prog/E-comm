@@ -10,7 +10,7 @@ import {
     DESKTOP_VISIBLE_COUNT,
     getNextSliderIndex,
     getPreviousSliderIndex,
-} from "./categorySlider.utils";
+} from "./CategorySlider.utils";
 
 export function useCategorySlider(tenantId: string) {
     const [categories, setCategories] = useState<Category[]>([]);
