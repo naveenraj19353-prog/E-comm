@@ -23,6 +23,7 @@ import EditTenant from "../features/admin/pages/EditTenant";
 import CreateTenant from "../features/admin/pages/CreateTenant";
 import AdminTenantProducts from "../features/admin/pages/AdminTenantProducts";
 import CreateProduct from "../features/admin/pages/CreateProduct";
+import BulkProductImport from "../features/admin/pages/BulkProductImport";
 import ThemeCustomizer from "../pages/ThemeCustomizer/ThemeCustomizer";
 import NotFound from "../pages/NotFound";
 export const router = createBrowserRouter([
@@ -64,6 +65,10 @@ export const router = createBrowserRouter([
                     {
                         path: ":tenantId/products/create",
                         element: <CreateProduct />,
+                    },
+                    {
+                        path: ":tenantId/products/bulk",
+                        element: <BulkProductImport />,
                     },
                 ],
             },

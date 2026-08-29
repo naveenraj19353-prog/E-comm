@@ -109,7 +109,10 @@ export default function AdminTenantProducts() {
         }).format(price || 0);
     };
     const handleAddProduct = () => {
-        navigate(`/admin/products/create?tenantId=${tenantId}`);
+        navigate(`/admin/tenants/${tenantId}/products/create`);
+    };
+    const handleBulkImport = () => {
+        navigate(`/admin/tenants/${tenantId}/products/bulk`);
     };
     const clearFilters = () => {
         setSearchInput("");
@@ -254,10 +257,15 @@ export default function AdminTenantProducts() {
             Manage products for <strong>{tenant.name}</strong>
           </p>
         </div>
-        <button type="button" className={styles.addButton} onClick={handleAddProduct}>
-          <span>+</span>
-          Add Product
-        </button>
+        <div className={styles.headerActions}>
+          <button type="button" className={styles.secondaryButton} onClick={handleBulkImport}>
+            Bulk Import
+          </button>
+          <button type="button" className={styles.addButton} onClick={handleAddProduct}>
+            <span>+</span>
+            Add Product
+          </button>
+        </div>
       </div>
       <div className={styles.summaryGrid}>
         <div className={styles.summaryCard}>

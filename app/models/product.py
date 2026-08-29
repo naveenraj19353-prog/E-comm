@@ -202,6 +202,25 @@ class ProductSearchRequest(BaseModel):
     )
 
 
+class BulkImportProductItem(BaseModel):
+    productId: Optional[str] = None
+    name: str = Field(min_length=1)
+    description: str = ""
+    categoryId: str = Field(min_length=1)
+    categoryName: Optional[str] = None
+    brand: Optional[str] = None
+    price: float = Field(ge=0)
+    discountPercentage: float = Field(default=0, ge=0, le=100)
+    inventory: list[InventoryItem] = Field(default_factory=list)
+    images: dict[str, list[str]] = Field(default_factory=dict)
+    isActive: Optional[bool] = True
+
+
+class BulkImportRequest(BaseModel):
+    tenantId: str = Field(min_length=1)
+    products: list[BulkImportProductItem] = Field(min_length=1, max_length=500)
+
+
 class VariantStockRequest(BaseModel):
     """
     Request used to check stock for a particular variant.

@@ -1,5 +1,5 @@
 fastapi
-uvicorn
+uvicorn[standard]
 pymongo
 python-dotenv
 python-jose[cryptography]
@@ -8,3 +8,5 @@ bcrypt
 python-multipart
 email-validator
 pydantic
+razorpay
+requests
