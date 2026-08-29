@@ -1,5 +1,6 @@
 import certifi
 from pymongo import MongoClient
+from pymongo.server_api import ServerApi
 
 from app.config import DATABASE_NAME, MONGO_URI, validate_required_settings
 
@@ -14,6 +15,7 @@ def _mongo_client_kwargs(uri: str) -> dict:
     }
     if uri.startswith("mongodb+srv://") or "tls=true" in uri.lower():
         options["tlsCAFile"] = certifi.where()
+        options["server_api"] = ServerApi("1")
     return options
 
 
