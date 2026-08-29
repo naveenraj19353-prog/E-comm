@@ -1,14 +1,20 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Eye, EyeOff } from "lucide-react";
 import styles from "../AuthModal/AuthModal.module.css";
 import { useAuth } from "../../../features/auth/hooks/useAuth";
+import { useStorefrontTenant } from "../../../features/tenant/useTenant";
 import axios from "axios";
 interface LoginFormProps {
     tenantId: string;
+    tenantSlug?: string;
     onSuccess: () => void;
     onSwitchToRegister: () => void;
 }
-const LoginForm = ({ tenantId, onSuccess, onSwitchToRegister, }: LoginFormProps) => {
+const LoginForm = ({ tenantId, tenantSlug, onSuccess, onSwitchToRegister, }: LoginFormProps) => {
+    const navigate = useNavigate();
+    const { tenantSlug: storeSlug } = useStorefrontTenant();
+    const resolvedSlug = tenantSlug || storeSlug;
     const { login } = useAuth();
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -69,7 +75,17 @@ const LoginForm = ({ tenantId, onSuccess, onSwitchToRegister, }: LoginFormProps)
         <div className={styles.field}>
           <div className={styles.labelRow}>
             <label htmlFor="login-password">Password</label>
-            <button type="button" className={styles.forgotButton}>
+            <button
+              type="button"
+              className={styles.forgotButton}
+              onClick={() =>
+                navigate(
+                  resolvedSlug
+                    ? `/${resolvedSlug}/forgot-password`
+                    : "/forgot-password",
+                )
+              }
+            >
               Forgot password?
             </button>
           </div>

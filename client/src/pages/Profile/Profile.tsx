@@ -43,9 +43,6 @@ const Profile = () => {
             });
         }
     };
-    console.log("PROFILE USER:", user);
-    console.log("PROFILE TENANT ID:", tenantId);
-    console.log("PROFILE USER ID:", userId);
     if (!user) {
         return (<div className={styles.page}>
         <div className={styles.container}>
@@ -187,7 +184,10 @@ const Profile = () => {
         
         <section className={styles.quickGrid}>
           
-          <button className={styles.quickCard}>
+          <button
+            className={styles.quickCard}
+            onClick={() => navigate(tenantSlug ? `/${tenantSlug}/orders` : "/orders")}
+          >
             <div className={styles.quickIcon}>
               <Package size={22}/>
             </div>

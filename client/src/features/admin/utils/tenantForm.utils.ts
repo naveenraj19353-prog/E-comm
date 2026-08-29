@@ -48,19 +48,14 @@ export const validateCreateTenantForm = (
 };
 
 export const getApiErrorMessage = (error: unknown, fallback: string): string => {
-    if (
-        error &&
-        typeof error === "object" &&
-        "response" in error &&
-        error.response &&
-        typeof error.response === "object" &&
-        "data" in error.response &&
-        error.response.data &&
-        typeof error.response.data === "object" &&
-        "detail" in error.response.data &&
-        typeof error.response.data.detail === "string"
-    ) {
-        return error.response.data.detail;
+    const detail = (
+        error as {
+            response?: { data?: { detail?: unknown } };
+        }
+    )?.response?.data?.detail;
+
+    if (typeof detail === "string" && detail.trim()) {
+        return detail;
     }
     return fallback;
 };

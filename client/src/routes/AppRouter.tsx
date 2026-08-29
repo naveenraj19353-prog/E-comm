@@ -6,11 +6,17 @@ import ProductDetails from "../pages/ProductDetails/ProductDetails";
 import Wishlist from "../pages/Wishlist/Wishlist";
 import Cart from "../pages/Cart/Cart";
 import Checkout from "../pages/Checkout/Checkout";
+import MyOrders from "../pages/Orders/MyOrders";
+import OrderDetail from "../pages/Orders/OrderDetail";
 import Profile from "../pages/Profile/Profile";
 import TenantLoader from "../features/tenant/TenantLoader";
 import Login from "../pages/Login/Login";
 import StorefrontLogin from "../pages/Login/StorefrontLogin";
 import StorefrontRegister from "../pages/Register/StorefrontRegister";
+import StorefrontForgotPassword from "../pages/Auth/StorefrontForgotPassword";
+import StorefrontResetPassword from "../pages/Auth/StorefrontResetPassword";
+import AdminForgotPassword from "../pages/Auth/AdminForgotPassword";
+import AdminResetPassword from "../pages/Auth/AdminResetPassword";
 import LegacyAuthRedirect from "../pages/Login/LegacyAuthRedirect";
 import Logout from "../pages/Logout/Logout";
 import RequireStorefrontAuth from "../features/auth/RequireStorefrontAuth";
@@ -24,6 +30,8 @@ import CreateTenant from "../features/admin/pages/CreateTenant";
 import AdminTenantProducts from "../features/admin/pages/AdminTenantProducts";
 import CreateProduct from "../features/admin/pages/CreateProduct";
 import BulkProductImport from "../features/admin/pages/BulkProductImport";
+import AdminTenantOrders from "../features/admin/pages/AdminTenantOrders";
+import AdminOrderDetail from "../features/admin/pages/AdminOrderDetail";
 import ThemeCustomizer from "../pages/ThemeCustomizer/ThemeCustomizer";
 import NotFound from "../pages/NotFound";
 import Welcome from "../pages/Welcome";
@@ -35,6 +43,14 @@ export const router = createBrowserRouter([
     {
         path: "/admin/login",
         element: <Login />,
+    },
+    {
+        path: "/admin/forgot-password",
+        element: <AdminForgotPassword />,
+    },
+    {
+        path: "/admin/reset-password",
+        element: <AdminResetPassword />,
     },
     {
         path: "/admin",
@@ -74,6 +90,14 @@ export const router = createBrowserRouter([
                     {
                         path: ":tenantId/products/bulk",
                         element: <BulkProductImport />,
+                    },
+                    {
+                        path: ":tenantId/orders",
+                        element: <AdminTenantOrders />,
+                    },
+                    {
+                        path: ":tenantId/orders/:orderId",
+                        element: <AdminOrderDetail />,
                     },
                 ],
             },
@@ -131,8 +155,32 @@ export const router = createBrowserRouter([
                         element: <StorefrontRegister />,
                     },
                     {
+                        path: "forgot-password",
+                        element: <StorefrontForgotPassword />,
+                    },
+                    {
+                        path: "reset-password",
+                        element: <StorefrontResetPassword />,
+                    },
+                    {
                         path: "profile",
                         element: <Profile />,
+                    },
+                    {
+                        path: "orders",
+                        element: (
+                            <RequireStorefrontAuth>
+                                <MyOrders />
+                            </RequireStorefrontAuth>
+                        ),
+                    },
+                    {
+                        path: "orders/:orderId",
+                        element: (
+                            <RequireStorefrontAuth>
+                                <OrderDetail />
+                            </RequireStorefrontAuth>
+                        ),
                     },
                 ],
             },

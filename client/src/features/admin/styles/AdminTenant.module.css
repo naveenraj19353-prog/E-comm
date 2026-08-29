@@ -95,6 +95,7 @@
 }
 .editButton,
 .productsButton,
+.ordersButton,
 .layoutButton {
   height: 2.625rem;
   padding: 0 1.125rem;
@@ -125,6 +126,15 @@
   background: #285d47;
   border-color: #285d47;
 }
+.ordersButton {
+  border: 0.0625rem solid #33423b;
+  background: #33423b;
+  color: #ffffff;
+}
+.ordersButton:hover {
+  background: #26332e;
+  border-color: #26332e;
+}
 .layoutButton {
   border: 0.0625rem solid #4c8a6d;
   background: #4c8a6d;
@@ -136,6 +146,7 @@
 }
 .editButton:active,
 .productsButton:active,
+.ordersButton:active,
 .layoutButton:active {
   transform: translateY(0.0625rem);
 }

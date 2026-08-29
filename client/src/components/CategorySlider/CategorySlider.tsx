@@ -118,7 +118,7 @@ export default function CategorySlider({ tenantId, onCategoryClick }: CategorySl
                                     />
                                 ) : (
                                     <div className={styles.placeholder}>
-                                        <span>{category.name.charAt(0).toUpperCase()}</span>
+                                        <span>{category?.name?.charAt(0).toUpperCase()}</span>
                                     </div>
                                 )}
                                 <div className={styles.gradient} />

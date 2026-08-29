@@ -1,11 +1,11 @@
-from datetime import datetime, timedelta
-from secrets import token_urlsafe
+from datetime import datetime
 from fastapi import APIRouter, HTTPException
 from app.database.mongo import users, tenants
 from app.models.user import (
     RegisterUser,
     LoginUser,
     ForgotPasswordRequest,
+    ResetPasswordRequest,
 )
 from app.utils.hash import (
     hash_password,
@@ -13,6 +13,13 @@ from app.utils.hash import (
 )
 from app.utils.jwt_handler import create_token
 from app.utils.email_service import send_reset_email
+from app.services.password_reset_service import (
+    build_reset_link,
+    create_reset_token,
+    reset_password_with_token,
+    resolve_reset_account,
+    save_reset_token,
+)
 router = APIRouter(
     prefix="/auth",
     tags=["Authentication"],
@@ -234,53 +241,59 @@ def login(
 def forgot_password(
     user: ForgotPasswordRequest,
 ):
-    email = str(
-        user.email
-    ).strip().lower()
-    query = {
-        "email": email,
-        "isActive": True,
-    }
-    if user.tenantId:
-        query["tenantId"] = (
-            user.tenantId.strip().lower()
-        )
-    else:
-        query["tenantId"] = None
-    existing = users.find_one(
-        query
+    account = resolve_reset_account(
+        email=str(user.email),
+        tenant_id=user.tenantId,
     )
-    if not existing:
+    if not account:
         raise HTTPException(
             status_code=404,
             detail="User does not exist.",
         )
-    token = token_urlsafe(32)
-    expiry = (
-        datetime.utcnow()
-        + timedelta(minutes=15)
+
+    token, expiry = create_reset_token()
+    save_reset_token(
+        account["collection"],
+        account["document"]["_id"],
+        token,
+        expiry,
     )
-    users.update_one(
-        {
-            "_id": existing["_id"]
-        },
-        {
-            "$set": {
-                "resetToken": token,
-                "resetTokenExpiry": expiry,
-                "updatedAt": datetime.utcnow(),
-            }
-        },
+    reset_link = build_reset_link(
+        account["account_kind"],
+        token,
+        account.get("tenant_slug"),
     )
-    reset_link = (
-        f"http://localhost:5173/"
-        f"reset-password?token={token}"
-    )
-    send_reset_email(
-        existing["email"],
-        reset_link,
-    )
+    send_reset_email(account["document"]["email"], reset_link)
     return {
         "success": True,
         "message": "Password reset link sent successfully.",
+    }
+
+
+@router.post("/reset-password")
+def reset_password(
+    payload: ResetPasswordRequest,
+):
+    try:
+        result = reset_password_with_token(
+            payload.token.strip(),
+            payload.password,
+        )
+    except HTTPException:
+        raise
+    except Exception as error:
+        print("Reset password error:", str(error))
+        raise HTTPException(
+            status_code=500,
+            detail="Unable to reset password.",
+        )
+
+    login_path = "/admin/login"
+    if result["account_kind"] == "customer" and result.get("tenant_slug"):
+        login_path = f"/{result['tenant_slug']}/login"
+
+    return {
+        "success": True,
+        "message": "Password updated successfully.",
+        "loginPath": login_path,
     }

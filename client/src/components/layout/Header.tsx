@@ -234,8 +234,7 @@ export default function Navbar() {
         </div>
         
         <nav className={styles.mobileNavLinks}>
-          {categoryResponse &&
-            categoryResponse.data.map((category: Category) => (<button key={category._id ||
+          {categoryResponse?.data?.map((category: Category) => (<button key={category._id ||
                     category.categoryId ||
                     category.slug ||
                     category.name} type="button" className={styles.mobileNavLink} onClick={() => handleCategoryClick(category)}>

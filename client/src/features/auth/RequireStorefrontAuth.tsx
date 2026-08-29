@@ -13,7 +13,7 @@ export default function RequireStorefrontAuth({
   const { isAuthenticated, user } = useAuth();
   const { tenantSlug } = useStorefrontTenant();
   const loginPath = getStorefrontLoginPath(tenantSlug);
-  if (!isAuthenticated || !user?._id || user.role !== "customer") {
+  if (!isAuthenticated || !user?._id || user?.role !== "customer") {
     return (
       <Navigate
         to={loginPath}

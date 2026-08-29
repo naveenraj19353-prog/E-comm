@@ -68,6 +68,7 @@ def create_order(
             coupon_code=request.couponCode,
             address_id=request.addressId,
             require_address=True,
+            delivery_method=request.deliveryMethod,
         )
         grand_total = checkout_data["grandTotal"]
         amount_in_paise = int(round(grand_total * 100))
@@ -93,8 +94,9 @@ def create_order(
                 "tenantId": tenant_id,
                 "userId": user_id,
                 "addressId": request.addressId,
-                "couponCode": checkout_data.get("couponCode"),
-                "grandTotal": grand_total,
+        "couponCode": checkout_data.get("couponCode"),
+        "deliveryMethod": checkout_data.get("deliveryMethod", "standard"),
+        "grandTotal": grand_total,
                 "checkout": checkout_data,
                 "status": "pending",
                 "createdAt": datetime.utcnow(),

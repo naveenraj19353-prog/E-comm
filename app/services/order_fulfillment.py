@@ -12,6 +12,7 @@ from app.database.mongo import (
 from app.services.checkout_service import (
     cart_owner_query,
     tenant_id_query,
+    calculate_checkout,
 )
 from app.utils.razorpay_client import client
 
@@ -153,6 +154,131 @@ def _claim_intent(razorpay_order_id: str):
     )
 
 
+def _finalize_order_from_checkout(
+    checkout_data: dict,
+    tenant_id: str,
+    user_id: str,
+    *,
+    payment_method: str,
+    payment_status: str,
+    razorpay_order_id: str | None = None,
+    razorpay_payment_id: str | None = None,
+) -> dict:
+    if not checkout_data.get("address"):
+        raise HTTPException(
+            status_code=400,
+            detail="A delivery address is required.",
+        )
+
+    order_items = _build_order_items(checkout_data)
+    now = datetime.utcnow()
+    reserved = []
+    for item in order_items:
+        stock_ok = decrement_variant_stock(
+            item["productId"],
+            item["variantId"],
+            item["quantity"],
+            now,
+        )
+        if not stock_ok:
+            for reserved_item in reserved:
+                restore_variant_stock(
+                    reserved_item["productId"],
+                    reserved_item["variantId"],
+                    reserved_item["quantity"],
+                    now,
+                )
+            raise HTTPException(
+                status_code=409,
+                detail="An item went out of stock.",
+            )
+        reserved.append(item)
+
+    user_object_id = ObjectId(str(user_id))
+    order_document = {
+        "tenantId": tenant_id,
+        "userId": user_object_id,
+        "items": order_items,
+        "subtotal": checkout_data["subtotal"],
+        "discount": checkout_data["discount"],
+        "shipping": checkout_data["shipping"],
+        "totalAmount": checkout_data["grandTotal"],
+        "couponCode": checkout_data.get("couponCode"),
+        "deliveryMethod": checkout_data.get("deliveryMethod", "standard"),
+        "address": checkout_data["address"],
+        "paymentMethod": payment_method,
+        "paymentStatus": payment_status,
+        "orderStatus": "confirmed",
+        "createdAt": now,
+        "updatedAt": now,
+    }
+    if razorpay_order_id:
+        order_document["razorpayOrderId"] = razorpay_order_id
+    if razorpay_payment_id:
+        order_document["razorpayPaymentId"] = razorpay_payment_id
+
+    try:
+        result = orders.insert_one(order_document)
+        order_document["_id"] = result.inserted_id
+    except DuplicateKeyError:
+        if razorpay_order_id:
+            existing = _find_order(razorpay_order_id)
+            if existing:
+                return existing
+        raise HTTPException(
+            status_code=409,
+            detail="Order could not be created. Please contact support.",
+        )
+
+    coupon_code = checkout_data.get("couponCode")
+    if coupon_code:
+        coupons.update_one(
+            {
+                "tenantId": tenant_id_query(tenant_id),
+                "code": coupon_code,
+                "isActive": True,
+            },
+            {
+                "$inc": {"usedCount": 1},
+                "$set": {"updatedAt": now},
+            },
+        )
+    carts.delete_many(cart_owner_query(tenant_id, str(user_id)))
+    return order_document
+
+
+def fulfill_cod_order(
+    tenant_id: str,
+    user_id: str,
+    address_id: str,
+    coupon_code: str | None = None,
+    delivery_method: str = "standard",
+) -> dict:
+    checkout_data = calculate_checkout(
+        tenant_id=tenant_id,
+        user_id=user_id,
+        coupon_code=coupon_code,
+        address_id=address_id,
+        require_address=True,
+        delivery_method=delivery_method,
+    )
+    order = _finalize_order_from_checkout(
+        checkout_data,
+        tenant_id,
+        user_id,
+        payment_method="cod",
+        payment_status="pending",
+    )
+    return {
+        "success": True,
+        "message": "Order placed successfully. Pay on delivery.",
+        "orderId": str(order["_id"]),
+        "amount": order.get("totalAmount"),
+        "paymentStatus": order.get("paymentStatus", "pending"),
+        "orderStatus": order.get("orderStatus", "confirmed"),
+    }
+
+
 def fulfill_captured_payment(
     razorpay_order_id: str,
     razorpay_payment_id: str,
@@ -282,10 +408,11 @@ def fulfill_captured_payment(
         "subtotal": checkout_data["subtotal"],
         "discount": checkout_data["discount"],
         "shipping": checkout_data["shipping"],
-        "tax": checkout_data["tax"],
         "totalAmount": checkout_data["grandTotal"],
         "couponCode": checkout_data.get("couponCode"),
+        "deliveryMethod": checkout_data.get("deliveryMethod", "standard"),
         "address": checkout_data["address"],
+        "paymentMethod": "razorpay",
         "paymentStatus": "paid",
         "orderStatus": "confirmed",
         "createdAt": now,

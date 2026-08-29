@@ -1,9 +1,12 @@
 import apiClient from "../../../api/client";
+import type { DeliveryMethodType } from "../../checkout/api/checkout.api";
+
 export interface CreatePaymentOrderRequest {
     tenantId: string;
     userId: string;
     addressId: string;
     couponCode?: string | null;
+    deliveryMethod?: DeliveryMethodType;
 }
 export interface CreatePaymentOrderResponse {
     success: boolean;

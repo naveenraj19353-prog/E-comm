@@ -164,12 +164,27 @@ def resolve_shipping_address(
     return serialize_address(address)
 
 
+FREE_SHIPPING_THRESHOLD = 1000.0
+STANDARD_SHIPPING_FEE = 100.0
+EXPRESS_DELIVERY_FEE = 99.0
+
+
+def calculate_shipping(subtotal: float, delivery_method: str = "standard") -> float:
+    base_shipping = (
+        0.0 if subtotal >= FREE_SHIPPING_THRESHOLD else STANDARD_SHIPPING_FEE
+    )
+    if delivery_method == "express":
+        return round(base_shipping + EXPRESS_DELIVERY_FEE, 2)
+    return round(base_shipping, 2)
+
+
 def calculate_checkout(
     tenant_id: str,
     user_id: str,
     coupon_code: str | None = None,
     address_id: str | None = None,
     require_address: bool = False,
+    delivery_method: str = "standard",
 ):
     tenant_id = normalize_tenant_id(tenant_id)
     cart_items = list(carts.find(cart_owner_query(tenant_id, user_id)))
@@ -285,12 +300,12 @@ def calculate_checkout(
             discount = min(discount_value, subtotal)
         discount = round(discount, 2)
         coupon_code_response = coupon.get("code")
-    shipping = 0.0
-    if subtotal < 1000:
-        shipping = 100.0
-    taxable_amount = max(subtotal - discount, 0)
-    tax = round(taxable_amount * 0.18, 2)
-    grand_total = round(taxable_amount + shipping + tax, 2)
+    normalized_delivery = (
+        delivery_method if delivery_method in {"standard", "express"} else "standard"
+    )
+    shipping = calculate_shipping(subtotal, normalized_delivery)
+    net_subtotal = max(subtotal - discount, 0)
+    grand_total = round(net_subtotal + shipping, 2)
     if grand_total <= 0:
         raise HTTPException(
             status_code=400,
@@ -308,7 +323,7 @@ def calculate_checkout(
         "couponCode": coupon_code_response,
         "discount": discount,
         "shipping": shipping,
-        "tax": tax,
         "grandTotal": grand_total,
+        "deliveryMethod": normalized_delivery,
         "address": address,
     }

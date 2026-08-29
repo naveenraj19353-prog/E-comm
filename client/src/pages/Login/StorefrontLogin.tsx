@@ -20,6 +20,7 @@ export default function StorefrontLogin() {
             <div className={styles.authCard}>
                 <LoginForm
                     tenantId={tenantId}
+                    tenantSlug={tenantSlug}
                     onSuccess={redirectAfterLogin}
                     onSwitchToRegister={goToRegister}
                 />

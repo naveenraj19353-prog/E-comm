@@ -1,5 +1,7 @@
 from pydantic import BaseModel, Field
-from typing import Optional
+from typing import Literal, Optional
+
+DeliveryMethod = Literal["standard", "express"]
 
 
 class CreatePaymentOrder(BaseModel):
@@ -7,6 +9,7 @@ class CreatePaymentOrder(BaseModel):
     userId: Optional[str] = None
     couponCode: Optional[str] = None
     addressId: str = Field(..., min_length=1)
+    deliveryMethod: DeliveryMethod = "standard"
 
 
 class VerifyPayment(BaseModel):

@@ -9,8 +9,8 @@ export const getVisibleTenants = (
     tenants: Tenant[],
     user?: TenantViewer | null,
 ): Tenant[] => {
-    if (user?.role === "admin" && user.tenantId) {
-        return tenants.filter((tenant) => tenant.tenantId === user.tenantId);
+    if (user?.role === "admin" && user?.tenantId) {
+        return tenants.filter((tenant) => tenant.tenantId === user?.tenantId);
     }
     return tenants;
 };

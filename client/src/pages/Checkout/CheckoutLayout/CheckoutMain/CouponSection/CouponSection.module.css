@@ -1,0 +1,131 @@
+.section {
+  padding: 1.375rem;
+  border: 0.0625rem solid var(--border);
+  border-radius: 1rem;
+  background: var(--surface);
+}
+
+.header {
+  margin-bottom: 1rem;
+}
+
+.eyebrow {
+  display: block;
+  margin-bottom: 0.375rem;
+  color: var(--primary);
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.075rem;
+}
+
+.header h2 {
+  margin: 0;
+  color: var(--text);
+  font-size: 1.125rem;
+  font-weight: 700;
+}
+
+.header p {
+  margin: 0.375rem 0 0;
+  color: var(--text);
+  opacity: 0.65;
+  font-size: 0.8125rem;
+}
+
+.form {
+  display: flex;
+  gap: 0.625rem;
+}
+
+.input {
+  flex: 1;
+  min-width: 0;
+  height: 2.75rem;
+  padding: 0 0.875rem;
+  border: 0.0625rem solid var(--border);
+  border-radius: 0.625rem;
+  background: var(--background);
+  color: var(--text);
+  font-size: 0.875rem;
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+.applyButton {
+  height: 2.75rem;
+  padding: 0 1rem;
+  border: none;
+  border-radius: 0.625rem;
+  background: var(--primary);
+  color: #fff;
+  font-size: 0.8125rem;
+  font-weight: 650;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.applyButton:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.applied {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.875rem 1rem;
+  border: 0.0625rem solid color-mix(in srgb, var(--primary) 25%, var(--border));
+  border-radius: 0.75rem;
+  background: color-mix(in srgb, var(--primary) 8%, var(--surface));
+}
+
+.appliedInfo {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  color: var(--primary);
+}
+
+.appliedInfo strong {
+  display: block;
+  color: var(--text);
+  font-size: 0.875rem;
+}
+
+.appliedInfo span {
+  display: block;
+  margin-top: 0.125rem;
+  color: var(--text);
+  opacity: 0.65;
+  font-size: 0.75rem;
+}
+
+.removeButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3125rem;
+  padding: 0.375rem 0.625rem;
+  border: 0.0625rem solid var(--border);
+  border-radius: 0.5rem;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.error {
+  margin: 0.625rem 0 0;
+  color: var(--danger, #b23f3f);
+  font-size: 0.8125rem;
+}
+
+@media (max-width: 40rem) {
+  .form {
+    flex-direction: column;
+  }
+}
