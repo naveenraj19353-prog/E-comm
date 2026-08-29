@@ -1,0 +1,452 @@
+.previewFrame {
+  min-height: 22rem;
+  padding: 1rem;
+  border: 0.0625rem solid var(--border);
+  border-radius: 0.875rem;
+  background: var(--background);
+  color: var(--text);
+}
+
+.previewChrome {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  border: 0.0625rem solid var(--border);
+  border-radius: 0.5rem;
+  background: var(--surface);
+  font-size: 0.6875rem;
+  color: color-mix(in srgb, var(--text-black) 70%, transparent);
+}
+
+.previewHeaderBar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  border: 0.0625rem solid var(--border);
+  border-radius: 0.5rem;
+  background: var(--surface);
+  font-size: 0.625rem;
+  color: color-mix(in srgb, var(--text-black) 70%, transparent);
+}
+
+.previewLogo,
+.previewNav,
+.previewSearch,
+.previewActions {
+  padding: 0.25rem 0.4375rem;
+  border-radius: 0.375rem;
+  background: color-mix(in srgb, var(--primary) 8%, var(--background));
+  white-space: nowrap;
+}
+
+.previewLogo {
+  font-weight: 700;
+  color: var(--primary);
+}
+
+.previewSearch {
+  background: color-mix(in srgb, var(--secondary) 10%, var(--background));
+}
+
+.previewActions {
+  margin-left: auto;
+}
+
+.previewLogoCenter .previewLogo {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.previewLogoCenter .previewActions {
+  margin-left: auto;
+}
+
+.previewSearchCenter .previewSearch {
+  flex: 1;
+  text-align: center;
+  margin: 0 auto;
+  max-width: 8rem;
+}
+
+.previewSearchCenter .previewActions {
+  margin-left: 0;
+}
+
+.previewSearchAfterLogo .previewSearch {
+  order: 2;
+}
+
+.previewSearchAfterLogo .previewNav {
+  order: 3;
+  margin-left: auto;
+}
+
+.previewSearchAfterLogo .previewActions {
+  order: 4;
+  margin-left: 0;
+}
+
+.previewSearchRight .previewSearch {
+  order: 4;
+  margin-left: auto;
+}
+
+.previewSearchRight .previewActions {
+  order: 5;
+  margin-left: 0;
+}
+
+.previewNavHidden .previewNav {
+  display: none;
+}
+
+.previewNavCenter .previewNav {
+  flex: 1;
+  text-align: center;
+}
+
+.previewNavLeft .previewNav {
+  order: 2;
+}
+
+.previewStickyTag {
+  position: absolute;
+  top: -0.375rem;
+  right: 0.5rem;
+  font-style: normal;
+  font-size: 0.5625rem;
+  color: var(--primary);
+  font-weight: 700;
+}
+
+.previewChrome em {
+  font-style: normal;
+  font-size: 0.625rem;
+  color: var(--primary);
+  font-weight: 700;
+}
+
+.previewChromeSticky {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+.footerPreview,
+.footerPreviewMinimal {
+  margin-top: 0.875rem;
+  padding: 0.75rem;
+  border-radius: var(--layout-card-radius);
+  background: var(--text-black);
+  color: var(--text-white);
+  font-size: 0.6875rem;
+}
+
+.footerPreview {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.footerPreviewCompact {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.375rem;
+}
+
+.footerPreviewMinimal {
+  text-align: center;
+  opacity: 0.85;
+}
+
+.banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 1rem 1.125rem;
+  margin-bottom: 0.875rem;
+  border-radius: var(--layout-banner-radius, 0);
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  color: var(--text-white);
+}
+
+.bannerContained {
+  border-radius: 1rem;
+}
+
+.banner button,
+.primaryButton {
+  border: none;
+  border-radius: calc(var(--layout-card-radius) * 0.75);
+  padding: 0.5rem 0.875rem;
+  background: var(--surface);
+  color: var(--primary);
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: default;
+}
+
+.chips {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.875rem;
+}
+
+.chips span,
+.sizes span {
+  padding: 0.375rem 0.625rem;
+  border: 0.0625rem solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  font-size: 0.6875rem;
+}
+
+.dealCard {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.75rem 0.875rem;
+  margin-bottom: 0.875rem;
+  border: 0.0625rem solid color-mix(in srgb, var(--primary) 25%, var(--border));
+  border-radius: var(--layout-card-radius);
+  background: color-mix(in srgb, var(--primary) 8%, var(--surface));
+}
+
+.miniGrid {
+  display: grid;
+  gap: var(--layout-grid-gap);
+}
+
+.productCard {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  padding: 0.625rem;
+  border: 0.0625rem solid var(--border);
+  border-radius: var(--layout-card-radius);
+  background: var(--surface);
+}
+
+.productImage,
+.detailImage,
+.cartThumb {
+  aspect-ratio: 1;
+  border-radius: calc(var(--layout-card-radius) * 0.75);
+  background: color-mix(in srgb, var(--primary) 12%, var(--background));
+}
+
+.heartLeft,
+.heartRight {
+  position: absolute;
+  top: 0.375rem;
+  font-size: 0.75rem;
+  color: var(--danger);
+}
+
+.heartLeft {
+  left: 0.375rem;
+}
+
+.heartRight {
+  right: 0.375rem;
+}
+
+.productCard strong,
+.cartRow strong,
+.detailInfo h3 {
+  font-size: 0.8125rem;
+  color: var(--text-black);
+}
+
+.productCard span,
+.detailInfo span,
+.cartRow span {
+  font-size: 0.6875rem;
+  color: color-mix(in srgb, var(--text-black) 65%, transparent);
+}
+
+.productCard span:last-of-type,
+.price {
+  color: var(--primary);
+  font-weight: 700;
+}
+
+.toolbar {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.875rem;
+  font-size: 0.75rem;
+  color: color-mix(in srgb, var(--text-black) 70%, transparent);
+}
+
+.detailLayout {
+  display: grid;
+  grid-template-columns: 1fr 1.1fr;
+  gap: 0.875rem;
+}
+
+.detailGalleryRight {
+  grid-template-columns: 1.1fr 1fr;
+}
+
+.detailGalleryRight .detailImage {
+  order: 2;
+}
+
+.detailGalleryRight .detailInfo {
+  order: 1;
+}
+
+.detailStacked {
+  grid-template-columns: 1fr;
+}
+
+.listingLayout {
+  display: grid;
+  grid-template-columns: 5.5rem minmax(0, 1fr);
+  gap: 0.75rem;
+}
+
+.listingSidebarRight {
+  grid-template-columns: minmax(0, 1fr) 5.5rem;
+}
+
+.listingSidebarRight .listingSidebar {
+  order: 2;
+}
+
+.listingFiltersTop {
+  grid-template-columns: 1fr;
+}
+
+.listingSidebar {
+  padding: 0.625rem;
+  border: 0.0625rem solid var(--border);
+  border-radius: var(--layout-card-radius);
+  background: var(--surface);
+  font-size: 0.6875rem;
+  color: color-mix(in srgb, var(--text-black) 70%, transparent);
+}
+
+.listingMain {
+  min-width: 0;
+}
+
+.productCardList {
+  display: grid;
+  grid-template-columns: 3.5rem 1fr;
+  gap: 0.625rem;
+  align-items: center;
+}
+
+.productCardList .productImage {
+  aspect-ratio: 1;
+}
+
+.cartLayout {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.cartSplit {
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  align-items: start;
+}
+
+.cartStacked {
+  grid-template-columns: 1fr;
+}
+
+.cartItems {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.testimonialCard {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  margin-top: 0.875rem;
+  padding: 0.75rem;
+  border: 0.0625rem solid var(--border);
+  border-radius: var(--layout-card-radius);
+  background: var(--surface);
+  font-size: 0.75rem;
+}
+
+.detailInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.rating {
+  color: var(--warning);
+}
+
+.sizes {
+  display: flex;
+  gap: 0.375rem;
+}
+
+.cartLayout {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.cartRow {
+  display: grid;
+  grid-template-columns: 3rem 1fr auto;
+  gap: 0.625rem;
+  align-items: center;
+  padding: 0.625rem;
+  border: 0.0625rem solid var(--border);
+  border-radius: var(--layout-card-radius);
+  background: var(--surface);
+}
+
+.cartThumb {
+  width: 3rem;
+  height: 3rem;
+}
+
+.summaryCard {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  padding: 0.875rem;
+  border: 0.0625rem solid var(--border);
+  border-radius: var(--layout-card-radius);
+  background: var(--surface);
+}
+
+.summaryCard div {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8125rem;
+}
+
+.secondaryButton {
+  border: 0.0625rem solid var(--primary);
+  border-radius: calc(var(--layout-card-radius) * 0.75);
+  padding: 0.375rem 0.625rem;
+  background: transparent;
+  color: var(--primary);
+  font-size: 0.6875rem;
+  cursor: default;
+}
+
+@media (max-width: 48rem) {
+  .detailLayout {
+    grid-template-columns: 1fr;
+  }
+}

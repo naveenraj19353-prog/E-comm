@@ -1,9 +1,13 @@
 import { useState, type FormEvent } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import styles from "../../styles/Auth.module.css";
 import { useAuth } from "../../features/auth/hooks/useAuth";
+
 export default function Login() {
     const navigate = useNavigate();
+    const location = useLocation();
+    const redirectPath = (location.state as { from?: string; message?: string } | null)?.from;
+    const redirectMessage = (location.state as { from?: string; message?: string } | null)?.message;
     const { login } = useAuth();
     const [tenantId, setTenantId] = useState("");
     const [email, setEmail] = useState("");
@@ -29,7 +33,6 @@ export default function Login() {
                 email: email.trim(),
                 password,
             });
-            console.log("LOGIN RESPONSE:", response);
             if (!response.success ||
                 !response.access_token ||
                 !response.user) {
@@ -37,7 +40,10 @@ export default function Login() {
                 return;
             }
             const user = response.user;
-            console.log("LOGGED USER:", user);
+            if (redirectPath && (user.role === "super_admin" || user.role === "admin")) {
+                navigate(redirectPath, { replace: true });
+                return;
+            }
             if (user.role === "super_admin") {
                 navigate("/admin", {
                     replace: true,
@@ -85,6 +91,10 @@ export default function Login() {
           </p>
         </div>
         
+        {redirectMessage && (<div className={styles.notice}>
+            {redirectMessage}
+          </div>)}
+
         {error && (<div className={styles.error}>
             <span>!</span>
             {error}

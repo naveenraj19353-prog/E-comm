@@ -6,6 +6,7 @@ import ProductGallery from "./ProductGallery";
 import ProductInfo from "./ProductInfo";
 import ProductReviews from "./ProductReviews";
 import ProductSpecifications from "./ProductSpecifications";
+import { useLayoutSettings } from "../../theme/useThemeSettings";
 import styles from "./ProductDetails.module.css";
 interface ProductDetailsViewProps {
     product: Product;
@@ -55,8 +56,14 @@ const ProductDetailsView = ({ product, reviews, isWishlisted, isAddingToCart, on
             item.stock > 0)?.size || "";
         setSelectedSize(firstSize);
     };
+    const layoutSettings = useLayoutSettings();
+    const detailLayoutClass = layoutSettings.productDetailLayout === "gallery-right"
+        ? styles.detailGalleryRight
+        : layoutSettings.productDetailLayout === "stacked"
+            ? styles.detailStacked
+            : styles.detailGalleryLeft;
     return (<div className={styles.page}>
-      <section className={styles.productSection}>
+      <section className={`${styles.productSection} ${detailLayoutClass}`}>
         <ProductGallery product={product} selectedColor={selectedColor}/>
         <ProductInfo product={product} selectedColor={selectedColor} selectedSize={selectedSize} availableSizes={availableSizes} selectedVariant={selectedVariant} onColorChange={handleColorChange} onSizeChange={setSelectedSize} isWishlisted={isWishlisted} isAddingToCart={isAddingToCart} onAddToCart={onAddToCart} onWishlist={onWishlist}/>
       </section>

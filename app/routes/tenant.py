@@ -2,11 +2,12 @@ from fastapi import APIRouter, Depends, HTTPException
 from bson import ObjectId
 from datetime import datetime
 from app.database.mongo import tenants
-from app.models.tenant import CreateTenant, UpdateTenant
+from app.models.tenant import CreateTenant, UpdateTenant, UpdateTenantTheme
 from app.utils.auth_dependencies import (
     require_super_admin,
     require_admin,
 )
+from app.services.storefront_layout import build_storefront_layout
 from app.utils.hash import hash_password
 router = APIRouter(
     prefix="/tenants",
@@ -216,9 +217,42 @@ def get_tenant_by_slug(
         "password",
         None,
     )
+    storefront_layout = build_storefront_layout(tenant)
     return {
         "success": True,
-        "data": tenant,
+        "data": {
+            **tenant,
+            "storefrontLayout": storefront_layout,
+        },
+    }
+
+
+@router.get("/slug/{slug}/storefront-layout")
+def get_storefront_layout_by_slug(
+    slug: str,
+):
+    slug = slug.strip().lower()
+    tenant = tenants.find_one({
+        "slug": slug,
+        "isActive": True,
+    })
+    if not tenant:
+        raise HTTPException(
+            status_code=404,
+            detail="Tenant not found.",
+        )
+    tenant["_id"] = str(tenant["_id"])
+    tenant.pop("password", None)
+    layout = build_storefront_layout(tenant)
+    return {
+        "success": True,
+        "data": {
+            "tenantId": tenant.get("tenantId"),
+            "slug": tenant.get("slug"),
+            "name": tenant.get("name"),
+            "_id": tenant["_id"],
+            **layout,
+        },
     }
 
 
@@ -371,6 +405,63 @@ def update_tenant(
     return {
         "success": True,
         "message": "Tenant updated successfully.",
+        "data": updated,
+    }
+
+
+@router.patch("/{id}/theme")
+def update_tenant_theme(
+    id: str,
+    payload: UpdateTenantTheme,
+    current_user: dict = Depends(require_admin),
+):
+    try:
+        object_id = ObjectId(id)
+    except Exception:
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid tenant ID.",
+        )
+
+    tenant = tenants.find_one({"_id": object_id})
+    if not tenant:
+        raise HTTPException(
+            status_code=404,
+            detail="Tenant not found.",
+        )
+
+    if current_user.get("role") != "super_admin":
+        if current_user.get("tenantId") != tenant.get("tenantId"):
+            raise HTTPException(
+                status_code=403,
+                detail="You cannot update another tenant's theme.",
+            )
+
+    update_data = payload.model_dump(exclude_unset=True)
+    if not update_data:
+        raise HTTPException(
+            status_code=400,
+            detail="No theme fields provided for update.",
+        )
+
+    update_data["updatedAt"] = datetime.utcnow()
+
+    result = tenants.update_one(
+        {"_id": object_id},
+        {"$set": update_data},
+    )
+    if result.matched_count == 0:
+        raise HTTPException(
+            status_code=404,
+            detail="Tenant not found.",
+        )
+
+    updated = tenants.find_one({"_id": object_id})
+    updated["_id"] = str(updated["_id"])
+    updated.pop("password", None)
+    return {
+        "success": True,
+        "message": "Theme updated successfully.",
         "data": updated,
     }
 

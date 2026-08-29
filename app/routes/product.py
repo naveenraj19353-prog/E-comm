@@ -8,6 +8,7 @@ from app.models.product import (
     UpdateProduct,
     ProductSearchRequest,
     VariantStockRequest,
+    BulkImportRequest,
 )
 from app.utils.product_serialize import (
     calculate_total_stock,
@@ -305,6 +306,52 @@ def create_product(
         "message": (
             "Product created successfully."
         ),
+    }
+
+
+@router.post("/bulk-import")
+def bulk_import_products(
+    body: BulkImportRequest,
+    current_user: dict = Depends(require_admin),
+):
+    from app.services.bulk_product_import import upsert_bulk_product
+
+    tenant_id = admin_tenant_id(current_user, body.tenantId)
+    created = 0
+    updated = 0
+    errors: list[dict] = []
+
+    for index, item in enumerate(body.products):
+        try:
+            result = upsert_bulk_product(tenant_id, item)
+            if result == "created":
+                created += 1
+            else:
+                updated += 1
+        except HTTPException as exc:
+            detail = exc.detail if isinstance(exc.detail, str) else str(exc.detail)
+            errors.append(
+                {
+                    "index": index,
+                    "name": item.name,
+                    "detail": detail,
+                }
+            )
+        except Exception as exc:
+            errors.append(
+                {
+                    "index": index,
+                    "name": item.name,
+                    "detail": str(exc),
+                }
+            )
+
+    return {
+        "success": len(errors) == 0,
+        "created": created,
+        "updated": updated,
+        "failed": len(errors),
+        "errors": errors,
     }
 
 

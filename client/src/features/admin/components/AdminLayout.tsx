@@ -1,36 +1,13 @@
 import { NavLink, Outlet, Navigate, useLocation, } from "react-router-dom";
+import { useAuth } from "../../auth/hooks/useAuth";
 import styles from "../styles/AdminLayout.module.css";
-interface AuthUser {
-    userId: string;
-    name: string;
-    email: string;
-    tenantId: string | null;
-    role: string;
-}
-interface AuthData {
-    user: AuthUser;
-    accessToken: string;
-}
 export default function AdminLayout() {
     const location = useLocation();
-    const storedAuth = localStorage.getItem("ecommerce_auth");
-    if (!storedAuth) {
+    const { user, isAuthenticated, logout } = useAuth();
+    if (!isAuthenticated || !user) {
         return (<Navigate to="/admin/login" replace state={{
                 from: location.pathname,
             }}/>);
-    }
-    let auth: AuthData;
-    try {
-        auth = JSON.parse(storedAuth);
-    }
-    catch {
-        localStorage.removeItem("ecommerce_auth");
-        return (<Navigate to="/admin/login" replace/>);
-    }
-    const user = auth?.user;
-    if (!user) {
-        localStorage.removeItem("ecommerce_auth");
-        return (<Navigate to="/admin/login" replace/>);
     }
     const isSuperAdmin = user.role === "super_admin";
     const isAdmin = user.role === "admin";
@@ -38,13 +15,14 @@ export default function AdminLayout() {
         return (<Navigate to="/admin/login" replace/>);
     }
     if (isSuperAdmin &&
-        user.tenantId !== null) {
-        localStorage.removeItem("ecommerce_auth");
+        user.tenantId !== null &&
+        user.tenantId !== undefined) {
+        logout();
         return (<Navigate to="/admin/login" replace/>);
     }
     if (isAdmin &&
         !user.tenantId) {
-        localStorage.removeItem("ecommerce_auth");
+        logout();
         return (<Navigate to="/admin/login" replace/>);
     }
     const pathname = location.pathname;
@@ -144,7 +122,7 @@ export default function AdminLayout() {
             </div>
           </div>
           <button className={styles.logoutButton} onClick={() => {
-            localStorage.removeItem("ecommerce_auth");
+            logout();
             window.location.href =
                 "/admin/login";
         }}>

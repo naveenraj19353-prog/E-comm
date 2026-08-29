@@ -35,6 +35,9 @@ export default function AdminTenant() {
           <p>/{tenant.slug}</p>
         </div>
         <div className={styles.headerActions}>
+          <button type="button" className={styles.layoutButton} onClick={() => navigate(`/${tenant.slug}/customize`)}>
+            Layout Studio
+          </button>
           <button type="button" className={styles.editButton} onClick={() => navigate(`/admin/tenants/${tenant.tenantId}/edit`)}>
             Edit Tenant
           </button>

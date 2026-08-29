@@ -6,6 +6,7 @@ import "swiper/css/navigation";
 import "swiper/css/pagination";
 import styles from "./Productcard.module.css";
 import { isProductOutOfStock } from "../../features/products/inventory";
+import { useProductNavigation } from "../../features/products/hooks/useProductNavigation";
 export interface ProductInventory {
     variantId: string;
     color: string;
@@ -32,6 +33,7 @@ interface ProductCardProps {
     isAdding?: boolean;
 }
 export default function ProductCard({ product, isWishlisted = false, onWishlist, onAddToCart, isAdding = false, }: ProductCardProps) {
+    const { goToProduct } = useProductNavigation();
     const { _id, name, price, finalPrice, discountPercentage, images = {}, inventory = [], averageRating, reviewCount = 0, isActive = true, } = product;
     const availableInventory = useMemo(() => {
         return inventory.filter((item) => item.stock > 0 && item.color?.trim() && item.size?.trim());
@@ -109,7 +111,15 @@ export default function ProductCard({ product, isWishlisted = false, onWishlist,
         event.stopPropagation();
         setSelectedSizeOverride(size);
     };
-    return (<article className={`${styles.card} ${!isActive ? styles.inactive : ""}`}>
+    const handleCardClick = () => {
+        goToProduct(_id);
+    };
+    return (<article className={`${styles.card} ${!isActive ? styles.inactive : ""}`} onClick={handleCardClick} role="link" tabIndex={0} onKeyDown={(event) => {
+            if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                handleCardClick();
+            }
+        }}>
       
       <div className={styles.imageContainer}>
         {validImages.length > 0 ? (<Swiper key={`${_id}-${selectedColor}`} modules={[Autoplay, Navigation, Pagination]} className={styles.productSwiper} slidesPerView={1} spaceBetween={0} loop={validImages.length > 1} speed={600} autoplay={validImages.length > 1

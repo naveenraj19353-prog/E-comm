@@ -1,11 +1,7 @@
-import { ShoppingBag } from "lucide-react";
-import styles from "./Cart.module.css";
+import PageLoader from "../../components/PageLoader";
+
 const CartLoading = () => {
-    return (<div className={styles.loading}>
-      <div className={styles.loader}>
-        <ShoppingBag size={24}/>
-      </div>
-      <span>Loading your cart...</span>
-    </div>);
+    return <PageLoader message="Loading your cart..." />;
 };
+
 export default CartLoading;

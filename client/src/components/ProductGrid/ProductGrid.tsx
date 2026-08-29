@@ -6,11 +6,13 @@ import { useCart } from "../../features/cart/hooks/useCart";
 import { useWishlist } from "../../features/wishlist/hooks/useWishlist";
 import { useAuth } from "../../features/auth/hooks/useAuth";
 import { useStorefrontTenant } from "../../features/tenant/useTenant";
+import { useLayoutSettings } from "../../theme/useThemeSettings";
 import ProductCard from "../ProductCard/UniCard/ProductCard";
 interface ProductGridProps {
     products: Product[];
 }
 const ProductGrid = ({ products, }: ProductGridProps) => {
+    const layoutSettings = useLayoutSettings();
     const user = useAuth().user;
     const navigate = useNavigate();
     const { tenantId: storeTenantId, tenantSlug } = useStorefrontTenant();
@@ -81,7 +83,7 @@ const ProductGrid = ({ products, }: ProductGridProps) => {
             console.error("Wishlist update failed:", error);
         }
     };
-    return (<div className={styles.grid}>
+    return (<div className={`${styles.grid} ${layoutSettings.productViewMode === "list" ? styles.listView : ""}`}>
       {products.map((product) => {
             const isWishlisted = wishlist.some((item) => item.productId ===
                 product._id);

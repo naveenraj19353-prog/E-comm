@@ -10,9 +10,17 @@
 .productSection,
 .brandSection {
   width: 100%;
-  max-width: 90rem;
+  max-width: var(--layout-page-max-width, 90%);
   margin: 0 auto;
-  padding: 2rem 2.5rem;
+  padding: var(--layout-section-gap, 2rem) clamp(1rem, 3vw, 2.5rem);
+  box-sizing: border-box;
+}
+.bannerContained {
+  width: calc(100% - 2rem);
+  max-width: calc(var(--layout-page-max-width, 90%) - 2rem);
+  margin-inline: auto;
+  border-radius: var(--layout-banner-radius, 1rem);
+  overflow: hidden;
 }
 .bannerSection h2,
 .categorySection h2,

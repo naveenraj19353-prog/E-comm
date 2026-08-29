@@ -1,4 +1,14 @@
+from contextlib import asynccontextmanager
+import json
+import logging
+
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from pymongo.errors import PyMongoError
+
+from app.config import CORS_ORIGINS
+from app.database.indexes import ensure_indexes
+from app.database.mongo import client
 from app.routes.auth import router as auth_router
 from app.routes.users import router as users_router
 from app.routes.product import router as create_product_router
@@ -16,20 +26,30 @@ from app.routes.home import router as home_router
 from app.routes.banner import router as banner_router
 from app.routes.tenant import router as tenant_router
 from app.routes.super_admin import router as super_admin_router
-from fastapi.middleware.cors import CORSMiddleware
-import json
-app = FastAPI()
-origins = [
-    "http://localhost:5173",
-    "http://127.0.0.1:5173",
-]
+
+logger = logging.getLogger(__name__)
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    try:
+        ensure_indexes()
+        logger.info("Database indexes ensured.")
+    except PyMongoError as error:
+        logger.error("Database index setup failed: %s", error)
+    yield
+
+
+app = FastAPI(lifespan=lifespan)
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 app.include_router(auth_router)
 app.include_router(users_router)
 app.include_router(create_product_router)
@@ -47,6 +67,32 @@ app.include_router(home_router)
 app.include_router(banner_router)
 app.include_router(tenant_router)
 app.include_router(super_admin_router)
+
+
+def _database_status() -> str:
+    try:
+        client.admin.command("ping")
+        return "connected"
+    except PyMongoError as error:
+        logger.error("Database health check failed: %s", error)
+        return "disconnected"
+
+
+@app.get("/healthcheck")
+@app.head("/healthcheck")
+def healthcheck():
+    """Lightweight liveness probe for Render (no database call)."""
+    return {"status": "ok"}
+
+
 @app.get("/")
+@app.head("/")
+@app.get("/health")
+@app.head("/health")
 def health():
-    return {"status": "UP", "database": "MongoDB Connected"}
+    database_status = _database_status()
+    overall = "UP" if database_status == "connected" else "DEGRADED"
+    return {
+        "status": overall,
+        "database": database_status,
+    }

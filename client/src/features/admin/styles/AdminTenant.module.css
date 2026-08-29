@@ -94,7 +94,8 @@
   flex-shrink: 0;
 }
 .editButton,
-.productsButton {
+.productsButton,
+.layoutButton {
   height: 2.625rem;
   padding: 0 1.125rem;
   border-radius: 0.5625rem;
@@ -124,8 +125,18 @@
   background: #285d47;
   border-color: #285d47;
 }
+.layoutButton {
+  border: 0.0625rem solid #4c8a6d;
+  background: #4c8a6d;
+  color: #ffffff;
+}
+.layoutButton:hover {
+  background: #3f765c;
+  border-color: #3f765c;
+}
 .editButton:active,
-.productsButton:active {
+.productsButton:active,
+.layoutButton:active {
   transform: translateY(0.0625rem);
 }
 

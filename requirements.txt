@@ -1,6 +1,7 @@
 fastapi
-uvicorn
-pymongo
+uvicorn[standard]
+pymongo[srv]>=4.6
+dnspython
 python-dotenv
 python-jose[cryptography]
 passlib[bcrypt]
@@ -8,3 +9,6 @@ bcrypt
 python-multipart
 email-validator
 pydantic
+razorpay
+requests
+certifi

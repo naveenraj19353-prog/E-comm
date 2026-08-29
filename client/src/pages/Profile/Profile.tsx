@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useProfile } from "../../features/profile/hooks/useProfile";
 import { useAuth } from "../../features/auth/hooks/useAuth";
 import { useStorefrontTenant } from "../../features/tenant/useTenant";
+import PageLoader from "../../components/PageLoader";
 import styles from "./Profile.module.css";
 import EditProfileModal from "./EditProfileModal";
 import AuthModal from "../../components/Auth/AuthModal/AuthModal";
@@ -53,13 +54,7 @@ const Profile = () => {
       </div>);
     }
     if (isLoading) {
-        return (<div className={styles.page}>
-        <div className={styles.container}>
-          <div className={styles.loading}>
-            Loading profile...
-          </div>
-        </div>
-      </div>);
+        return <PageLoader message="Loading profile..." />;
     }
     if (isError || !profile) {
         return (<div className={styles.page}>

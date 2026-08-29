@@ -1,8 +1,8 @@
 .container {
   width: 100%;
-  max-width: 80rem;
+  max-width: var(--layout-page-max-width, 90%);
   margin: 0 auto;
-  padding: 2.375rem 1.75rem 3.75rem;
+  padding: 2.375rem clamp(1rem, 3vw, 1.75rem) 3.75rem;
   box-sizing: border-box;
 }
 .header {
@@ -95,10 +95,18 @@
 }
 .layout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 22.5rem;
   gap: 1.5rem;
   align-items: start;
 }
+
+.layoutSplit {
+  grid-template-columns: minmax(0, 1fr) 22.5rem;
+}
+
+.layoutStacked {
+  grid-template-columns: 1fr;
+}
+
 .items {
   display: flex;
   flex-direction: column;

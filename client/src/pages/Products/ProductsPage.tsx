@@ -5,6 +5,7 @@ import styles from "./ProductsPage.module.css";
 import { useAppDispatch, useAppSelector } from "../../app/hooks";
 import { clearFilters, setCatalogFilter, setFilters } from "../../features/products/productSlice";
 import { useStorefrontTenant } from "../../features/tenant/useTenant";
+import PageLoader from "../../components/PageLoader";
 import Breadcrumb from "../../components/Breadcrumb";
 import ProductFilters from "../../components/ProductFilters";
 import ProductGrid from "../../components/ProductGrid";
@@ -13,12 +14,13 @@ import SortDropdown from "../../components/SortDropdown";
 import AppliedFilters from "../../components/ProductFilters/AppliedFilters";
 import { useProducts } from "../../features/products/hooks/useProducts";
 import { useDebounce } from "../../hooks/useDebounce";
-const DEFAULT_MIN_PRICE = 0;
-const DEFAULT_MAX_PRICE = 100000;
+import { DEFAULT_MAX_PRICE, DEFAULT_MIN_PRICE, getApiPriceBounds, isActivePriceFilter, } from "../../features/products/filterUtils";
+import { useLayoutSettings } from "../../theme/useThemeSettings";
 const Products = () => {
     const [searchParams, setSearchParams] = useSearchParams();
     const dispatch = useAppDispatch();
     const { tenantSlug, tenantId } = useStorefrontTenant();
+    const layoutSettings = useLayoutSettings();
     const filters = useAppSelector((state) => state.products.filters);
     const storedCatalogFilter = useAppSelector(
         (state) => state.products.catalogFilter,
@@ -120,6 +122,7 @@ const Products = () => {
     const search = urlSearch.trim() || undefined;
     const catalogPriceMin = storedCatalogFilter?.price.min;
     const catalogPriceMax = storedCatalogFilter?.price.max;
+    const apiPriceBounds = getApiPriceBounds(debouncedPriceRange, catalogPriceMin, catalogPriceMax);
     const productsQuery = useProducts({
         tenantId,
         limit: 20,
@@ -139,20 +142,7 @@ const Products = () => {
             : filters.brands.length > 0
                 ? filters.brands
                 : undefined,
-        minPrice:
-            catalogPriceMin !== undefined &&
-            debouncedPriceRange[0] > catalogPriceMin
-                ? debouncedPriceRange[0]
-                : debouncedPriceRange[0] !== DEFAULT_MIN_PRICE
-                    ? debouncedPriceRange[0]
-                    : undefined,
-        maxPrice:
-            catalogPriceMax !== undefined &&
-            debouncedPriceRange[1] < catalogPriceMax
-                ? debouncedPriceRange[1]
-                : debouncedPriceRange[1] !== DEFAULT_MAX_PRICE
-                    ? debouncedPriceRange[1]
-                    : undefined,
+        ...apiPriceBounds,
         rating: filters.rating !== null ? filters.rating : undefined,
         search,
         sortBy: urlSortBy as "createdAt" | "price" | "rating" | "discount" | "name",
@@ -166,19 +156,6 @@ const Products = () => {
             return;
         }
         dispatch(setCatalogFilter(catalogFilter));
-        const isUnsetPrice =
-            filters.priceRange[0] === DEFAULT_MIN_PRICE &&
-            filters.priceRange[1] === DEFAULT_MAX_PRICE;
-        if (isUnsetPrice && catalogFilter.price) {
-            dispatch(
-                setFilters({
-                    priceRange: [
-                        catalogFilter.price.min,
-                        Math.max(catalogFilter.price.max, catalogFilter.price.min),
-                    ],
-                }),
-            );
-        }
     }, [catalogFilter, dispatch]);
     const handleSortChange = (value: string) => {
         switch (value) {
@@ -242,10 +219,8 @@ const Products = () => {
         });
         params.delete("minPrice");
         params.delete("maxPrice");
-        if (filters.priceRange[0] !== DEFAULT_MIN_PRICE) {
+        if (isActivePriceFilter(filters.priceRange, catalogPriceMin, catalogPriceMax)) {
             params.set("minPrice", String(filters.priceRange[0]));
-        }
-        if (filters.priceRange[1] !== DEFAULT_MAX_PRICE) {
             params.set("maxPrice", String(filters.priceRange[1]));
         }
         params.delete("rating");
@@ -303,33 +278,7 @@ const Products = () => {
         setSearchParams(params);
     };
     if (productsQuery.isLoading) {
-        return (<div className={styles.page}>
-        <Breadcrumb items={[
-                {
-                    label: "Home",
-                    href: `/${tenantSlug}`,
-                },
-                {
-                    label: "Products",
-                },
-            ]}/>
-        <div className={styles.header}>
-          <div>
-            <h1>Products</h1>
-            <p>Loading products...</p>
-          </div>
-        </div>
-        <div className={styles.loadingGrid}>
-          {Array.from({
-                length: 8,
-            }).map((_, index) => (<div key={index} className={styles.skeletonCard}>
-              <div className={styles.skeletonImage}/>
-              <div className={styles.skeletonLine}/>
-              <div className={styles.skeletonLineShort}/>
-              <div className={styles.skeletonPrice}/>
-            </div>))}
-        </div>
-      </div>);
+        return <PageLoader message="Loading products..." />;
     }
     if (productsQuery.isError) {
         return (<div className={styles.page}>
@@ -398,10 +347,10 @@ const Products = () => {
           </button>
         </div>)}
       <AppliedFilters />
-      <div className={styles.content}>
-        <aside className={styles.sidebar}>
+      <div className={`${styles.content} ${styles[`listing_${layoutSettings.productListingLayout}`]}`}>
+        {layoutSettings.productListingLayout !== "filters-top" && (<aside className={styles.sidebar}>
           <ProductFilters />
-        </aside>
+        </aside>)}
         <main className={styles.products}>
           {products.length === 0 ? (<div className={styles.emptyState}>
               <div className={styles.emptyIcon}>

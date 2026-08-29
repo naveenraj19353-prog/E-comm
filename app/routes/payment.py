@@ -1,19 +1,19 @@
+import json
+import logging
+
 from fastapi import APIRouter, Depends, HTTPException, Request
-from bson import ObjectId
 from datetime import datetime
 from requests.exceptions import SSLError, ConnectionError as RequestsConnectionError
-from app.database.mongo import (
-    carts,
-    products,
-    orders,
-    coupons,
-    payment_intents,
-)
+
+from app.config import RAZORPAY_WEBHOOK_SECRET
+from app.database.mongo import payment_intents
 from app.models.payment import (
     CreatePaymentOrder,
     VerifyPayment,
 )
 from app.services.checkout_service import calculate_checkout
+from app.services.order_fulfillment import fulfill_captured_payment
+from app.services.payment_validation import validate_captured_payment
 from app.utils.razorpay_client import client
 from app.utils.auth_dependencies import (
     customer_scope,
@@ -22,49 +22,12 @@ from app.utils.auth_dependencies import (
     require_super_admin,
 )
 
+logger = logging.getLogger(__name__)
+
 router = APIRouter(
     prefix="/payments",
     tags=["Payments"],
 )
-
-
-def decrement_variant_stock(
-    product_id: ObjectId,
-    tenant_id: str,
-    variant_id: str,
-    quantity: int,
-    now: datetime,
-) -> bool:
-    result = products.update_one(
-        {
-            "_id": product_id,
-            "tenantId": tenant_id,
-            "inventory": {
-                "$elemMatch": {
-                    "variantId": str(variant_id),
-                    "stock": {"$gte": quantity},
-                }
-            },
-        },
-        {
-            "$inc": {"inventory.$.stock": -quantity},
-            "$set": {"updatedAt": now},
-        },
-    )
-    if result.modified_count == 0:
-        return False
-    product = products.find_one({"_id": product_id}, {"inventory": 1})
-    total = 0
-    for item in (product or {}).get("inventory") or []:
-        try:
-            total += int(item.get("stock", 0) or 0)
-        except (TypeError, ValueError):
-            continue
-    products.update_one(
-        {"_id": product_id},
-        {"$set": {"totalStock": total, "updatedAt": now}},
-    )
-    return True
 
 
 @router.get("/test-razorpay")
@@ -85,8 +48,11 @@ def test_razorpay(current_user: dict = Depends(require_super_admin)):
             "currency": order["currency"],
             "status": order["status"],
         }
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+    except Exception:
+        raise HTTPException(
+            status_code=400,
+            detail="Unable to connect to Razorpay.",
+        )
 
 
 @router.post("/create-order")
@@ -100,6 +66,8 @@ def create_order(
             tenant_id=tenant_id,
             user_id=user_id,
             coupon_code=request.couponCode,
+            address_id=request.addressId,
+            require_address=True,
         )
         grand_total = checkout_data["grandTotal"]
         amount_in_paise = int(round(grand_total * 100))
@@ -124,9 +92,11 @@ def create_order(
                 "razorpayOrderId": razorpay_order["id"],
                 "tenantId": tenant_id,
                 "userId": user_id,
+                "addressId": request.addressId,
                 "couponCode": checkout_data.get("couponCode"),
                 "grandTotal": grand_total,
                 "checkout": checkout_data,
+                "status": "pending",
                 "createdAt": datetime.utcnow(),
             }
         )
@@ -141,8 +111,8 @@ def create_order(
         }
     except HTTPException:
         raise
-    except SSLError as e:
-        print("CREATE PAYMENT ORDER ERROR", str(e))
+    except SSLError:
+        logger.exception("Razorpay SSL error while creating payment order")
         raise HTTPException(
             status_code=502,
             detail=(
@@ -150,15 +120,15 @@ def create_order(
                 "certificate error on this machine."
             ),
         )
-    except RequestsConnectionError as e:
-        print("CREATE PAYMENT ORDER ERROR", str(e))
+    except RequestsConnectionError:
+        logger.exception("Razorpay connection error while creating payment order")
         raise HTTPException(
             status_code=502,
             detail="Could not connect to Razorpay. Please try again.",
         )
-    except Exception as e:
-        print("CREATE PAYMENT ORDER ERROR", str(e))
-        detail = str(e).strip() or "Unable to create payment order."
+    except Exception as error:
+        logger.exception("Unexpected error while creating payment order")
+        detail = str(error).strip() or "Unable to create payment order."
         if "certificate" in detail.lower() or "ssl" in detail.lower():
             raise HTTPException(
                 status_code=502,
@@ -167,7 +137,7 @@ def create_order(
                     "certificate error on this machine."
                 ),
             )
-        raise HTTPException(status_code=500, detail=detail)
+        raise HTTPException(status_code=500, detail="Unable to create payment order.")
 
 
 @router.post("/verify")
@@ -184,162 +154,22 @@ def verify_payment(
                 "razorpay_signature": request.razorpaySignature,
             }
         )
-        razorpay_order = client.order.fetch(request.razorpayOrderId)
-        notes = razorpay_order.get("notes", {})
-        if notes.get("tenantId") != tenant_id:
-            raise HTTPException(status_code=400, detail="Tenant mismatch.")
-        if notes.get("userId") != user_id:
-            raise HTTPException(status_code=400, detail="User mismatch.")
-        payment = client.payment.fetch(request.razorpayPaymentId)
-        if payment.get("order_id") != request.razorpayOrderId:
-            raise HTTPException(
-                status_code=400,
-                detail="Payment does not belong to this order.",
-            )
-        if payment.get("status") != "captured":
-            raise HTTPException(
-                status_code=400,
-                detail="Payment has not been captured.",
-            )
-        existing_order = orders.find_one(
-            {
-                "tenantId": tenant_id,
-                "razorpayOrderId": request.razorpayOrderId,
-            }
+        validate_captured_payment(
+            request.razorpayOrderId,
+            request.razorpayPaymentId,
+            tenant_id=tenant_id,
+            user_id=user_id,
         )
-        if existing_order:
-            return {
-                "success": True,
-                "message": "Order already processed.",
-                "orderId": str(existing_order["_id"]),
-                "paymentId": request.razorpayPaymentId,
-            }
-        intent = payment_intents.find_one(
-            {
-                "razorpayOrderId": request.razorpayOrderId,
-                "tenantId": tenant_id,
-                "userId": user_id,
-            }
+        return fulfill_captured_payment(
+            request.razorpayOrderId,
+            request.razorpayPaymentId,
+            tenant_id=tenant_id,
+            user_id=user_id,
         )
-        if not intent:
-            raise HTTPException(
-                status_code=400,
-                detail="Payment order was not found.",
-            )
-        checkout_data = intent["checkout"]
-        calculated_amount = checkout_data["grandTotal"]
-        razorpay_amount = razorpay_order["amount"] / 100
-        if round(razorpay_amount, 2) != round(calculated_amount, 2):
-            raise HTTPException(
-                status_code=400,
-                detail="Payment amount does not match checkout amount.",
-            )
-        user_object_id = ObjectId(user_id)
-        order_items = []
-        for item in checkout_data["items"]:
-            order_items.append(
-                {
-                    "productId": ObjectId(item["productId"]),
-                    "variantId": item.get("variantId"),
-                    "name": item["name"],
-                    "price": item["price"],
-                    "quantity": item["quantity"],
-                    "subtotal": item["subtotal"],
-                    "image": item.get("image"),
-                    "color": item.get("color"),
-                    "size": item.get("size"),
-                }
-            )
-        now = datetime.utcnow()
-        order_document = {
-            "tenantId": tenant_id,
-            "userId": user_object_id,
-            "razorpayOrderId": request.razorpayOrderId,
-            "razorpayPaymentId": request.razorpayPaymentId,
-            "items": order_items,
-            "subtotal": checkout_data["subtotal"],
-            "discount": checkout_data["discount"],
-            "shipping": checkout_data["shipping"],
-            "tax": checkout_data["tax"],
-            "totalAmount": checkout_data["grandTotal"],
-            "couponCode": checkout_data["couponCode"],
-            "address": checkout_data["address"],
-            "paymentStatus": "paid",
-            "orderStatus": "confirmed",
-            "createdAt": now,
-            "updatedAt": now,
-        }
-        result = orders.insert_one(order_document)
-        for item in order_items:
-            variant_id = item.get("variantId")
-            if not variant_id:
-                orders.update_one(
-                    {"_id": result.inserted_id},
-                    {
-                        "$set": {
-                            "orderStatus": "stock_issue",
-                            "updatedAt": datetime.utcnow(),
-                        }
-                    },
-                )
-                raise HTTPException(
-                    status_code=409,
-                    detail="Stock changed while processing the order.",
-                )
-            stock_ok = decrement_variant_stock(
-                item["productId"],
-                tenant_id,
-                variant_id,
-                item["quantity"],
-                now,
-            )
-            if not stock_ok:
-                orders.update_one(
-                    {"_id": result.inserted_id},
-                    {
-                        "$set": {
-                            "orderStatus": "stock_issue",
-                            "updatedAt": datetime.utcnow(),
-                        }
-                    },
-                )
-                raise HTTPException(
-                    status_code=409,
-                    detail="Stock changed while processing the order.",
-                )
-        coupon_code = checkout_data.get("couponCode")
-        if coupon_code:
-            coupons.update_one(
-                {
-                    "tenantId": tenant_id,
-                    "code": coupon_code,
-                    "isActive": True,
-                },
-                {
-                    "$inc": {"usedCount": 1},
-                    "$set": {"updatedAt": now},
-                },
-            )
-        carts.delete_many(
-            {
-                "tenantId": tenant_id,
-                "userId": user_object_id,
-            }
-        )
-        return {
-            "success": True,
-            "message": "Payment verified and order created successfully.",
-            "orderId": str(result.inserted_id),
-            "razorpayOrderId": request.razorpayOrderId,
-            "paymentId": request.razorpayPaymentId,
-            "amount": checkout_data["grandTotal"],
-            "paymentStatus": "paid",
-            "orderStatus": "confirmed",
-        }
     except HTTPException:
         raise
-    except Exception as e:
-        print("PAYMENT VERIFICATION ERROR", str(e))
+    except Exception:
+        logger.exception("Payment verification failed")
         raise HTTPException(
             status_code=400,
             detail="Payment verification failed.",
@@ -430,7 +260,78 @@ def refund(
 
 @router.post("/webhook")
 async def webhook(request: Request):
-    return {
-        "success": True,
-        "status": "webhook setup pending",
-    }
+    if not RAZORPAY_WEBHOOK_SECRET:
+        raise HTTPException(
+            status_code=503,
+            detail="Webhook secret is not configured.",
+        )
+
+    body = await request.body()
+    signature = request.headers.get("X-Razorpay-Signature", "")
+    if not signature:
+        raise HTTPException(status_code=400, detail="Missing webhook signature.")
+
+    try:
+        client.utility.verify_webhook_signature(
+            body.decode("utf-8"),
+            signature,
+            RAZORPAY_WEBHOOK_SECRET,
+        )
+    except Exception:
+        logger.exception("Invalid Razorpay webhook signature")
+        raise HTTPException(status_code=400, detail="Invalid webhook signature.")
+
+    try:
+        payload = json.loads(body)
+    except json.JSONDecodeError:
+        raise HTTPException(status_code=400, detail="Invalid webhook payload.")
+
+    event = payload.get("event")
+    if event != "payment.captured":
+        return {"success": True, "status": "ignored", "event": event}
+
+    payment_entity = payload.get("payload", {}).get("payment", {}).get("entity", {})
+    razorpay_order_id = payment_entity.get("order_id")
+    razorpay_payment_id = payment_entity.get("id")
+    if not razorpay_order_id or not razorpay_payment_id:
+        return {"success": True, "status": "ignored", "reason": "missing ids"}
+
+    if payment_entity.get("status") != "captured":
+        return {"success": True, "status": "ignored", "reason": "not captured"}
+
+    try:
+        validate_captured_payment(razorpay_order_id, razorpay_payment_id)
+        result = fulfill_captured_payment(
+            razorpay_order_id,
+            razorpay_payment_id,
+        )
+        return {"success": True, "status": "fulfilled", "orderId": result.get("orderId")}
+    except HTTPException as error:
+        detail = str(error.detail)
+        transient = (
+            error.status_code == 409
+            and "still being processed" in detail.lower()
+        ) or (
+            error.status_code == 400
+            and detail == "Payment order was not found."
+        )
+        if transient:
+            raise HTTPException(
+                status_code=503,
+                detail=detail,
+            ) from error
+        if error.status_code in {400, 409}:
+            logger.warning(
+                "Webhook fulfillment terminal failure with status %s: %s",
+                error.status_code,
+                detail,
+            )
+            return {
+                "success": True,
+                "status": "terminal",
+                "detail": detail,
+            }
+        raise
+    except Exception:
+        logger.exception("Webhook fulfillment failed")
+        raise HTTPException(status_code=500, detail="Webhook processing failed.")

@@ -1,8 +1,8 @@
 .container {
   width: 100%;
-  max-width: 80rem;
+  max-width: var(--layout-page-max-width, 90%);
   margin: 0 auto;
-  padding: 2.375rem 1.75rem 3.75rem;
+  padding: 2.375rem clamp(1rem, 3vw, 1.75rem) 3.75rem;
   box-sizing: border-box;
 }
 .header {
@@ -34,8 +34,12 @@
 }
 .grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 1.25rem;
+  grid-template-columns: repeat(var(--layout-grid-columns, 4), minmax(0, 1fr));
+  gap: var(--layout-grid-gap, 1.25rem);
+}
+
+.listView {
+  grid-template-columns: 1fr;
 }
 .card {
   overflow: hidden;
