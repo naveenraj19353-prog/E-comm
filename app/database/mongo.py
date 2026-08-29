@@ -5,11 +5,18 @@ from app.config import DATABASE_NAME, MONGO_URI, validate_required_settings
 
 validate_required_settings()
 
-client = MongoClient(
-    MONGO_URI,
-    tlsCAFile=certifi.where(),
-    serverSelectionTimeoutMS=10000,
-)
+
+def _mongo_client_kwargs(uri: str) -> dict:
+    options: dict = {
+        "serverSelectionTimeoutMS": 10000,
+        "retryWrites": True,
+    }
+    if uri.startswith("mongodb+srv://") or "tls=true" in uri.lower():
+        options["tlsCAFile"] = certifi.where()
+    return options
+
+
+client = MongoClient(MONGO_URI, **_mongo_client_kwargs(MONGO_URI))
 db = client[DATABASE_NAME]
 
 users = db["users"]

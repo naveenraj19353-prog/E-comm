@@ -70,6 +70,11 @@ app.include_router(super_admin_router)
 
 
 @app.get("/")
+@app.head("/")
+@app.get("/health")
+@app.head("/health")
+@app.get("/healthcheck")
+@app.head("/healthcheck")
 def health():
     database_status = "disconnected"
     try:
