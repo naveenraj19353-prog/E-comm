@@ -1,8 +1,8 @@
 {
   "rewrites": [
     {
-      "source": "/api/:path*",
-      "destination": "https://e-comm-h13q.onrender.com/:path*"
+      "source": "/api/(.*)",
+      "destination": "https://e-comm-h13q.onrender.com/$1"
     },
     {
       "source": "/:path*",
