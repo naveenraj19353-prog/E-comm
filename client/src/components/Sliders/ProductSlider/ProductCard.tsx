@@ -2,6 +2,7 @@ import { Heart, ShoppingCart, Star } from "lucide-react";
 import styles from "./ProductCard.module.css";
 import type { Product } from "../../../features/products/types";
 import { getFirstProductImage, isProductOutOfStock, } from "../../../features/products/inventory";
+import ProductImage from "../../ProductImage";
 import { useProductNavigation } from "../../../features/products/hooks/useProductNavigation";
 interface ProductCardProps {
     product: Product;
@@ -43,7 +44,7 @@ const ProductCard = ({ product, isWishlisted = false, onWishlist, onAddToCart, i
         <Heart size={18} fill={isWishlisted ? "currentColor" : "none"}/>
       </button>
       <div className={styles.imageWrapper}>
-        <img src={image} alt={product.name} className={styles.image}/>
+        <ProductImage src={image} alt={product.name} className={styles.image} />
       </div>
       <div className={styles.content}>
         <h3>{product.name}</h3>

@@ -10,6 +10,7 @@ import {
 } from "../../features/orders/api/order.api";
 import PageLoader from "../../components/PageLoader";
 import AuthModal from "../../components/Auth/AuthModal/AuthModal";
+import ProductImage from "../../components/ProductImage";
 import styles from "./MyOrders.module.css";
 
 const MyOrders = () => {
@@ -106,11 +107,11 @@ const MyOrders = () => {
                                     {(order.items ?? []).map((item) => (
                                         <div key={`${order.orderId}-${item.productId}-${item.variantId}`} className={styles.item}>
                                             <div className={styles.imageWrap}>
-                                                {item.image ? (
-                                                    <img src={item.image} alt={item.name} />
-                                                ) : (
-                                                    <Package size={18} />
-                                                )}
+                                                <ProductImage
+                                                    src={item.image}
+                                                    alt={item.name}
+                                                    placeholder={<Package size={18} />}
+                                                />
                                             </div>
                                             <div className={styles.itemDetails}>
                                                 <strong>{item.name}</strong>

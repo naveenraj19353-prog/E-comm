@@ -5,6 +5,7 @@ import {
     formatOrderDate,
     orderStatusLabel,
 } from "../api/order.api";
+import ProductImage from "../../../components/ProductImage";
 import styles from "./OrderDetailContent.module.css";
 
 interface OrderDetailContentProps {
@@ -89,11 +90,11 @@ const OrderDetailContent = ({
                             className={`${styles.item} ${index < orderItems.length - 1 ? styles.itemDivider : ""}`}
                         >
                             <div className={styles.imageWrap}>
-                                {item.image ? (
-                                    <img src={item.image} alt={item.name} />
-                                ) : (
-                                    <Package size={18} />
-                                )}
+                                <ProductImage
+                                    src={item.image}
+                                    alt={item.name}
+                                    placeholder={<Package size={18} />}
+                                />
                             </div>
                             <div className={styles.itemDetails}>
                                 <strong>{item.name}</strong>

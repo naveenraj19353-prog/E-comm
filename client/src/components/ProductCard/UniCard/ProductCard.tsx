@@ -1,7 +1,8 @@
 import { useMemo, useState } from "react";
 import { Heart, ShoppingCart, Star } from "lucide-react";
 import styles from "./ProductCard.module.css";
-import { isProductOutOfStock, } from "../../../features/products/inventory";
+import { isProductOutOfStock, getFirstProductImage, } from "../../../features/products/inventory";
+import ProductImage from "../../ProductImage";
 import { useProductNavigation } from "../../../features/products/hooks/useProductNavigation";
 import { useLayoutSettings } from "../../../theme/useThemeSettings";
 import type { Product, ProductInventory, } from "../../../features/products/types";
@@ -60,21 +61,13 @@ const ProductCard = ({ product, isWishlisted = false, onWishlist, onAddToCart, i
     ]);
     const isOutOfStock = isProductOutOfStock(product);
     const productImage = useMemo(() => {
-        if (!activeColor) {
-            return Object.values(product.images ?? {})
-                .flat()
-                .find((image) => typeof image === "string" &&
-                image.trim().length > 0);
+        if (activeColor) {
+            const colorImages = product.images?.[activeColor];
+            if (Array.isArray(colorImages) && colorImages.length > 0) {
+                return colorImages[0];
+            }
         }
-        const colorImages = product.images?.[activeColor];
-        if (Array.isArray(colorImages) &&
-            colorImages.length > 0) {
-            return colorImages[0];
-        }
-        return Object.values(product.images ?? {})
-            .flat()
-            .find((image) => typeof image === "string" &&
-            image.trim().length > 0);
+        return getFirstProductImage(product.images);
     }, [product.images, activeColor]);
     const handleWishlist = (event: React.MouseEvent<HTMLButtonElement>) => {
         event.stopPropagation();
@@ -128,11 +121,13 @@ const ProductCard = ({ product, isWishlisted = false, onWishlist, onAddToCart, i
       </button>
       
       <div className={styles.imageWrapper}>
-        {productImage ? (<img src={productImage} alt={`${product.name}${activeColor
-                ? ` ${activeColor}`
-                : ""}`} className={styles.image} loading="lazy"/>) : (<div className={styles.noImage}>
-            No Image
-          </div>)}
+        <ProductImage
+            src={productImage}
+            alt={`${product.name}${activeColor ? ` ${activeColor}` : ""}`}
+            className={styles.image}
+            loading="lazy"
+            placeholder={<div className={styles.noImage}>No Image</div>}
+        />
         {isOutOfStock && (<div className={styles.outOfStock}>Out of Stock</div>)}
       </div>
       

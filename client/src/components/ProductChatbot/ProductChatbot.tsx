@@ -5,6 +5,7 @@ import { useProductChatbot } from "../../features/chatbot/hooks/useProductChatbo
 import type { ChatProductResult } from "../../features/chatbot/types";
 import { useStorefrontTenant } from "../../features/tenant/useTenant";
 import { routes } from "../../routes/routes";
+import ProductImage from "../../components/ProductImage";
 import styles from "./ProductChatbot.module.css";
 
 const ProductChatbot = () => {
@@ -70,7 +71,12 @@ const ProductChatbot = () => {
                             }
                         }}>
                           <div className={styles.productImageWrap}>
-                            {product.image ? (<img src={product.image} alt={product.name} className={styles.productImage}/>) : (<span className={styles.noImage}>No image</span>)}
+                            <ProductImage
+                                src={product.image}
+                                alt={product.name}
+                                className={styles.productImage}
+                                placeholder={<span className={styles.noImage}>No image</span>}
+                            />
                           </div>
                           <div className={styles.productInfo}>
                             <span className={styles.productName}>{product.name}</span>

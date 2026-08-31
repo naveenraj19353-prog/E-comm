@@ -5,7 +5,8 @@ import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
 import styles from "./ProductCard.module.css";
-import { isProductOutOfStock } from "../../features/products/inventory";
+import { isProductOutOfStock, getFirstProductImage } from "../../features/products/inventory";
+import ProductImage from "../ProductImage";
 import { useProductNavigation } from "../../features/products/hooks/useProductNavigation";
 import { getColorValue } from "./ProductCard.utils";
 import { ArrowIcon, BagIcon, HeartIcon, StarIcon } from "./ProductCardIcons";
@@ -72,14 +73,20 @@ export default function ProductCard({
 
     const isOutOfStock = isProductOutOfStock(product);
     const validImages = useMemo(() => {
-        if (!selectedColor) {
-            return [];
+        if (selectedColor) {
+            const colorImages = images[selectedColor];
+            if (Array.isArray(colorImages)) {
+                const resolved = colorImages.filter(
+                    (image): image is string => typeof image === "string" && image.trim().length > 0,
+                );
+                if (resolved.length > 0) {
+                    return resolved;
+                }
+            }
         }
-        const colorImages = images[selectedColor];
-        if (!Array.isArray(colorImages)) {
-            return [];
-        }
-        return colorImages.filter((image): image is string => typeof image === "string" && image.trim().length > 0);
+
+        const fallback = getFirstProductImage(images);
+        return fallback ? [fallback] : [];
     }, [images, selectedColor]);
 
     const handleWishlist = (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -155,19 +162,30 @@ export default function ProductCard({
                     >
                         {validImages.map((image, index) => (
                             <SwiperSlide key={`${_id}-${selectedColor}-${index}`} className={styles.productSlide}>
-                                <img
+                                <ProductImage
                                     src={image}
                                     alt={`${name} ${selectedColor} ${index + 1}`}
                                     className={styles.productImage}
                                     loading={index === 0 ? "eager" : "lazy"}
+                                    placeholder={
+                                        <div className={styles.noImage}>
+                                            <span>No Image</span>
+                                        </div>
+                                    }
                                 />
                             </SwiperSlide>
                         ))}
                     </Swiper>
                 ) : (
-                    <div className={styles.noImage}>
-                        <span>No Image</span>
-                    </div>
+                    <ProductImage
+                        alt={name}
+                        className={styles.productImage}
+                        placeholder={
+                            <div className={styles.noImage}>
+                                <span>No Image</span>
+                            </div>
+                        }
+                    />
                 )}
                 <div className={styles.gradient} />
                 {discountPercentage > 0 && (

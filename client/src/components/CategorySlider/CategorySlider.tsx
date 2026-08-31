@@ -1,5 +1,6 @@
 import styles from "./CategorySlider.module.css";
 import type { Category } from "../../features/home/api/category.api";
+import CategoryImage from "../CategoryImage/CategoryImage";
 import { CategoryArrow } from "./CategorySliderIcons";
 import { formatCategoryName } from "./CategorySlider.utils";
 import { useCategorySlider } from "./useCategorySlider";
@@ -109,18 +110,17 @@ export default function CategorySlider({ tenantId, onCategoryClick }: CategorySl
                             onClick={() => onCategoryClick?.(category)}
                         >
                             <div className={styles.imageWrapper}>
-                                {category.image ? (
-                                    <img
-                                        src={category.image}
-                                        alt={category.name}
-                                        className={styles.image}
-                                        loading="lazy"
-                                    />
-                                ) : (
-                                    <div className={styles.placeholder}>
-                                        <span>{category?.name?.charAt(0).toUpperCase()}</span>
-                                    </div>
-                                )}
+                                <CategoryImage
+                                    src={category.image}
+                                    alt={category.name}
+                                    className={styles.image}
+                                    loading="lazy"
+                                    placeholder={
+                                        <div className={styles.placeholder}>
+                                            <span>{category?.name?.charAt(0).toUpperCase()}</span>
+                                        </div>
+                                    }
+                                />
                                 <div className={styles.gradient} />
                                 <span className={styles.index}>
                                     {String(index + 1).padStart(2, "0")}

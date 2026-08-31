@@ -7,6 +7,7 @@ import {
     ShoppingBag,
     Truck,
 } from "lucide-react";
+import ProductImage from "../../../components/ProductImage";
 import { useAdminOrders } from "../../orders/hooks/useOrders";
 import { useTenantByTenantId } from "../hooks/useTenants";
 import {
@@ -246,11 +247,11 @@ export default function AdminTenantOrders() {
                                         <td>
                                             <div className={styles.itemPreview}>
                                                 <div className={styles.itemThumb}>
-                                                    {leadItem?.image ? (
-                                                        <img src={leadItem.image} alt="" />
-                                                    ) : (
-                                                        <Package size={14} />
-                                                    )}
+                                                    <ProductImage
+                                                        src={leadItem?.image}
+                                                        alt=""
+                                                        placeholder={<Package size={14} />}
+                                                    />
                                                 </div>
                                                 <div>
                                                     <strong>{order.items?.length ?? 0} items</strong>
