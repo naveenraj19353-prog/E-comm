@@ -12,6 +12,10 @@ import {
     useCheckoutPreview,
 } from "../../features/checkout/hooks/useCheckout";
 import type { DeliveryMethodType } from "../../features/checkout/api/checkout.api";
+import {
+    buildCheckoutOrderWhatsAppInput,
+    sendOrderConfirmationWhatsApp,
+} from "../../features/orders/share/orderWhatsAppShare";
 import CheckoutHeader from "./CheckoutHeader/CheckoutHeader";
 import PageLoader from "../../components/PageLoader";
 import CheckoutLayout from "./CheckoutLayout/CheckoutLayout";
@@ -32,7 +36,7 @@ const Checkout = () => {
     const queryClient = useQueryClient();
     const { Razorpay } = useRazorpay();
     const { user } = useAuth();
-    const { tenantSlug } = useStorefrontTenant();
+    const { tenantSlug, tenant } = useStorefrontTenant();
     const navigateToLogin = useNavigateToLogin();
     const { cart, grandTotal, isLoading } = useCart(
         user?._id as string,
@@ -136,6 +140,34 @@ const Checkout = () => {
         }
     };
 
+    const openOrderWhatsApp = (
+        orderId: string,
+        paymentStatus: string,
+    ) => {
+        if (!tenantSlug || !checkoutPreview) {
+            return;
+        }
+        sendOrderConfirmationWhatsApp(
+            buildCheckoutOrderWhatsAppInput({
+                tenantSlug,
+                orderId,
+                storeName: tenant?.name,
+                items: checkoutPreview.items.map((item) => ({
+                    name: item.name,
+                    quantity: item.quantity,
+                    subtotal: item.subtotal,
+                })),
+                total: checkoutPreview.grandTotal,
+                subtotal: checkoutPreview.subtotal,
+                discount: checkoutPreview.discount,
+                shipping: checkoutPreview.shipping,
+                paymentMethod,
+                paymentStatus,
+                address: selectedAddress,
+            }),
+        );
+    };
+
     const handlePlaceOrder = async () => {
         try {
             if (!user || !user._id || !user.tenantId) {
@@ -166,8 +198,8 @@ const Checkout = () => {
                     deliveryMethod,
                 });
                 await queryClient.invalidateQueries({ queryKey: ["cart"] });
-                alert(codOrder.message || "Order placed successfully.");
-                redirectAfterOrder(codOrder.orderId);
+                openOrderWhatsApp(codOrder.orderId, codOrder.paymentStatus || "pending");
+                window.setTimeout(() => redirectAfterOrder(codOrder.orderId), 400);
                 setIsProcessing(false);
                 return;
             }
@@ -224,8 +256,8 @@ const Checkout = () => {
                             couponCode: appliedCoupon,
                         });
                         await queryClient.invalidateQueries({ queryKey: ["cart"] });
-                        alert("Payment successful! Order placed.");
-                        redirectAfterOrder(verifyData.orderId);
+                        openOrderWhatsApp(verifyData.orderId, "paid");
+                        window.setTimeout(() => redirectAfterOrder(verifyData.orderId), 400);
                     } catch (error) {
                         console.error("Payment verification error:", error);
                         alert(

@@ -124,4 +124,9 @@ export const API_ENDPOINTS = {
     SUPER_ADMIN: {
         DASHBOARD: "/super-admin/dashboard",
     },
+
+    SHARE: {
+        product: (tenantSlug: string, productId: string) =>
+            `/share/${tenantSlug}/product/${productId}`,
+    },
 } as const;

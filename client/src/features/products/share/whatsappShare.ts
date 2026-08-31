@@ -143,6 +143,34 @@ export const buildWhatsAppMessage = (
     return `Check out ${productName}${priceText}\n${productUrl}`;
 };
 
+const LOCAL_ORIGIN_PATTERN = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i;
+
+/** Public URL for WhatsApp links — never localhost when a deploy URL is configured. */
+export const buildProductShareUrl = (tenantSlug: string, productId: string) => {
+    const sharePath = `/share/${tenantSlug}/product/${productId}`;
+
+    const publicSite = import.meta.env.VITE_PUBLIC_URL?.trim().replace(/\/$/, "");
+    if (publicSite) {
+        return `${publicSite}/api${sharePath}`;
+    }
+
+    const origin = window.location.origin;
+    if (!LOCAL_ORIGIN_PATTERN.test(origin)) {
+        return `${origin}/api${sharePath}`;
+    }
+
+    const apiBase = import.meta.env.VITE_API_URL?.trim().replace(/\/$/, "");
+    if (apiBase && !apiBase.startsWith("/")) {
+        return `${apiBase}${sharePath}`;
+    }
+
+    return `${origin}/api${sharePath}`;
+};
+
+export const isShareUrlLocalhost = (url: string) => {
+    return LOCAL_ORIGIN_PATTERN.test(new URL(url, window.location.origin).origin);
+};
+
 export const isMobileDevice = () => {
     return /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
 };
@@ -152,7 +180,11 @@ export const openWhatsApp = (message: string) => {
     const url = isMobileDevice()
         ? `https://wa.me/?text=${encoded}`
         : `https://web.whatsapp.com/send?text=${encoded}`;
-    window.open(url, "_blank", "noopener,noreferrer");
+
+    const popup = window.open(url, "_blank", "noopener,noreferrer");
+    if (!popup) {
+        window.location.assign(url);
+    }
 };
 
 export const downloadShareFile = (file: File) => {
@@ -188,7 +220,6 @@ export const canShareImageFile = (file: File) => {
 };
 
 export type WhatsAppShareMethod =
-    | "native-image"
     | "clipboard-image"
     | "download-image"
     | "text-only";
@@ -200,29 +231,17 @@ export const shareProductOnWhatsApp = ({
     imageFile: File | null;
     message: string;
 }): WhatsAppShareMethod => {
-    if (imageFile && canShareImageFile(imageFile)) {
-        navigator.share({
-            files: [imageFile],
-            text: message,
-        }).catch(() => {
-            openWhatsApp(message);
-            void copyImageToClipboard(imageFile).catch(() => {
-                downloadShareFile(imageFile);
-            });
-        });
-        return "native-image";
-    }
-
     openWhatsApp(message);
 
-    if (imageFile) {
-        void copyImageToClipboard(imageFile)
-            .then(() => undefined)
-            .catch(() => {
-                downloadShareFile(imageFile);
-            });
-        return "clipboard-image";
+    if (!imageFile) {
+        return "text-only";
     }
 
-    return "text-only";
+    void copyImageToClipboard(imageFile)
+        .then(() => undefined)
+        .catch(() => {
+            downloadShareFile(imageFile);
+        });
+
+    return "clipboard-image";
 };

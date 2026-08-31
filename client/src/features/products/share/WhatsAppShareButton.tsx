@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import { FaWhatsapp } from "react-icons/fa";
 import { useStorefrontTenant } from "../../tenant/useTenant";
-import { routes } from "../../../routes/routes";
 import {
+    buildProductShareUrl,
     buildWhatsAppMessage,
     createWhatsAppShareCard,
     getProductImageForColor,
+    isShareUrlLocalhost,
     shareProductOnWhatsApp,
 } from "../share/whatsappShare";
 import styles from "./WhatsAppShareButton.module.css";
@@ -38,13 +39,13 @@ export default function WhatsAppShareButton({
             return undefined;
         }
 
-        const productUrl = `${window.location.origin}${routes.product(tenantSlug, productId)}`;
+        const shareUrl = buildProductShareUrl(tenantSlug, productId);
         const safeName = productName.replace(/[^\w.-]+/g, "-").slice(0, 40);
 
         void createWhatsAppShareCard({
             imageUrl,
             productName,
-            productUrl,
+            productUrl: shareUrl,
             price,
             fileName: `${safeName || "product"}.jpg`,
         })
@@ -70,26 +71,26 @@ export default function WhatsAppShareButton({
             return;
         }
 
-        const productUrl = `${window.location.origin}${routes.product(tenantSlug, productId)}`;
-        const message = buildWhatsAppMessage(productName, productUrl, price);
+        const shareUrl = buildProductShareUrl(tenantSlug, productId);
+        const message = buildWhatsAppMessage(productName, shareUrl, price);
         const method = shareProductOnWhatsApp({
             imageFile: imageFileRef.current,
             message,
         });
 
-        if (method === "native-image") {
-            setFeedback("Choose WhatsApp — image and link will be shared together.");
-            return;
-        }
         if (method === "clipboard-image") {
-            setFeedback("WhatsApp opened with the link. Paste the product image in the same chat (Ctrl+V). The link is also printed on the image.");
+            setFeedback(
+                isShareUrlLocalhost(shareUrl)
+                    ? "WhatsApp opened. Paste the image (Ctrl+V). Set VITE_PUBLIC_URL in client/.env so the link works for others."
+                    : "WhatsApp opened with the link. Paste the product image in the same chat (Ctrl+V).",
+            );
             return;
         }
-        if (method === "download-image") {
-            setFeedback("WhatsApp opened with the link. Attach the downloaded image in the same chat.");
-            return;
-        }
-        setFeedback("WhatsApp opened with the product link.");
+        setFeedback(
+            isShareUrlLocalhost(shareUrl)
+                ? "WhatsApp opened. Set VITE_PUBLIC_URL in client/.env to share a public link."
+                : "WhatsApp opened with the product link.",
+        );
     };
 
     return (
