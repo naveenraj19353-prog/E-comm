@@ -1,4 +1,5 @@
 import { Minus, Plus, Trash2 } from "lucide-react";
+import ProductImage from "../../components/ProductImage";
 import styles from "./Cart.module.css";
 interface CartItemProps {
     item: {
@@ -20,7 +21,7 @@ interface CartItemProps {
 const CartItem = ({ item, isUpdating, isRemoving, onUpdateQuantity, onRemove, }: CartItemProps) => {
     return (<div className={styles.item}>
       <div className={styles.imageWrapper}>
-        <img src={item.image} alt={item.name} className={styles.image}/>
+        <ProductImage src={item.image} alt={item.name} className={styles.image} />
       </div>
       <div className={styles.details}>
         <h2>{item.name}</h2>

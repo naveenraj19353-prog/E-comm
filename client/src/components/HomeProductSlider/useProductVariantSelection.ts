@@ -3,7 +3,13 @@ import type { ProductInventory } from "./ProductCard";
 
 export function useProductVariantSelection(inventory: ProductInventory[] = []) {
     const availableInventory = useMemo(() => {
-        return inventory.filter((item) => item.stock > 0 && item.color?.trim() && item.size?.trim());
+        return inventory
+            .filter((item) => Number(item.stock) > 0)
+            .map((item) => ({
+                ...item,
+                color: item.color?.trim() || "Default",
+                size: item.size?.trim() || "Standard",
+            }));
     }, [inventory]);
 
     const availableColors = useMemo(() => {

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import ProductImage from "../../../components/ProductImage";
 import { useDeleteProduct, useProducts, useUpdateProduct, } from "../hooks/useTenantProducts";
 import { useTenantByTenantId } from "../hooks/useTenants";
 import styles from "../styles/AdminTenantProducts.module.css";
@@ -383,7 +384,11 @@ export default function AdminTenantProducts() {
                       <td>
                         <div className={styles.product}>
                           <div className={styles.productImage}>
-                            {product.images?.[0] ? (<img src={product.images[0]} alt={productName}/>) : (productName.charAt(0).toUpperCase())}
+                            <ProductImage
+                              src={product.images?.[0]}
+                              alt={productName}
+                              placeholder={productName.charAt(0).toUpperCase()}
+                            />
                           </div>
                           <div className={styles.productInfo}>
                             <strong>{productName}</strong>

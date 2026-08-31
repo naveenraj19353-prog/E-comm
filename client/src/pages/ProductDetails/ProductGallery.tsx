@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { ZoomIn } from "lucide-react";
+import ProductImage from "../../components/ProductImage";
+import { DEFAULT_PRODUCT_IMAGE } from "../../constants/images";
 import styles from "./ProductDetails.module.css";
 import type { Product } from "../../features/products/types";
 interface ProductGalleryProps {
@@ -22,7 +24,7 @@ const ProductGallery = ({ product, selectedColor, }: ProductGalleryProps) => {
         : Object.values(product.images || {}).find((images) => images.length > 0) || [];
     const images = fallbackImages.length > 0
         ? fallbackImages
-        : ["https://picsum.photos/600/600"];
+        : [DEFAULT_PRODUCT_IMAGE];
     useEffect(() => {
         setSelectedImage(0);
         setZoomVisible(false);
@@ -40,7 +42,11 @@ const ProductGallery = ({ product, selectedColor, }: ProductGalleryProps) => {
     return (<div className={styles.gallery}>
       
       <div className={styles.mainImageWrapper} onMouseEnter={() => setZoomVisible(true)} onMouseLeave={() => setZoomVisible(false)} onMouseMove={handleMouseMove}>
-        <img src={currentImage} alt={`${product.name} ${selectedColor || ""}`} className={styles.mainImage}/>
+        <ProductImage
+            src={currentImage}
+            alt={`${product.name} ${selectedColor || ""}`}
+            className={styles.mainImage}
+        />
         <div className={styles.zoomHint}>
           <ZoomIn size={15}/>
           Hover to zoom
@@ -56,7 +62,10 @@ const ProductGallery = ({ product, selectedColor, }: ProductGalleryProps) => {
         {images.map((image, index) => (<button key={`${image}-${index}`} type="button" className={`${styles.thumbnail} ${selectedImage === index
                 ? styles.thumbnailActive
                 : ""}`} onClick={() => setSelectedImage(index)}>
-            <img src={image} alt={`${product.name} ${selectedColor || ""} ${index + 1}`}/>
+            <ProductImage
+                src={image}
+                alt={`${product.name} ${selectedColor || ""} ${index + 1}`}
+            />
           </button>))}
       </div>
     </div>);
