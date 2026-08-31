@@ -14,11 +14,6 @@ export default defineConfig(({ mode }) => {
             secure: true,
             rewrite: (path: string) => path.replace(/^\/api/, ""),
         },
-        "/share": {
-            target: proxyTarget,
-            changeOrigin: true,
-            secure: true,
-        },
     };
 
     return {

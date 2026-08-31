@@ -5,10 +5,6 @@
       "destination": "https://e-comm-h13q.onrender.com/$1"
     },
     {
-      "source": "/share/:tenant/product/:id",
-      "destination": "https://e-comm-h13q.onrender.com/share/:tenant/product/:id"
-    },
-    {
       "source": "/:path*",
       "destination": "/index.html"
     }

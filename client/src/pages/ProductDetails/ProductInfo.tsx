@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 import { Heart, ShoppingBag, Star, Minus, Plus, } from "lucide-react";
-import WhatsAppShareButton, { getProductImageForColor } from "../../features/products/share/WhatsAppShareButton";
 import styles from "./ProductDetails.module.css";
 import type { Product, ProductInventory, } from "../../features/products/types";
 interface ProductInfoProps {
@@ -40,7 +39,6 @@ const ProductInfo = ({ product, selectedColor, selectedSize, availableSizes, sel
     const handleColorChange = (color: string) => {
         onColorChange(color);
     };
-    const shareImageUrl = getProductImageForColor(product.images, selectedColor);
     return (<div className={styles.info}>
       
       <div className={styles.category}>
@@ -150,13 +148,6 @@ const ProductInfo = ({ product, selectedColor, selectedSize, availableSizes, sel
             ? "Adding..."
             : "Add to Cart"}
         </button>
-        <WhatsAppShareButton
-          className={styles.whatsappShareSlot}
-          productId={product._id}
-          productName={product.name}
-          price={product.finalPrice}
-          imageUrl={shareImageUrl}
-        />
         <button type="button" className={`${styles.wishlistButton} ${isWishlisted
             ? styles.wishlistActive
             : ""}`} onClick={() => onWishlist(product._id)} aria-label={isWishlisted

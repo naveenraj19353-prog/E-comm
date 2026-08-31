@@ -26,7 +26,6 @@ from app.routes.home import router as home_router
 from app.routes.banner import router as banner_router
 from app.routes.tenant import router as tenant_router
 from app.routes.super_admin import router as super_admin_router
-from app.routes.share import router as share_router
 
 logger = logging.getLogger(__name__)
 
@@ -68,7 +67,6 @@ app.include_router(home_router)
 app.include_router(banner_router)
 app.include_router(tenant_router)
 app.include_router(super_admin_router)
-app.include_router(share_router)
 
 
 def _database_status() -> tuple[str, str | None]:
