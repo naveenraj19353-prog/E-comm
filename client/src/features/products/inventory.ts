@@ -38,14 +38,19 @@ export function isProductOutOfStock(product: {
 }): boolean {
     return getProductTotalStock(product) <= 0;
 }
-export function getFirstProductImage(images?: Record<string, string[]> | string[] | null): string {
+export function getFirstProductImage(
+    images?: Record<string, string[]> | ProductImageMap | string[] | null,
+): string {
     if (Array.isArray(images)) {
         return images.find((image) => typeof image === "string" && image.trim()) || "";
     }
     if (!images || typeof images !== "object") {
         return "";
     }
-    for (const colorImages of Object.values(images)) {
+    for (const colorImages of Object.values(images as ProductImageMap)) {
+        if (typeof colorImages === "string" && colorImages.trim()) {
+            return colorImages.trim();
+        }
         if (!Array.isArray(colorImages)) {
             continue;
         }
@@ -55,4 +60,46 @@ export function getFirstProductImage(images?: Record<string, string[]> | string[
         }
     }
     return "";
+}
+
+type ProductImageMap = Record<string, string[] | string>;
+
+export function getProductImagesForColor(
+    images: ProductImageMap | undefined,
+    color?: string | null,
+): string[] {
+    if (!images || typeof images !== "object") {
+        return [];
+    }
+
+    const normalizedColor = color?.trim();
+    if (normalizedColor) {
+        const direct = images[normalizedColor];
+        if (Array.isArray(direct)) {
+            const resolved = direct.filter((item) => typeof item === "string" && item.trim());
+            if (resolved.length > 0) {
+                return resolved;
+            }
+        } else if (typeof direct === "string" && direct.trim()) {
+            return [direct.trim()];
+        }
+
+        const caseMatch = Object.entries(images).find(
+            ([key]) => key.trim().toLowerCase() === normalizedColor.toLowerCase(),
+        );
+        if (caseMatch) {
+            const value = caseMatch[1];
+            if (Array.isArray(value)) {
+                const resolved = value.filter((item) => typeof item === "string" && item.trim());
+                if (resolved.length > 0) {
+                    return resolved;
+                }
+            } else if (typeof value === "string" && value.trim()) {
+                return [value.trim()];
+            }
+        }
+    }
+
+    const fallback = getFirstProductImage(images as Record<string, string[]>);
+    return fallback ? [fallback] : [];
 }
