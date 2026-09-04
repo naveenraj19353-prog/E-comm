@@ -72,15 +72,16 @@ def create_order(
         )
         grand_total = checkout_data["grandTotal"]
         amount_in_paise = int(round(grand_total * 100))
-        if amount_in_paise <= 0:
+        if amount_in_paise < 100:
             raise HTTPException(
                 status_code=400,
-                detail="Amount must be greater than zero.",
+                detail="Order amount must be at least ₹1.00 (100 paise).",
             )
         razorpay_order = client.order.create(
             {
                 "amount": amount_in_paise,
                 "currency": "INR",
+                "receipt": f"rcpt_{tenant_id[:12]}_{user_id[-8:]}",
                 "payment_capture": 1,
                 "notes": {
                     "tenantId": tenant_id,
@@ -148,6 +149,15 @@ def verify_payment(
     current_user: dict = Depends(require_customer),
 ):
     tenant_id, user_id = customer_scope(current_user)
+    if (
+        not request.razorpayOrderId
+        or not request.razorpayPaymentId
+        or not request.razorpaySignature
+    ):
+        raise HTTPException(
+            status_code=400,
+            detail="razorpayOrderId, razorpayPaymentId, and razorpaySignature are required.",
+        )
     try:
         client.utility.verify_payment_signature(
             {
@@ -156,6 +166,14 @@ def verify_payment(
                 "razorpay_signature": request.razorpaySignature,
             }
         )
+    except Exception as error:
+        logger.warning("Razorpay signature mismatch: %s", error)
+        raise HTTPException(
+            status_code=400,
+            detail="Payment signature verification failed.",
+        ) from error
+
+    try:
         validate_captured_payment(
             request.razorpayOrderId,
             request.razorpayPaymentId,
@@ -171,7 +189,7 @@ def verify_payment(
     except HTTPException:
         raise
     except Exception:
-        logger.exception("Payment verification failed")
+        logger.exception("Payment fulfillment failed after signature verification")
         raise HTTPException(
             status_code=400,
             detail="Payment verification failed.",

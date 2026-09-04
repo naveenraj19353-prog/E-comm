@@ -6,6 +6,7 @@ import ProductDetails from "../pages/ProductDetails/ProductDetails";
 import Wishlist from "../pages/Wishlist/Wishlist";
 import Cart from "../pages/Cart/Cart";
 import Checkout from "../pages/Checkout/Checkout";
+import ThankYou from "../pages/ThankYou";
 import MyOrders from "../pages/Orders/MyOrders";
 import OrderDetail from "../pages/Orders/OrderDetail";
 import Profile from "../pages/Profile/Profile";
@@ -143,6 +144,14 @@ export const router = createBrowserRouter([
                         element: (
                             <RequireStorefrontAuth>
                                 <Checkout />
+                            </RequireStorefrontAuth>
+                        ),
+                    },
+                    {
+                        path: "thank-you/:orderId",
+                        element: (
+                            <RequireStorefrontAuth>
+                                <ThankYou />
                             </RequireStorefrontAuth>
                         ),
                     },

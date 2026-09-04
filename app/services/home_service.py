@@ -1,9 +1,9 @@
 from app.database.mongo import (
     products,
-    categories,
     orders,
     banners,
 )
+from app.utils.category_catalog import get_catalog_categories
 from app.utils.product_serialize import serialize_product
 
 
@@ -22,9 +22,9 @@ def get_home_data(
     Generate all Home Page sections.
     Data comes from:
         products
-        categories
         orders
         banners
+    Categories are derived from live products (same as filters).
     """
 
 
@@ -34,21 +34,14 @@ def get_home_data(
     }
 
 
-    category_cursor = (
-        categories.find(
-            {
-                "tenantId": tenant_id,
-                "isActive": True,
-            }
-        )
-        .sort("createdAt", -1)
-        .limit(category_limit)
-    )
     category_data = []
-    for category in category_cursor:
+    for category in get_catalog_categories(
+        tenant_id,
+        limit=category_limit,
+    ):
         category_data.append(
             {
-                "id": str(category["_id"]),
+                "id": category["_id"],
                 "name": category.get("name", ""),
                 "description": category.get("description", ""),
                 "image": category.get("image"),

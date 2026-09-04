@@ -1,0 +1,159 @@
+.page {
+  width: 100%;
+  min-height: 100%;
+  padding: 2.5rem clamp(1rem, 3vw, 1.5rem) 4rem;
+  background: var(--background);
+  box-sizing: border-box;
+}
+
+.container {
+  width: 100%;
+  max-width: min(40rem, var(--layout-page-max-width, 90%));
+  margin: 0 auto;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.25rem;
+  padding: clamp(1.75rem, 4vw, 2.5rem);
+  border: 0.0625rem solid var(--border);
+  border-radius: var(--layout-card-radius, 1.125rem);
+  background: var(--surface);
+  text-align: center;
+  box-shadow: 0 0.5rem 1.75rem rgba(15, 23, 42, 0.06);
+}
+
+.iconWrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 4.25rem;
+  height: 4.25rem;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--success, #16a34a) 14%, var(--surface));
+  color: var(--success, #16a34a);
+}
+
+.eyebrow {
+  margin: 0;
+  color: var(--primary);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.title {
+  margin: 0;
+  color: var(--text);
+  font-size: clamp(1.5rem, 4vw, 2rem);
+  font-weight: 750;
+  line-height: 1.2;
+}
+
+.message {
+  margin: 0;
+  max-width: 28rem;
+  color: var(--text);
+  opacity: 0.72;
+  font-size: 0.9375rem;
+  line-height: 1.55;
+}
+
+.meta {
+  display: grid;
+  gap: 0.75rem;
+  width: 100%;
+  margin-top: 0.25rem;
+  padding: 1rem;
+  border-radius: 0.875rem;
+  background: color-mix(in srgb, var(--background) 80%, var(--surface));
+  text-align: left;
+}
+
+.metaRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.metaLabel {
+  color: var(--text);
+  opacity: 0.65;
+  font-size: 0.8125rem;
+}
+
+.metaValue {
+  color: var(--text);
+  font-size: 0.875rem;
+  font-weight: 650;
+  word-break: break-all;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.75rem;
+  width: 100%;
+  margin-top: 0.5rem;
+}
+
+.primaryButton,
+.secondaryButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.75rem;
+  padding: 0.75rem 1.25rem;
+  border-radius: 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 650;
+  cursor: pointer;
+  transition:
+    transform 0.15s ease,
+    background 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.primaryButton {
+  border: none;
+  background: var(--primary);
+  color: #fff;
+}
+
+.primaryButton:hover {
+  transform: translateY(-0.0625rem);
+  filter: brightness(1.05);
+}
+
+.secondaryButton {
+  border: 0.0625rem solid var(--border);
+  background: transparent;
+  color: var(--text);
+}
+
+.secondaryButton:hover {
+  border-color: color-mix(in srgb, var(--primary) 40%, var(--border));
+  background: color-mix(in srgb, var(--primary) 8%, transparent);
+}
+
+@media (max-width: 40rem) {
+  .actions {
+    flex-direction: column;
+  }
+
+  .primaryButton,
+  .secondaryButton {
+    width: 100%;
+  }
+
+  .metaRow {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+  }
+}

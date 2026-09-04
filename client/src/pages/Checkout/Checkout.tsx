@@ -26,6 +26,7 @@ import type { Address } from "../../features/address/types/address.types";
 import type { DeliveryOption } from "./CheckoutLayout/CheckoutMain/DeliveryMethod/DeliveryMethod";
 import type { PaymentMethodType } from "./CheckoutLayout/CheckoutMain/PaymentMethod/PaymentMethod";
 import { RAZORPAY_KEY_ID } from "../../constants/api";
+import { routes } from "../../routes/routes";
 
 const Checkout = () => {
     const navigate = useNavigate();
@@ -126,14 +127,27 @@ const Checkout = () => {
         setDeliveryMethod(option.id);
     };
 
-    const redirectAfterOrder = (orderId?: string) => {
-        if (orderId && tenantSlug) {
-            navigate(`/${tenantSlug}/orders/${orderId}`);
+    const redirectToThankYou = (params: {
+        orderId?: string;
+        amount?: number;
+        paymentStatus?: string;
+        paymentMethod?: "cod" | "online";
+    }) => {
+        if (!tenantSlug) {
             return;
         }
-        if (tenantSlug) {
-            navigate(`/${tenantSlug}`);
+        if (params.orderId) {
+            navigate(routes.thankYou(tenantSlug, params.orderId), {
+                replace: true,
+                state: {
+                    amount: params.amount,
+                    paymentStatus: params.paymentStatus,
+                    paymentMethod: params.paymentMethod,
+                },
+            });
+            return;
         }
+        navigate(routes.home(tenantSlug), { replace: true });
     };
 
     const handlePlaceOrder = async () => {
@@ -166,8 +180,12 @@ const Checkout = () => {
                     deliveryMethod,
                 });
                 await queryClient.invalidateQueries({ queryKey: ["cart"] });
-                alert(codOrder.message || "Order placed successfully.");
-                redirectAfterOrder(codOrder.orderId);
+                redirectToThankYou({
+                    orderId: codOrder.orderId,
+                    amount: codOrder.amount,
+                    paymentStatus: codOrder.paymentStatus,
+                    paymentMethod: "cod",
+                });
                 setIsProcessing(false);
                 return;
             }
@@ -191,6 +209,13 @@ const Checkout = () => {
                 deliveryMethod,
             });
 
+            const razorpayMethod =
+                paymentMethod === "card"
+                    ? "card"
+                    : paymentMethod === "netbanking"
+                      ? "netbanking"
+                      : "upi";
+
             const options = {
                 key: RAZORPAY_KEY_ID,
                 amount: orderData.amountInPaise,
@@ -198,14 +223,15 @@ const Checkout = () => {
                 name: "OmniStore",
                 description: "E-commerce Order Payment",
                 order_id: orderData.orderId,
+                method: razorpayMethod,
                 prefill: {
                     name: selectedAddress.fullName,
                     contact: selectedAddress.phone,
                 },
-                notes: JSON.stringify({
+                notes: {
                     tenantId: user.tenantId,
                     userId: user._id,
-                }),
+                } as unknown as string,
                 theme: {
                     color: "#2f6b52",
                 },
@@ -224,8 +250,12 @@ const Checkout = () => {
                             couponCode: appliedCoupon,
                         });
                         await queryClient.invalidateQueries({ queryKey: ["cart"] });
-                        alert("Payment successful! Order placed.");
-                        redirectAfterOrder(verifyData.orderId);
+                        redirectToThankYou({
+                            orderId: verifyData.orderId,
+                            amount: verifyData.amount,
+                            paymentStatus: verifyData.paymentStatus || "paid",
+                            paymentMethod: "online",
+                        });
                     } catch (error) {
                         console.error("Payment verification error:", error);
                         alert(
@@ -245,6 +275,24 @@ const Checkout = () => {
             };
 
             const razorpay = new Razorpay(options);
+            razorpay.on(
+                "payment.failed",
+                (response: {
+                    error?: {
+                        description?: string;
+                        reason?: string;
+                        code?: string;
+                    };
+                }) => {
+                    const description =
+                        response?.error?.description ||
+                        response?.error?.reason ||
+                        "Payment failed. Please try again.";
+                    console.error("Razorpay payment.failed:", response);
+                    alert(description);
+                    setIsProcessing(false);
+                },
+            );
             razorpay.open();
         } catch (error) {
             console.error("Place order error:", error);

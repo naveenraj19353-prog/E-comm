@@ -4,6 +4,7 @@ from datetime import datetime
 from app.database.mongo import categories
 from app.models.category import CreateCategory, UpdateCategory
 from app.utils.auth_dependencies import admin_tenant_id, require_admin
+from app.utils.category_catalog import get_catalog_categories
 router = APIRouter(
     prefix="/categories",
     tags=["Categories"]
@@ -47,22 +48,16 @@ def create_category(
 
 @router.get("/")
 def get_all_categories(tenantId: str):
-    data = []
-    cursor = categories.find(
-        {
-            "tenantId": tenantId,
-            "isActive": True
-        }
-    ).sort("createdAt", 1)
-    for category in cursor:
-        category["_id"] = str(
-            category["_id"]
-        )
-        data.append(category)
+    """
+    Categories with at least one active product for the tenant.
+    Built from the product catalog (same source as product filters),
+    so new/updated product categories appear without a separate seed.
+    """
+    data = get_catalog_categories(tenantId)
     return {
         "success": True,
         "count": len(data),
-        "data": data
+        "data": data,
     }
 
 

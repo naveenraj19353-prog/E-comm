@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Heart, ShoppingBag, Star, Minus, Plus, } from "lucide-react";
 import styles from "./ProductDetails.module.css";
 import type { Product, ProductInventory, } from "../../features/products/types";
+import { getColorValue } from "../../utils/productColors";
 interface ProductInfoProps {
     product: Product;
     selectedColor: string;
@@ -98,7 +99,7 @@ const ProductInfo = ({ product, selectedColor, selectedSize, availableSizes, sel
                     ? styles.optionSelected
                     : ""}`} onClick={() => handleColorChange(color)}>
                 <span className={styles.colorDot} style={{
-                    backgroundColor: color.toLowerCase(),
+                    backgroundColor: getColorValue(color),
                 }}/>
                 {color}
               </button>))}
