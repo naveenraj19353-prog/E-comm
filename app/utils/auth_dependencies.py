@@ -1,3 +1,5 @@
+from typing import Annotated
+
 from fastapi import Depends, HTTPException, status
 from fastapi.security import (
     HTTPAuthorizationCredentials,
@@ -14,9 +16,10 @@ security = HTTPBearer()
 
 
 def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(
-        security
-    ),
+    credentials: Annotated[
+        HTTPAuthorizationCredentials,
+        Depends(security),
+    ],
 ):
     token = credentials.credentials
     try:
@@ -136,9 +139,10 @@ optional_security = HTTPBearer(auto_error=False)
 
 
 def get_optional_user(
-    credentials: HTTPAuthorizationCredentials | None = Depends(
-        optional_security
-    ),
+    credentials: Annotated[
+        HTTPAuthorizationCredentials | None,
+        Depends(optional_security),
+    ],
 ):
     if credentials is None:
         return None
@@ -187,9 +191,7 @@ def admin_tenant_id(
 
 
 def require_super_admin(
-    current_user: dict = Depends(
-        get_current_user
-    ),
+    current_user: Annotated[dict, Depends(get_current_user)],
 ):
     if current_user.get(
         "role"
@@ -209,9 +211,7 @@ def require_super_admin(
 
 
 def require_admin(
-    current_user: dict = Depends(
-        get_current_user
-    ),
+    current_user: Annotated[dict, Depends(get_current_user)],
 ):
     if current_user.get(
         "role"
@@ -227,9 +227,7 @@ def require_admin(
 
 
 def require_tenant_admin(
-    current_user: dict = Depends(
-        get_current_user
-    ),
+    current_user: Annotated[dict, Depends(get_current_user)],
 ):
     if current_user.get(
         "role"
@@ -249,9 +247,7 @@ def require_tenant_admin(
 
 
 def require_customer(
-    current_user: dict = Depends(
-        get_current_user
-    ),
+    current_user: Annotated[dict, Depends(get_current_user)],
 ):
     if current_user.get(
         "role"

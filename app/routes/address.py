@@ -1,11 +1,15 @@
 from datetime import datetime, timezone
+from typing import Annotated
+
 from bson import ObjectId
 from bson.errors import InvalidId
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Path, Query
+
 from app.database.mongo import addresses
 from app.models.address import CreateAddress, UpdateAddress
 from app.routes.response_metadata import FORBIDDEN_RESPONSE
 from app.utils.auth_dependencies import customer_scope, require_customer
+
 router = APIRouter(
     prefix="/addresses",
     tags=["Addresses"],
@@ -45,7 +49,7 @@ def validate_object_id(value: str, field_name: str = "ID") -> ObjectId:
 )
 def create_address(
     request: CreateAddress,
-    current_user: dict = Depends(require_customer),
+    current_user: Annotated[dict, Depends(require_customer)],
 ):
     tenant_id, user_id = customer_scope(current_user)
     user_object_id = validate_object_id(user_id, USER_ID_FIELD)
@@ -94,21 +98,21 @@ def create_address(
     },
 )
 def get_addresses(
-    userId: str,
-    tenant_id: str | None = Query(default=None, alias="tenantId"),
-    current_user: dict = Depends(require_customer),
+    user_id: Annotated[str, Path(alias="userId")],
+    current_user: Annotated[dict, Depends(require_customer)],
+    _tenant_id: Annotated[str | None, Query(alias="tenantId")] = None,
 ):
-    tenant_id, token_user_id = customer_scope(current_user)
-    if userId != token_user_id:
+    scoped_tenant_id, token_user_id = customer_scope(current_user)
+    if user_id != token_user_id:
         raise HTTPException(
             status_code=403,
             detail="You cannot access another user's addresses.",
         )
-    user_id = validate_object_id(token_user_id, USER_ID_FIELD)
+    user_object_id = validate_object_id(token_user_id, USER_ID_FIELD)
     cursor = addresses.find(
         {
-            "tenantId": tenant_id,
-            "userId": user_id,
+            "tenantId": scoped_tenant_id,
+            "userId": user_object_id,
         }
     ).sort(
         [
@@ -139,7 +143,7 @@ def get_addresses(
 def update_address(
     id: str,
     request: UpdateAddress,
-    current_user: dict = Depends(require_customer),
+    current_user: Annotated[dict, Depends(require_customer)],
 ):
     tenant_id, user_id = customer_scope(current_user)
     address_id = validate_object_id(id, "address ID")
@@ -214,15 +218,15 @@ def update_address(
 )
 def delete_address(
     id: str,
-    tenant_id: str | None = Query(default=None, alias="tenantId"),
-    current_user: dict = Depends(require_customer),
+    current_user: Annotated[dict, Depends(require_customer)],
+    _tenant_id: Annotated[str | None, Query(alias="tenantId")] = None,
 ):
-    tenant_id, user_id = customer_scope(current_user)
+    scoped_tenant_id, user_id = customer_scope(current_user)
     address_id = validate_object_id(id, "address ID")
     address = addresses.find_one(
         {
             "_id": address_id,
-            "tenantId": tenant_id,
+            "tenantId": scoped_tenant_id,
             "userId": validate_object_id(user_id, USER_ID_FIELD),
         }
     )
@@ -236,7 +240,7 @@ def delete_address(
     result = addresses.delete_one(
         {
             "_id": address_id,
-            "tenantId": tenant_id,
+            "tenantId": scoped_tenant_id,
             "userId": address["userId"],
         }
     )
@@ -250,7 +254,7 @@ def delete_address(
     if was_default:
         next_address = addresses.find_one(
             {
-                "tenantId": tenant_id,
+                "tenantId": scoped_tenant_id,
                 "userId": address["userId"],
             },
             sort=[

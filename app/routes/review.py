@@ -1,7 +1,10 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
-from bson import ObjectId
 from datetime import datetime, timezone
-from app.database.mongo import reviews, products
+from typing import Annotated
+
+from bson import ObjectId
+from fastapi import APIRouter, Depends, HTTPException, Path, Query
+
+from app.database.mongo import products, reviews
 from app.models.review import ReviewCreate, UpdateReview
 from app.routes.detail_messages import PRODUCT_NOT_FOUND
 from app.routes.response_metadata import (
@@ -53,7 +56,7 @@ def recalculate_product_rating(tenant_id: str, product_id: ObjectId):
 )
 def add_review(
     request: ReviewCreate,
-    current_user: dict = Depends(require_customer),
+    current_user: Annotated[dict, Depends(require_customer)],
 ):
     tenant_id, user_id = customer_scope(current_user)
     product = products.find_one(
@@ -98,11 +101,11 @@ def add_review(
 
 @router.get("/product/{productId}")
 def get_reviews(
-    productId: str,
-    tenant_id: str = Query(..., alias="tenantId"),
+    product_id: Annotated[str, Path(alias="productId")],
+    tenant_id: Annotated[str, Query(alias="tenantId")],
 ):
     cursor = reviews.find(
-        {"tenantId": tenant_id, "productId": ObjectId(productId)}
+        {"tenantId": tenant_id, "productId": ObjectId(product_id)}
     ).sort("createdAt", -1)
     data = []
     for review in cursor:
@@ -123,15 +126,15 @@ def get_reviews(
 def update_review(
     id: str,
     request: UpdateReview,
-    tenant_id: str | None = Query(default=None, alias="tenantId"),
-    userId: str | None = None,
-    current_user: dict = Depends(require_customer),
+    current_user: Annotated[dict, Depends(require_customer)],
+    _tenant_id: Annotated[str | None, Query(alias="tenantId")] = None,
+    _user_id: Annotated[str | None, Query(alias="userId")] = None,
 ):
-    tenant_id, token_user_id = customer_scope(current_user)
+    scoped_tenant_id, token_user_id = customer_scope(current_user)
     review = reviews.find_one(
         {
             "_id": ObjectId(id),
-            "tenantId": tenant_id,
+            "tenantId": scoped_tenant_id,
             "userId": ObjectId(token_user_id),
         }
     )
@@ -149,7 +152,7 @@ def update_review(
             }
         },
     )
-    recalculate_product_rating(tenant_id, review["productId"])
+    recalculate_product_rating(scoped_tenant_id, review["productId"])
     return {"success": True, "message": "Review updated successfully."}
 
 
@@ -162,20 +165,20 @@ def update_review(
 )
 def delete_review(
     id: str,
-    tenant_id: str | None = Query(default=None, alias="tenantId"),
-    userId: str | None = None,
-    current_user: dict = Depends(require_customer),
+    current_user: Annotated[dict, Depends(require_customer)],
+    _tenant_id: Annotated[str | None, Query(alias="tenantId")] = None,
+    _user_id: Annotated[str | None, Query(alias="userId")] = None,
 ):
-    tenant_id, token_user_id = customer_scope(current_user)
+    scoped_tenant_id, token_user_id = customer_scope(current_user)
     review = reviews.find_one(
         {
             "_id": ObjectId(id),
-            "tenantId": tenant_id,
+            "tenantId": scoped_tenant_id,
             "userId": ObjectId(token_user_id),
         }
     )
     if not review:
         raise HTTPException(status_code=404, detail="Review not found.")
     reviews.delete_one({"_id": ObjectId(id)})
-    recalculate_product_rating(tenant_id, review["productId"])
+    recalculate_product_rating(scoped_tenant_id, review["productId"])
     return {"success": True, "message": "Review deleted successfully."}

@@ -1,9 +1,11 @@
 import json
 import logging
+from datetime import datetime, timezone
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Request
-from datetime import datetime, timezone
-from requests.exceptions import SSLError, ConnectionError as RequestsConnectionError
+from requests.exceptions import ConnectionError as RequestsConnectionError
+from requests.exceptions import SSLError
 
 from app.config import RAZORPAY_WEBHOOK_SECRET
 from app.database.mongo import payment_intents
@@ -11,9 +13,6 @@ from app.models.payment import (
     CreatePaymentOrder,
     VerifyPayment,
 )
-from app.services.checkout_service import calculate_checkout
-from app.services.order_fulfillment import fulfill_captured_payment
-from app.services.payment_validation import validate_captured_payment
 from app.routes.response_metadata import (
     BAD_GATEWAY_RESPONSE,
     BAD_REQUEST_RESPONSE,
@@ -23,13 +22,16 @@ from app.routes.response_metadata import (
     NOT_FOUND_RESPONSE,
     SERVICE_UNAVAILABLE_RESPONSE,
 )
-from app.utils.razorpay_client import client
+from app.services.checkout_service import calculate_checkout
+from app.services.order_fulfillment import fulfill_captured_payment
+from app.services.payment_validation import validate_captured_payment
 from app.utils.auth_dependencies import (
     customer_scope,
     require_admin,
     require_customer,
     require_super_admin,
 )
+from app.utils.razorpay_client import client
 
 logger = logging.getLogger(__name__)
 RAZORPAY_SSL_ERROR_DETAIL = "Could not reach Razorpay because of an SSL certificate error on this machine."
@@ -41,7 +43,9 @@ router = APIRouter(
 
 
 @router.get("/test-razorpay", responses={400: BAD_REQUEST_RESPONSE[400]})
-def test_razorpay(current_user: dict = Depends(require_super_admin)):
+def test_razorpay(
+    current_user: Annotated[dict, Depends(require_super_admin)],
+):
     try:
         order = client.order.create(
             {
@@ -77,7 +81,7 @@ def test_razorpay(current_user: dict = Depends(require_super_admin)):
 )
 def create_order(
     request: CreatePaymentOrder,
-    current_user: dict = Depends(require_customer),
+    current_user: Annotated[dict, Depends(require_customer)],
 ):
     tenant_id, user_id = customer_scope(current_user)
     try:
@@ -166,7 +170,7 @@ def create_order(
 )
 def verify_payment(
     request: VerifyPayment,
-    current_user: dict = Depends(require_customer),
+    current_user: Annotated[dict, Depends(require_customer)],
 ):
     tenant_id, user_id = customer_scope(current_user)
     if (
@@ -226,7 +230,7 @@ def verify_payment(
 )
 def get_payment_status(
     order_id: str,
-    current_user: dict = Depends(require_customer),
+    current_user: Annotated[dict, Depends(require_customer)],
 ):
     tenant_id, user_id = customer_scope(current_user)
     intent = payment_intents.find_one(
@@ -271,7 +275,7 @@ def get_payment_status(
 )
 def get_payment(
     payment_id: str,
-    current_user: dict = Depends(require_admin),
+    current_user: Annotated[dict, Depends(require_admin)],
 ):
     try:
         payment_data = client.payment.fetch(payment_id)
@@ -297,7 +301,7 @@ def get_payment(
 )
 def refund(
     payment_id: str,
-    current_user: dict = Depends(require_admin),
+    current_user: Annotated[dict, Depends(require_admin)],
 ):
     try:
         refund_data = client.payment.refund(payment_id)

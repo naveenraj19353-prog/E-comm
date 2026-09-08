@@ -1,14 +1,14 @@
 from datetime import datetime, timezone
+from typing import Annotated
 
 from bson import ObjectId
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Path, Query
 from pymongo import DESCENDING
 
 from app.database.mongo import orders, users
-from app.models.orders import UpdateOrderStatus
 from app.models.checkout import CreateCodOrder
+from app.models.orders import UpdateOrderStatus
 from app.routes.detail_messages import ORDER_NOT_FOUND
-from app.services.order_fulfillment import fulfill_cod_order, restore_variant_stock
 from app.routes.response_metadata import (
     BAD_REQUEST_RESPONSE,
     CONFLICT_RESPONSE,
@@ -17,6 +17,7 @@ from app.routes.response_metadata import (
     INTERNAL_SERVER_ERROR_RESPONSE,
     NOT_FOUND_RESPONSE,
 )
+from app.services.order_fulfillment import fulfill_cod_order, restore_variant_stock
 from app.utils.auth_dependencies import (
     admin_tenant_id,
     customer_scope,
@@ -36,7 +37,7 @@ ADMIN_STATUS_TRANSITIONS: dict[str, set[str]] = {
 
 
 @router.post("/", responses={410: GONE_RESPONSE[410]})
-def create_order(current_user: dict = Depends(require_customer)):
+def create_order(current_user: Annotated[dict, Depends(require_customer)]):
     raise HTTPException(
         status_code=410,
         detail="Orders are created only after payment verification.",
@@ -55,7 +56,7 @@ def create_order(current_user: dict = Depends(require_customer)):
 )
 def create_cod_order(
     request: CreateCodOrder,
-    current_user: dict = Depends(require_customer),
+    current_user: Annotated[dict, Depends(require_customer)],
 ):
     tenant_id, user_id = customer_scope(current_user)
     try:
@@ -82,12 +83,14 @@ def create_cod_order(
     },
 )
 def list_tenant_orders(
-    tenant_id: str | None = Query(default=None, alias="tenantId"),
-    current_user: dict = Depends(require_admin),
+    current_user: Annotated[dict, Depends(require_admin)],
+    tenant_id: Annotated[str | None, Query(alias="tenantId")] = None,
 ):
-    tenant_id = admin_tenant_id(current_user, tenant_id)
+    scoped_tenant_id = admin_tenant_id(current_user, tenant_id)
     try:
-        cursor = orders.find({"tenantId": tenant_id}).sort("createdAt", DESCENDING)
+        cursor = orders.find({"tenantId": scoped_tenant_id}).sort(
+            "createdAt", DESCENDING
+        )
         data = []
         user_cache: dict[str, dict] = {}
         for order in cursor:
@@ -121,16 +124,16 @@ def list_tenant_orders(
 def update_order_status(
     order_id: str,
     payload: UpdateOrderStatus,
-    tenant_id: str | None = Query(default=None, alias="tenantId"),
-    current_user: dict = Depends(require_admin),
+    current_user: Annotated[dict, Depends(require_admin)],
+    tenant_id: Annotated[str | None, Query(alias="tenantId")] = None,
 ):
-    tenant_id = admin_tenant_id(current_user, tenant_id)
+    scoped_tenant_id = admin_tenant_id(current_user, tenant_id)
     try:
         object_id = ObjectId(order_id)
     except Exception:
         raise HTTPException(status_code=400, detail="Invalid order ID.")
 
-    order = orders.find_one({"_id": object_id, "tenantId": tenant_id})
+    order = orders.find_one({"_id": object_id, "tenantId": scoped_tenant_id})
     if not order:
         raise HTTPException(status_code=404, detail=ORDER_NOT_FOUND)
 
@@ -190,16 +193,16 @@ def update_order_status(
 )
 def get_admin_order_detail(
     order_id: str,
-    tenant_id: str | None = Query(default=None, alias="tenantId"),
-    current_user: dict = Depends(require_admin),
+    current_user: Annotated[dict, Depends(require_admin)],
+    tenant_id: Annotated[str | None, Query(alias="tenantId")] = None,
 ):
-    tenant_id = admin_tenant_id(current_user, tenant_id)
+    scoped_tenant_id = admin_tenant_id(current_user, tenant_id)
     try:
         object_id = ObjectId(order_id)
     except Exception:
         raise HTTPException(status_code=400, detail="Invalid order ID.")
 
-    order = orders.find_one({"_id": object_id, "tenantId": tenant_id})
+    order = orders.find_one({"_id": object_id, "tenantId": scoped_tenant_id})
     if not order:
         raise HTTPException(status_code=404, detail=ORDER_NOT_FOUND)
 
@@ -229,16 +232,16 @@ def get_admin_order_detail(
 )
 def get_order(
     order_id: str,
-    tenant_id: str | None = Query(default=None, alias="tenantId"),
-    userId: str | None = None,
-    current_user: dict = Depends(require_customer),
+    current_user: Annotated[dict, Depends(require_customer)],
+    _tenant_id: Annotated[str | None, Query(alias="tenantId")] = None,
+    _user_id: Annotated[str | None, Query(alias="userId")] = None,
 ):
-    tenant_id, token_user_id = customer_scope(current_user)
+    scoped_tenant_id, token_user_id = customer_scope(current_user)
     try:
         order = orders.find_one(
             {
                 "_id": ObjectId(order_id),
-                "tenantId": tenant_id,
+                "tenantId": scoped_tenant_id,
                 "userId": ObjectId(token_user_id),
             }
         )
@@ -260,19 +263,19 @@ def get_order(
     },
 )
 def get_user_orders(
-    userId: str,
-    tenant_id: str | None = Query(default=None, alias="tenantId"),
-    current_user: dict = Depends(require_customer),
+    user_id: Annotated[str, Path(alias="userId")],
+    current_user: Annotated[dict, Depends(require_customer)],
+    _tenant_id: Annotated[str | None, Query(alias="tenantId")] = None,
 ):
-    tenant_id, token_user_id = customer_scope(current_user)
-    if userId != token_user_id:
+    scoped_tenant_id, token_user_id = customer_scope(current_user)
+    if user_id != token_user_id:
         raise HTTPException(
             status_code=403,
             detail="You cannot access another user's orders.",
         )
     try:
         cursor = orders.find(
-            {"tenantId": tenant_id, "userId": ObjectId(token_user_id)}
+            {"tenantId": scoped_tenant_id, "userId": ObjectId(token_user_id)}
         ).sort("createdAt", DESCENDING)
         data = [_serialize_order(order) for order in cursor]
         return {"success": True, "count": len(data), "data": data}

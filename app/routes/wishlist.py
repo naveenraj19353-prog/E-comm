@@ -1,6 +1,9 @@
 from datetime import datetime, timezone
+from typing import Annotated
+
 from bson import ObjectId
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Path, Query
+
 from app.database.mongo import products, wishlists
 from app.models.wishlist import WishList
 from app.routes.detail_messages import PRODUCT_NOT_FOUND
@@ -39,7 +42,7 @@ def get_object_id(value: str, field_name: str) -> ObjectId:
 )
 def add_to_wishlist(
     request: WishList,
-    current_user: dict = Depends(require_customer),
+    current_user: Annotated[dict, Depends(require_customer)],
 ):
     tenant_id, user_id = customer_scope(current_user)
     product_object_id = get_object_id(request.productId, "productId")
@@ -87,12 +90,12 @@ def add_to_wishlist(
     },
 )
 def get_wishlist(
-    userId: str,
-    tenant_id: str | None = Query(default=None, alias="tenantId"),
-    current_user: dict = Depends(require_customer),
+    user_id: Annotated[str, Path(alias="userId")],
+    current_user: Annotated[dict, Depends(require_customer)],
+    _tenant_id: Annotated[str | None, Query(alias="tenantId")] = None,
 ):
-    tenant_id, token_user_id = customer_scope(current_user)
-    if userId != token_user_id:
+    scoped_tenant_id, token_user_id = customer_scope(current_user)
+    if user_id != token_user_id:
         raise HTTPException(
             status_code=403,
             detail="You cannot access another user's wishlist.",
@@ -100,7 +103,7 @@ def get_wishlist(
     user_object_id = get_object_id(token_user_id, "userId")
     wishlist_items = wishlists.find(
         {
-            "tenantId": tenant_id,
+            "tenantId": scoped_tenant_id,
             "userId": user_object_id,
         }
     )
@@ -109,7 +112,7 @@ def get_wishlist(
         product = products.find_one(
             {
                 "_id": item["productId"],
-                "tenantId": tenant_id,
+                "tenantId": scoped_tenant_id,
                 "isActive": True,
             }
         )
@@ -153,17 +156,17 @@ def get_wishlist(
     },
 )
 def remove_from_wishlist(
-    productId: str,
-    userId: str | None = None,
-    tenant_id: str | None = Query(default=None, alias="tenantId"),
-    current_user: dict = Depends(require_customer),
+    product_id: Annotated[str, Path(alias="productId")],
+    current_user: Annotated[dict, Depends(require_customer)],
+    _user_id: Annotated[str | None, Query(alias="userId")] = None,
+    _tenant_id: Annotated[str | None, Query(alias="tenantId")] = None,
 ):
-    tenant_id, token_user_id = customer_scope(current_user)
-    product_object_id = get_object_id(productId, "productId")
+    scoped_tenant_id, token_user_id = customer_scope(current_user)
+    product_object_id = get_object_id(product_id, "productId")
     user_object_id = get_object_id(token_user_id, "userId")
     result = wishlists.delete_one(
         {
-            "tenantId": tenant_id,
+            "tenantId": scoped_tenant_id,
             "userId": user_object_id,
             "productId": product_object_id,
         }
@@ -187,15 +190,15 @@ def remove_from_wishlist(
     },
 )
 def clear_wishlist(
-    userId: str | None = None,
-    tenant_id: str | None = Query(default=None, alias="tenantId"),
-    current_user: dict = Depends(require_customer),
+    current_user: Annotated[dict, Depends(require_customer)],
+    _user_id: Annotated[str | None, Query(alias="userId")] = None,
+    _tenant_id: Annotated[str | None, Query(alias="tenantId")] = None,
 ):
-    tenant_id, token_user_id = customer_scope(current_user)
+    scoped_tenant_id, token_user_id = customer_scope(current_user)
     user_object_id = get_object_id(token_user_id, "userId")
     result = wishlists.delete_many(
         {
-            "tenantId": tenant_id,
+            "tenantId": scoped_tenant_id,
             "userId": user_object_id,
         }
     )

@@ -1,7 +1,10 @@
-from app.models.coupon import ApplyCoupon, CreateCoupon
-from fastapi import APIRouter, Depends, HTTPException
-from app.database.mongo import coupons
 from datetime import datetime, timezone
+from typing import Annotated
+
+from fastapi import APIRouter, Depends, HTTPException
+
+from app.database.mongo import coupons
+from app.models.coupon import ApplyCoupon, CreateCoupon
 from app.routes.response_metadata import (
     BAD_REQUEST_RESPONSE,
     CONFLICT_RESPONSE,
@@ -28,7 +31,7 @@ router = APIRouter(prefix="/coupon", tags=["Coupon"])
 )
 def create_coupon(
     request: CreateCoupon,
-    current_user: dict = Depends(require_admin),
+    current_user: Annotated[dict, Depends(require_admin)],
 ):
     tenant_id = admin_tenant_id(current_user, request.tenantId)
     existing = coupons.find_one(
@@ -73,7 +76,7 @@ def create_coupon(
 )
 def apply_coupon(
     request: ApplyCoupon,
-    current_user: dict = Depends(require_customer),
+    current_user: Annotated[dict, Depends(require_customer)],
 ):
     tenant_id, _user_id = customer_scope(current_user)
     coupon = coupons.find_one(
