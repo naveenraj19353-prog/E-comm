@@ -3,6 +3,7 @@ from bson import ObjectId
 from fastapi import APIRouter, Depends, HTTPException
 from app.database.mongo import carts
 from app.models.cart import AddCart, UpdateCart
+from app.routes.detail_messages import PRODUCT_NOT_FOUND
 from app.routes.response_metadata import (
     BAD_REQUEST_RESPONSE,
     FORBIDDEN_RESPONSE,
@@ -35,9 +36,9 @@ def get_object_id(value: str, field_name: str) -> ObjectId:
 @router.post(
     "/",
     responses={
-        **BAD_REQUEST_RESPONSE,
-        **FORBIDDEN_RESPONSE,
-        **NOT_FOUND_RESPONSE,
+        400: BAD_REQUEST_RESPONSE[400],
+        403: FORBIDDEN_RESPONSE[403],
+        404: NOT_FOUND_RESPONSE[404],
     },
 )
 def add_to_cart(
@@ -49,7 +50,7 @@ def add_to_cart(
     user_object_id = get_object_id(user_id, "userId")
     product = find_active_product(product_id, tenant_id)
     if not product:
-        raise HTTPException(status_code=404, detail="Product not found.")
+        raise HTTPException(status_code=404, detail=PRODUCT_NOT_FOUND)
     if not request.variantId:
         raise HTTPException(status_code=400, detail="variantId is required.")
     variant = get_variant(product, request.variantId)
@@ -124,9 +125,9 @@ def add_to_cart(
 @router.put(
     "/{productId}",
     responses={
-        **BAD_REQUEST_RESPONSE,
-        **FORBIDDEN_RESPONSE,
-        **NOT_FOUND_RESPONSE,
+        400: BAD_REQUEST_RESPONSE[400],
+        403: FORBIDDEN_RESPONSE[403],
+        404: NOT_FOUND_RESPONSE[404],
     },
 )
 def update_cart(
@@ -138,7 +139,7 @@ def update_cart(
     product_object_id = get_object_id(productId, "productId")
     product = find_active_product(product_object_id, tenant_id)
     if not product:
-        raise HTTPException(status_code=404, detail="Product not found.")
+        raise HTTPException(status_code=404, detail=PRODUCT_NOT_FOUND)
     query = {
         **cart_owner_query(tenant_id, user_id),
         "productId": product_id_query(product_object_id),
@@ -184,7 +185,7 @@ def update_cart(
     }
 
 
-@router.get("/{userId}", responses=FORBIDDEN_RESPONSE)
+@router.get("/{userId}", responses={403: FORBIDDEN_RESPONSE[403]})
 def get_cart(
     userId: str,
     tenantId: str | None = None,
@@ -242,9 +243,9 @@ def get_cart(
 @router.delete(
     "/{productId}",
     responses={
-        **BAD_REQUEST_RESPONSE,
-        **FORBIDDEN_RESPONSE,
-        **NOT_FOUND_RESPONSE,
+        400: BAD_REQUEST_RESPONSE[400],
+        403: FORBIDDEN_RESPONSE[403],
+        404: NOT_FOUND_RESPONSE[404],
     },
 )
 def remove_from_cart(
@@ -274,7 +275,7 @@ def remove_from_cart(
     }
 
 
-@router.delete("/", responses=FORBIDDEN_RESPONSE)
+@router.delete("/", responses={403: FORBIDDEN_RESPONSE[403]})
 def clear_cart(
     userId: str | None = None,
     tenantId: str | None = None,

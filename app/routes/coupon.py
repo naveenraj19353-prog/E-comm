@@ -21,9 +21,9 @@ router = APIRouter(prefix="/coupon", tags=["Coupon"])
 @router.post(
     "/create-coupon",
     responses={
-        **BAD_REQUEST_RESPONSE,
-        **FORBIDDEN_RESPONSE,
-        **CONFLICT_RESPONSE,
+        400: BAD_REQUEST_RESPONSE[400],
+        403: FORBIDDEN_RESPONSE[403],
+        409: CONFLICT_RESPONSE[409],
     },
 )
 def create_coupon(
@@ -66,7 +66,10 @@ def create_coupon(
 
 @router.post(
     "/apply-coupon",
-    responses={**FORBIDDEN_RESPONSE, **NOT_FOUND_RESPONSE},
+    responses={
+        403: FORBIDDEN_RESPONSE[403],
+        404: NOT_FOUND_RESPONSE[404],
+    },
 )
 def apply_coupon(
     request: ApplyCoupon,

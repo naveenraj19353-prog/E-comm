@@ -7,6 +7,7 @@ from pymongo import DESCENDING
 from app.database.mongo import orders, users
 from app.models.orders import UpdateOrderStatus
 from app.models.checkout import CreateCodOrder
+from app.routes.detail_messages import ORDER_NOT_FOUND
 from app.services.order_fulfillment import fulfill_cod_order, restore_variant_stock
 from app.routes.response_metadata import (
     BAD_REQUEST_RESPONSE,
@@ -34,7 +35,7 @@ ADMIN_STATUS_TRANSITIONS: dict[str, set[str]] = {
 }
 
 
-@router.post("/", responses=GONE_RESPONSE)
+@router.post("/", responses={410: GONE_RESPONSE[410]})
 def create_order(current_user: dict = Depends(require_customer)):
     raise HTTPException(
         status_code=410,
@@ -45,11 +46,11 @@ def create_order(current_user: dict = Depends(require_customer)):
 @router.post(
     "/cod",
     responses={
-        **BAD_REQUEST_RESPONSE,
-        **FORBIDDEN_RESPONSE,
-        **NOT_FOUND_RESPONSE,
-        **CONFLICT_RESPONSE,
-        **INTERNAL_SERVER_ERROR_RESPONSE,
+        400: BAD_REQUEST_RESPONSE[400],
+        403: FORBIDDEN_RESPONSE[403],
+        404: NOT_FOUND_RESPONSE[404],
+        409: CONFLICT_RESPONSE[409],
+        500: INTERNAL_SERVER_ERROR_RESPONSE[500],
     },
 )
 def create_cod_order(
@@ -75,9 +76,9 @@ def create_cod_order(
 @router.get(
     "/admin/list",
     responses={
-        **BAD_REQUEST_RESPONSE,
-        **FORBIDDEN_RESPONSE,
-        **INTERNAL_SERVER_ERROR_RESPONSE,
+        400: BAD_REQUEST_RESPONSE[400],
+        403: FORBIDDEN_RESPONSE[403],
+        500: INTERNAL_SERVER_ERROR_RESPONSE[500],
     },
 )
 def list_tenant_orders(
@@ -112,9 +113,9 @@ def list_tenant_orders(
 @router.patch(
     "/admin/{order_id}/status",
     responses={
-        **BAD_REQUEST_RESPONSE,
-        **FORBIDDEN_RESPONSE,
-        **NOT_FOUND_RESPONSE,
+        400: BAD_REQUEST_RESPONSE[400],
+        403: FORBIDDEN_RESPONSE[403],
+        404: NOT_FOUND_RESPONSE[404],
     },
 )
 def update_order_status(
@@ -131,7 +132,7 @@ def update_order_status(
 
     order = orders.find_one({"_id": object_id, "tenantId": tenant_id})
     if not order:
-        raise HTTPException(status_code=404, detail="Order not found.")
+        raise HTTPException(status_code=404, detail=ORDER_NOT_FOUND)
 
     current_status = order.get("orderStatus", "confirmed")
     next_status = payload.orderStatus
@@ -182,9 +183,9 @@ def update_order_status(
 @router.get(
     "/admin/detail/{order_id}",
     responses={
-        **BAD_REQUEST_RESPONSE,
-        **FORBIDDEN_RESPONSE,
-        **NOT_FOUND_RESPONSE,
+        400: BAD_REQUEST_RESPONSE[400],
+        403: FORBIDDEN_RESPONSE[403],
+        404: NOT_FOUND_RESPONSE[404],
     },
 )
 def get_admin_order_detail(
@@ -200,7 +201,7 @@ def get_admin_order_detail(
 
     order = orders.find_one({"_id": object_id, "tenantId": tenant_id})
     if not order:
-        raise HTTPException(status_code=404, detail="Order not found.")
+        raise HTTPException(status_code=404, detail=ORDER_NOT_FOUND)
 
     user_key = str(order.get("userId", ""))
     customer = None
@@ -221,9 +222,9 @@ def get_admin_order_detail(
 @router.get(
     "/detail/{order_id}",
     responses={
-        **FORBIDDEN_RESPONSE,
-        **NOT_FOUND_RESPONSE,
-        **INTERNAL_SERVER_ERROR_RESPONSE,
+        403: FORBIDDEN_RESPONSE[403],
+        404: NOT_FOUND_RESPONSE[404],
+        500: INTERNAL_SERVER_ERROR_RESPONSE[500],
     },
 )
 def get_order(
@@ -242,7 +243,7 @@ def get_order(
             }
         )
         if not order:
-            raise HTTPException(status_code=404, detail="Order not found.")
+            raise HTTPException(status_code=404, detail=ORDER_NOT_FOUND)
         return {"success": True, "order": _serialize_order(order)}
     except HTTPException:
         raise
@@ -253,7 +254,10 @@ def get_order(
 
 @router.get(
     "/{userId}",
-    responses={**FORBIDDEN_RESPONSE, **INTERNAL_SERVER_ERROR_RESPONSE},
+    responses={
+        403: FORBIDDEN_RESPONSE[403],
+        500: INTERNAL_SERVER_ERROR_RESPONSE[500],
+    },
 )
 def get_user_orders(
     userId: str,

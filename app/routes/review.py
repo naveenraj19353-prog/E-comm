@@ -3,6 +3,7 @@ from bson import ObjectId
 from datetime import datetime, timezone
 from app.database.mongo import reviews, products
 from app.models.review import ReviewCreate, UpdateReview
+from app.routes.detail_messages import PRODUCT_NOT_FOUND
 from app.routes.response_metadata import (
     CONFLICT_RESPONSE,
     FORBIDDEN_RESPONSE,
@@ -45,9 +46,9 @@ def recalculate_product_rating(tenant_id: str, product_id: ObjectId):
 @router.post(
     "/",
     responses={
-        **FORBIDDEN_RESPONSE,
-        **NOT_FOUND_RESPONSE,
-        **CONFLICT_RESPONSE,
+        403: FORBIDDEN_RESPONSE[403],
+        404: NOT_FOUND_RESPONSE[404],
+        409: CONFLICT_RESPONSE[409],
     },
 )
 def add_review(
@@ -63,7 +64,7 @@ def add_review(
         }
     )
     if not product:
-        raise HTTPException(status_code=404, detail="Product not found.")
+        raise HTTPException(status_code=404, detail=PRODUCT_NOT_FOUND)
     existing = reviews.find_one(
         {
             "tenantId": tenant_id,
@@ -111,7 +112,10 @@ def get_reviews(productId: str, tenantId: str):
 
 @router.put(
     "/update-review/{id}",
-    responses={**FORBIDDEN_RESPONSE, **NOT_FOUND_RESPONSE},
+    responses={
+        403: FORBIDDEN_RESPONSE[403],
+        404: NOT_FOUND_RESPONSE[404],
+    },
 )
 def update_review(
     id: str,
@@ -148,7 +152,10 @@ def update_review(
 
 @router.delete(
     "/delete-review/{id}",
-    responses={**FORBIDDEN_RESPONSE, **NOT_FOUND_RESPONSE},
+    responses={
+        403: FORBIDDEN_RESPONSE[403],
+        404: NOT_FOUND_RESPONSE[404],
+    },
 )
 def delete_review(
     id: str,

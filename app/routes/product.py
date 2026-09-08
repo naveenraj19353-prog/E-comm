@@ -10,6 +10,7 @@ from app.models.product import (
     VariantStockRequest,
     BulkImportRequest,
 )
+from app.routes.detail_messages import INVALID_PRODUCT_ID, PRODUCT_NOT_FOUND
 from app.utils.product_serialize import (
     calculate_total_stock,
     serialize_product,
@@ -219,7 +220,10 @@ def validate_color_images_against_inventory(
 
 @router.post(
     "/create-product",
-    responses={**BAD_REQUEST_RESPONSE, **FORBIDDEN_RESPONSE},
+    responses={
+        400: BAD_REQUEST_RESPONSE[400],
+        403: FORBIDDEN_RESPONSE[403],
+    },
 )
 def create_product(
     product: CreateProduct,
@@ -325,7 +329,10 @@ def create_product(
 
 @router.post(
     "/bulk-import",
-    responses={**BAD_REQUEST_RESPONSE, **FORBIDDEN_RESPONSE},
+    responses={
+        400: BAD_REQUEST_RESPONSE[400],
+        403: FORBIDDEN_RESPONSE[403],
+    },
 )
 def bulk_import_products(
     body: BulkImportRequest,
@@ -511,7 +518,7 @@ def get_tenant_product_filters(
 
 @router.get(
     "/get-all-products",
-    responses=INTERNAL_SERVER_ERROR_RESPONSE,
+    responses={500: INTERNAL_SERVER_ERROR_RESPONSE[500]},
 )
 def get_all_products(
     tenantId: str,
@@ -1056,7 +1063,7 @@ def get_all_products(
         "data": data,
     }
 
-@router.post("/search", responses=INTERNAL_SERVER_ERROR_RESPONSE)
+@router.post("/search", responses={500: INTERNAL_SERVER_ERROR_RESPONSE[500]})
 def search_product(
     request: ProductSearchRequest,
 ):
@@ -1310,9 +1317,9 @@ def get_new_arrivals(
 @router.get(
     "/{id}",
     responses={
-        **BAD_REQUEST_RESPONSE,
-        **NOT_FOUND_RESPONSE,
-        **INTERNAL_SERVER_ERROR_RESPONSE,
+        400: BAD_REQUEST_RESPONSE[400],
+        404: NOT_FOUND_RESPONSE[404],
+        500: INTERNAL_SERVER_ERROR_RESPONSE[500],
     },
 )
 def get_product(
@@ -1322,7 +1329,7 @@ def get_product(
     if not ObjectId.is_valid(id):
         raise HTTPException(
             status_code=400,
-            detail="Invalid product ID.",
+            detail=INVALID_PRODUCT_ID,
         )
     query = {
         "_id": ObjectId(id),
@@ -1345,7 +1352,7 @@ def get_product(
     if not product:
         raise HTTPException(
             status_code=404,
-            detail="Product not found.",
+            detail=PRODUCT_NOT_FOUND,
         )
     product = serialize_product(
         product
@@ -1359,10 +1366,10 @@ def get_product(
 @router.put(
     "/{id}",
     responses={
-        **BAD_REQUEST_RESPONSE,
-        **FORBIDDEN_RESPONSE,
-        **NOT_FOUND_RESPONSE,
-        **INTERNAL_SERVER_ERROR_RESPONSE,
+        400: BAD_REQUEST_RESPONSE[400],
+        403: FORBIDDEN_RESPONSE[403],
+        404: NOT_FOUND_RESPONSE[404],
+        500: INTERNAL_SERVER_ERROR_RESPONSE[500],
     },
 )
 def update_product(
@@ -1373,7 +1380,7 @@ def update_product(
     if not ObjectId.is_valid(id):
         raise HTTPException(
             status_code=400,
-            detail="Invalid product ID.",
+            detail=INVALID_PRODUCT_ID,
         )
     tenant_id = admin_tenant_id(current_user, product.tenantId)
     db_product = products.find_one(
@@ -1385,7 +1392,7 @@ def update_product(
     if not db_product:
         raise HTTPException(
             status_code=404,
-            detail="Product not found.",
+            detail=PRODUCT_NOT_FOUND,
         )
     update_data = product.model_dump(
         exclude_unset=True,
@@ -1531,7 +1538,7 @@ def update_product(
     if result.matched_count == 0:
         raise HTTPException(
             status_code=404,
-            detail="Product not found.",
+            detail=PRODUCT_NOT_FOUND,
         )
     return {
         "success": True,
@@ -1544,9 +1551,9 @@ def update_product(
 @router.delete(
     "/{id}",
     responses={
-        **BAD_REQUEST_RESPONSE,
-        **NOT_FOUND_RESPONSE,
-        **INTERNAL_SERVER_ERROR_RESPONSE,
+        400: BAD_REQUEST_RESPONSE[400],
+        404: NOT_FOUND_RESPONSE[404],
+        500: INTERNAL_SERVER_ERROR_RESPONSE[500],
     },
 )
 def delete_product(
@@ -1557,7 +1564,7 @@ def delete_product(
     if not ObjectId.is_valid(id):
         raise HTTPException(
             status_code=400,
-            detail="Invalid product ID.",
+            detail=INVALID_PRODUCT_ID,
         )
     try:
         scoped_tenant = admin_tenant_id(current_user, tenantId)
@@ -1579,7 +1586,7 @@ def delete_product(
     if result.deleted_count == 0:
         raise HTTPException(
             status_code=404,
-            detail="Product not found.",
+            detail=PRODUCT_NOT_FOUND,
         )
     return {
         "success": True,
@@ -1592,9 +1599,9 @@ def delete_product(
 @router.get(
     "/{id}/inventory",
     responses={
-        **BAD_REQUEST_RESPONSE,
-        **NOT_FOUND_RESPONSE,
-        **INTERNAL_SERVER_ERROR_RESPONSE,
+        400: BAD_REQUEST_RESPONSE[400],
+        404: NOT_FOUND_RESPONSE[404],
+        500: INTERNAL_SERVER_ERROR_RESPONSE[500],
     },
 )
 def get_product_inventory(
@@ -1604,7 +1611,7 @@ def get_product_inventory(
     if not ObjectId.is_valid(id):
         raise HTTPException(
             status_code=400,
-            detail="Invalid product ID.",
+            detail=INVALID_PRODUCT_ID,
         )
     try:
         product = products.find_one(
@@ -1629,7 +1636,7 @@ def get_product_inventory(
     if not product:
         raise HTTPException(
             status_code=404,
-            detail="Product not found.",
+            detail=PRODUCT_NOT_FOUND,
         )
     inventory = product.get(
         "inventory",
@@ -1662,9 +1669,9 @@ def get_product_inventory(
 @router.post(
     "/{id}/check-stock",
     responses={
-        **BAD_REQUEST_RESPONSE,
-        **NOT_FOUND_RESPONSE,
-        **INTERNAL_SERVER_ERROR_RESPONSE,
+        400: BAD_REQUEST_RESPONSE[400],
+        404: NOT_FOUND_RESPONSE[404],
+        500: INTERNAL_SERVER_ERROR_RESPONSE[500],
     },
 )
 def check_variant_stock(
@@ -1674,7 +1681,7 @@ def check_variant_stock(
     if not ObjectId.is_valid(id):
         raise HTTPException(
             status_code=400,
-            detail="Invalid product ID.",
+            detail=INVALID_PRODUCT_ID,
         )
     try:
         product = products.find_one(
@@ -1699,7 +1706,7 @@ def check_variant_stock(
     if not product:
         raise HTTPException(
             status_code=404,
-            detail="Product not found.",
+            detail=PRODUCT_NOT_FOUND,
         )
     inventory = product.get(
         "inventory",
