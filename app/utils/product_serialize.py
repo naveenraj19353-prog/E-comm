@@ -1,34 +1,52 @@
 from datetime import datetime
 
 
+AUTO_FORMAT_QUERY = "?auto=format"
+UNSPLASH_BASE_URL = "https://images.unsplash.com/"
+UNSPLASH_DUPLICATE_PREFIX = f"{UNSPLASH_BASE_URL}https://"
+
+
 def sanitize_image_url(url: str | None) -> str:
     """Fix malformed Unsplash URLs (e.g. double https://images.unsplash.com/ prefix)."""
     value = (url or "").strip()
     if not value:
         return ""
 
-    duplicate_prefix = "https://images.unsplash.com/https://"
-    while value.startswith(duplicate_prefix):
-        value = value[len("https://images.unsplash.com/") :]
+    while value.startswith(UNSPLASH_DUPLICATE_PREFIX):
+        value = value[len(UNSPLASH_BASE_URL) :]
 
-    if value.count("?auto=format") > 1:
-        first, remainder = value.split("?auto=format", 1)
-        query, _extra = remainder.split("?auto=format", 1)
-        value = f"{first}?auto=format{query}"
+    if value.count(AUTO_FORMAT_QUERY) > 1:
+        first, remainder = value.split(AUTO_FORMAT_QUERY, 1)
+        query, _extra = remainder.split(AUTO_FORMAT_QUERY, 1)
+        value = f"{first}{AUTO_FORMAT_QUERY}{query}"
 
     return value
 
 
+def _normalize_image_list(images: list) -> list[str]:
+    normalized = []
+    for item in images:
+        if not isinstance(item, str):
+            continue
+        cleaned = sanitize_image_url(item)
+        if cleaned:
+            normalized.append(cleaned)
+    return normalized
+
+
+def _normalize_color_images(image_list: object) -> list[str]:
+    if isinstance(image_list, str):
+        cleaned = sanitize_image_url(image_list)
+        return [cleaned] if cleaned else []
+    if isinstance(image_list, list):
+        return _normalize_image_list(image_list)
+    return []
+
+
 def normalize_product_images(images: dict | list | None) -> dict[str, list[str]]:
     if isinstance(images, list):
-        normalized_list = [
-            sanitize_image_url(item)
-            for item in images
-            if isinstance(item, str) and sanitize_image_url(item)
-        ]
-        if not normalized_list:
-            return {}
-        return {"Default": normalized_list}
+        normalized_list = _normalize_image_list(images)
+        return {"Default": normalized_list} if normalized_list else {}
 
     if not isinstance(images, dict):
         return {}
@@ -39,17 +57,7 @@ def normalize_product_images(images: dict | list | None) -> dict[str, list[str]]
         if not color_key:
             continue
 
-        urls: list[str] = []
-        if isinstance(image_list, str):
-            cleaned = sanitize_image_url(image_list)
-            if cleaned:
-                urls.append(cleaned)
-        elif isinstance(image_list, list):
-            for item in image_list:
-                if isinstance(item, str):
-                    cleaned = sanitize_image_url(item)
-                    if cleaned:
-                        urls.append(cleaned)
+        urls = _normalize_color_images(image_list)
         if urls:
             normalized[color_key] = urls
 
@@ -70,29 +78,35 @@ def calculate_total_stock(inventory: list | None) -> int:
     return total
 
 
+def _normalize_inventory_item(item: dict) -> dict:
+    normalized_item = dict(item)
+    try:
+        normalized_item["stock"] = int(normalized_item.get("stock", 0) or 0)
+    except (TypeError, ValueError):
+        normalized_item["stock"] = 0
+
+    for field in ("variantId", "color", "size"):
+        if normalized_item.get(field) is not None:
+            normalized_item[field] = str(normalized_item[field])
+    return normalized_item
+
+
+def _normalize_inventory(inventory: object) -> list[dict]:
+    if not isinstance(inventory, list):
+        return []
+    return [
+        _normalize_inventory_item(item)
+        for item in inventory
+        if isinstance(item, dict)
+    ]
+
+
 def serialize_product(product: dict) -> dict:
     product = dict(product)
     if "_id" in product:
         product["_id"] = str(product["_id"])
-    inventory = product.get("inventory", [])
-    if not isinstance(inventory, list):
-        inventory = []
-    normalized_inventory = []
-    for item in inventory:
-        if not isinstance(item, dict):
-            continue
-        item = dict(item)
-        try:
-            item["stock"] = int(item.get("stock", 0) or 0)
-        except (TypeError, ValueError):
-            item["stock"] = 0
-        if item.get("variantId") is not None:
-            item["variantId"] = str(item["variantId"])
-        if item.get("color") is not None:
-            item["color"] = str(item["color"])
-        if item.get("size") is not None:
-            item["size"] = str(item["size"])
-        normalized_inventory.append(item)
+
+    normalized_inventory = _normalize_inventory(product.get("inventory", []))
     product["inventory"] = normalized_inventory
     total_stock = calculate_total_stock(normalized_inventory)
     product["totalStock"] = total_stock
