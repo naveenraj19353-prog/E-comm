@@ -12,6 +12,8 @@ def _mongo_client_kwargs(uri: str) -> dict:
         "serverSelectionTimeoutMS": 30000,
         "connectTimeoutMS": 20000,
         "retryWrites": True,
+        # Keep BSON UTC datetimes timezone-aware when reading them back.
+        "tz_aware": True,
     }
     if uri.startswith("mongodb+srv://") or "tls=true" in uri.lower():
         options["tlsCAFile"] = certifi.where()

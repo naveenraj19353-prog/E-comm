@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from bson import ObjectId
 from bson.errors import InvalidId
 from fastapi import APIRouter, Depends, HTTPException
@@ -43,7 +43,7 @@ def create_address(
                 }
             },
         )
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     address_data = {
         "tenantId": tenant_id,
         "userId": user_object_id,
@@ -152,7 +152,7 @@ def update_address(
                 }
             },
         )
-    update_data["updatedAt"] = datetime.utcnow()
+    update_data["updatedAt"] = datetime.now(timezone.utc)
     result = addresses.update_one(
         {
             "_id": address_id,
@@ -228,7 +228,7 @@ def delete_address(
                 {
                     "$set": {
                         "isDefault": True,
-                        "updatedAt": datetime.utcnow(),
+                        "updatedAt": datetime.now(timezone.utc),
                     }
                 },
             )

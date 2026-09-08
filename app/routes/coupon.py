@@ -1,7 +1,7 @@
 from app.models.coupon import ApplyCoupon, CreateCoupon
 from fastapi import APIRouter, Depends, HTTPException
 from app.database.mongo import coupons
-from datetime import datetime
+from datetime import datetime, timezone
 from app.utils.auth_dependencies import (
     admin_tenant_id,
     customer_scope,
@@ -40,8 +40,8 @@ def create_coupon(
         "startDate": request.startDate,
         "endDate": request.endDate,
         "isActive": True,
-        "createdAt": datetime.utcnow(),
-        "updatedAt": datetime.utcnow(),
+        "createdAt": datetime.now(timezone.utc),
+        "updatedAt": datetime.now(timezone.utc),
     }
     result = coupons.insert_one(coupon)
     return {

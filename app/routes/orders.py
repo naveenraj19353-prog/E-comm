@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 
 from bson import ObjectId
 from fastapi import APIRouter, Depends, HTTPException
@@ -118,7 +118,7 @@ def update_order_status(
             detail=f"Cannot change order status from {current_status} to {next_status}.",
         )
 
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     if next_status == "cancelled" and current_status != "cancelled":
         for item in order.get("items") or []:
             variant_id = item.get("variantId")

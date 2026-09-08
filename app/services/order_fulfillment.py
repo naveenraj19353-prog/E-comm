@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from bson import ObjectId
 from fastapi import HTTPException
 from pymongo.errors import DuplicateKeyError
@@ -130,7 +130,7 @@ def _build_order_items(checkout_data: dict) -> list[dict]:
 
 
 def _claim_intent(razorpay_order_id: str):
-    stale_before = datetime.utcnow() - timedelta(
+    stale_before = datetime.now(timezone.utc) - timedelta(
         minutes=PROCESSING_STALE_MINUTES
     )
     return payment_intents.find_one_and_update(
@@ -148,7 +148,7 @@ def _claim_intent(razorpay_order_id: str):
         {
             "$set": {
                 "status": "processing",
-                "processingAt": datetime.utcnow(),
+                "processingAt": datetime.now(timezone.utc),
             }
         },
     )
@@ -171,7 +171,7 @@ def _finalize_order_from_checkout(
         )
 
     order_items = _build_order_items(checkout_data)
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     reserved = []
     for item in order_items:
         stock_ok = decrement_variant_stock(
@@ -322,7 +322,7 @@ def fulfill_captured_payment(
     if existing:
         payment_intents.update_one(
             {"_id": claimed["_id"]},
-            {"$set": {"status": "fulfilled", "updatedAt": datetime.utcnow()}},
+            {"$set": {"status": "fulfilled", "updatedAt": datetime.now(timezone.utc)}},
         )
         return _order_response(existing, razorpay_payment_id)
 
@@ -334,7 +334,7 @@ def fulfill_captured_payment(
             {
                 "$set": {
                     "status": "refunded",
-                    "updatedAt": datetime.utcnow(),
+                    "updatedAt": datetime.now(timezone.utc),
                 }
             },
         )
@@ -352,12 +352,12 @@ def fulfill_captured_payment(
             {
                 "$set": {
                     "status": "refunded",
-                    "updatedAt": datetime.utcnow(),
+                    "updatedAt": datetime.now(timezone.utc),
                 }
             },
         )
         raise
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     reserved = []
     if not claimed.get("stockReserved"):
         for item in order_items:
@@ -452,7 +452,7 @@ def fulfill_captured_payment(
             "$set": {
                 "status": "fulfilled",
                 "razorpayPaymentId": razorpay_payment_id,
-                "updatedAt": datetime.utcnow(),
+                "updatedAt": datetime.now(timezone.utc),
             }
         },
     )
