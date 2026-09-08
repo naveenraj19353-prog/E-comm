@@ -1,6 +1,6 @@
 from fastapi import HTTPException
 from bson import ObjectId
-from datetime import datetime
+from datetime import datetime, timezone
 import re
 from app.database.mongo import (
     carts,
@@ -263,7 +263,7 @@ def calculate_checkout(
                 status_code=404,
                 detail="Invalid coupon.",
             )
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         if coupon.get("startDate") and coupon["startDate"] > now:
             raise HTTPException(
                 status_code=400,

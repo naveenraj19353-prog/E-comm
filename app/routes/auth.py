@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from fastapi import APIRouter, HTTPException
 from app.database.mongo import users, tenants
 from app.models.user import (
@@ -58,7 +58,7 @@ def register(
         )
 
 
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     payload = {
         "tenantId": tenant_id,
         "name": user.name.strip(),

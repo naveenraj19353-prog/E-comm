@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from bson import ObjectId
-from datetime import datetime
+from datetime import datetime, timezone
 from app.database.mongo import categories
 from app.models.category import CreateCategory, UpdateCategory
 from app.utils.auth_dependencies import admin_tenant_id, require_admin
@@ -28,7 +28,7 @@ def create_category(
             status_code=400,
             detail="Category already exists."
         )
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     payload = {
         "tenantId": tenant_id,
         "name": category.name,
@@ -113,7 +113,7 @@ def update_category(
             status_code=400,
             detail="No fields provided for update."
         )
-    update_data["updatedAt"] = datetime.utcnow()
+    update_data["updatedAt"] = datetime.now(timezone.utc)
     result = categories.update_one(
         {
             "_id": ObjectId(id),

@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from bson import ObjectId
-from datetime import datetime
+from datetime import datetime, timezone
 from app.database.mongo import tenants
 from app.models.tenant import CreateTenant, UpdateTenant, UpdateTenantTheme
 from app.utils.auth_dependencies import (
@@ -62,7 +62,7 @@ def create_tenant(
         )
 
 
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
 
 
         payload = {
@@ -376,7 +376,7 @@ def update_tenant(
         )
 
 
-    update_data["updatedAt"] = datetime.utcnow()
+    update_data["updatedAt"] = datetime.now(timezone.utc)
 
 
     result = tenants.update_one(
@@ -444,7 +444,7 @@ def update_tenant_theme(
             detail="No theme fields provided for update.",
         )
 
-    update_data["updatedAt"] = datetime.utcnow()
+    update_data["updatedAt"] = datetime.now(timezone.utc)
 
     result = tenants.update_one(
         {"_id": object_id},

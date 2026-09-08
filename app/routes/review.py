@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from bson import ObjectId
-from datetime import datetime
+from datetime import datetime, timezone
 from app.database.mongo import reviews, products
 from app.models.review import ReviewCreate, UpdateReview
 from app.utils.auth_dependencies import customer_scope, require_customer
@@ -71,8 +71,8 @@ def add_review(
         "rating": request.rating,
         "title": request.title,
         "comment": request.comment,
-        "createdAt": datetime.utcnow(),
-        "updatedAt": datetime.utcnow(),
+        "createdAt": datetime.now(timezone.utc),
+        "updatedAt": datetime.now(timezone.utc),
     }
     result = reviews.insert_one(review)
     recalculate_product_rating(tenant_id, ObjectId(request.productId))
@@ -123,7 +123,7 @@ def update_review(
                 "title": request.title,
                 "comment": request.comment,
                 "images": request.images,
-                "updatedAt": datetime.utcnow(),
+                "updatedAt": datetime.now(timezone.utc),
             }
         },
     )

@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from bson import ObjectId
 from fastapi import APIRouter, Depends, HTTPException
 from app.database.mongo import banners, tenants
@@ -42,7 +42,7 @@ def create_banner(
             )
 
 
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         banner_data["createdAt"] = now
         banner_data["updatedAt"] = now
 
@@ -144,7 +144,7 @@ def get_active_banners(
             )
 
 
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
 
 
         query = {
@@ -252,7 +252,7 @@ def update_banner(
 
         update_data[
             "updatedAt"
-        ] = datetime.utcnow()
+        ] = datetime.now(timezone.utc)
 
 
         result = banners.update_one(

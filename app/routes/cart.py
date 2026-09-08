@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from bson import ObjectId
 from fastapi import APIRouter, Depends, HTTPException
 from app.database.mongo import carts
@@ -82,7 +82,7 @@ def add_to_cart(
             {
                 "$set": {
                     "quantity": new_quantity,
-                    "updatedAt": datetime.utcnow(),
+                    "updatedAt": datetime.now(timezone.utc),
                 }
             },
         )
@@ -99,8 +99,8 @@ def add_to_cart(
             "color": variant.get("color"),
             "size": variant.get("size"),
             "quantity": request.quantity,
-            "createdAt": datetime.utcnow(),
-            "updatedAt": datetime.utcnow(),
+            "createdAt": datetime.now(timezone.utc),
+            "updatedAt": datetime.now(timezone.utc),
         }
     )
     return {
@@ -155,7 +155,7 @@ def update_cart(
         {
             "$set": {
                 "quantity": request.quantity,
-                "updatedAt": datetime.utcnow(),
+                "updatedAt": datetime.now(timezone.utc),
             }
         },
     )

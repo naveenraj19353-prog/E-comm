@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Literal
 
 from fastapi import HTTPException
@@ -107,14 +107,14 @@ def save_reset_token(
             "$set": {
                 "resetToken": token,
                 "resetTokenExpiry": expiry,
-                "updatedAt": datetime.utcnow(),
+                "updatedAt": datetime.now(timezone.utc),
             }
         },
     )
 
 
 def find_account_by_reset_token(token: str) -> dict | None:
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     for collection_name in ("users", "tenants"):
         collection = users if collection_name == "users" else tenants
         document = collection.find_one(
@@ -160,7 +160,7 @@ def reset_password_with_token(token: str, new_password: str) -> dict:
     collection_name: CollectionName = account["collection"]
     collection = users if collection_name == "users" else tenants
     document = account["document"]
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
 
     collection.update_one(
         {"_id": document["_id"]},
@@ -186,5 +186,5 @@ def create_reset_token() -> tuple[str, datetime]:
     from secrets import token_urlsafe
 
     token = token_urlsafe(32)
-    expiry = datetime.utcnow() + timedelta(minutes=RESET_TOKEN_MINUTES)
+    expiry = datetime.now(timezone.utc) + timedelta(minutes=RESET_TOKEN_MINUTES)
     return token, expiry

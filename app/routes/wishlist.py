@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from bson import ObjectId
 from fastapi import APIRouter, Depends, HTTPException
 from app.database.mongo import products, wishlists
@@ -55,7 +55,7 @@ def add_to_wishlist(
             "tenantId": tenant_id,
             "userId": user_object_id,
             "productId": product_object_id,
-            "createdAt": datetime.utcnow(),
+            "createdAt": datetime.now(timezone.utc),
         }
     )
     return {

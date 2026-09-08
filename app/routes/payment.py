@@ -2,7 +2,7 @@ import json
 import logging
 
 from fastapi import APIRouter, Depends, HTTPException, Request
-from datetime import datetime
+from datetime import datetime, timezone
 from requests.exceptions import SSLError, ConnectionError as RequestsConnectionError
 
 from app.config import RAZORPAY_WEBHOOK_SECRET
@@ -100,7 +100,7 @@ def create_order(
         "grandTotal": grand_total,
                 "checkout": checkout_data,
                 "status": "pending",
-                "createdAt": datetime.utcnow(),
+                "createdAt": datetime.now(timezone.utc),
             }
         )
         return {

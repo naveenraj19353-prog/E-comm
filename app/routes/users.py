@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from bson import ObjectId
-from datetime import datetime
+from datetime import datetime, timezone
 from app.database.mongo import users
 from app.models.user import UpdateUser
 from app.utils.auth_dependencies import admin_tenant_id, require_admin
@@ -60,7 +60,7 @@ def update_user(
     update_data.pop("password", None)
     if not update_data:
         raise HTTPException(status_code=400, detail="No fields provided for update.")
-    update_data["updatedAt"] = datetime.utcnow()
+    update_data["updatedAt"] = datetime.now(timezone.utc)
     result = users.update_one(
         {"_id": ObjectId(id), "tenantId": tenant_id},
         {"$set": update_data},

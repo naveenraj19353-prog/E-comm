@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
-from datetime import datetime
+from datetime import datetime, timezone
 from bson import ObjectId
 from app.database.mongo import users
 from app.models.profile import UpdateProfile
@@ -44,7 +44,7 @@ def update_profile(
     update_data = request.model_dump(exclude_unset=True, exclude_none=True)
     if not update_data:
         raise HTTPException(status_code=400, detail="No fields provided for update.")
-    update_data["updatedAt"] = datetime.utcnow()
+    update_data["updatedAt"] = datetime.now(timezone.utc)
     result = users.update_one(
         {
             "_id": ObjectId(token_user_id),
