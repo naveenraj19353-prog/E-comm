@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { ZoomIn } from "lucide-react";
 import ProductImage from "../../components/ProductImage";
 import { DEFAULT_PRODUCT_IMAGE } from "../../constants/images";
+import { getProductImagesForColor } from "../../features/products/inventory";
 import styles from "./ProductDetails.module.css";
 import type { Product } from "../../features/products/types";
 interface ProductGalleryProps {
@@ -16,14 +17,9 @@ const ProductGallery = ({ product, selectedColor, }: ProductGalleryProps) => {
         x: 50,
         y: 50,
     });
-    const colorImages = selectedColor && product.images?.[selectedColor]
-        ? product.images[selectedColor]
-        : [];
-    const fallbackImages = colorImages.length > 0
+    const colorImages = getProductImagesForColor(product.images, selectedColor);
+    const images = colorImages.length > 0
         ? colorImages
-        : Object.values(product.images || {}).find((images) => images.length > 0) || [];
-    const images = fallbackImages.length > 0
-        ? fallbackImages
         : [DEFAULT_PRODUCT_IMAGE];
     useEffect(() => {
         setSelectedImage(0);

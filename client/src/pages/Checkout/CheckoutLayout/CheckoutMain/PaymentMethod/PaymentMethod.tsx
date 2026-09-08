@@ -9,16 +9,16 @@ type PaymentOption = {
 };
 const PAYMENT_OPTIONS: PaymentOption[] = [
     {
-        id: "card",
-        title: "Credit / Debit Card",
-        description: "Pay securely using your card",
-        icon: CreditCard,
-    },
-    {
         id: "upi",
         title: "UPI",
-        description: "Pay using any supported UPI app",
+        description: "GPay, PhonePe, Paytm, BHIM or any UPI ID",
         icon: Wallet,
+    },
+    {
+        id: "card",
+        title: "Credit / Debit Card",
+        description: "Visa, Mastercard, RuPay and more",
+        icon: CreditCard,
     },
     {
         id: "netbanking",

@@ -1,6 +1,7 @@
 import { useInfiniteQuery, useMutation, useQueryClient, } from "@tanstack/react-query";
 import apiClient from "../../../api/client";
 import { API_ENDPOINTS } from "../../../api/endpoints";
+import { QUERY_KEYS } from "../../../constants/queryKeys";
 import type { ProductQueryParams, ProductsResponse } from "../types/types";
 export interface ProductInventoryPayload {
     variantId: string;
@@ -31,10 +32,11 @@ export interface UpdateProductPayload {
     categoryId: string;
     price: number;
     discountPercentage: number;
-    stock: number;
-    sizes: string[];
-    colors: string[];
-    images: string[];
+    stock?: number;
+    sizes?: string[];
+    colors?: string[];
+    inventory?: ProductInventoryPayload[];
+    images: Record<string, string[]>;
     isActive: boolean;
 }
 interface DeleteProductPayload {
@@ -97,6 +99,12 @@ export const useCreateProduct = () => {
             queryClient.invalidateQueries({
                 queryKey: ["tenant-products", variables.tenantId],
             });
+            queryClient.invalidateQueries({
+                queryKey: [QUERY_KEYS.CATEGORIES, variables.tenantId],
+            });
+            queryClient.invalidateQueries({
+                queryKey: [QUERY_KEYS.PRODUCTS],
+            });
         },
     });
 };
@@ -113,6 +121,12 @@ export const useUpdateProduct = () => {
             });
             queryClient.invalidateQueries({
                 queryKey: ["tenant-products", variables.payload.tenantId],
+            });
+            queryClient.invalidateQueries({
+                queryKey: [QUERY_KEYS.CATEGORIES, variables.payload.tenantId],
+            });
+            queryClient.invalidateQueries({
+                queryKey: [QUERY_KEYS.PRODUCTS],
             });
         },
     });
@@ -134,6 +148,12 @@ export const useDeleteProduct = () => {
             });
             queryClient.invalidateQueries({
                 queryKey: ["tenant-products", variables.tenantId],
+            });
+            queryClient.invalidateQueries({
+                queryKey: [QUERY_KEYS.CATEGORIES, variables.tenantId],
+            });
+            queryClient.invalidateQueries({
+                queryKey: [QUERY_KEYS.PRODUCTS],
             });
         },
     });

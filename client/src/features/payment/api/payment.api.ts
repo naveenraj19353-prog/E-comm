@@ -27,6 +27,9 @@ export interface VerifyPaymentResponse {
     success: boolean;
     message: string;
     orderId: string;
+    amount?: number;
+    paymentStatus?: string;
+    orderStatus?: string;
 }
 export const createPaymentOrder = async (payload: CreatePaymentOrderRequest): Promise<CreatePaymentOrderResponse> => {
     const response = await apiClient.post(API_ENDPOINTS.PAYMENTS.CREATE_ORDER, payload);

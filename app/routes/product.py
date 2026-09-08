@@ -272,13 +272,18 @@ def create_product(
         timezone.utc
     )
 
+    category_id = product.categoryId.strip()
+    category_name = (
+        (product.categoryName or "").strip()
+        or category_id.replace("_", " ").replace("-", " ").title()
+    )
 
     payload = {
         "tenantId": tenant_id,
         "name": product.name.strip(),
         "description": product.description,
-        "categoryId": product.categoryId,
-        "categoryName": product.categoryName,
+        "categoryId": category_id,
+        "categoryName": category_name,
         "brand": product.brand,
         "price": product.price,
         "discountPercentage": (

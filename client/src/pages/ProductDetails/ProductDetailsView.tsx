@@ -65,9 +65,11 @@ const ProductDetailsView = ({ product, reviews, isWishlisted, isAddingToCart, on
     return (<div className={styles.page}>
       <section className={`${styles.productSection} ${detailLayoutClass}`}>
         <ProductGallery product={product} selectedColor={selectedColor}/>
-        <ProductInfo product={product} selectedColor={selectedColor} selectedSize={selectedSize} availableSizes={availableSizes} selectedVariant={selectedVariant} onColorChange={handleColorChange} onSizeChange={setSelectedSize} isWishlisted={isWishlisted} isAddingToCart={isAddingToCart} onAddToCart={onAddToCart} onWishlist={onWishlist}/>
+        <div className={styles.infoColumn}>
+          <ProductInfo product={product} selectedColor={selectedColor} selectedSize={selectedSize} availableSizes={availableSizes} selectedVariant={selectedVariant} onColorChange={handleColorChange} onSizeChange={setSelectedSize} isWishlisted={isWishlisted} isAddingToCart={isAddingToCart} onAddToCart={onAddToCart} onWishlist={onWishlist}/>
+          <ProductDelivery />
+        </div>
       </section>
-      <ProductDelivery />
       <ProductSpecifications product={product}/>
       <ProductReviews reviews={reviews} onWriteReview={onWriteReview} showReviewForm={showReviewForm} reviewRating={reviewRating} reviewTitle={reviewTitle} reviewComment={reviewComment} onReviewRatingChange={onReviewRatingChange} onReviewTitleChange={onReviewTitleChange} onReviewCommentChange={onReviewCommentChange} onSubmitReview={onSubmitReview} isSubmittingReview={isSubmittingReview} reviewsLoading={reviewsLoading}/>
     </div>);

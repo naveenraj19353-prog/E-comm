@@ -5,7 +5,7 @@ import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
 import styles from "./ProductCard.module.css";
-import { isProductOutOfStock, getFirstProductImage } from "../../features/products/inventory";
+import { isProductOutOfStock, getProductImagesForColor } from "../../features/products/inventory";
 import ProductImage from "../ProductImage";
 import { useProductNavigation } from "../../features/products/hooks/useProductNavigation";
 import { getColorValue } from "./ProductCard.utils";
@@ -72,22 +72,10 @@ export default function ProductCard({
     } = useProductVariantSelection(inventory);
 
     const isOutOfStock = isProductOutOfStock(product);
-    const validImages = useMemo(() => {
-        if (selectedColor) {
-            const colorImages = images[selectedColor];
-            if (Array.isArray(colorImages)) {
-                const resolved = colorImages.filter(
-                    (image): image is string => typeof image === "string" && image.trim().length > 0,
-                );
-                if (resolved.length > 0) {
-                    return resolved;
-                }
-            }
-        }
-
-        const fallback = getFirstProductImage(images);
-        return fallback ? [fallback] : [];
-    }, [images, selectedColor]);
+    const validImages = useMemo(
+        () => getProductImagesForColor(images, selectedColor),
+        [images, selectedColor],
+    );
 
     const handleWishlist = (event: React.MouseEvent<HTMLButtonElement>) => {
         event.stopPropagation();

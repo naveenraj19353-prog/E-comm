@@ -1,11 +1,12 @@
 import { useMemo, useState } from "react";
 import { Heart, ShoppingCart, Star } from "lucide-react";
 import styles from "./ProductCard.module.css";
-import { isProductOutOfStock, getFirstProductImage, } from "../../../features/products/inventory";
+import { isProductOutOfStock, getProductImagesForColor, } from "../../../features/products/inventory";
 import ProductImage from "../../ProductImage";
 import { useProductNavigation } from "../../../features/products/hooks/useProductNavigation";
 import { useLayoutSettings } from "../../../theme/useThemeSettings";
 import type { Product, ProductInventory, } from "../../../features/products/types";
+import { getColorValue } from "../../../utils/productColors";
 interface ProductCardProps {
     product: Product;
     isWishlisted?: boolean;
@@ -61,13 +62,8 @@ const ProductCard = ({ product, isWishlisted = false, onWishlist, onAddToCart, i
     ]);
     const isOutOfStock = isProductOutOfStock(product);
     const productImage = useMemo(() => {
-        if (activeColor) {
-            const colorImages = product.images?.[activeColor];
-            if (Array.isArray(colorImages) && colorImages.length > 0) {
-                return colorImages[0];
-            }
-        }
-        return getFirstProductImage(product.images);
+        const colorImages = getProductImagesForColor(product.images, activeColor);
+        return colorImages[0] || "";
     }, [product.images, activeColor]);
     const handleWishlist = (event: React.MouseEvent<HTMLButtonElement>) => {
         event.stopPropagation();
@@ -208,24 +204,3 @@ const ProductCard = ({ product, isWishlisted = false, onWishlist, onAddToCart, i
     </div>);
 };
 export default ProductCard;
-function getColorValue(color: string): string {
-    const normalized = color.toLowerCase().trim();
-    const colors: Record<string, string> = {
-        red: "#ef4444",
-        blue: "#3b82f6",
-        green: "#22c55e",
-        yellow: "#eab308",
-        black: "#111827",
-        white: "#ffffff",
-        grey: "#9ca3af",
-        gray: "#9ca3af",
-        beige: "#d6c2a1",
-        pink: "#ec4899",
-        purple: "#a855f7",
-        orange: "#f97316",
-        brown: "#92400e",
-        navy: "#1e3a8a",
-    };
-    return (colors[normalized] ??
-        "#d1d5db");
-}

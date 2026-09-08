@@ -41,15 +41,15 @@ export default function Navbar() {
     const [searchOpen, setSearchOpen] = useState(false);
     const [searchValue, setSearchValue] = useState("");
     const categories: Category[] = categoryResponse?.data
-        ? categoryResponse.data.slice(0, 5)
+        ? categoryResponse.data.slice(0, 8)
         : [];
     useEffect(() => {
-        if (categories.length <= 3) {
+        if (categories.length <= 8) {
             return;
         }
         const interval = window.setInterval(() => {
             setCategoryStart((current) => {
-                const next = current + 3;
+                const next = current + 8;
                 return next >= categories.length ? 0 : next;
             });
         }, 3000);
@@ -57,11 +57,11 @@ export default function Navbar() {
             window.clearInterval(interval);
         };
     }, [categories.length]);
-    let visibleCategories = categories.slice(categoryStart, categoryStart + 3);
-    if (visibleCategories.length < 3 && categories.length > 3) {
+    let visibleCategories = categories.slice(categoryStart, categoryStart + 8);
+    if (visibleCategories.length < 8 && categories.length > 8) {
         visibleCategories = [
             ...visibleCategories,
-            ...categories.slice(0, 3 - visibleCategories.length),
+            ...categories.slice(0, 8 - visibleCategories.length),
         ];
     }
     const handleSearch = () => {
