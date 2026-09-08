@@ -5,7 +5,7 @@ Use this folder to test bulk product upload.
 ## Prerequisites
 
 - Backend running
-- Tenant **shopsphere** with categories (run `python app/dataset-generator/seed_fashionhub.py` if needed)
+- Tenant **shopsphere** with the required categories already configured
 - Admin login
 
 ## Files

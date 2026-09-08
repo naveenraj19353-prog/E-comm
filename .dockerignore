@@ -11,10 +11,6 @@ client
 docs
 bulk-import-test
 templates
-scripts
-products.json
-**/products.json
-app/dataset-generator
 **/__pycache__
 **/*.pyc
 .pytest_cache
