@@ -88,19 +88,24 @@ def get_variant(product: dict, variant_id: str | None):
     return None
 
 
+def _first_grouped_image(images: dict):
+    for color_images in images.values():
+        if isinstance(color_images, list) and color_images:
+            return color_images[0]
+    return None
+
+
 def get_variant_image(product: dict, color: str | None):
     images = product.get("images", {})
-    if isinstance(images, dict):
-        if color and images.get(color):
-            color_images = images[color]
-            if isinstance(color_images, list) and color_images:
-                return color_images[0]
-        for color_images in images.values():
-            if isinstance(color_images, list) and color_images:
-                return color_images[0]
-    if isinstance(images, list) and images:
-        return images[0]
-    return None
+    if isinstance(images, list):
+        return images[0] if images else None
+    if not isinstance(images, dict):
+        return None
+
+    selected_images = images.get(color) if color else None
+    if isinstance(selected_images, list) and selected_images:
+        return selected_images[0]
+    return _first_grouped_image(images)
 
 
 def variant_stock(variant: dict | None) -> int:

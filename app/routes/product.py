@@ -30,6 +30,19 @@ router = APIRouter(
     prefix="/product",
     tags=["Product"],
 )
+MONGO_MATCH_STAGE = "$match"
+MONGO_GROUP_STAGE = "$group"
+MONGO_OPTIONS_OPERATOR = "$options"
+MONGO_ELEM_MATCH_OPERATOR = "$elemMatch"
+PRODUCT_SORT_FIELDS = {
+    "createdAt": "createdAt",
+    "price": "finalPrice",
+    "rating": "averageRating",
+    "discount": "discountPercentage",
+    "name": "name",
+}
+
+
 def calculate_final_price(
     price: float,
     discount_percentage: float,
@@ -94,93 +107,97 @@ def validate_images(
                 )
 
 
-def validate_inventory(
-    inventory: list,
-):
+def _inventory_item_values(item: dict) -> tuple[str, str, str]:
+    if not isinstance(item, dict):
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid inventory item.",
+        )
+
+    variant_id = str(item.get("variantId", "")).strip()
+    color = str(item.get("color", "")).strip()
+    size = str(item.get("size", "")).strip()
+
+    if not variant_id:
+        raise HTTPException(
+            status_code=400,
+            detail="Variant ID cannot be empty.",
+        )
+    if not color:
+        raise HTTPException(
+            status_code=400,
+            detail="Inventory color cannot be empty.",
+        )
+    if not size:
+        raise HTTPException(
+            status_code=400,
+            detail="Inventory size cannot be empty.",
+        )
+
+    try:
+        stock = int(item.get("stock", 0))
+    except (TypeError, ValueError) as error:
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                f"Invalid stock for variant "
+                f"'{variant_id}'. Stock must be a number."
+            ),
+        ) from error
+    if stock < 0:
+        raise HTTPException(
+            status_code=400,
+            detail="Inventory stock cannot be negative.",
+        )
+
+    return variant_id, color, size
+
+
+def _record_unique_inventory_variant(
+    variant_id: str,
+    color: str,
+    size: str,
+    variant_ids: set[str],
+    combinations: set[tuple[str, str]],
+) -> None:
+    if variant_id in variant_ids:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Duplicate variantId: {variant_id}",
+        )
+
+    combination = (color.lower(), size.lower())
+    if combination in combinations:
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                "Duplicate color/size combination: "
+                f"{color} / {size}"
+            ),
+        )
+
+    variant_ids.add(variant_id)
+    combinations.add(combination)
+
+
+def validate_inventory(inventory: list) -> None:
     if not isinstance(inventory, list):
         raise HTTPException(
             status_code=400,
             detail="Inventory must be an array.",
         )
-    variant_ids = set()
-    combinations = set()
+
+    variant_ids: set[str] = set()
+    combinations: set[tuple[str, str]] = set()
     for item in inventory:
-        if not isinstance(item, dict):
-            raise HTTPException(
-                status_code=400,
-                detail="Invalid inventory item.",
-            )
-        variant_id = str(
-            item.get("variantId", "")
-        ).strip()
-        color = str(
-            item.get("color", "")
-        ).strip()
-        size = str(
-            item.get("size", "")
-        ).strip()
-        stock = item.get("stock", 0)
-
-
-        if not variant_id:
-            raise HTTPException(
-                status_code=400,
-                detail="Variant ID cannot be empty.",
-            )
-
-
-        if not color:
-            raise HTTPException(
-                status_code=400,
-                detail="Inventory color cannot be empty.",
-            )
-
-
-        if not size:
-            raise HTTPException(
-                status_code=400,
-                detail="Inventory size cannot be empty.",
-            )
-
-
-        try:
-            stock = int(stock)
-        except (TypeError, ValueError):
-            raise HTTPException(
-                status_code=400,
-                detail=(
-                    f"Invalid stock for variant "
-                    f"'{variant_id}'. Stock must be a number."
-                ),
-            )
-        if stock < 0:
-            raise HTTPException(
-                status_code=400,
-                detail="Inventory stock cannot be negative.",
-            )
-
-
-        if variant_id in variant_ids:
-            raise HTTPException(
-                status_code=400,
-                detail=f"Duplicate variantId: {variant_id}",
-            )
-
-
-        combination = (
-            color.lower(),
-            size.lower(),
+        variant_id, color, size = _inventory_item_values(item)
+        _record_unique_inventory_variant(
+            variant_id,
+            color,
+            size,
+            variant_ids,
+            combinations,
         )
-        if combination in combinations:
-            raise HTTPException(
-                status_code=400,
-                detail=(
-                    "Duplicate color/size combination: "
-                    f"{color} / {size}"
-                ),
-            )
-        variant_ids.add(variant_id)
-        combinations.add(combination)
 
 
 def validate_color_images_against_inventory(
@@ -416,12 +433,12 @@ def get_tenant_product_filters(
         result = list(
             products.aggregate(
                 [
-                    {"$match": match},
+                    {MONGO_MATCH_STAGE: match},
                     {
                         "$facet": {
                             "price": [
                                 {
-                                    "$group": {
+                                    MONGO_GROUP_STAGE: {
                                         "_id": None,
                                         "min": {"$min": "$finalPrice"},
                                         "max": {"$max": "$finalPrice"},
@@ -430,21 +447,21 @@ def get_tenant_product_filters(
                             ],
                             "brands": [
                                 {
-                                    "$match": {
+                                    MONGO_MATCH_STAGE: {
                                         "brand": {"$nin": [None, ""]},
                                     }
                                 },
-                                {"$group": {"_id": "$brand"}},
+                                {MONGO_GROUP_STAGE: {"_id": "$brand"}},
                                 {"$sort": {"_id": 1}},
                             ],
                             "categories": [
                                 {
-                                    "$match": {
+                                    MONGO_MATCH_STAGE: {
                                         "categoryId": {"$nin": [None, ""]},
                                     }
                                 },
                                 {
-                                    "$group": {
+                                    MONGO_GROUP_STAGE: {
                                         "_id": "$categoryId",
                                         "name": {
                                             "$first": "$categoryName"
@@ -461,7 +478,7 @@ def get_tenant_product_filters(
                                     }
                                 },
                                 {
-                                    "$group": {
+                                    MONGO_GROUP_STAGE: {
                                         "_id": None,
                                         "colors": {
                                             "$addToSet": "$inventory.color"
@@ -516,6 +533,238 @@ def get_tenant_product_filters(
     }
 
 
+def _normalize_product_filter_values(
+    values: list[str] | None,
+) -> list[str]:
+    normalized = []
+    for value in values or []:
+        if value is None:
+            continue
+        for part in str(value).strip().split(","):
+            part = part.strip()
+            if part:
+                normalized.append(part)
+
+    unique = []
+    seen = set()
+    for value in normalized:
+        key = value.lower()
+        if key not in seen:
+            seen.add(key)
+            unique.append(value)
+    return unique
+
+
+def _normalize_product_pagination(
+    page: int,
+    limit: int,
+) -> tuple[int, int, int]:
+    normalized_page = max(page, 1)
+    normalized_limit = min(max(limit, 1), 100)
+    skip = (normalized_page - 1) * normalized_limit
+    return normalized_page, normalized_limit, skip
+
+
+def _allow_inactive_products(
+    include_inactive: bool,
+    current_user: dict | None,
+    tenant_id: str,
+) -> bool:
+    if not include_inactive or not current_user:
+        return False
+    if current_user.get("role") not in ("admin", "super_admin"):
+        return False
+    try:
+        admin_tenant_id(current_user, tenant_id)
+        return True
+    except HTTPException:
+        return False
+
+
+def _case_insensitive_regex(value: str) -> dict:
+    return {
+        "$regex": re.escape(value),
+        MONGO_OPTIONS_OPERATOR: "i",
+    }
+
+
+def _multiple_regex_condition(
+    field: str,
+    values: list[str],
+) -> dict | None:
+    if not values:
+        return None
+    regexes = [_case_insensitive_regex(value) for value in values]
+    if len(regexes) == 1:
+        return {field: regexes[0]}
+    return {
+        "$or": [
+            {field: regex}
+            for regex in regexes
+        ]
+    }
+
+
+def _add_price_filter(
+    query: dict,
+    min_price: float | None,
+    max_price: float | None,
+) -> None:
+    if min_price is None and max_price is None:
+        return
+    query["finalPrice"] = {}
+    if min_price is not None:
+        query["finalPrice"]["$gte"] = min_price
+    if max_price is not None:
+        query["finalPrice"]["$lte"] = max_price
+
+
+def _add_inventory_filter(
+    query: dict,
+    sizes: list[str],
+    colors: list[str],
+) -> None:
+    conditions = []
+    size_condition = _multiple_regex_condition("size", sizes)
+    color_condition = _multiple_regex_condition("color", colors)
+    if size_condition:
+        conditions.append(size_condition)
+    if color_condition:
+        conditions.append(color_condition)
+    conditions.append({"stock": {"$gt": 0}})
+    query["inventory"] = {
+        MONGO_ELEM_MATCH_OPERATOR: {
+            "$and": conditions,
+        }
+    }
+
+
+def _add_search_filter(
+    query: dict,
+    search: str | None,
+) -> None:
+    if not search:
+        return
+    search_regex = re.escape(search)
+    search_conditions = [
+        {
+            field: {
+                "$regex": search_regex,
+                MONGO_OPTIONS_OPERATOR: "i",
+            }
+        }
+        for field in ("name", "description", "brand")
+    ]
+    if "$or" in query:
+        query["$and"] = [
+            {"$or": query.pop("$or")},
+            {"$or": search_conditions},
+        ]
+        return
+    query["$or"] = search_conditions
+
+
+def _build_all_products_query(
+    tenant_id: str,
+    allow_inactive: bool,
+    category_ids: list[str],
+    brands: list[str],
+    min_price: float | None,
+    max_price: float | None,
+    sizes: list[str],
+    colors: list[str],
+    rating: float | None,
+    search: str | None,
+) -> dict:
+    query = {"tenantId": tenant_id}
+    if not allow_inactive:
+        query["isActive"] = True
+    if category_ids:
+        query["categoryId"] = {"$in": category_ids}
+
+    brand_condition = _multiple_regex_condition("brand", brands)
+    if brand_condition:
+        query.update(brand_condition)
+    _add_price_filter(query, min_price, max_price)
+    _add_inventory_filter(query, sizes, colors)
+    if rating is not None:
+        query["averageRating"] = {"$gte": rating}
+    _add_search_filter(query, search)
+    return query
+
+
+def _resolve_product_sort(
+    sort_by: str,
+    sort_order: str,
+) -> tuple[str, int]:
+    sort_field = PRODUCT_SORT_FIELDS.get(sort_by, "createdAt")
+    direction = -1 if sort_order.lower() == "desc" else 1
+    return sort_field, direction
+
+
+def _count_all_products(query: dict) -> int:
+    try:
+        return products.count_documents(query)
+    except Exception as error:
+        print("ERROR counting products:", repr(error))
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to count products.",
+        ) from error
+
+
+def _fetch_all_products(
+    query: dict,
+    sort_field: str,
+    sort_order: int,
+    skip: int,
+    limit: int,
+) -> list[dict]:
+    try:
+        cursor = (
+            products.find(query)
+            .sort(sort_field, sort_order)
+            .skip(skip)
+            .limit(limit)
+        )
+        return [
+            serialize_product(product)
+            for product in cursor
+        ]
+    except Exception as error:
+        print("ERROR fetching products:", repr(error))
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to fetch products.",
+        ) from error
+
+
+def _assemble_all_products_response(
+    data: list[dict],
+    total_count: int,
+    page: int,
+    limit: int,
+    filter_data: dict,
+) -> dict:
+    total_pages = (
+        (total_count + limit - 1) // limit
+        if total_count > 0
+        else 0
+    )
+    return {
+        "success": True,
+        "count": len(data),
+        "totalCount": total_count,
+        "page": page,
+        "limit": limit,
+        "totalPages": total_pages,
+        "hasNextPage": page < total_pages,
+        "hasPreviousPage": page > 1,
+        "filter": filter_data,
+        "data": data,
+    }
+
+
 @router.get(
     "/get-all-products",
     responses={500: INTERNAL_SERVER_ERROR_RESPONSE[500]},
@@ -547,724 +796,149 @@ def get_all_products(
         get_optional_user
     ),
 ):
-
-    page = max(
+    page, limit, skip = _normalize_product_pagination(page, limit)
+    categoryIds = _normalize_product_filter_values(categoryIds)
+    sizes = _normalize_product_filter_values(sizes)
+    colors = _normalize_product_filter_values(colors)
+    brands = _normalize_product_filter_values(brands)
+    search = search.strip() if search else None
+    allow_inactive = _allow_inactive_products(
+        includeInactive,
+        current_user,
+        tenantId,
+    )
+    query = _build_all_products_query(
+        tenantId,
+        allow_inactive,
+        categoryIds,
+        brands,
+        minPrice,
+        maxPrice,
+        sizes,
+        colors,
+        rating,
+        search,
+    )
+    sort_field, sort_order = _resolve_product_sort(sortBy, sortOrder)
+    total_count = _count_all_products(query)
+    data = _fetch_all_products(
+        query,
+        sort_field,
+        sort_order,
+        skip,
+        limit,
+    )
+    filter_data = get_tenant_product_filters(
+        tenantId,
+        allow_inactive,
+    )
+    return _assemble_all_products_response(
+        data,
+        total_count,
         page,
-        1,
+        limit,
+        filter_data,
     )
 
-    limit = min(
-        max(limit, 1),
-        100,
-    )
 
-    skip = (
-        page - 1
-    ) * limit
-
-    # --------------------------------------------------
-    # CLEAN FILTER VALUES
-    # --------------------------------------------------
-
-    def clean_values(
-        values: list[str] | None,
-    ) -> list[str]:
-
-        result = []
-
-        for value in values or []:
-
-            if value is None:
-                continue
-
-            value = str(
-                value
-            ).strip()
-
-            if not value:
-                continue
-
-            # Support:
-            # brands=Amul,Milkmaid
-            # as well as:
-            # brands=Amul&brands=Milkmaid
-            parts = value.split(",")
-
-            for part in parts:
-
-                part = part.strip()
-
-                if part:
-                    result.append(part)
-
-        # Remove duplicates
-        unique = []
-
-        seen = set()
-
-        for value in result:
-
-            key = value.lower()
-
-            if key not in seen:
-
-                seen.add(key)
-
-                unique.append(value)
-
-        return unique
-
-    categoryIds = clean_values(
-        categoryIds
-    )
-
-    sizes = clean_values(
-        sizes
-    )
-
-    colors = clean_values(
-        colors
-    )
-
-    brands = clean_values(
-        brands
-    )
-
-    # --------------------------------------------------
-    # SEARCH
-    # --------------------------------------------------
-
-    search = (
-        search.strip()
-        if search
-        else None
-    )
-
-    # --------------------------------------------------
-    # BASE QUERY
-    # --------------------------------------------------
-
-    query = {
-        "tenantId": tenantId,
-    }
-
-    # --------------------------------------------------
-    # ACTIVE / INACTIVE
-    # --------------------------------------------------
-
-    allow_inactive = False
-
-    if (
-        includeInactive
-        and current_user
-        and current_user.get("role")
-        in (
-            "admin",
-            "super_admin",
-        )
-    ):
-
-        try:
-
-            admin_tenant_id(
-                current_user,
-                tenantId,
-            )
-
-            allow_inactive = True
-
-        except HTTPException:
-
-            allow_inactive = False
-
-    if not allow_inactive:
-
-        query["isActive"] = True
-
-    # --------------------------------------------------
-    # CATEGORY FILTER
-    # --------------------------------------------------
-
-    if categoryIds:
-
-        query["categoryId"] = {
-            "$in": categoryIds
-        }
-
-    # --------------------------------------------------
-    # BRAND FILTER
-    #
-    # Case insensitive
-    # Supports multiple brands
-    # --------------------------------------------------
-
-    if brands:
-
-        brand_regex = []
-
-        for brand in brands:
-
-            brand_regex.append(
-                {
-                    "$regex": re.escape(
-                        brand
-                    ),
-                    "$options": "i",
-                }
-            )
-
-        if len(brand_regex) == 1:
-
-            query["brand"] = (
-                brand_regex[0]
-            )
-
-        else:
-
-            query["$or"] = (
-                query.get("$or", [])
-                + [
-                    {
-                        "brand": item
-                    }
-                    for item
-                    in brand_regex
-                ]
-            )
-
-    # --------------------------------------------------
-    # PRICE FILTER
-    # --------------------------------------------------
-
-    if (
-        minPrice is not None
-        or maxPrice is not None
-    ):
-
-        query["finalPrice"] = {}
-
-        if minPrice is not None:
-
-            query["finalPrice"][
-                "$gte"
-            ] = minPrice
-
-        if maxPrice is not None:
-
-            query["finalPrice"][
-                "$lte"
-            ] = maxPrice
-
-    # --------------------------------------------------
-    # INVENTORY FILTER
-    #
-    # IMPORTANT:
-    #
-    # size + color must belong to the
-    # same inventory variant.
-    #
-    # stock must be > 0.
-    # --------------------------------------------------
-
-    inventory_conditions = []
-
+def _add_search_inventory_filter(
+    query: dict,
+    sizes: list[str],
+    colors: list[str],
+) -> None:
+    conditions = []
     if sizes:
-
-        size_regex = [
-            {
-                "$regex": re.escape(
-                    size
-                ),
-                "$options": "i",
-            }
-            for size in sizes
-        ]
-
-        if len(size_regex) == 1:
-
-            inventory_conditions.append(
-                {
-                    "size": size_regex[0]
-                }
-            )
-
-        else:
-
-            inventory_conditions.append(
-                {
-                    "$or": [
-                        {
-                            "size": item
-                        }
-                        for item
-                        in size_regex
-                    ]
-                }
-            )
-
+        conditions.append({"size": {"$in": sizes}})
     if colors:
-
-        color_regex = [
-            {
-                "$regex": re.escape(
-                    color
-                ),
-                "$options": "i",
-            }
-            for color in colors
-        ]
-
-        if len(color_regex) == 1:
-
-            inventory_conditions.append(
-                {
-                    "color": color_regex[0]
-                }
-            )
-
-        else:
-
-            inventory_conditions.append(
-                {
-                    "$or": [
-                        {
-                            "color": item
-                        }
-                        for item
-                        in color_regex
-                    ]
-                }
-            )
-
-    # Always require stock
-    inventory_conditions.append(
-        {
-            "stock": {
-                "$gt": 0
-            }
-        }
-    )
-
+        conditions.append({"color": {"$in": colors}})
+    conditions.append({"stock": {"$gt": 0}})
     query["inventory"] = {
-        "$elemMatch": {
-            "$and": inventory_conditions
+        MONGO_ELEM_MATCH_OPERATOR: {
+            "$and": conditions,
         }
     }
 
-    # --------------------------------------------------
-    # RATING
-    # --------------------------------------------------
 
-    if rating is not None:
-
-        query["averageRating"] = {
-            "$gte": rating
-        }
-
-    # --------------------------------------------------
-    # SEARCH
-    # --------------------------------------------------
-
-    if search:
-
-        search_regex = re.escape(
-            search
-        )
-
-        search_conditions = [
-            {
-                "name": {
-                    "$regex": search_regex,
-                    "$options": "i",
-                }
-            },
-            {
-                "description": {
-                    "$regex": search_regex,
-                    "$options": "i",
-                }
-            },
-            {
-                "brand": {
-                    "$regex": search_regex,
-                    "$options": "i",
-                }
-            },
-        ]
-
-        if "$or" in query:
-
-            query["$and"] = [
-                {
-                    "$or": query.pop(
-                        "$or"
-                    )
-                },
-                {
-                    "$or": search_conditions
-                },
-            ]
-
-        else:
-
-            query["$or"] = (
-                search_conditions
-            )
-
-    # --------------------------------------------------
-    # SORT
-    # --------------------------------------------------
-
-    allowed_sort_fields = {
-        "createdAt": "createdAt",
-        "price": "finalPrice",
-        "rating": "averageRating",
-        "discount": "discountPercentage",
-        "name": "name",
+def _build_search_product_query(request: ProductSearchRequest) -> dict:
+    query = {
+        "tenantId": request.tenantId,
+        "isActive": True,
     }
+    search = request.search.strip() if request.search else None
+    _add_search_filter(query, search)
+    if request.categoryIds:
+        query["categoryId"] = {"$in": request.categoryIds}
+    _add_price_filter(query, request.minPrice, request.maxPrice)
+    _add_search_inventory_filter(query, request.sizes, request.colors)
+    if request.rating is not None:
+        query["averageRating"] = {"$gte": request.rating}
+    return query
 
-    sort_field = (
-        allowed_sort_fields.get(
-            sortBy,
-            "createdAt",
-        )
-    )
 
-    sort_order = (
-        -1
-        if sortOrder.lower()
-        == "desc"
-        else 1
-    )
+def _resolve_search_product_sort(
+    sort_by: str,
+    sort_order: str,
+) -> tuple[str, int]:
+    sort_field = PRODUCT_SORT_FIELDS.get(sort_by, "createdAt")
+    direction = 1 if sort_order.lower() == "asc" else -1
+    return sort_field, direction
 
-    # --------------------------------------------------
-    # COUNT
-    # --------------------------------------------------
 
+def _fetch_search_products(
+    query: dict,
+    sort_field: str,
+    sort_direction: int,
+    skip: int,
+    limit: int,
+) -> list[dict]:
     try:
-
-        total_count = (
-            products.count_documents(
-                query
-            )
-        )
-
-    except Exception as e:
-
-        print(
-            "ERROR counting products:",
-            repr(e),
-        )
-
-        raise HTTPException(
-            status_code=500,
-            detail=(
-                "Failed to count products."
-            ),
-        )
-
-    # --------------------------------------------------
-    # FETCH PRODUCTS
-    # --------------------------------------------------
-
-    try:
-
         cursor = (
             products.find(query)
-            .sort(
-                sort_field,
-                sort_order,
-            )
+            .sort(sort_field, sort_direction)
             .skip(skip)
             .limit(limit)
         )
-
-        data = []
-
-        for product in cursor:
-
-            data.append(
-                serialize_product(
-                    product
-                )
-            )
-
-    except Exception as e:
-
-        print(
-            "ERROR fetching products:",
-            repr(e),
-        )
-
+        return [
+            serialize_product(product)
+            for product in cursor
+        ]
+    except Exception as error:
+        print("ERROR searching products:", repr(error))
         raise HTTPException(
             status_code=500,
-            detail=(
-                "Failed to fetch products."
-            ),
-        )
+            detail="Failed to search products.",
+        ) from error
 
-    # --------------------------------------------------
-    # PAGINATION
-    # --------------------------------------------------
-
-    total_pages = (
-        (
-            total_count
-            + limit
-            - 1
-        )
-        // limit
-        if total_count > 0
-        else 0
-    )
-
-    # --------------------------------------------------
-    # DYNAMIC FILTERS
-    #
-    # IMPORTANT:
-    # These are generated from ALL products
-    # belonging to this tenant.
-    # --------------------------------------------------
-
-    filter_data = (
-        get_tenant_product_filters(
-            tenantId,
-            allow_inactive,
-        )
-    )
-
-    # --------------------------------------------------
-    # RESPONSE
-    # --------------------------------------------------
-
-    return {
-        "success": True,
-
-        "count": len(data),
-
-        "totalCount": total_count,
-
-        "page": page,
-
-        "limit": limit,
-
-        "totalPages": total_pages,
-
-        "hasNextPage": (
-            page < total_pages
-        ),
-
-        "hasPreviousPage": (
-            page > 1
-        ),
-
-        "filter": filter_data,
-
-        "data": data,
-    }
 
 @router.post("/search", responses={500: INTERNAL_SERVER_ERROR_RESPONSE[500]})
 def search_product(
     request: ProductSearchRequest,
 ):
-
-
-    query = {
-        "tenantId": request.tenantId,
-        "isActive": True,
-    }
-
-
-    if request.search:
-        search = request.search.strip()
-        if search:
-            escaped_search = re.escape(
-                search
-            )
-            query["$or"] = [
-                {
-                    "name": {
-                        "$regex": escaped_search,
-                        "$options": "i",
-                    }
-                },
-                {
-                    "description": {
-                        "$regex": escaped_search,
-                        "$options": "i",
-                    }
-                },
-                {
-                    "brand": {
-                        "$regex": escaped_search,
-                        "$options": "i",
-                    }
-                },
-            ]
-
-
-    if request.categoryIds:
-        query["categoryId"] = {
-            "$in": request.categoryIds
-        }
-
-
-    if (
-        request.minPrice is not None
-        or request.maxPrice is not None
-    ):
-        query["finalPrice"] = {}
-        if request.minPrice is not None:
-            query["finalPrice"]["$gte"] = (
-                request.minPrice
-            )
-        if request.maxPrice is not None:
-            query["finalPrice"]["$lte"] = (
-                request.maxPrice
-            )
-
-
-    inventory_conditions = []
-    if request.sizes:
-        inventory_conditions.append(
-            {
-                "size": {
-                    "$in": request.sizes
-                }
-            }
-        )
-    if request.colors:
-        inventory_conditions.append(
-            {
-                "color": {
-                    "$in": request.colors
-                }
-            }
-        )
-    inventory_conditions.append(
-        {
-            "stock": {
-                "$gt": 0
-            }
-        }
-    )
-    query["inventory"] = {
-        "$elemMatch": {
-            "$and": inventory_conditions
-        }
-    }
-
-
-    if request.rating is not None:
-        query["averageRating"] = {
-            "$gte": request.rating
-        }
-
-
-    allowed_sort_fields = {
-        "createdAt": "createdAt",
-        "price": "finalPrice",
-        "rating": "averageRating",
-        "discount": "discountPercentage",
-        "name": "name",
-    }
-    sort_field = allowed_sort_fields.get(
+    query = _build_search_product_query(request)
+    sort_field, sort_direction = _resolve_search_product_sort(
         request.sortBy,
-        "createdAt",
+        request.sortOrder,
     )
-    sort_direction = (
-        1
-        if request.sortOrder.lower() == "asc"
-        else -1
-    )
-
-
-    page = max(
+    page, limit, skip = _normalize_product_pagination(
         request.page,
-        1,
+        request.limit,
     )
-    limit = min(
-        max(
-            request.limit,
-            1,
-        ),
-        100,
+    total_count = _count_all_products(query)
+    data = _fetch_search_products(
+        query,
+        sort_field,
+        sort_direction,
+        skip,
+        limit,
     )
-    skip = (
-        page - 1
-    ) * limit
-
-
-    try:
-        total_count = products.count_documents(
-            query
-        )
-    except Exception as e:
-        print(
-            "ERROR searching product count:",
-            repr(e),
-        )
-        raise HTTPException(
-            status_code=500,
-            detail="Failed to count products.",
-        )
-
-
-    try:
-        cursor = (
-            products.find(query)
-            .sort(
-                sort_field,
-                sort_direction,
-            )
-            .skip(skip)
-            .limit(limit)
-        )
-        data = []
-        for product in cursor:
-            data.append(
-                serialize_product(product)
-            )
-    except Exception as e:
-        print(
-            "ERROR searching products:",
-            repr(e),
-        )
-        raise HTTPException(
-            status_code=500,
-            detail="Failed to search products.",
-        )
-
-
-    total_pages = (
-        (
-            total_count
-            + limit
-            - 1
-        )
-        // limit
-        if total_count > 0
-        else 0
+    filter_data = get_tenant_product_filters(request.tenantId, False)
+    return _assemble_all_products_response(
+        data,
+        total_count,
+        page,
+        limit,
+        filter_data,
     )
-    return {
-        "success": True,
-        "count": len(data),
-        "totalCount": total_count,
-        "page": page,
-        "limit": limit,
-        "totalPages": total_pages,
-        "hasNextPage": (
-            page < total_pages
-        ),
-        "hasPreviousPage": (
-            page > 1
-        ),
-        "data": data,
-        "filter": get_tenant_product_filters(
-            request.tenantId,
-            False,
-        ),
-    }
 def get_new_arrivals(
     tenantId: str,
     limit: int = 10,
@@ -1277,7 +951,7 @@ def get_new_arrivals(
         "tenantId": tenantId,
         "isActive": True,
         "inventory": {
-            "$elemMatch": {
+            MONGO_ELEM_MATCH_OPERATOR: {
                 "stock": {
                     "$gt": 0
                 }
@@ -1363,6 +1037,119 @@ def get_product(
     }
 
 
+def _validate_product_update_values(update_data: dict) -> None:
+    if "name" in update_data:
+        name = str(update_data["name"]).strip()
+        if not name:
+            raise HTTPException(
+                status_code=400,
+                detail="Product name cannot be empty.",
+            )
+        update_data["name"] = name
+
+    if "price" in update_data and update_data["price"] < 0:
+        raise HTTPException(
+            status_code=400,
+            detail="Price cannot be negative.",
+        )
+
+    discount = update_data.get("discountPercentage")
+    if discount is not None:
+        if discount < 0 or discount > 100:
+            raise HTTPException(
+                status_code=400,
+                detail="Discount must be between 0 and 100.",
+            )
+
+def _prepare_updated_inventory(update_data: dict) -> list | None:
+    inventory = None
+    if "inventory" in update_data:
+        inventory = update_data["inventory"]
+        validate_inventory(inventory)
+        for item in inventory:
+            item["stock"] = int(item.get("stock", 0))
+        update_data["totalStock"] = calculate_total_stock(inventory)
+    return inventory
+
+
+def _validate_updated_images(
+    update_data: dict,
+    inventory: list | None,
+    db_product: dict,
+) -> None:
+    if "images" in update_data:
+        images = update_data["images"]
+        validate_images(images)
+        inventory_for_validation = (
+            inventory
+            if inventory is not None
+            else db_product.get("inventory", [])
+        )
+        validate_color_images_against_inventory(
+            inventory_for_validation,
+            images,
+        )
+
+
+def _update_final_price(update_data: dict, db_product: dict) -> None:
+    if "price" in update_data or "discountPercentage" in update_data:
+        price = update_data.get(
+            "price",
+            db_product.get("price", 0),
+        )
+        discount = update_data.get(
+            "discountPercentage",
+            db_product.get("discountPercentage", 0),
+        )
+        update_data["finalPrice"] = calculate_final_price(
+            price,
+            discount,
+        )
+
+
+def _prepare_product_update(
+    product: UpdateProduct,
+    db_product: dict,
+) -> dict:
+    update_data = product.model_dump(
+        exclude_unset=True,
+        exclude_none=True,
+    )
+    update_data.pop("tenantId", None)
+    _validate_product_update_values(update_data)
+    inventory = _prepare_updated_inventory(update_data)
+    _validate_updated_images(update_data, inventory, db_product)
+    _update_final_price(update_data, db_product)
+    update_data["updatedAt"] = datetime.now(timezone.utc)
+    return update_data
+
+
+def _persist_product_update(
+    object_id: ObjectId,
+    tenant_id: str,
+    update_data: dict,
+) -> None:
+    try:
+        result = products.update_one(
+            {
+                "_id": object_id,
+                "tenantId": tenant_id,
+            },
+            {"$set": update_data},
+        )
+    except Exception as error:
+        print("ERROR updating product:", repr(error))
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to update product.",
+        ) from error
+    if result.matched_count == 0:
+        raise HTTPException(
+            status_code=404,
+            detail=PRODUCT_NOT_FOUND,
+        )
+
+
 @router.put(
     "/{id}",
     responses={
@@ -1382,10 +1169,11 @@ def update_product(
             status_code=400,
             detail=INVALID_PRODUCT_ID,
         )
+    object_id = ObjectId(id)
     tenant_id = admin_tenant_id(current_user, product.tenantId)
     db_product = products.find_one(
         {
-            "_id": ObjectId(id),
+            "_id": object_id,
             "tenantId": tenant_id,
         }
     )
@@ -1394,157 +1182,12 @@ def update_product(
             status_code=404,
             detail=PRODUCT_NOT_FOUND,
         )
-    update_data = product.model_dump(
-        exclude_unset=True,
-        exclude_none=True,
-    )
-    update_data.pop(
-        "tenantId",
-        None,
-    )
 
-
-    if "name" in update_data:
-        name = str(
-            update_data["name"]
-        ).strip()
-        if not name:
-            raise HTTPException(
-                status_code=400,
-                detail=(
-                    "Product name cannot be empty."
-                ),
-            )
-        update_data["name"] = name
-
-
-    if "price" in update_data:
-        if update_data["price"] < 0:
-            raise HTTPException(
-                status_code=400,
-                detail=(
-                    "Price cannot be negative."
-                ),
-            )
-
-
-    if "discountPercentage" in update_data:
-        discount = update_data[
-            "discountPercentage"
-        ]
-        if discount < 0 or discount > 100:
-            raise HTTPException(
-                status_code=400,
-                detail=(
-                    "Discount must be between "
-                    "0 and 100."
-                ),
-            )
-
-
-    inventory = None
-    if "inventory" in update_data:
-        inventory = update_data[
-            "inventory"
-        ]
-        validate_inventory(
-            inventory
-        )
-
-        for item in inventory:
-            item["stock"] = int(
-                item.get("stock", 0)
-            )
-        update_data[
-            "totalStock"
-        ] = calculate_total_stock(
-            inventory
-        )
-
-
-    if "images" in update_data:
-        images = update_data[
-            "images"
-        ]
-        validate_images(
-            images
-        )
-        inventory_for_validation = (
-            inventory
-            if inventory is not None
-            else db_product.get(
-                "inventory",
-                [],
-            )
-        )
-        validate_color_images_against_inventory(
-            inventory_for_validation,
-            images,
-        )
-
-
-    if (
-        "price" in update_data
-        or "discountPercentage" in update_data
-    ):
-        price = update_data.get(
-            "price",
-            db_product.get(
-                "price",
-                0,
-            ),
-        )
-        discount = update_data.get(
-            "discountPercentage",
-            db_product.get(
-                "discountPercentage",
-                0,
-            ),
-        )
-        update_data[
-            "finalPrice"
-        ] = calculate_final_price(
-            price,
-            discount,
-        )
-
-
-    update_data[
-        "updatedAt"
-    ] = datetime.now(
-        timezone.utc
-    )
-
-
-    try:
-        result = products.update_one(
-            {
-                "_id": ObjectId(id),
-                "tenantId": tenant_id,
-            },
-            {
-                "$set": update_data
-            },
-        )
-    except Exception as e:
-        print(
-            "ERROR updating product:",
-            repr(e),
-        )
-        raise HTTPException(
-            status_code=500,
-            detail="Failed to update product.",
-        )
-    if result.matched_count == 0:
-        raise HTTPException(
-            status_code=404,
-            detail=PRODUCT_NOT_FOUND,
-        )
+    update_data = _prepare_product_update(product, db_product)
+    _persist_product_update(object_id, tenant_id, update_data)
     return {
         "success": True,
-        "message": (
-            "Product updated successfully."
-        ),
+        "message": "Product updated successfully.",
     }
 
 

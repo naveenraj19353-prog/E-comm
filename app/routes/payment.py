@@ -316,6 +316,83 @@ def refund(
         raise HTTPException(status_code=400, detail="Refund failed.")
 
 
+def _verify_webhook(body: bytes, signature: str) -> None:
+    try:
+        client.utility.verify_webhook_signature(
+            body.decode("utf-8"),
+            signature,
+            RAZORPAY_WEBHOOK_SECRET,
+        )
+    except Exception as error:
+        logger.exception("Invalid Razorpay webhook signature")
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid webhook signature.",
+        ) from error
+
+
+def _parse_webhook_payload(body: bytes) -> dict:
+    try:
+        return json.loads(body)
+    except json.JSONDecodeError as error:
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid webhook payload.",
+        ) from error
+
+
+def _is_transient_fulfillment_error(error: HTTPException, detail: str) -> bool:
+    return (
+        error.status_code == 409
+        and "still being processed" in detail.lower()
+    ) or (
+        error.status_code == 400
+        and detail == "Payment order was not found."
+    )
+
+
+def _fulfill_webhook_payment(
+    razorpay_order_id: str,
+    razorpay_payment_id: str,
+) -> dict:
+    try:
+        validate_captured_payment(razorpay_order_id, razorpay_payment_id)
+        result = fulfill_captured_payment(
+            razorpay_order_id,
+            razorpay_payment_id,
+        )
+        return {
+            "success": True,
+            "status": "fulfilled",
+            "orderId": result.get("orderId"),
+        }
+    except HTTPException as error:
+        detail = str(error.detail)
+        if _is_transient_fulfillment_error(error, detail):
+            raise HTTPException(
+                status_code=503,
+                detail=detail,
+            ) from error
+        if error.status_code in {400, 409}:
+            logger.warning(
+                "Webhook fulfillment terminal failure with status %s: %s",
+                error.status_code,
+                detail,
+            )
+            return {
+                "success": True,
+                "status": "terminal",
+                "detail": detail,
+            }
+        raise
+    except Exception as error:
+        logger.exception("Webhook fulfillment failed")
+        raise HTTPException(
+            status_code=500,
+            detail="Webhook processing failed.",
+        ) from error
+
+
 @router.post(
     "/webhook",
     responses={
@@ -336,20 +413,8 @@ async def webhook(request: Request):
     if not signature:
         raise HTTPException(status_code=400, detail="Missing webhook signature.")
 
-    try:
-        client.utility.verify_webhook_signature(
-            body.decode("utf-8"),
-            signature,
-            RAZORPAY_WEBHOOK_SECRET,
-        )
-    except Exception:
-        logger.exception("Invalid Razorpay webhook signature")
-        raise HTTPException(status_code=400, detail="Invalid webhook signature.")
-
-    try:
-        payload = json.loads(body)
-    except json.JSONDecodeError:
-        raise HTTPException(status_code=400, detail="Invalid webhook payload.")
+    _verify_webhook(body, signature)
+    payload = _parse_webhook_payload(body)
 
     event = payload.get("event")
     if event != "payment.captured":
@@ -364,39 +429,7 @@ async def webhook(request: Request):
     if payment_entity.get("status") != "captured":
         return {"success": True, "status": "ignored", "reason": "not captured"}
 
-    try:
-        validate_captured_payment(razorpay_order_id, razorpay_payment_id)
-        result = fulfill_captured_payment(
-            razorpay_order_id,
-            razorpay_payment_id,
-        )
-        return {"success": True, "status": "fulfilled", "orderId": result.get("orderId")}
-    except HTTPException as error:
-        detail = str(error.detail)
-        transient = (
-            error.status_code == 409
-            and "still being processed" in detail.lower()
-        ) or (
-            error.status_code == 400
-            and detail == "Payment order was not found."
-        )
-        if transient:
-            raise HTTPException(
-                status_code=503,
-                detail=detail,
-            ) from error
-        if error.status_code in {400, 409}:
-            logger.warning(
-                "Webhook fulfillment terminal failure with status %s: %s",
-                error.status_code,
-                detail,
-            )
-            return {
-                "success": True,
-                "status": "terminal",
-                "detail": detail,
-            }
-        raise
-    except Exception:
-        logger.exception("Webhook fulfillment failed")
-        raise HTTPException(status_code=500, detail="Webhook processing failed.")
+    return _fulfill_webhook_payment(
+        razorpay_order_id,
+        razorpay_payment_id,
+    )
