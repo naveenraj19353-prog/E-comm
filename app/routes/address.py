@@ -231,7 +231,6 @@ def delete_address(
             status_code=404,
             detail=ADDRESS_NOT_FOUND_MESSAGE,
         )
-    user_id = address["userId"]
     was_default = address.get("isDefault", False)
 
     result = addresses.delete_one(

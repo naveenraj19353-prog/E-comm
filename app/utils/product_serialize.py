@@ -1,6 +1,3 @@
-from datetime import datetime
-
-
 AUTO_FORMAT_QUERY = "?auto=format"
 UNSPLASH_BASE_URL = "https://images.unsplash.com/"
 UNSPLASH_DUPLICATE_PREFIX = f"{UNSPLASH_BASE_URL}https://"
@@ -113,8 +110,4 @@ def serialize_product(product: dict) -> dict:
     product["stock"] = total_stock
     images = normalize_product_images(product.get("images", {}))
     product["images"] = images
-    for field in ("createdAt", "updatedAt"):
-        value = product.get(field)
-        if isinstance(value, datetime):
-            pass
     return product

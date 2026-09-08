@@ -139,10 +139,7 @@ def _inventory_item_values(item: dict) -> tuple[str, str, str]:
     except (TypeError, ValueError) as error:
         raise HTTPException(
             status_code=400,
-            detail=(
-                f"Invalid stock for variant "
-                f"'{variant_id}'. Stock must be a number."
-            ),
+            detail=f"Invalid stock for variant '{variant_id}'. Stock must be a number.",
         ) from error
     if stock < 0:
         raise HTTPException(
@@ -765,61 +762,86 @@ def _assemble_all_products_response(
     }
 
 
+def _product_filter_parameters(
+    categoryIds: list[str] | None = Query(default=None),
+    minPrice: float | None = None,
+    maxPrice: float | None = None,
+    sizes: list[str] | None = Query(default=None),
+    colors: list[str] | None = Query(default=None),
+    brands: list[str] | None = Query(default=None),
+    rating: float | None = None,
+    search: str | None = None,
+) -> dict:
+    return {
+        "categoryIds": categoryIds,
+        "minPrice": minPrice,
+        "maxPrice": maxPrice,
+        "sizes": sizes,
+        "colors": colors,
+        "brands": brands,
+        "rating": rating,
+        "search": search,
+    }
+
+
+def _product_listing_parameters(
+    page: int = 1,
+    limit: int = 20,
+    sortBy: str = "createdAt",
+    sortOrder: str = "desc",
+    includeInactive: bool = False,
+    current_user: dict | None = Depends(get_optional_user),
+) -> dict:
+    return {
+        "page": page,
+        "limit": limit,
+        "sortBy": sortBy,
+        "sortOrder": sortOrder,
+        "includeInactive": includeInactive,
+        "current_user": current_user,
+    }
+
+
 @router.get(
     "/get-all-products",
     responses={500: INTERNAL_SERVER_ERROR_RESPONSE[500]},
 )
 def get_all_products(
     tenantId: str,
-    page: int = 1,
-    limit: int = 20,
-    categoryIds: list[str] | None = Query(
-        default=None
-    ),
-    minPrice: float | None = None,
-    maxPrice: float | None = None,
-    sizes: list[str] | None = Query(
-        default=None
-    ),
-    colors: list[str] | None = Query(
-        default=None
-    ),
-    brands: list[str] | None = Query(
-        default=None
-    ),
-    rating: float | None = None,
-    search: str | None = None,
-    sortBy: str = "createdAt",
-    sortOrder: str = "desc",
-    includeInactive: bool = False,
-    current_user: dict | None = Depends(
-        get_optional_user
-    ),
+    filters: dict = Depends(_product_filter_parameters),
+    listing: dict = Depends(_product_listing_parameters),
 ):
-    page, limit, skip = _normalize_product_pagination(page, limit)
-    categoryIds = _normalize_product_filter_values(categoryIds)
-    sizes = _normalize_product_filter_values(sizes)
-    colors = _normalize_product_filter_values(colors)
-    brands = _normalize_product_filter_values(brands)
-    search = search.strip() if search else None
+    page, limit, skip = _normalize_product_pagination(
+        listing["page"],
+        listing["limit"],
+    )
+    category_ids = _normalize_product_filter_values(filters["categoryIds"])
+    sizes = _normalize_product_filter_values(filters["sizes"])
+    colors = _normalize_product_filter_values(filters["colors"])
+    brands = _normalize_product_filter_values(filters["brands"])
+    search_value = filters["search"]
+    search = search_value.strip() if search_value else None
     allow_inactive = _allow_inactive_products(
-        includeInactive,
-        current_user,
+        listing["includeInactive"],
+        listing["current_user"],
         tenantId,
     )
     query = _build_all_products_query(
         tenantId,
         allow_inactive,
-        categoryIds,
+        category_ids,
         brands,
-        minPrice,
-        maxPrice,
+        filters["minPrice"],
+        filters["maxPrice"],
         sizes,
         colors,
-        rating,
+        filters["rating"],
         search,
     )
-    sort_field, sort_order = _resolve_product_sort(sortBy, sortOrder)
+    sort_field, sort_order = _resolve_product_sort(
+        listing["sortBy"],
+        listing["sortOrder"],
+    )
     total_count = _count_all_products(query)
     data = _fetch_all_products(
         query,
@@ -1054,12 +1076,11 @@ def _validate_product_update_values(update_data: dict) -> None:
         )
 
     discount = update_data.get("discountPercentage")
-    if discount is not None:
-        if discount < 0 or discount > 100:
-            raise HTTPException(
-                status_code=400,
-                detail="Discount must be between 0 and 100.",
-            )
+    if discount is not None and (discount < 0 or discount > 100):
+        raise HTTPException(
+            status_code=400,
+            detail="Discount must be between 0 and 100.",
+        )
 
 def _prepare_updated_inventory(update_data: dict) -> list | None:
     inventory = None

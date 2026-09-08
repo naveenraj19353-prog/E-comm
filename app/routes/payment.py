@@ -32,6 +32,7 @@ from app.utils.auth_dependencies import (
 )
 
 logger = logging.getLogger(__name__)
+RAZORPAY_SSL_ERROR_DETAIL = "Could not reach Razorpay because of an SSL certificate error on this machine."
 
 router = APIRouter(
     prefix="/payments",
@@ -136,10 +137,7 @@ def create_order(
         logger.exception("Razorpay SSL error while creating payment order")
         raise HTTPException(
             status_code=502,
-            detail=(
-                "Could not reach Razorpay because of an SSL "
-                "certificate error on this machine."
-            ),
+            detail=RAZORPAY_SSL_ERROR_DETAIL,
         )
     except RequestsConnectionError:
         logger.exception("Razorpay connection error while creating payment order")
@@ -153,10 +151,7 @@ def create_order(
         if "certificate" in detail.lower() or "ssl" in detail.lower():
             raise HTTPException(
                 status_code=502,
-                detail=(
-                    "Could not reach Razorpay because of an SSL "
-                    "certificate error on this machine."
-                ),
+                detail=RAZORPAY_SSL_ERROR_DETAIL,
             )
         raise HTTPException(status_code=500, detail="Unable to create payment order.")
 
