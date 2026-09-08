@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 from bson import ObjectId
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from app.database.mongo import products, wishlists
 from app.models.wishlist import WishList
 from app.routes.detail_messages import PRODUCT_NOT_FOUND
@@ -88,7 +88,7 @@ def add_to_wishlist(
 )
 def get_wishlist(
     userId: str,
-    tenantId: str | None = None,
+    tenant_id: str | None = Query(default=None, alias="tenantId"),
     current_user: dict = Depends(require_customer),
 ):
     tenant_id, token_user_id = customer_scope(current_user)
@@ -155,7 +155,7 @@ def get_wishlist(
 def remove_from_wishlist(
     productId: str,
     userId: str | None = None,
-    tenantId: str | None = None,
+    tenant_id: str | None = Query(default=None, alias="tenantId"),
     current_user: dict = Depends(require_customer),
 ):
     tenant_id, token_user_id = customer_scope(current_user)
@@ -188,7 +188,7 @@ def remove_from_wishlist(
 )
 def clear_wishlist(
     userId: str | None = None,
-    tenantId: str | None = None,
+    tenant_id: str | None = Query(default=None, alias="tenantId"),
     current_user: dict = Depends(require_customer),
 ):
     tenant_id, token_user_id = customer_scope(current_user)

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from datetime import datetime, timezone
 from bson import ObjectId
 from app.database.mongo import users
@@ -27,7 +27,7 @@ router = APIRouter(prefix="/profile", tags=["Profile"])
     },
 )
 def get_profile(
-    tenantId: str | None = None,
+    tenant_id: str | None = Query(default=None, alias="tenantId"),
     userId: str | None = None,
     current_user: dict = Depends(require_customer),
 ):
@@ -58,7 +58,7 @@ def get_profile(
 )
 def update_profile(
     request: UpdateProfile,
-    tenantId: str | None = None,
+    tenant_id: str | None = Query(default=None, alias="tenantId"),
     userId: str | None = None,
     current_user: dict = Depends(require_customer),
 ):

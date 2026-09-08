@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from bson import ObjectId
 from datetime import datetime, timezone
 from app.database.mongo import reviews, products
@@ -97,9 +97,12 @@ def add_review(
 
 
 @router.get("/product/{productId}")
-def get_reviews(productId: str, tenantId: str):
+def get_reviews(
+    productId: str,
+    tenant_id: str = Query(..., alias="tenantId"),
+):
     cursor = reviews.find(
-        {"tenantId": tenantId, "productId": ObjectId(productId)}
+        {"tenantId": tenant_id, "productId": ObjectId(productId)}
     ).sort("createdAt", -1)
     data = []
     for review in cursor:
@@ -120,7 +123,7 @@ def get_reviews(productId: str, tenantId: str):
 def update_review(
     id: str,
     request: UpdateReview,
-    tenantId: str | None = None,
+    tenant_id: str | None = Query(default=None, alias="tenantId"),
     userId: str | None = None,
     current_user: dict = Depends(require_customer),
 ):
@@ -159,7 +162,7 @@ def update_review(
 )
 def delete_review(
     id: str,
-    tenantId: str | None = None,
+    tenant_id: str | None = Query(default=None, alias="tenantId"),
     userId: str | None = None,
     current_user: dict = Depends(require_customer),
 ):

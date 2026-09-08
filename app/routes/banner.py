@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 from bson import ObjectId
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from app.database.mongo import banners, tenants
 from app.models.banner import CreateBanner, UpdateBanner
 from app.routes.detail_messages import (
@@ -97,14 +97,14 @@ def create_banner(
     },
 )
 def get_banners(
-    tenantId: str,
+    tenant_id: str = Query(..., alias="tenantId"),
 ):
     try:
 
 
         tenant = tenants.find_one(
             {
-                "tenantId": tenantId,
+                "tenantId": tenant_id,
                 "isActive": True,
             }
         )
@@ -117,7 +117,7 @@ def get_banners(
 
         banner_list = banners.find(
             {
-                "tenantId": tenantId,
+                "tenantId": tenant_id,
             }
         ).sort(
             "priority",
@@ -157,14 +157,14 @@ def get_banners(
     },
 )
 def get_active_banners(
-    tenantId: str,
+    tenant_id: str = Query(..., alias="tenantId"),
 ):
     try:
 
 
         tenant = tenants.find_one(
             {
-                "tenantId": tenantId,
+                "tenantId": tenant_id,
                 "isActive": True,
             }
         )
@@ -179,7 +179,7 @@ def get_active_banners(
 
 
         query = {
-            "tenantId": tenantId,
+            "tenantId": tenant_id,
             "isActive": True,
             "$or": [
                 {

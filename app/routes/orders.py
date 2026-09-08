@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 
 from bson import ObjectId
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from pymongo import DESCENDING
 
 from app.database.mongo import orders, users
@@ -82,10 +82,10 @@ def create_cod_order(
     },
 )
 def list_tenant_orders(
-    tenantId: str | None = None,
+    tenant_id: str | None = Query(default=None, alias="tenantId"),
     current_user: dict = Depends(require_admin),
 ):
-    tenant_id = admin_tenant_id(current_user, tenantId)
+    tenant_id = admin_tenant_id(current_user, tenant_id)
     try:
         cursor = orders.find({"tenantId": tenant_id}).sort("createdAt", DESCENDING)
         data = []
@@ -121,10 +121,10 @@ def list_tenant_orders(
 def update_order_status(
     order_id: str,
     payload: UpdateOrderStatus,
-    tenantId: str | None = None,
+    tenant_id: str | None = Query(default=None, alias="tenantId"),
     current_user: dict = Depends(require_admin),
 ):
-    tenant_id = admin_tenant_id(current_user, tenantId)
+    tenant_id = admin_tenant_id(current_user, tenant_id)
     try:
         object_id = ObjectId(order_id)
     except Exception:
@@ -190,10 +190,10 @@ def update_order_status(
 )
 def get_admin_order_detail(
     order_id: str,
-    tenantId: str | None = None,
+    tenant_id: str | None = Query(default=None, alias="tenantId"),
     current_user: dict = Depends(require_admin),
 ):
-    tenant_id = admin_tenant_id(current_user, tenantId)
+    tenant_id = admin_tenant_id(current_user, tenant_id)
     try:
         object_id = ObjectId(order_id)
     except Exception:
@@ -229,7 +229,7 @@ def get_admin_order_detail(
 )
 def get_order(
     order_id: str,
-    tenantId: str | None = None,
+    tenant_id: str | None = Query(default=None, alias="tenantId"),
     userId: str | None = None,
     current_user: dict = Depends(require_customer),
 ):
@@ -261,7 +261,7 @@ def get_order(
 )
 def get_user_orders(
     userId: str,
-    tenantId: str | None = None,
+    tenant_id: str | None = Query(default=None, alias="tenantId"),
     current_user: dict = Depends(require_customer),
 ):
     tenant_id, token_user_id = customer_scope(current_user)
