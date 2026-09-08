@@ -1,20 +1,19 @@
-from datetime import datetime, timezone
 import re
+from datetime import datetime, timezone
+from typing import Annotated
+
 from bson import ObjectId
 from fastapi import APIRouter, Depends, HTTPException, Query
+
 from app.database.mongo import products
 from app.models.product import (
-    CreateProduct,
-    UpdateProduct,
-    ProductSearchRequest,
-    VariantStockRequest,
     BulkImportRequest,
+    CreateProduct,
+    ProductSearchRequest,
+    UpdateProduct,
+    VariantStockRequest,
 )
 from app.routes.detail_messages import INVALID_PRODUCT_ID, PRODUCT_NOT_FOUND
-from app.utils.product_serialize import (
-    calculate_total_stock,
-    serialize_product,
-)
 from app.routes.response_metadata import (
     BAD_REQUEST_RESPONSE,
     FORBIDDEN_RESPONSE,
@@ -26,6 +25,11 @@ from app.utils.auth_dependencies import (
     get_optional_user,
     require_admin,
 )
+from app.utils.product_serialize import (
+    calculate_total_stock,
+    serialize_product,
+)
+
 router = APIRouter(
     prefix="/product",
     tags=["Product"],
@@ -241,7 +245,7 @@ def validate_color_images_against_inventory(
 )
 def create_product(
     product: CreateProduct,
-    current_user: dict = Depends(require_admin),
+    current_user: Annotated[dict, Depends(require_admin)],
 ):
     tenant_id = admin_tenant_id(current_user, product.tenantId)
 
@@ -350,7 +354,7 @@ def create_product(
 )
 def bulk_import_products(
     body: BulkImportRequest,
-    current_user: dict = Depends(require_admin),
+    current_user: Annotated[dict, Depends(require_admin)],
 ):
     from app.services.bulk_product_import import upsert_bulk_product
 
@@ -763,19 +767,21 @@ def _assemble_all_products_response(
 
 
 def _product_filter_parameters(
-    categoryIds: list[str] | None = Query(default=None),
-    minPrice: float | None = None,
-    maxPrice: float | None = None,
-    sizes: list[str] | None = Query(default=None),
-    colors: list[str] | None = Query(default=None),
-    brands: list[str] | None = Query(default=None),
+    category_ids: Annotated[
+        list[str] | None, Query(alias="categoryIds")
+    ] = None,
+    min_price: Annotated[float | None, Query(alias="minPrice")] = None,
+    max_price: Annotated[float | None, Query(alias="maxPrice")] = None,
+    sizes: Annotated[list[str] | None, Query()] = None,
+    colors: Annotated[list[str] | None, Query()] = None,
+    brands: Annotated[list[str] | None, Query()] = None,
     rating: float | None = None,
     search: str | None = None,
 ) -> dict:
     return {
-        "categoryIds": categoryIds,
-        "minPrice": minPrice,
-        "maxPrice": maxPrice,
+        "categoryIds": category_ids,
+        "minPrice": min_price,
+        "maxPrice": max_price,
         "sizes": sizes,
         "colors": colors,
         "brands": brands,
@@ -785,19 +791,19 @@ def _product_filter_parameters(
 
 
 def _product_listing_parameters(
+    current_user: Annotated[dict | None, Depends(get_optional_user)],
     page: int = 1,
     limit: int = 20,
-    sortBy: str = "createdAt",
-    sortOrder: str = "desc",
-    includeInactive: bool = False,
-    current_user: dict | None = Depends(get_optional_user),
+    sort_by: Annotated[str, Query(alias="sortBy")] = "createdAt",
+    sort_order: Annotated[str, Query(alias="sortOrder")] = "desc",
+    include_inactive: Annotated[bool, Query(alias="includeInactive")] = False,
 ) -> dict:
     return {
         "page": page,
         "limit": limit,
-        "sortBy": sortBy,
-        "sortOrder": sortOrder,
-        "includeInactive": includeInactive,
+        "sortBy": sort_by,
+        "sortOrder": sort_order,
+        "includeInactive": include_inactive,
         "current_user": current_user,
     }
 
@@ -807,9 +813,9 @@ def _product_listing_parameters(
     responses={500: INTERNAL_SERVER_ERROR_RESPONSE[500]},
 )
 def get_all_products(
-    tenant_id: str = Query(..., alias="tenantId"),
-    filters: dict = Depends(_product_filter_parameters),
-    listing: dict = Depends(_product_listing_parameters),
+    tenant_id: Annotated[str, Query(alias="tenantId")],
+    filters: Annotated[dict, Depends(_product_filter_parameters)],
+    listing: Annotated[dict, Depends(_product_listing_parameters)],
 ):
     page, limit, skip = _normalize_product_pagination(
         listing["page"],
@@ -962,10 +968,10 @@ def search_product(
         filter_data,
     )
 def get_new_arrivals(
-    tenant_id: str = Query(..., alias="tenantId"),
+    tenant_id: Annotated[str, Query(alias="tenantId")],
     limit: int = 10,
 ):
-    limit = min(
+    normalized_limit = min(
         max(limit, 1),
         100,
     )
@@ -987,7 +993,7 @@ def get_new_arrivals(
                 "createdAt",
                 -1,
             )
-            .limit(limit)
+            .limit(normalized_limit)
         )
         data = []
         for product in cursor:
@@ -1020,7 +1026,7 @@ def get_new_arrivals(
 )
 def get_product(
     id: str,
-    tenant_id: str = Query(..., alias="tenantId"),
+    tenant_id: Annotated[str, Query(alias="tenantId")],
 ):
     if not ObjectId.is_valid(id):
         raise HTTPException(
@@ -1183,7 +1189,7 @@ def _persist_product_update(
 def update_product(
     id: str,
     product: UpdateProduct,
-    current_user: dict = Depends(require_admin),
+    current_user: Annotated[dict, Depends(require_admin)],
 ):
     if not ObjectId.is_valid(id):
         raise HTTPException(
@@ -1222,8 +1228,8 @@ def update_product(
 )
 def delete_product(
     id: str,
-    tenant_id: str = Query(..., alias="tenantId"),
-    current_user: dict = Depends(require_admin),
+    tenant_id: Annotated[str, Query(alias="tenantId")],
+    current_user: Annotated[dict, Depends(require_admin)],
 ):
     if not ObjectId.is_valid(id):
         raise HTTPException(
@@ -1270,7 +1276,7 @@ def delete_product(
 )
 def get_product_inventory(
     id: str,
-    tenant_id: str = Query(..., alias="tenantId"),
+    tenant_id: Annotated[str, Query(alias="tenantId")],
 ):
     if not ObjectId.is_valid(id):
         raise HTTPException(

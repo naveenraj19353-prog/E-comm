@@ -1,6 +1,9 @@
-from fastapi import APIRouter, Depends, HTTPException
-from bson import ObjectId
 from datetime import datetime, timezone
+from typing import Annotated
+
+from bson import ObjectId
+from fastapi import APIRouter, Depends, HTTPException
+
 from app.database.mongo import tenants
 from app.models.tenant import CreateTenant, UpdateTenant, UpdateTenantTheme
 from app.routes.detail_messages import (
@@ -8,18 +11,19 @@ from app.routes.detail_messages import (
     NO_UPDATE_FIELDS,
     TENANT_NOT_FOUND,
 )
-from app.utils.auth_dependencies import (
-    require_super_admin,
-    require_admin,
-)
-from app.services.storefront_layout import build_storefront_layout
 from app.routes.response_metadata import (
     BAD_REQUEST_RESPONSE,
     FORBIDDEN_RESPONSE,
     INTERNAL_SERVER_ERROR_RESPONSE,
     NOT_FOUND_RESPONSE,
 )
+from app.services.storefront_layout import build_storefront_layout
+from app.utils.auth_dependencies import (
+    require_admin,
+    require_super_admin,
+)
 from app.utils.hash import hash_password
+
 router = APIRouter(
     prefix="/tenants",
     tags=["Tenants"],
@@ -35,7 +39,7 @@ router = APIRouter(
 )
 def create_tenant(
     tenant: CreateTenant,
-    current_user: dict = Depends(require_super_admin),
+    current_user: Annotated[dict, Depends(require_super_admin)],
 ):
     try:
         tenant_id = tenant.tenantId.strip().lower()
@@ -131,7 +135,7 @@ def create_tenant(
 
 @router.get("/", responses={403: FORBIDDEN_RESPONSE[403]})
 def get_tenants(
-    current_user: dict = Depends(require_admin),
+    current_user: Annotated[dict, Depends(require_admin)],
 ):
 
 
@@ -186,21 +190,21 @@ def get_tenants(
 )
 def get_tenant_by_tenant_id(
     tenant_id: str,
-    current_user: dict = Depends(require_admin),
+    current_user: Annotated[dict, Depends(require_admin)],
 ):
-    tenant_id = tenant_id.strip().lower()
+    normalized_tenant_id = tenant_id.strip().lower()
 
 
     if (
         current_user.get("role") != "super_admin"
-        and current_user.get("tenantId") != tenant_id
+        and current_user.get("tenantId") != normalized_tenant_id
     ):
         raise HTTPException(
             status_code=403,
             detail="You cannot access another tenant.",
         )
     tenant = tenants.find_one({
-        "tenantId": tenant_id,
+        "tenantId": normalized_tenant_id,
         "isActive": True,
     })
     if not tenant:
@@ -225,9 +229,9 @@ def get_tenant_by_tenant_id(
 def get_tenant_by_slug(
     slug: str,
 ):
-    slug = slug.strip().lower()
+    normalized_slug = slug.strip().lower()
     tenant = tenants.find_one({
-        "slug": slug,
+        "slug": normalized_slug,
         "isActive": True,
     })
     if not tenant:
@@ -259,9 +263,9 @@ def get_tenant_by_slug(
 def get_storefront_layout_by_slug(
     slug: str,
 ):
-    slug = slug.strip().lower()
+    normalized_slug = slug.strip().lower()
     tenant = tenants.find_one({
-        "slug": slug,
+        "slug": normalized_slug,
         "isActive": True,
     })
     if not tenant:
@@ -294,7 +298,7 @@ def get_storefront_layout_by_slug(
 )
 def get_tenant_by_id(
     id: str,
-    current_user: dict = Depends(require_admin),
+    current_user: Annotated[dict, Depends(require_admin)],
 ):
     try:
         object_id = ObjectId(id)
@@ -344,9 +348,7 @@ def get_tenant_by_id(
 def update_tenant(
     id: str,
     tenant: UpdateTenant,
-    current_user: dict = Depends(
-        require_super_admin
-    ),
+    current_user: Annotated[dict, Depends(require_super_admin)],
 ):
     try:
         object_id = ObjectId(id)
@@ -461,7 +463,7 @@ def update_tenant(
 def update_tenant_theme(
     id: str,
     payload: UpdateTenantTheme,
-    current_user: dict = Depends(require_admin),
+    current_user: Annotated[dict, Depends(require_admin)],
 ):
     try:
         object_id = ObjectId(id)
@@ -525,9 +527,7 @@ def update_tenant_theme(
 )
 def delete_tenant(
     id: str,
-    current_user: dict = Depends(
-        require_super_admin
-    ),
+    current_user: Annotated[dict, Depends(require_super_admin)],
 ):
     try:
         object_id = ObjectId(id)

@@ -1,6 +1,9 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
 from datetime import datetime, timezone
+from typing import Annotated
+
 from bson import ObjectId
+from fastapi import APIRouter, Depends, HTTPException, Query
+
 from app.database.mongo import users
 from app.models.profile import UpdateProfile
 from app.routes.detail_messages import (
@@ -27,17 +30,17 @@ router = APIRouter(prefix="/profile", tags=["Profile"])
     },
 )
 def get_profile(
-    tenant_id: str | None = Query(default=None, alias="tenantId"),
-    userId: str | None = None,
-    current_user: dict = Depends(require_customer),
+    current_user: Annotated[dict, Depends(require_customer)],
+    _tenant_id: Annotated[str | None, Query(alias="tenantId")] = None,
+    _user_id: Annotated[str | None, Query(alias="userId")] = None,
 ):
-    tenant_id, token_user_id = customer_scope(current_user)
+    scoped_tenant_id, token_user_id = customer_scope(current_user)
     if not ObjectId.is_valid(token_user_id):
         raise HTTPException(status_code=400, detail=INVALID_USER_ID)
     user = users.find_one(
         {
             "_id": ObjectId(token_user_id),
-            "tenantId": tenant_id,
+            "tenantId": scoped_tenant_id,
             "isActive": True,
         },
         {"password": 0, "resetToken": 0, "resetTokenExpiry": 0},
@@ -58,11 +61,11 @@ def get_profile(
 )
 def update_profile(
     request: UpdateProfile,
-    tenant_id: str | None = Query(default=None, alias="tenantId"),
-    userId: str | None = None,
-    current_user: dict = Depends(require_customer),
+    current_user: Annotated[dict, Depends(require_customer)],
+    _tenant_id: Annotated[str | None, Query(alias="tenantId")] = None,
+    _user_id: Annotated[str | None, Query(alias="userId")] = None,
 ):
-    tenant_id, token_user_id = customer_scope(current_user)
+    scoped_tenant_id, token_user_id = customer_scope(current_user)
     if not ObjectId.is_valid(token_user_id):
         raise HTTPException(status_code=400, detail=INVALID_USER_ID)
     update_data = request.model_dump(exclude_unset=True, exclude_none=True)
@@ -72,7 +75,7 @@ def update_profile(
     result = users.update_one(
         {
             "_id": ObjectId(token_user_id),
-            "tenantId": tenant_id,
+            "tenantId": scoped_tenant_id,
             "isActive": True,
         },
         {"$set": update_data},
@@ -82,7 +85,7 @@ def update_profile(
     user = users.find_one(
         {
             "_id": ObjectId(token_user_id),
-            "tenantId": tenant_id,
+            "tenantId": scoped_tenant_id,
             "isActive": True,
         },
         {"password": 0, "resetToken": 0, "resetTokenExpiry": 0},

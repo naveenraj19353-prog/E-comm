@@ -1,4 +1,7 @@
+from typing import Annotated
+
 from fastapi import APIRouter, Depends, HTTPException
+
 from app.models.checkout import CheckoutRequest
 from app.routes.response_metadata import (
     BAD_REQUEST_RESPONSE,
@@ -26,7 +29,7 @@ router = APIRouter(
 )
 def checkout(
     request: CheckoutRequest,
-    current_user: dict = Depends(require_customer),
+    current_user: Annotated[dict, Depends(require_customer)],
 ):
     tenant_id, user_id = customer_scope(current_user)
     try:

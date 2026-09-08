@@ -1,6 +1,9 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
-from bson import ObjectId
 from datetime import datetime, timezone
+from typing import Annotated
+
+from bson import ObjectId
+from fastapi import APIRouter, Depends, HTTPException, Query
+
 from app.database.mongo import categories
 from app.models.category import CreateCategory, UpdateCategory
 from app.routes.detail_messages import (
@@ -15,6 +18,7 @@ from app.routes.response_metadata import (
 )
 from app.utils.auth_dependencies import admin_tenant_id, require_admin
 from app.utils.category_catalog import get_catalog_categories
+
 router = APIRouter(
     prefix="/categories",
     tags=["Categories"]
@@ -30,7 +34,7 @@ router = APIRouter(
 )
 def create_category(
     category: CreateCategory,
-    current_user: dict = Depends(require_admin),
+    current_user: Annotated[dict, Depends(require_admin)],
 ):
     tenant_id = admin_tenant_id(current_user, category.tenantId)
     existing = categories.find_one(
@@ -64,7 +68,7 @@ def create_category(
 
 @router.get("/")
 def get_all_categories(
-    tenant_id: str = Query(..., alias="tenantId"),
+    tenant_id: Annotated[str, Query(alias="tenantId")],
 ):
     """
     Categories with at least one active product for the tenant.
@@ -88,7 +92,7 @@ def get_all_categories(
 )
 def get_category_by_id(
     id: str,
-    tenant_id: str = Query(..., alias="tenantId"),
+    tenant_id: Annotated[str, Query(alias="tenantId")],
 ):
     if not ObjectId.is_valid(id):
         raise HTTPException(
@@ -127,7 +131,7 @@ def get_category_by_id(
 def update_category(
     id: str,
     category: UpdateCategory,
-    current_user: dict = Depends(require_admin),
+    current_user: Annotated[dict, Depends(require_admin)],
 ):
     if not ObjectId.is_valid(id):
         raise HTTPException(
@@ -186,10 +190,10 @@ def update_category(
 )
 def delete_category(
     id: str,
-    tenant_id: str = Query(..., alias="tenantId"),
-    current_user: dict = Depends(require_admin),
+    tenant_id: Annotated[str, Query(alias="tenantId")],
+    current_user: Annotated[dict, Depends(require_admin)],
 ):
-    tenant_id = admin_tenant_id(current_user, tenant_id)
+    scoped_tenant_id = admin_tenant_id(current_user, tenant_id)
     if not ObjectId.is_valid(id):
         raise HTTPException(
             status_code=400,
@@ -198,7 +202,7 @@ def delete_category(
     result = categories.delete_one(
         {
             "_id": ObjectId(id),
-            "tenantId": tenant_id
+            "tenantId": scoped_tenant_id
         }
     )
     if result.deleted_count == 0:

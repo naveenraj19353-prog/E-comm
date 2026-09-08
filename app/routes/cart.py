@@ -1,6 +1,9 @@
 from datetime import datetime, timezone
+from typing import Annotated
+
 from bson import ObjectId
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Path, Query
+
 from app.database.mongo import carts
 from app.models.cart import AddCart, UpdateCart
 from app.routes.detail_messages import PRODUCT_NOT_FOUND
@@ -9,14 +12,14 @@ from app.routes.response_metadata import (
     FORBIDDEN_RESPONSE,
     NOT_FOUND_RESPONSE,
 )
-from app.utils.auth_dependencies import customer_scope, require_customer
 from app.services.checkout_service import (
     cart_owner_query,
     find_active_product,
-    product_id_query,
     get_variant,
     get_variant_image,
+    product_id_query,
 )
+from app.utils.auth_dependencies import customer_scope, require_customer
 
 router = APIRouter(
     prefix="/cart",
@@ -43,7 +46,7 @@ def get_object_id(value: str, field_name: str) -> ObjectId:
 )
 def add_to_cart(
     request: AddCart,
-    current_user: dict = Depends(require_customer),
+    current_user: Annotated[dict, Depends(require_customer)],
 ):
     tenant_id, user_id = customer_scope(current_user)
     product_id = get_object_id(request.productId, "productId")
@@ -131,12 +134,12 @@ def add_to_cart(
     },
 )
 def update_cart(
-    productId: str,
+    product_id: Annotated[str, Path(alias="productId")],
     request: UpdateCart,
-    current_user: dict = Depends(require_customer),
+    current_user: Annotated[dict, Depends(require_customer)],
 ):
     tenant_id, user_id = customer_scope(current_user)
-    product_object_id = get_object_id(productId, "productId")
+    product_object_id = get_object_id(product_id, "productId")
     product = find_active_product(product_object_id, tenant_id)
     if not product:
         raise HTTPException(status_code=404, detail=PRODUCT_NOT_FOUND)
@@ -187,22 +190,22 @@ def update_cart(
 
 @router.get("/{userId}", responses={403: FORBIDDEN_RESPONSE[403]})
 def get_cart(
-    userId: str,
-    tenant_id: str | None = Query(default=None, alias="tenantId"),
-    current_user: dict = Depends(require_customer),
+    user_id: Annotated[str, Path(alias="userId")],
+    current_user: Annotated[dict, Depends(require_customer)],
+    _tenant_id: Annotated[str | None, Query(alias="tenantId")] = None,
 ):
-    tenant_id, token_user_id = customer_scope(current_user)
-    if userId != token_user_id:
+    scoped_tenant_id, token_user_id = customer_scope(current_user)
+    if user_id != token_user_id:
         raise HTTPException(
             status_code=403,
             detail="You cannot access another user's cart.",
         )
-    cursor = carts.find(cart_owner_query(tenant_id, token_user_id))
+    cursor = carts.find(cart_owner_query(scoped_tenant_id, token_user_id))
     data = []
     grand_total = 0
     total_quantity = 0
     for item in cursor:
-        product = find_active_product(item.get("productId"), tenant_id)
+        product = find_active_product(item.get("productId"), scoped_tenant_id)
         if not product:
             carts.delete_one({"_id": item["_id"]})
             continue
@@ -249,20 +252,20 @@ def get_cart(
     },
 )
 def remove_from_cart(
-    productId: str,
-    userId: str | None = None,
-    tenant_id: str | None = Query(default=None, alias="tenantId"),
-    variantId: str | None = None,
-    current_user: dict = Depends(require_customer),
+    product_id: Annotated[str, Path(alias="productId")],
+    current_user: Annotated[dict, Depends(require_customer)],
+    _user_id: Annotated[str | None, Query(alias="userId")] = None,
+    _tenant_id: Annotated[str | None, Query(alias="tenantId")] = None,
+    variant_id: Annotated[str | None, Query(alias="variantId")] = None,
 ):
-    tenant_id, token_user_id = customer_scope(current_user)
-    product_object_id = get_object_id(productId, "productId")
+    scoped_tenant_id, token_user_id = customer_scope(current_user)
+    product_object_id = get_object_id(product_id, "productId")
     query = {
-        **cart_owner_query(tenant_id, token_user_id),
+        **cart_owner_query(scoped_tenant_id, token_user_id),
         "productId": product_id_query(product_object_id),
     }
-    if variantId:
-        query["variantId"] = variantId
+    if variant_id:
+        query["variantId"] = variant_id
     result = carts.delete_one(query)
     if result.deleted_count == 0:
         raise HTTPException(
@@ -277,12 +280,12 @@ def remove_from_cart(
 
 @router.delete("/", responses={403: FORBIDDEN_RESPONSE[403]})
 def clear_cart(
-    userId: str | None = None,
-    tenant_id: str | None = Query(default=None, alias="tenantId"),
-    current_user: dict = Depends(require_customer),
+    current_user: Annotated[dict, Depends(require_customer)],
+    _user_id: Annotated[str | None, Query(alias="userId")] = None,
+    _tenant_id: Annotated[str | None, Query(alias="tenantId")] = None,
 ):
-    tenant_id, token_user_id = customer_scope(current_user)
-    result = carts.delete_many(cart_owner_query(tenant_id, token_user_id))
+    scoped_tenant_id, token_user_id = customer_scope(current_user)
+    result = carts.delete_many(cart_owner_query(scoped_tenant_id, token_user_id))
     return {
         "success": True,
         "message": "Cart cleared successfully.",

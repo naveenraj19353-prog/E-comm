@@ -1,6 +1,9 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
-from bson import ObjectId
 from datetime import datetime, timezone
+from typing import Annotated
+
+from bson import ObjectId
+from fastapi import APIRouter, Depends, HTTPException, Query
+
 from app.database.mongo import users
 from app.models.user import UpdateUser
 from app.routes.detail_messages import (
@@ -26,13 +29,13 @@ router = APIRouter(prefix="/users", tags=["Users"])
     },
 )
 def get_users(
-    tenant_id: str | None = Query(default=None, alias="tenantId"),
-    current_user: dict = Depends(require_admin),
+    current_user: Annotated[dict, Depends(require_admin)],
+    tenant_id: Annotated[str | None, Query(alias="tenantId")] = None,
 ):
-    tenant_id = admin_tenant_id(current_user, tenant_id)
+    scoped_tenant_id = admin_tenant_id(current_user, tenant_id)
     result = []
     cursor = users.find(
-        {"tenantId": tenant_id},
+        {"tenantId": scoped_tenant_id},
         {"password": 0, "resetToken": 0, "resetTokenExpiry": 0},
     )
     for user in cursor:
@@ -51,14 +54,14 @@ def get_users(
 )
 def get_user(
     id: str,
-    tenant_id: str | None = Query(default=None, alias="tenantId"),
-    current_user: dict = Depends(require_admin),
+    current_user: Annotated[dict, Depends(require_admin)],
+    tenant_id: Annotated[str | None, Query(alias="tenantId")] = None,
 ):
-    tenant_id = admin_tenant_id(current_user, tenant_id)
+    scoped_tenant_id = admin_tenant_id(current_user, tenant_id)
     if not ObjectId.is_valid(id):
         raise HTTPException(status_code=400, detail=INVALID_USER_ID)
     user = users.find_one(
-        {"_id": ObjectId(id), "tenantId": tenant_id},
+        {"_id": ObjectId(id), "tenantId": scoped_tenant_id},
         {"password": 0, "resetToken": 0, "resetTokenExpiry": 0},
     )
     if not user:
@@ -78,10 +81,10 @@ def get_user(
 def update_user(
     id: str,
     request: UpdateUser,
-    tenant_id: str | None = Query(default=None, alias="tenantId"),
-    current_user: dict = Depends(require_admin),
+    current_user: Annotated[dict, Depends(require_admin)],
+    tenant_id: Annotated[str | None, Query(alias="tenantId")] = None,
 ):
-    tenant_id = admin_tenant_id(current_user, tenant_id)
+    scoped_tenant_id = admin_tenant_id(current_user, tenant_id)
     if not ObjectId.is_valid(id):
         raise HTTPException(status_code=400, detail=INVALID_USER_ID)
     update_data = request.model_dump(exclude_unset=True)
@@ -92,13 +95,13 @@ def update_user(
         raise HTTPException(status_code=400, detail=NO_UPDATE_FIELDS)
     update_data["updatedAt"] = datetime.now(timezone.utc)
     result = users.update_one(
-        {"_id": ObjectId(id), "tenantId": tenant_id},
+        {"_id": ObjectId(id), "tenantId": scoped_tenant_id},
         {"$set": update_data},
     )
     if result.matched_count == 0:
         raise HTTPException(status_code=404, detail=USER_NOT_FOUND)
     user = users.find_one(
-        {"_id": ObjectId(id), "tenantId": tenant_id},
+        {"_id": ObjectId(id), "tenantId": scoped_tenant_id},
         {"password": 0, "resetToken": 0, "resetTokenExpiry": 0},
     )
     user["_id"] = str(user["_id"])
@@ -115,13 +118,15 @@ def update_user(
 )
 def delete_user(
     id: str,
-    tenant_id: str | None = Query(default=None, alias="tenantId"),
-    current_user: dict = Depends(require_admin),
+    current_user: Annotated[dict, Depends(require_admin)],
+    tenant_id: Annotated[str | None, Query(alias="tenantId")] = None,
 ):
-    tenant_id = admin_tenant_id(current_user, tenant_id)
+    scoped_tenant_id = admin_tenant_id(current_user, tenant_id)
     if not ObjectId.is_valid(id):
         raise HTTPException(status_code=400, detail=INVALID_USER_ID)
-    result = users.delete_one({"_id": ObjectId(id), "tenantId": tenant_id})
+    result = users.delete_one(
+        {"_id": ObjectId(id), "tenantId": scoped_tenant_id}
+    )
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail=USER_NOT_FOUND)
     return {"success": True, "message": "User deleted successfully."}

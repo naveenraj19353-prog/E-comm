@@ -1,6 +1,9 @@
 from datetime import datetime, timezone
+from typing import Annotated
+
 from bson import ObjectId
 from fastapi import APIRouter, Depends, HTTPException, Query
+
 from app.database.mongo import banners, tenants
 from app.models.banner import CreateBanner, UpdateBanner
 from app.routes.detail_messages import (
@@ -15,6 +18,7 @@ from app.routes.response_metadata import (
     NOT_FOUND_RESPONSE,
 )
 from app.utils.auth_dependencies import admin_tenant_id, require_admin
+
 router = APIRouter(
     prefix="/banner",
     tags=["Banner"],
@@ -32,7 +36,7 @@ router = APIRouter(
 )
 def create_banner(
     banner: CreateBanner,
-    current_user: dict = Depends(require_admin),
+    current_user: Annotated[dict, Depends(require_admin)],
 ):
     try:
         banner_data = banner.model_dump()
@@ -97,7 +101,7 @@ def create_banner(
     },
 )
 def get_banners(
-    tenant_id: str = Query(..., alias="tenantId"),
+    tenant_id: Annotated[str, Query(alias="tenantId")],
 ):
     try:
 
@@ -157,7 +161,7 @@ def get_banners(
     },
 )
 def get_active_banners(
-    tenant_id: str = Query(..., alias="tenantId"),
+    tenant_id: Annotated[str, Query(alias="tenantId")],
 ):
     try:
 
@@ -249,7 +253,7 @@ def get_active_banners(
 def update_banner(
     banner_id: str,
     banner: UpdateBanner,
-    current_user: dict = Depends(require_admin),
+    current_user: Annotated[dict, Depends(require_admin)],
 ):
     try:
 
@@ -352,7 +356,7 @@ def update_banner(
 )
 def delete_banner(
     banner_id: str,
-    current_user: dict = Depends(require_admin),
+    current_user: Annotated[dict, Depends(require_admin)],
 ):
     try:
 
