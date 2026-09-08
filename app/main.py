@@ -78,11 +78,7 @@ def _database_status() -> tuple[str, str | None]:
         message = str(error)
         hint = None
         if "TLSV1_ALERT_INTERNAL_ERROR" in message:
-            hint = (
-                "Atlas blocked the connection. In MongoDB Atlas → Network Access, "
-                "add 0.0.0.0/0 (and ::/0), wait 2–3 minutes, redeploy Render. "
-                "Use a mongodb+srv:// URI with URL-encoded password."
-            )
+            hint = "Atlas blocked the connection. In MongoDB Atlas → Network Access, add 0.0.0.0/0 (and ::/0), wait 2–3 minutes, redeploy Render. Use a mongodb+srv:// URI with URL-encoded password."
         return "disconnected", hint
 
 

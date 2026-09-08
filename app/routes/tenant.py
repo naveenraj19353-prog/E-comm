@@ -191,12 +191,14 @@ def get_tenant_by_tenant_id(
     tenant_id = tenant_id.strip().lower()
 
 
-    if current_user.get("role") != "super_admin":
-        if current_user.get("tenantId") != tenant_id:
-            raise HTTPException(
-                status_code=403,
-                detail="You cannot access another tenant.",
-            )
+    if (
+        current_user.get("role") != "super_admin"
+        and current_user.get("tenantId") != tenant_id
+    ):
+        raise HTTPException(
+            status_code=403,
+            detail="You cannot access another tenant.",
+        )
     tenant = tenants.find_one({
         "tenantId": tenant_id,
         "isActive": True,
@@ -311,14 +313,14 @@ def get_tenant_by_id(
         )
 
 
-    if current_user.get("role") != "super_admin":
-        if current_user.get("tenantId") != tenant.get(
-            "tenantId"
-        ):
-            raise HTTPException(
-                status_code=403,
-                detail="You cannot access another tenant.",
-            )
+    if (
+        current_user.get("role") != "super_admin"
+        and current_user.get("tenantId") != tenant.get("tenantId")
+    ):
+        raise HTTPException(
+            status_code=403,
+            detail="You cannot access another tenant.",
+        )
     tenant["_id"] = str(
         tenant["_id"]
     )
@@ -476,12 +478,14 @@ def update_tenant_theme(
             detail=TENANT_NOT_FOUND,
         )
 
-    if current_user.get("role") != "super_admin":
-        if current_user.get("tenantId") != tenant.get("tenantId"):
-            raise HTTPException(
-                status_code=403,
-                detail="You cannot update another tenant's theme.",
-            )
+    if (
+        current_user.get("role") != "super_admin"
+        and current_user.get("tenantId") != tenant.get("tenantId")
+    ):
+        raise HTTPException(
+            status_code=403,
+            detail="You cannot update another tenant's theme.",
+        )
 
     update_data = payload.model_dump(exclude_unset=True)
     if not update_data:
