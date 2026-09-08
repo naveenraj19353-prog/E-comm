@@ -3,6 +3,12 @@ from bson import ObjectId
 from fastapi import APIRouter, Depends, HTTPException
 from app.database.mongo import banners, tenants
 from app.models.banner import CreateBanner, UpdateBanner
+from app.routes.response_metadata import (
+    BAD_REQUEST_RESPONSE,
+    FORBIDDEN_RESPONSE,
+    INTERNAL_SERVER_ERROR_RESPONSE,
+    NOT_FOUND_RESPONSE,
+)
 from app.utils.auth_dependencies import admin_tenant_id, require_admin
 router = APIRouter(
     prefix="/banner",
@@ -10,7 +16,15 @@ router = APIRouter(
 )
 
 
-@router.post("/create")
+@router.post(
+    "/create",
+    responses={
+        **BAD_REQUEST_RESPONSE,
+        **FORBIDDEN_RESPONSE,
+        **NOT_FOUND_RESPONSE,
+        **INTERNAL_SERVER_ERROR_RESPONSE,
+    },
+)
 def create_banner(
     banner: CreateBanner,
     current_user: dict = Depends(require_admin),
@@ -70,7 +84,10 @@ def create_banner(
         )
 
 
-@router.get("/get-all")
+@router.get(
+    "/get-all",
+    responses={**NOT_FOUND_RESPONSE, **INTERNAL_SERVER_ERROR_RESPONSE},
+)
 def get_banners(
     tenantId: str,
 ):
@@ -124,7 +141,10 @@ def get_banners(
         )
 
 
-@router.get("/active")
+@router.get(
+    "/active",
+    responses={**NOT_FOUND_RESPONSE, **INTERNAL_SERVER_ERROR_RESPONSE},
+)
 def get_active_banners(
     tenantId: str,
 ):
@@ -206,7 +226,15 @@ def get_active_banners(
         )
 
 
-@router.put("/update/{banner_id}")
+@router.put(
+    "/update/{banner_id}",
+    responses={
+        **BAD_REQUEST_RESPONSE,
+        **FORBIDDEN_RESPONSE,
+        **NOT_FOUND_RESPONSE,
+        **INTERNAL_SERVER_ERROR_RESPONSE,
+    },
+)
 def update_banner(
     banner_id: str,
     banner: UpdateBanner,
@@ -302,7 +330,15 @@ def update_banner(
         )
 
 
-@router.delete("/delete/{banner_id}")
+@router.delete(
+    "/delete/{banner_id}",
+    responses={
+        **BAD_REQUEST_RESPONSE,
+        **FORBIDDEN_RESPONSE,
+        **NOT_FOUND_RESPONSE,
+        **INTERNAL_SERVER_ERROR_RESPONSE,
+    },
+)
 def delete_banner(
     banner_id: str,
     current_user: dict = Depends(require_admin),

@@ -3,12 +3,24 @@ from datetime import datetime, timezone
 from bson import ObjectId
 from app.database.mongo import users
 from app.models.profile import UpdateProfile
+from app.routes.response_metadata import (
+    BAD_REQUEST_RESPONSE,
+    FORBIDDEN_RESPONSE,
+    NOT_FOUND_RESPONSE,
+)
 from app.utils.auth_dependencies import customer_scope, require_customer
 
 router = APIRouter(prefix="/profile", tags=["Profile"])
 
 
-@router.get("/")
+@router.get(
+    "/",
+    responses={
+        **BAD_REQUEST_RESPONSE,
+        **FORBIDDEN_RESPONSE,
+        **NOT_FOUND_RESPONSE,
+    },
+)
 def get_profile(
     tenantId: str | None = None,
     userId: str | None = None,
@@ -31,7 +43,14 @@ def get_profile(
     return {"success": True, "data": user}
 
 
-@router.put("/update-profile")
+@router.put(
+    "/update-profile",
+    responses={
+        **BAD_REQUEST_RESPONSE,
+        **FORBIDDEN_RESPONSE,
+        **NOT_FOUND_RESPONSE,
+    },
+)
 def update_profile(
     request: UpdateProfile,
     tenantId: str | None = None,

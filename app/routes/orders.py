@@ -8,6 +8,14 @@ from app.database.mongo import orders, users
 from app.models.orders import UpdateOrderStatus
 from app.models.checkout import CreateCodOrder
 from app.services.order_fulfillment import fulfill_cod_order, restore_variant_stock
+from app.routes.response_metadata import (
+    BAD_REQUEST_RESPONSE,
+    CONFLICT_RESPONSE,
+    FORBIDDEN_RESPONSE,
+    GONE_RESPONSE,
+    INTERNAL_SERVER_ERROR_RESPONSE,
+    NOT_FOUND_RESPONSE,
+)
 from app.utils.auth_dependencies import (
     admin_tenant_id,
     customer_scope,
@@ -26,7 +34,7 @@ ADMIN_STATUS_TRANSITIONS: dict[str, set[str]] = {
 }
 
 
-@router.post("/")
+@router.post("/", responses=GONE_RESPONSE)
 def create_order(current_user: dict = Depends(require_customer)):
     raise HTTPException(
         status_code=410,
@@ -34,7 +42,16 @@ def create_order(current_user: dict = Depends(require_customer)):
     )
 
 
-@router.post("/cod")
+@router.post(
+    "/cod",
+    responses={
+        **BAD_REQUEST_RESPONSE,
+        **FORBIDDEN_RESPONSE,
+        **NOT_FOUND_RESPONSE,
+        **CONFLICT_RESPONSE,
+        **INTERNAL_SERVER_ERROR_RESPONSE,
+    },
+)
 def create_cod_order(
     request: CreateCodOrder,
     current_user: dict = Depends(require_customer),
@@ -55,7 +72,14 @@ def create_cod_order(
         raise HTTPException(status_code=500, detail="Unable to place COD order.")
 
 
-@router.get("/admin/list")
+@router.get(
+    "/admin/list",
+    responses={
+        **BAD_REQUEST_RESPONSE,
+        **FORBIDDEN_RESPONSE,
+        **INTERNAL_SERVER_ERROR_RESPONSE,
+    },
+)
 def list_tenant_orders(
     tenantId: str | None = None,
     current_user: dict = Depends(require_admin),
@@ -85,7 +109,14 @@ def list_tenant_orders(
         raise HTTPException(status_code=500, detail="Unable to fetch orders.")
 
 
-@router.patch("/admin/{order_id}/status")
+@router.patch(
+    "/admin/{order_id}/status",
+    responses={
+        **BAD_REQUEST_RESPONSE,
+        **FORBIDDEN_RESPONSE,
+        **NOT_FOUND_RESPONSE,
+    },
+)
 def update_order_status(
     order_id: str,
     payload: UpdateOrderStatus,
@@ -148,7 +179,14 @@ def update_order_status(
     }
 
 
-@router.get("/admin/detail/{order_id}")
+@router.get(
+    "/admin/detail/{order_id}",
+    responses={
+        **BAD_REQUEST_RESPONSE,
+        **FORBIDDEN_RESPONSE,
+        **NOT_FOUND_RESPONSE,
+    },
+)
 def get_admin_order_detail(
     order_id: str,
     tenantId: str | None = None,
@@ -180,7 +218,14 @@ def get_admin_order_detail(
     }
 
 
-@router.get("/detail/{order_id}")
+@router.get(
+    "/detail/{order_id}",
+    responses={
+        **FORBIDDEN_RESPONSE,
+        **NOT_FOUND_RESPONSE,
+        **INTERNAL_SERVER_ERROR_RESPONSE,
+    },
+)
 def get_order(
     order_id: str,
     tenantId: str | None = None,
@@ -206,7 +251,10 @@ def get_order(
         raise HTTPException(status_code=500, detail="Unable to fetch order.")
 
 
-@router.get("/{userId}")
+@router.get(
+    "/{userId}",
+    responses={**FORBIDDEN_RESPONSE, **INTERNAL_SERVER_ERROR_RESPONSE},
+)
 def get_user_orders(
     userId: str,
     tenantId: str | None = None,

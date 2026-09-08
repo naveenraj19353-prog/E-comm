@@ -3,6 +3,11 @@ from bson import ObjectId
 from datetime import datetime, timezone
 from app.database.mongo import reviews, products
 from app.models.review import ReviewCreate, UpdateReview
+from app.routes.response_metadata import (
+    CONFLICT_RESPONSE,
+    FORBIDDEN_RESPONSE,
+    NOT_FOUND_RESPONSE,
+)
 from app.utils.auth_dependencies import customer_scope, require_customer
 
 router = APIRouter(prefix="/reviews", tags=["Reviews"])
@@ -37,7 +42,14 @@ def recalculate_product_rating(tenant_id: str, product_id: ObjectId):
         )
 
 
-@router.post("/")
+@router.post(
+    "/",
+    responses={
+        **FORBIDDEN_RESPONSE,
+        **NOT_FOUND_RESPONSE,
+        **CONFLICT_RESPONSE,
+    },
+)
 def add_review(
     request: ReviewCreate,
     current_user: dict = Depends(require_customer),
@@ -97,7 +109,10 @@ def get_reviews(productId: str, tenantId: str):
     return {"success": True, "count": len(data), "data": data}
 
 
-@router.put("/update-review/{id}")
+@router.put(
+    "/update-review/{id}",
+    responses={**FORBIDDEN_RESPONSE, **NOT_FOUND_RESPONSE},
+)
 def update_review(
     id: str,
     request: UpdateReview,
@@ -131,7 +146,10 @@ def update_review(
     return {"success": True, "message": "Review updated successfully."}
 
 
-@router.delete("/delete-review/{id}")
+@router.delete(
+    "/delete-review/{id}",
+    responses={**FORBIDDEN_RESPONSE, **NOT_FOUND_RESPONSE},
+)
 def delete_review(
     id: str,
     tenantId: str | None = None,

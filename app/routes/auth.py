@@ -20,13 +20,22 @@ from app.services.password_reset_service import (
     resolve_reset_account,
     save_reset_token,
 )
+from app.routes.response_metadata import (
+    BAD_REQUEST_RESPONSE,
+    INTERNAL_SERVER_ERROR_RESPONSE,
+    NOT_FOUND_RESPONSE,
+    UNAUTHORIZED_RESPONSE,
+)
 router = APIRouter(
     prefix="/auth",
     tags=["Authentication"],
 )
 
 
-@router.post("/register")
+@router.post(
+    "/register",
+    responses={**BAD_REQUEST_RESPONSE, **NOT_FOUND_RESPONSE},
+)
 def register(
     user: RegisterUser,
 ):
@@ -84,7 +93,7 @@ def register(
     }
 
 
-@router.post("/login")
+@router.post("/login", responses=UNAUTHORIZED_RESPONSE)
 def login(
     user: LoginUser,
 ):
@@ -237,7 +246,7 @@ def login(
     }
 
 
-@router.post("/forgot-password")
+@router.post("/forgot-password", responses=NOT_FOUND_RESPONSE)
 def forgot_password(
     user: ForgotPasswordRequest,
 ):
@@ -270,7 +279,10 @@ def forgot_password(
     }
 
 
-@router.post("/reset-password")
+@router.post(
+    "/reset-password",
+    responses={**BAD_REQUEST_RESPONSE, **INTERNAL_SERVER_ERROR_RESPONSE},
+)
 def reset_password(
     payload: ResetPasswordRequest,
 ):

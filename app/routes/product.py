@@ -14,6 +14,12 @@ from app.utils.product_serialize import (
     calculate_total_stock,
     serialize_product,
 )
+from app.routes.response_metadata import (
+    BAD_REQUEST_RESPONSE,
+    FORBIDDEN_RESPONSE,
+    INTERNAL_SERVER_ERROR_RESPONSE,
+    NOT_FOUND_RESPONSE,
+)
 from app.utils.auth_dependencies import (
     admin_tenant_id,
     get_optional_user,
@@ -211,7 +217,10 @@ def validate_color_images_against_inventory(
         )
 
 
-@router.post("/create-product")
+@router.post(
+    "/create-product",
+    responses={**BAD_REQUEST_RESPONSE, **FORBIDDEN_RESPONSE},
+)
 def create_product(
     product: CreateProduct,
     current_user: dict = Depends(require_admin),
@@ -314,7 +323,10 @@ def create_product(
     }
 
 
-@router.post("/bulk-import")
+@router.post(
+    "/bulk-import",
+    responses={**BAD_REQUEST_RESPONSE, **FORBIDDEN_RESPONSE},
+)
 def bulk_import_products(
     body: BulkImportRequest,
     current_user: dict = Depends(require_admin),
@@ -497,7 +509,10 @@ def get_tenant_product_filters(
     }
 
 
-@router.get("/get-all-products")
+@router.get(
+    "/get-all-products",
+    responses=INTERNAL_SERVER_ERROR_RESPONSE,
+)
 def get_all_products(
     tenantId: str,
     page: int = 1,
@@ -1041,7 +1056,7 @@ def get_all_products(
         "data": data,
     }
 
-@router.post("/search")
+@router.post("/search", responses=INTERNAL_SERVER_ERROR_RESPONSE)
 def search_product(
     request: ProductSearchRequest,
 ):
@@ -1292,7 +1307,14 @@ def get_new_arrivals(
     }
 
 
-@router.get("/{id}")
+@router.get(
+    "/{id}",
+    responses={
+        **BAD_REQUEST_RESPONSE,
+        **NOT_FOUND_RESPONSE,
+        **INTERNAL_SERVER_ERROR_RESPONSE,
+    },
+)
 def get_product(
     id: str,
     tenantId: str,
@@ -1334,7 +1356,15 @@ def get_product(
     }
 
 
-@router.put("/{id}")
+@router.put(
+    "/{id}",
+    responses={
+        **BAD_REQUEST_RESPONSE,
+        **FORBIDDEN_RESPONSE,
+        **NOT_FOUND_RESPONSE,
+        **INTERNAL_SERVER_ERROR_RESPONSE,
+    },
+)
 def update_product(
     id: str,
     product: UpdateProduct,
@@ -1511,7 +1541,14 @@ def update_product(
     }
 
 
-@router.delete("/{id}")
+@router.delete(
+    "/{id}",
+    responses={
+        **BAD_REQUEST_RESPONSE,
+        **NOT_FOUND_RESPONSE,
+        **INTERNAL_SERVER_ERROR_RESPONSE,
+    },
+)
 def delete_product(
     id: str,
     tenantId: str,
@@ -1552,7 +1589,14 @@ def delete_product(
     }
 
 
-@router.get("/{id}/inventory")
+@router.get(
+    "/{id}/inventory",
+    responses={
+        **BAD_REQUEST_RESPONSE,
+        **NOT_FOUND_RESPONSE,
+        **INTERNAL_SERVER_ERROR_RESPONSE,
+    },
+)
 def get_product_inventory(
     id: str,
     tenantId: str,
@@ -1615,7 +1659,14 @@ def get_product_inventory(
     }
 
 
-@router.post("/{id}/check-stock")
+@router.post(
+    "/{id}/check-stock",
+    responses={
+        **BAD_REQUEST_RESPONSE,
+        **NOT_FOUND_RESPONSE,
+        **INTERNAL_SERVER_ERROR_RESPONSE,
+    },
+)
 def check_variant_stock(
     id: str,
     request: VariantStockRequest,

@@ -4,11 +4,30 @@ from bson.errors import InvalidId
 from fastapi import APIRouter, Depends, HTTPException
 from app.database.mongo import addresses
 from app.models.address import CreateAddress, UpdateAddress
+from app.routes.response_metadata import FORBIDDEN_RESPONSE
 from app.utils.auth_dependencies import customer_scope, require_customer
 router = APIRouter(
     prefix="/addresses",
     tags=["Addresses"],
 )
+
+BAD_REQUEST_RESPONSE = {
+    400: {
+        "description": "Invalid request or object identifier.",
+    }
+}
+ADDRESS_MUTATION_RESPONSES = {
+    **BAD_REQUEST_RESPONSE,
+    **FORBIDDEN_RESPONSE,
+    404: {
+        "description": "Address not found.",
+    },
+}
+ADDRESS_ACCESS_RESPONSES = {
+    **BAD_REQUEST_RESPONSE,
+    **FORBIDDEN_RESPONSE,
+}
+USER_ID_FIELD = "user ID"
 
 
 def validate_object_id(value: str, field_name: str = "ID") -> ObjectId:
@@ -24,13 +43,16 @@ def validate_object_id(value: str, field_name: str = "ID") -> ObjectId:
         )
 
 
-@router.post("/create-address")
+@router.post(
+    "/create-address",
+    responses=ADDRESS_ACCESS_RESPONSES,
+)
 def create_address(
     request: CreateAddress,
     current_user: dict = Depends(require_customer),
 ):
     tenant_id, user_id = customer_scope(current_user)
-    user_object_id = validate_object_id(user_id, "user ID")
+    user_object_id = validate_object_id(user_id, USER_ID_FIELD)
     if request.isDefault:
         addresses.update_many(
             {
@@ -68,7 +90,10 @@ def create_address(
     }
 
 
-@router.get("/get-address/{userId}")
+@router.get(
+    "/get-address/{userId}",
+    responses=ADDRESS_ACCESS_RESPONSES,
+)
 def get_addresses(
     userId: str,
     tenantId: str | None = None,
@@ -80,7 +105,7 @@ def get_addresses(
             status_code=403,
             detail="You cannot access another user's addresses.",
         )
-    user_id = validate_object_id(token_user_id, "user ID")
+    user_id = validate_object_id(token_user_id, USER_ID_FIELD)
     cursor = addresses.find(
         {
             "tenantId": tenant_id,
@@ -104,7 +129,10 @@ def get_addresses(
     }
 
 
-@router.put("/update-address/{id}")
+@router.put(
+    "/update-address/{id}",
+    responses=ADDRESS_MUTATION_RESPONSES,
+)
 def update_address(
     id: str,
     request: UpdateAddress,
@@ -116,7 +144,7 @@ def update_address(
         {
             "_id": address_id,
             "tenantId": tenant_id,
-            "userId": validate_object_id(user_id, "user ID"),
+            "userId": validate_object_id(user_id, USER_ID_FIELD),
         }
     )
     if not existing_address:
@@ -173,7 +201,10 @@ def update_address(
     }
 
 
-@router.delete("/{id}")
+@router.delete(
+    "/{id}",
+    responses=ADDRESS_MUTATION_RESPONSES,
+)
 def delete_address(
     id: str,
     tenantId: str | None = None,
@@ -185,7 +216,7 @@ def delete_address(
         {
             "_id": address_id,
             "tenantId": tenant_id,
-            "userId": validate_object_id(user_id, "user ID"),
+            "userId": validate_object_id(user_id, USER_ID_FIELD),
         }
     )
     if not address:

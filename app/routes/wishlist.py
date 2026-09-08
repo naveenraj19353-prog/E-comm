@@ -3,6 +3,12 @@ from bson import ObjectId
 from fastapi import APIRouter, Depends, HTTPException
 from app.database.mongo import products, wishlists
 from app.models.wishlist import WishList
+from app.routes.response_metadata import (
+    BAD_REQUEST_RESPONSE,
+    CONFLICT_RESPONSE,
+    FORBIDDEN_RESPONSE,
+    NOT_FOUND_RESPONSE,
+)
 from app.utils.auth_dependencies import customer_scope, require_customer
 from app.utils.product_serialize import serialize_product
 
@@ -21,7 +27,15 @@ def get_object_id(value: str, field_name: str) -> ObjectId:
     return ObjectId(value)
 
 
-@router.post("/")
+@router.post(
+    "/",
+    responses={
+        **BAD_REQUEST_RESPONSE,
+        **FORBIDDEN_RESPONSE,
+        **NOT_FOUND_RESPONSE,
+        **CONFLICT_RESPONSE,
+    },
+)
 def add_to_wishlist(
     request: WishList,
     current_user: dict = Depends(require_customer),
@@ -64,7 +78,10 @@ def add_to_wishlist(
     }
 
 
-@router.get("/{userId}")
+@router.get(
+    "/{userId}",
+    responses={**BAD_REQUEST_RESPONSE, **FORBIDDEN_RESPONSE},
+)
 def get_wishlist(
     userId: str,
     tenantId: str | None = None,
@@ -123,7 +140,14 @@ def get_wishlist(
     }
 
 
-@router.delete("/{productId}")
+@router.delete(
+    "/{productId}",
+    responses={
+        **BAD_REQUEST_RESPONSE,
+        **FORBIDDEN_RESPONSE,
+        **NOT_FOUND_RESPONSE,
+    },
+)
 def remove_from_wishlist(
     productId: str,
     userId: str | None = None,
@@ -151,7 +175,10 @@ def remove_from_wishlist(
     }
 
 
-@router.delete("/")
+@router.delete(
+    "/",
+    responses={**BAD_REQUEST_RESPONSE, **FORBIDDEN_RESPONSE},
+)
 def clear_wishlist(
     userId: str | None = None,
     tenantId: str | None = None,

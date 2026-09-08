@@ -1,10 +1,11 @@
 from fastapi import APIRouter, HTTPException, Query
+from app.routes.response_metadata import INTERNAL_SERVER_ERROR_RESPONSE
 from app.services.home_service import get_home_data
 router = APIRouter(prefix="/home", tags=["Home"])
 
 
-@router.get("")
-@router.get("/")
+@router.get("", responses=INTERNAL_SERVER_ERROR_RESPONSE)
+@router.get("/", responses=INTERNAL_SERVER_ERROR_RESPONSE)
 def get_home(
     tenantId: str,
     productLimit: int = Query(default=10, ge=1, le=50),

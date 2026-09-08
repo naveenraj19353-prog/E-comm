@@ -3,6 +3,11 @@ from bson import ObjectId
 from fastapi import APIRouter, Depends, HTTPException
 from app.database.mongo import carts
 from app.models.cart import AddCart, UpdateCart
+from app.routes.response_metadata import (
+    BAD_REQUEST_RESPONSE,
+    FORBIDDEN_RESPONSE,
+    NOT_FOUND_RESPONSE,
+)
 from app.utils.auth_dependencies import customer_scope, require_customer
 from app.services.checkout_service import (
     cart_owner_query,
@@ -27,7 +32,14 @@ def get_object_id(value: str, field_name: str) -> ObjectId:
     return ObjectId(value)
 
 
-@router.post("/")
+@router.post(
+    "/",
+    responses={
+        **BAD_REQUEST_RESPONSE,
+        **FORBIDDEN_RESPONSE,
+        **NOT_FOUND_RESPONSE,
+    },
+)
 def add_to_cart(
     request: AddCart,
     current_user: dict = Depends(require_customer),
@@ -109,7 +121,14 @@ def add_to_cart(
     }
 
 
-@router.put("/{productId}")
+@router.put(
+    "/{productId}",
+    responses={
+        **BAD_REQUEST_RESPONSE,
+        **FORBIDDEN_RESPONSE,
+        **NOT_FOUND_RESPONSE,
+    },
+)
 def update_cart(
     productId: str,
     request: UpdateCart,
@@ -165,7 +184,7 @@ def update_cart(
     }
 
 
-@router.get("/{userId}")
+@router.get("/{userId}", responses=FORBIDDEN_RESPONSE)
 def get_cart(
     userId: str,
     tenantId: str | None = None,
@@ -220,7 +239,14 @@ def get_cart(
     }
 
 
-@router.delete("/{productId}")
+@router.delete(
+    "/{productId}",
+    responses={
+        **BAD_REQUEST_RESPONSE,
+        **FORBIDDEN_RESPONSE,
+        **NOT_FOUND_RESPONSE,
+    },
+)
 def remove_from_cart(
     productId: str,
     userId: str | None = None,
@@ -248,7 +274,7 @@ def remove_from_cart(
     }
 
 
-@router.delete("/")
+@router.delete("/", responses=FORBIDDEN_RESPONSE)
 def clear_cart(
     userId: str | None = None,
     tenantId: str | None = None,

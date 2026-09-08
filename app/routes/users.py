@@ -3,12 +3,20 @@ from bson import ObjectId
 from datetime import datetime, timezone
 from app.database.mongo import users
 from app.models.user import UpdateUser
+from app.routes.response_metadata import (
+    BAD_REQUEST_RESPONSE,
+    FORBIDDEN_RESPONSE,
+    NOT_FOUND_RESPONSE,
+)
 from app.utils.auth_dependencies import admin_tenant_id, require_admin
 
 router = APIRouter(prefix="/users", tags=["Users"])
 
 
-@router.get("/")
+@router.get(
+    "/",
+    responses={**BAD_REQUEST_RESPONSE, **FORBIDDEN_RESPONSE},
+)
 def get_users(
     tenantId: str | None = None,
     current_user: dict = Depends(require_admin),
@@ -25,7 +33,14 @@ def get_users(
     return {"success": True, "count": len(result), "data": result}
 
 
-@router.get("/{id}")
+@router.get(
+    "/{id}",
+    responses={
+        **BAD_REQUEST_RESPONSE,
+        **FORBIDDEN_RESPONSE,
+        **NOT_FOUND_RESPONSE,
+    },
+)
 def get_user(
     id: str,
     tenantId: str | None = None,
@@ -44,7 +59,14 @@ def get_user(
     return {"success": True, "data": user}
 
 
-@router.put("/{id}")
+@router.put(
+    "/{id}",
+    responses={
+        **BAD_REQUEST_RESPONSE,
+        **FORBIDDEN_RESPONSE,
+        **NOT_FOUND_RESPONSE,
+    },
+)
 def update_user(
     id: str,
     request: UpdateUser,
@@ -75,7 +97,14 @@ def update_user(
     return {"success": True, "message": "User updated successfully.", "data": user}
 
 
-@router.delete("/{id}")
+@router.delete(
+    "/{id}",
+    responses={
+        **BAD_REQUEST_RESPONSE,
+        **FORBIDDEN_RESPONSE,
+        **NOT_FOUND_RESPONSE,
+    },
+)
 def delete_user(
     id: str,
     tenantId: str | None = None,

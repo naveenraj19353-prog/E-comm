@@ -1,5 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException
 from app.models.checkout import CheckoutRequest
+from app.routes.response_metadata import (
+    BAD_REQUEST_RESPONSE,
+    FORBIDDEN_RESPONSE,
+    INTERNAL_SERVER_ERROR_RESPONSE,
+    NOT_FOUND_RESPONSE,
+)
 from app.services.checkout_service import calculate_checkout
 from app.utils.auth_dependencies import customer_scope, require_customer
 
@@ -9,7 +15,15 @@ router = APIRouter(
 )
 
 
-@router.post("/")
+@router.post(
+    "/",
+    responses={
+        **BAD_REQUEST_RESPONSE,
+        **FORBIDDEN_RESPONSE,
+        **NOT_FOUND_RESPONSE,
+        **INTERNAL_SERVER_ERROR_RESPONSE,
+    },
+)
 def checkout(
     request: CheckoutRequest,
     current_user: dict = Depends(require_customer),
