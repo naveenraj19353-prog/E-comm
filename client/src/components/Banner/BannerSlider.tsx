@@ -36,11 +36,18 @@ const BannerSlider = ({ banners }: BannerSliderProps) => {
             disableOnInteraction: false,
             pauseOnMouseEnter: true,
         }} speed={700} loop={banners.length > 1} className={styles.swiper}>
-        {banners.map((banner) => (<SwiperSlide key={banner._id}>
+        {banners.map((banner, index) => (<SwiperSlide key={banner._id}>
             <div className={styles.banner}>
               <picture>
                 {banner.mobileImage && (<source media="(max-width: 768px)" srcSet={banner.mobileImage}/>)}
-                <img src={banner.image} alt={banner.title || "Banner"} className={styles.image}/>
+                <img
+                  src={banner.image}
+                  alt={banner.title || "Banner"}
+                  className={styles.image}
+                  loading={index === 0 ? "eager" : "lazy"}
+                  fetchPriority={index === 0 ? "high" : "auto"}
+                  decoding="async"
+                />
               </picture>
               <div className={styles.overlay}>
                 <div className={styles.content}>
