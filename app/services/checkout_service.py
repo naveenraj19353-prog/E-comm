@@ -183,66 +183,73 @@ def calculate_shipping(subtotal: float, delivery_method: str = "standard") -> fl
     return round(base_shipping, 2)
 
 
-def calculate_checkout(
-    tenant_id: str,
-    user_id: str,
-    coupon_code: str | None = None,
-    address_id: str | None = None,
-    require_address: bool = False,
-    delivery_method: str = "standard",
-):
-    tenant_id = normalize_tenant_id(tenant_id)
+def _load_cart_items(tenant_id: str, user_id: str) -> list:
     cart_items = list(carts.find(cart_owner_query(tenant_id, user_id)))
     if not cart_items:
         raise HTTPException(
             status_code=404,
             detail="Cart is empty.",
         )
+    return cart_items
+
+
+def _resolve_cart_item(cart_item: dict, tenant_id: str):
+    product = find_active_product(
+        cart_item.get("productId"),
+        tenant_id,
+    )
+    if not product:
+        carts.delete_one({"_id": cart_item["_id"]})
+        return None
+
+    variant = get_variant(product, cart_item.get("variantId"))
+    if not variant:
+        carts.delete_one({"_id": cart_item["_id"]})
+        return None
+
+    quantity = int(cart_item.get("quantity", 0) or 0)
+    stock = variant_stock(variant)
+    if quantity <= 0 or stock <= 0:
+        carts.delete_one({"_id": cart_item["_id"]})
+        return None
+    if quantity > stock:
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                f"{product['name']} has only "
+                f"{stock} item(s) in stock."
+            ),
+        )
+    return product, variant, quantity
+
+
+def _build_checkout_item(product: dict, variant: dict, quantity: int) -> dict:
+    price = float(product["finalPrice"])
+    line_total = round(price * quantity, 2)
+    color = variant.get("color")
+    return {
+        "productId": str(product["_id"]),
+        "variantId": str(variant.get("variantId")),
+        "name": product["name"],
+        "price": price,
+        "quantity": quantity,
+        "subtotal": line_total,
+        "color": color,
+        "size": variant.get("size"),
+        "image": get_variant_image(product, color),
+    }
+
+
+def _price_cart_items(cart_items: list, tenant_id: str) -> tuple[list, float]:
     items = []
     subtotal = 0.0
     for cart_item in cart_items:
-        product = find_active_product(
-            cart_item.get("productId"),
-            tenant_id,
-        )
-        if not product:
-            carts.delete_one({"_id": cart_item["_id"]})
+        resolved_item = _resolve_cart_item(cart_item, tenant_id)
+        if not resolved_item:
             continue
-        variant_id = cart_item.get("variantId")
-        variant = get_variant(product, variant_id)
-        if not variant:
-            carts.delete_one({"_id": cart_item["_id"]})
-            continue
-        quantity = int(cart_item.get("quantity", 0) or 0)
-        stock = variant_stock(variant)
-        if quantity <= 0 or stock <= 0:
-            carts.delete_one({"_id": cart_item["_id"]})
-            continue
-        if quantity > stock:
-            raise HTTPException(
-                status_code=400,
-                detail=(
-                    f"{product['name']} has only "
-                    f"{stock} item(s) in stock."
-                ),
-            )
-        price = float(product["finalPrice"])
-        line_total = round(price * quantity, 2)
-        subtotal += line_total
-        color = variant.get("color")
-        items.append(
-            {
-                "productId": str(product["_id"]),
-                "variantId": str(variant.get("variantId")),
-                "name": product["name"],
-                "price": price,
-                "quantity": quantity,
-                "subtotal": line_total,
-                "color": color,
-                "size": variant.get("size"),
-                "image": get_variant_image(product, color),
-            }
-        )
+        item = _build_checkout_item(*resolved_item)
+        items.append(item)
+        subtotal += item["subtotal"]
     if not items:
         raise HTTPException(
             status_code=400,
@@ -251,62 +258,85 @@ def calculate_checkout(
                 "Please add items again."
             ),
         )
-    subtotal = round(subtotal, 2)
-    discount = 0.0
-    coupon_code_response = None
-    if coupon_code and coupon_code.strip():
-        normalized_coupon = coupon_code.strip().upper()
-        coupon = coupons.find_one(
-            {
-                "tenantId": tenant_id_query(tenant_id),
-                "code": normalized_coupon,
-                "isActive": True,
-            }
+    return items, round(subtotal, 2)
+
+
+def _load_valid_coupon(tenant_id: str, coupon_code: str, subtotal: float) -> dict:
+    coupon = coupons.find_one(
+        {
+            "tenantId": tenant_id_query(tenant_id),
+            "code": coupon_code,
+            "isActive": True,
+        }
+    )
+    if not coupon:
+        raise HTTPException(
+            status_code=404,
+            detail="Invalid coupon.",
         )
-        if not coupon:
-            raise HTTPException(
-                status_code=404,
-                detail="Invalid coupon.",
-            )
-        now = datetime.now(timezone.utc)
-        if coupon.get("startDate") and coupon["startDate"] > now:
-            raise HTTPException(
-                status_code=400,
-                detail="Coupon is not active yet.",
-            )
-        if coupon.get("endDate") and coupon["endDate"] < now:
-            raise HTTPException(
-                status_code=400,
-                detail="Coupon has expired.",
-            )
-        minimum_order_amount = float(
-            coupon.get("minimumOrderAmount", 0) or 0
+
+    now = datetime.now(timezone.utc)
+    if coupon.get("startDate") and coupon["startDate"] > now:
+        raise HTTPException(
+            status_code=400,
+            detail="Coupon is not active yet.",
         )
-        if subtotal < minimum_order_amount:
-            raise HTTPException(
-                status_code=400,
-                detail=f"Minimum order amount is ₹{minimum_order_amount}",
-            )
-        usage_limit = coupon.get("usageLimit", 0) or 0
-        used_count = coupon.get("usedCount", 0) or 0
-        if usage_limit > 0 and used_count >= usage_limit:
-            raise HTTPException(
-                status_code=400,
-                detail="Coupon usage limit exceeded.",
-            )
-        discount_type = coupon.get("discountType")
-        discount_value = float(coupon.get("discountValue", 0) or 0)
-        if discount_type == "percentage":
-            discount = subtotal * discount_value / 100
-            maximum_discount = coupon.get("maximumDiscount")
-            if maximum_discount:
-                discount = min(discount, float(maximum_discount))
-        else:
-            discount = min(discount_value, subtotal)
-        discount = round(discount, 2)
-        coupon_code_response = coupon.get("code")
+    if coupon.get("endDate") and coupon["endDate"] < now:
+        raise HTTPException(
+            status_code=400,
+            detail="Coupon has expired.",
+        )
+
+    minimum_order_amount = float(coupon.get("minimumOrderAmount", 0) or 0)
+    if subtotal < minimum_order_amount:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Minimum order amount is ₹{minimum_order_amount}",
+        )
+
+    usage_limit = coupon.get("usageLimit", 0) or 0
+    used_count = coupon.get("usedCount", 0) or 0
+    if usage_limit > 0 and used_count >= usage_limit:
+        raise HTTPException(
+            status_code=400,
+            detail="Coupon usage limit exceeded.",
+        )
+    return coupon
+
+
+def _calculate_coupon_discount(coupon: dict, subtotal: float) -> float:
+    discount_value = float(coupon.get("discountValue", 0) or 0)
+    if coupon.get("discountType") == "percentage":
+        discount = subtotal * discount_value / 100
+        maximum_discount = coupon.get("maximumDiscount")
+        if maximum_discount:
+            discount = min(discount, float(maximum_discount))
+    else:
+        discount = min(discount_value, subtotal)
+    return round(discount, 2)
+
+
+def _apply_coupon(
+    tenant_id: str,
+    coupon_code: str | None,
+    subtotal: float,
+) -> tuple[float, str | None]:
+    if not coupon_code or not coupon_code.strip():
+        return 0.0, None
+    normalized_coupon = coupon_code.strip().upper()
+    coupon = _load_valid_coupon(tenant_id, normalized_coupon, subtotal)
+    return _calculate_coupon_discount(coupon, subtotal), coupon.get("code")
+
+
+def _checkout_totals(
+    subtotal: float,
+    discount: float,
+    delivery_method: str,
+) -> tuple[str, float, float]:
     normalized_delivery = (
-        delivery_method if delivery_method in {"standard", "express"} else "standard"
+        delivery_method
+        if delivery_method in {"standard", "express"}
+        else "standard"
     )
     shipping = calculate_shipping(subtotal, normalized_delivery)
     net_subtotal = max(subtotal - discount, 0)
@@ -316,6 +346,30 @@ def calculate_checkout(
             status_code=400,
             detail="Invalid checkout amount.",
         )
+    return normalized_delivery, shipping, grand_total
+
+
+def calculate_checkout(
+    tenant_id: str,
+    user_id: str,
+    coupon_code: str | None = None,
+    address_id: str | None = None,
+    require_address: bool = False,
+    delivery_method: str = "standard",
+):
+    tenant_id = normalize_tenant_id(tenant_id)
+    cart_items = _load_cart_items(tenant_id, user_id)
+    items, subtotal = _price_cart_items(cart_items, tenant_id)
+    discount, coupon_code_response = _apply_coupon(
+        tenant_id,
+        coupon_code,
+        subtotal,
+    )
+    normalized_delivery, shipping, grand_total = _checkout_totals(
+        subtotal,
+        discount,
+        delivery_method,
+    )
     address = resolve_shipping_address(
         tenant_id,
         user_id,
