@@ -14,6 +14,15 @@ from app.models.payment import (
 from app.services.checkout_service import calculate_checkout
 from app.services.order_fulfillment import fulfill_captured_payment
 from app.services.payment_validation import validate_captured_payment
+from app.routes.response_metadata import (
+    BAD_GATEWAY_RESPONSE,
+    BAD_REQUEST_RESPONSE,
+    CONFLICT_RESPONSE,
+    FORBIDDEN_RESPONSE,
+    INTERNAL_SERVER_ERROR_RESPONSE,
+    NOT_FOUND_RESPONSE,
+    SERVICE_UNAVAILABLE_RESPONSE,
+)
 from app.utils.razorpay_client import client
 from app.utils.auth_dependencies import (
     customer_scope,
@@ -30,7 +39,7 @@ router = APIRouter(
 )
 
 
-@router.get("/test-razorpay")
+@router.get("/test-razorpay", responses=BAD_REQUEST_RESPONSE)
 def test_razorpay(current_user: dict = Depends(require_super_admin)):
     try:
         order = client.order.create(
@@ -55,7 +64,16 @@ def test_razorpay(current_user: dict = Depends(require_super_admin)):
         )
 
 
-@router.post("/create-order")
+@router.post(
+    "/create-order",
+    responses={
+        **BAD_REQUEST_RESPONSE,
+        **FORBIDDEN_RESPONSE,
+        **NOT_FOUND_RESPONSE,
+        **INTERNAL_SERVER_ERROR_RESPONSE,
+        **BAD_GATEWAY_RESPONSE,
+    },
+)
 def create_order(
     request: CreatePaymentOrder,
     current_user: dict = Depends(require_customer),
@@ -143,7 +161,14 @@ def create_order(
         raise HTTPException(status_code=500, detail="Unable to create payment order.")
 
 
-@router.post("/verify")
+@router.post(
+    "/verify",
+    responses={
+        **BAD_REQUEST_RESPONSE,
+        **FORBIDDEN_RESPONSE,
+        **CONFLICT_RESPONSE,
+    },
+)
 def verify_payment(
     request: VerifyPayment,
     current_user: dict = Depends(require_customer),
@@ -196,7 +221,14 @@ def verify_payment(
         )
 
 
-@router.get("/order/{order_id}")
+@router.get(
+    "/order/{order_id}",
+    responses={
+        **BAD_REQUEST_RESPONSE,
+        **FORBIDDEN_RESPONSE,
+        **NOT_FOUND_RESPONSE,
+    },
+)
 def get_payment_status(
     order_id: str,
     current_user: dict = Depends(require_customer),
@@ -238,7 +270,7 @@ def get_payment_status(
         )
 
 
-@router.get("/payment/{payment_id}")
+@router.get("/payment/{payment_id}", responses=BAD_REQUEST_RESPONSE)
 def get_payment(
     payment_id: str,
     current_user: dict = Depends(require_admin),
@@ -261,7 +293,7 @@ def get_payment(
         )
 
 
-@router.post("/refund/{payment_id}")
+@router.post("/refund/{payment_id}", responses=BAD_REQUEST_RESPONSE)
 def refund(
     payment_id: str,
     current_user: dict = Depends(require_admin),
@@ -278,7 +310,14 @@ def refund(
         raise HTTPException(status_code=400, detail="Refund failed.")
 
 
-@router.post("/webhook")
+@router.post(
+    "/webhook",
+    responses={
+        **BAD_REQUEST_RESPONSE,
+        **INTERNAL_SERVER_ERROR_RESPONSE,
+        **SERVICE_UNAVAILABLE_RESPONSE,
+    },
+)
 async def webhook(request: Request):
     if not RAZORPAY_WEBHOOK_SECRET:
         raise HTTPException(

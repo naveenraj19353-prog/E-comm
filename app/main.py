@@ -35,8 +35,8 @@ async def lifespan(app: FastAPI):
     try:
         ensure_indexes()
         logger.info("Database indexes ensured.")
-    except PyMongoError as error:
-        logger.error("Database index setup failed: %s", error)
+    except PyMongoError:
+        logger.exception("Database index setup failed.")
     yield
 
 
@@ -74,7 +74,7 @@ def _database_status() -> tuple[str, str | None]:
         client.admin.command("ping")
         return "connected", None
     except PyMongoError as error:
-        logger.error("Database health check failed: %s", error)
+        logger.exception("Database health check failed.")
         message = str(error)
         hint = None
         if "TLSV1_ALERT_INTERNAL_ERROR" in message:

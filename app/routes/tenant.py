@@ -8,6 +8,12 @@ from app.utils.auth_dependencies import (
     require_admin,
 )
 from app.services.storefront_layout import build_storefront_layout
+from app.routes.response_metadata import (
+    BAD_REQUEST_RESPONSE,
+    FORBIDDEN_RESPONSE,
+    INTERNAL_SERVER_ERROR_RESPONSE,
+    NOT_FOUND_RESPONSE,
+)
 from app.utils.hash import hash_password
 router = APIRouter(
     prefix="/tenants",
@@ -15,7 +21,10 @@ router = APIRouter(
 )
 
 
-@router.post("/")
+@router.post(
+    "/",
+    responses={**BAD_REQUEST_RESPONSE, **INTERNAL_SERVER_ERROR_RESPONSE},
+)
 def create_tenant(
     tenant: CreateTenant,
     current_user: dict = Depends(require_super_admin),
@@ -112,7 +121,7 @@ def create_tenant(
         )
 
 
-@router.get("/")
+@router.get("/", responses=FORBIDDEN_RESPONSE)
 def get_tenants(
     current_user: dict = Depends(require_admin),
 ):
@@ -160,7 +169,10 @@ def get_tenants(
     }
 
 
-@router.get("/tenant-id/{tenant_id}")
+@router.get(
+    "/tenant-id/{tenant_id}",
+    responses={**FORBIDDEN_RESPONSE, **NOT_FOUND_RESPONSE},
+)
 def get_tenant_by_tenant_id(
     tenant_id: str,
     current_user: dict = Depends(require_admin),
@@ -196,7 +208,7 @@ def get_tenant_by_tenant_id(
     }
 
 
-@router.get("/slug/{slug}")
+@router.get("/slug/{slug}", responses=NOT_FOUND_RESPONSE)
 def get_tenant_by_slug(
     slug: str,
 ):
@@ -227,7 +239,10 @@ def get_tenant_by_slug(
     }
 
 
-@router.get("/slug/{slug}/storefront-layout")
+@router.get(
+    "/slug/{slug}/storefront-layout",
+    responses=NOT_FOUND_RESPONSE,
+)
 def get_storefront_layout_by_slug(
     slug: str,
 ):
@@ -256,7 +271,14 @@ def get_storefront_layout_by_slug(
     }
 
 
-@router.get("/{id}")
+@router.get(
+    "/{id}",
+    responses={
+        **BAD_REQUEST_RESPONSE,
+        **FORBIDDEN_RESPONSE,
+        **NOT_FOUND_RESPONSE,
+    },
+)
 def get_tenant_by_id(
     id: str,
     current_user: dict = Depends(require_admin),
@@ -299,7 +321,10 @@ def get_tenant_by_id(
     }
 
 
-@router.put("/{id}")
+@router.put(
+    "/{id}",
+    responses={**BAD_REQUEST_RESPONSE, **NOT_FOUND_RESPONSE},
+)
 def update_tenant(
     id: str,
     tenant: UpdateTenant,
@@ -409,7 +434,14 @@ def update_tenant(
     }
 
 
-@router.patch("/{id}/theme")
+@router.patch(
+    "/{id}/theme",
+    responses={
+        **BAD_REQUEST_RESPONSE,
+        **FORBIDDEN_RESPONSE,
+        **NOT_FOUND_RESPONSE,
+    },
+)
 def update_tenant_theme(
     id: str,
     payload: UpdateTenantTheme,
@@ -466,7 +498,10 @@ def update_tenant_theme(
     }
 
 
-@router.delete("/{id}")
+@router.delete(
+    "/{id}",
+    responses={**BAD_REQUEST_RESPONSE, **NOT_FOUND_RESPONSE},
+)
 def delete_tenant(
     id: str,
     current_user: dict = Depends(

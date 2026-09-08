@@ -2,6 +2,12 @@ from app.models.coupon import ApplyCoupon, CreateCoupon
 from fastapi import APIRouter, Depends, HTTPException
 from app.database.mongo import coupons
 from datetime import datetime, timezone
+from app.routes.response_metadata import (
+    BAD_REQUEST_RESPONSE,
+    CONFLICT_RESPONSE,
+    FORBIDDEN_RESPONSE,
+    NOT_FOUND_RESPONSE,
+)
 from app.utils.auth_dependencies import (
     admin_tenant_id,
     customer_scope,
@@ -12,7 +18,14 @@ from app.utils.auth_dependencies import (
 router = APIRouter(prefix="/coupon", tags=["Coupon"])
 
 
-@router.post("/create-coupon")
+@router.post(
+    "/create-coupon",
+    responses={
+        **BAD_REQUEST_RESPONSE,
+        **FORBIDDEN_RESPONSE,
+        **CONFLICT_RESPONSE,
+    },
+)
 def create_coupon(
     request: CreateCoupon,
     current_user: dict = Depends(require_admin),
@@ -51,7 +64,10 @@ def create_coupon(
     }
 
 
-@router.post("/apply-coupon")
+@router.post(
+    "/apply-coupon",
+    responses={**FORBIDDEN_RESPONSE, **NOT_FOUND_RESPONSE},
+)
 def apply_coupon(
     request: ApplyCoupon,
     current_user: dict = Depends(require_customer),

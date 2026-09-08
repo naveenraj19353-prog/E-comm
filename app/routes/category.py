@@ -3,6 +3,11 @@ from bson import ObjectId
 from datetime import datetime, timezone
 from app.database.mongo import categories
 from app.models.category import CreateCategory, UpdateCategory
+from app.routes.response_metadata import (
+    BAD_REQUEST_RESPONSE,
+    FORBIDDEN_RESPONSE,
+    NOT_FOUND_RESPONSE,
+)
 from app.utils.auth_dependencies import admin_tenant_id, require_admin
 from app.utils.category_catalog import get_catalog_categories
 router = APIRouter(
@@ -11,7 +16,10 @@ router = APIRouter(
 )
 
 
-@router.post("/")
+@router.post(
+    "/",
+    responses={**BAD_REQUEST_RESPONSE, **FORBIDDEN_RESPONSE},
+)
 def create_category(
     category: CreateCategory,
     current_user: dict = Depends(require_admin),
@@ -61,7 +69,10 @@ def get_all_categories(tenantId: str):
     }
 
 
-@router.get("/{id}")
+@router.get(
+    "/{id}",
+    responses={**BAD_REQUEST_RESPONSE, **NOT_FOUND_RESPONSE},
+)
 def get_category_by_id(
     id: str,
     tenantId: str
@@ -92,7 +103,14 @@ def get_category_by_id(
     }
 
 
-@router.put("/{id}")
+@router.put(
+    "/{id}",
+    responses={
+        **BAD_REQUEST_RESPONSE,
+        **FORBIDDEN_RESPONSE,
+        **NOT_FOUND_RESPONSE,
+    },
+)
 def update_category(
     id: str,
     category: UpdateCategory,
@@ -145,7 +163,14 @@ def update_category(
     }
 
 
-@router.delete("/{id}")
+@router.delete(
+    "/{id}",
+    responses={
+        **BAD_REQUEST_RESPONSE,
+        **FORBIDDEN_RESPONSE,
+        **NOT_FOUND_RESPONSE,
+    },
+)
 def delete_category(
     id: str,
     tenantId: str,
