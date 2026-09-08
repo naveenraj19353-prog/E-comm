@@ -3,6 +3,11 @@ from bson import ObjectId
 from datetime import datetime, timezone
 from app.database.mongo import categories
 from app.models.category import CreateCategory, UpdateCategory
+from app.routes.detail_messages import (
+    CATEGORY_NOT_FOUND,
+    INVALID_CATEGORY_ID,
+    NO_UPDATE_FIELDS,
+)
 from app.routes.response_metadata import (
     BAD_REQUEST_RESPONSE,
     FORBIDDEN_RESPONSE,
@@ -18,7 +23,10 @@ router = APIRouter(
 
 @router.post(
     "/",
-    responses={**BAD_REQUEST_RESPONSE, **FORBIDDEN_RESPONSE},
+    responses={
+        400: BAD_REQUEST_RESPONSE[400],
+        403: FORBIDDEN_RESPONSE[403],
+    },
 )
 def create_category(
     category: CreateCategory,
@@ -71,7 +79,10 @@ def get_all_categories(tenantId: str):
 
 @router.get(
     "/{id}",
-    responses={**BAD_REQUEST_RESPONSE, **NOT_FOUND_RESPONSE},
+    responses={
+        400: BAD_REQUEST_RESPONSE[400],
+        404: NOT_FOUND_RESPONSE[404],
+    },
 )
 def get_category_by_id(
     id: str,
@@ -80,7 +91,7 @@ def get_category_by_id(
     if not ObjectId.is_valid(id):
         raise HTTPException(
             status_code=400,
-            detail="Invalid category ID."
+            detail=INVALID_CATEGORY_ID
         )
     category = categories.find_one(
         {
@@ -92,7 +103,7 @@ def get_category_by_id(
     if not category:
         raise HTTPException(
             status_code=404,
-            detail="Category not found."
+            detail=CATEGORY_NOT_FOUND
         )
     category["_id"] = str(
         category["_id"]
@@ -106,9 +117,9 @@ def get_category_by_id(
 @router.put(
     "/{id}",
     responses={
-        **BAD_REQUEST_RESPONSE,
-        **FORBIDDEN_RESPONSE,
-        **NOT_FOUND_RESPONSE,
+        400: BAD_REQUEST_RESPONSE[400],
+        403: FORBIDDEN_RESPONSE[403],
+        404: NOT_FOUND_RESPONSE[404],
     },
 )
 def update_category(
@@ -119,7 +130,7 @@ def update_category(
     if not ObjectId.is_valid(id):
         raise HTTPException(
             status_code=400,
-            detail="Invalid category ID."
+            detail=INVALID_CATEGORY_ID
         )
     tenant_id = admin_tenant_id(current_user, category.tenantId)
     update_data = category.model_dump(
@@ -129,7 +140,7 @@ def update_category(
     if not update_data:
         raise HTTPException(
             status_code=400,
-            detail="No fields provided for update."
+            detail=NO_UPDATE_FIELDS
         )
     update_data["updatedAt"] = datetime.now(timezone.utc)
     result = categories.update_one(
@@ -144,7 +155,7 @@ def update_category(
     if result.matched_count == 0:
         raise HTTPException(
             status_code=404,
-            detail="Category not found."
+            detail=CATEGORY_NOT_FOUND
         )
     updated = categories.find_one(
         {
@@ -166,9 +177,9 @@ def update_category(
 @router.delete(
     "/{id}",
     responses={
-        **BAD_REQUEST_RESPONSE,
-        **FORBIDDEN_RESPONSE,
-        **NOT_FOUND_RESPONSE,
+        400: BAD_REQUEST_RESPONSE[400],
+        403: FORBIDDEN_RESPONSE[403],
+        404: NOT_FOUND_RESPONSE[404],
     },
 )
 def delete_category(
@@ -180,7 +191,7 @@ def delete_category(
     if not ObjectId.is_valid(id):
         raise HTTPException(
             status_code=400,
-            detail="Invalid category ID."
+            detail=INVALID_CATEGORY_ID
         )
     result = categories.delete_one(
         {
@@ -191,7 +202,7 @@ def delete_category(
     if result.deleted_count == 0:
         raise HTTPException(
             status_code=404,
-            detail="Category not found."
+            detail=CATEGORY_NOT_FOUND
         )
     return {
         "success": True,

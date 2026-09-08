@@ -18,10 +18,10 @@ router = APIRouter(
 @router.post(
     "/",
     responses={
-        **BAD_REQUEST_RESPONSE,
-        **FORBIDDEN_RESPONSE,
-        **NOT_FOUND_RESPONSE,
-        **INTERNAL_SERVER_ERROR_RESPONSE,
+        400: BAD_REQUEST_RESPONSE[400],
+        403: FORBIDDEN_RESPONSE[403],
+        404: NOT_FOUND_RESPONSE[404],
+        500: INTERNAL_SERVER_ERROR_RESPONSE[500],
     },
 )
 def checkout(

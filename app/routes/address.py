@@ -16,16 +16,9 @@ BAD_REQUEST_RESPONSE = {
         "description": "Invalid request or object identifier.",
     }
 }
-ADDRESS_MUTATION_RESPONSES = {
-    **BAD_REQUEST_RESPONSE,
-    **FORBIDDEN_RESPONSE,
-    404: {
-        "description": "Address not found.",
-    },
-}
-ADDRESS_ACCESS_RESPONSES = {
-    **BAD_REQUEST_RESPONSE,
-    **FORBIDDEN_RESPONSE,
+ADDRESS_NOT_FOUND_MESSAGE = "Address not found."
+ADDRESS_NOT_FOUND_RESPONSE = {
+    "description": ADDRESS_NOT_FOUND_MESSAGE,
 }
 USER_ID_FIELD = "user ID"
 
@@ -45,7 +38,10 @@ def validate_object_id(value: str, field_name: str = "ID") -> ObjectId:
 
 @router.post(
     "/create-address",
-    responses=ADDRESS_ACCESS_RESPONSES,
+    responses={
+        400: BAD_REQUEST_RESPONSE[400],
+        403: FORBIDDEN_RESPONSE[403],
+    },
 )
 def create_address(
     request: CreateAddress,
@@ -92,7 +88,10 @@ def create_address(
 
 @router.get(
     "/get-address/{userId}",
-    responses=ADDRESS_ACCESS_RESPONSES,
+    responses={
+        400: BAD_REQUEST_RESPONSE[400],
+        403: FORBIDDEN_RESPONSE[403],
+    },
 )
 def get_addresses(
     userId: str,
@@ -131,7 +130,11 @@ def get_addresses(
 
 @router.put(
     "/update-address/{id}",
-    responses=ADDRESS_MUTATION_RESPONSES,
+    responses={
+        400: BAD_REQUEST_RESPONSE[400],
+        403: FORBIDDEN_RESPONSE[403],
+        404: ADDRESS_NOT_FOUND_RESPONSE,
+    },
 )
 def update_address(
     id: str,
@@ -150,7 +153,7 @@ def update_address(
     if not existing_address:
         raise HTTPException(
             status_code=404,
-            detail="Address not found.",
+            detail=ADDRESS_NOT_FOUND_MESSAGE,
         )
 
     update_data = request.model_dump(exclude_unset=True)
@@ -193,7 +196,7 @@ def update_address(
     if result.matched_count == 0:
         raise HTTPException(
             status_code=404,
-            detail="Address not found.",
+            detail=ADDRESS_NOT_FOUND_MESSAGE,
         )
     return {
         "success": True,
@@ -203,7 +206,11 @@ def update_address(
 
 @router.delete(
     "/{id}",
-    responses=ADDRESS_MUTATION_RESPONSES,
+    responses={
+        400: BAD_REQUEST_RESPONSE[400],
+        403: FORBIDDEN_RESPONSE[403],
+        404: ADDRESS_NOT_FOUND_RESPONSE,
+    },
 )
 def delete_address(
     id: str,
@@ -222,7 +229,7 @@ def delete_address(
     if not address:
         raise HTTPException(
             status_code=404,
-            detail="Address not found.",
+            detail=ADDRESS_NOT_FOUND_MESSAGE,
         )
     user_id = address["userId"]
     was_default = address.get("isDefault", False)
@@ -237,7 +244,7 @@ def delete_address(
     if result.deleted_count == 0:
         raise HTTPException(
             status_code=404,
-            detail="Address not found.",
+            detail=ADDRESS_NOT_FOUND_MESSAGE,
         )
 
 

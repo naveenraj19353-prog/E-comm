@@ -3,6 +3,11 @@ from datetime import datetime, timezone
 from bson import ObjectId
 from app.database.mongo import users
 from app.models.profile import UpdateProfile
+from app.routes.detail_messages import (
+    INVALID_USER_ID,
+    NO_UPDATE_FIELDS,
+    USER_NOT_FOUND,
+)
 from app.routes.response_metadata import (
     BAD_REQUEST_RESPONSE,
     FORBIDDEN_RESPONSE,
@@ -16,9 +21,9 @@ router = APIRouter(prefix="/profile", tags=["Profile"])
 @router.get(
     "/",
     responses={
-        **BAD_REQUEST_RESPONSE,
-        **FORBIDDEN_RESPONSE,
-        **NOT_FOUND_RESPONSE,
+        400: BAD_REQUEST_RESPONSE[400],
+        403: FORBIDDEN_RESPONSE[403],
+        404: NOT_FOUND_RESPONSE[404],
     },
 )
 def get_profile(
@@ -28,7 +33,7 @@ def get_profile(
 ):
     tenant_id, token_user_id = customer_scope(current_user)
     if not ObjectId.is_valid(token_user_id):
-        raise HTTPException(status_code=400, detail="Invalid user ID.")
+        raise HTTPException(status_code=400, detail=INVALID_USER_ID)
     user = users.find_one(
         {
             "_id": ObjectId(token_user_id),
@@ -38,7 +43,7 @@ def get_profile(
         {"password": 0, "resetToken": 0, "resetTokenExpiry": 0},
     )
     if not user:
-        raise HTTPException(status_code=404, detail="User not found.")
+        raise HTTPException(status_code=404, detail=USER_NOT_FOUND)
     user["_id"] = str(user["_id"])
     return {"success": True, "data": user}
 
@@ -46,9 +51,9 @@ def get_profile(
 @router.put(
     "/update-profile",
     responses={
-        **BAD_REQUEST_RESPONSE,
-        **FORBIDDEN_RESPONSE,
-        **NOT_FOUND_RESPONSE,
+        400: BAD_REQUEST_RESPONSE[400],
+        403: FORBIDDEN_RESPONSE[403],
+        404: NOT_FOUND_RESPONSE[404],
     },
 )
 def update_profile(
@@ -59,10 +64,10 @@ def update_profile(
 ):
     tenant_id, token_user_id = customer_scope(current_user)
     if not ObjectId.is_valid(token_user_id):
-        raise HTTPException(status_code=400, detail="Invalid user ID.")
+        raise HTTPException(status_code=400, detail=INVALID_USER_ID)
     update_data = request.model_dump(exclude_unset=True, exclude_none=True)
     if not update_data:
-        raise HTTPException(status_code=400, detail="No fields provided for update.")
+        raise HTTPException(status_code=400, detail=NO_UPDATE_FIELDS)
     update_data["updatedAt"] = datetime.now(timezone.utc)
     result = users.update_one(
         {
@@ -73,7 +78,7 @@ def update_profile(
         {"$set": update_data},
     )
     if result.matched_count == 0:
-        raise HTTPException(status_code=404, detail="User not found.")
+        raise HTTPException(status_code=404, detail=USER_NOT_FOUND)
     user = users.find_one(
         {
             "_id": ObjectId(token_user_id),
@@ -83,6 +88,6 @@ def update_profile(
         {"password": 0, "resetToken": 0, "resetTokenExpiry": 0},
     )
     if not user:
-        raise HTTPException(status_code=404, detail="User not found.")
+        raise HTTPException(status_code=404, detail=USER_NOT_FOUND)
     user["_id"] = str(user["_id"])
     return {"success": True, "message": "Profile updated successfully.", "data": user}

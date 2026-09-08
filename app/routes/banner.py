@@ -3,6 +3,11 @@ from bson import ObjectId
 from fastapi import APIRouter, Depends, HTTPException
 from app.database.mongo import banners, tenants
 from app.models.banner import CreateBanner, UpdateBanner
+from app.routes.detail_messages import (
+    BANNER_NOT_FOUND,
+    NO_UPDATE_FIELDS,
+    TENANT_NOT_FOUND_OR_INACTIVE,
+)
 from app.routes.response_metadata import (
     BAD_REQUEST_RESPONSE,
     FORBIDDEN_RESPONSE,
@@ -19,10 +24,10 @@ router = APIRouter(
 @router.post(
     "/create",
     responses={
-        **BAD_REQUEST_RESPONSE,
-        **FORBIDDEN_RESPONSE,
-        **NOT_FOUND_RESPONSE,
-        **INTERNAL_SERVER_ERROR_RESPONSE,
+        400: BAD_REQUEST_RESPONSE[400],
+        403: FORBIDDEN_RESPONSE[403],
+        404: NOT_FOUND_RESPONSE[404],
+        500: INTERNAL_SERVER_ERROR_RESPONSE[500],
     },
 )
 def create_banner(
@@ -52,7 +57,7 @@ def create_banner(
         if not tenant:
             raise HTTPException(
                 status_code=404,
-                detail="Tenant not found or inactive.",
+                detail=TENANT_NOT_FOUND_OR_INACTIVE,
             )
 
 
@@ -86,7 +91,10 @@ def create_banner(
 
 @router.get(
     "/get-all",
-    responses={**NOT_FOUND_RESPONSE, **INTERNAL_SERVER_ERROR_RESPONSE},
+    responses={
+        404: NOT_FOUND_RESPONSE[404],
+        500: INTERNAL_SERVER_ERROR_RESPONSE[500],
+    },
 )
 def get_banners(
     tenantId: str,
@@ -103,7 +111,7 @@ def get_banners(
         if not tenant:
             raise HTTPException(
                 status_code=404,
-                detail="Tenant not found or inactive.",
+                detail=TENANT_NOT_FOUND_OR_INACTIVE,
             )
 
 
@@ -143,7 +151,10 @@ def get_banners(
 
 @router.get(
     "/active",
-    responses={**NOT_FOUND_RESPONSE, **INTERNAL_SERVER_ERROR_RESPONSE},
+    responses={
+        404: NOT_FOUND_RESPONSE[404],
+        500: INTERNAL_SERVER_ERROR_RESPONSE[500],
+    },
 )
 def get_active_banners(
     tenantId: str,
@@ -160,7 +171,7 @@ def get_active_banners(
         if not tenant:
             raise HTTPException(
                 status_code=404,
-                detail="Tenant not found or inactive.",
+                detail=TENANT_NOT_FOUND_OR_INACTIVE,
             )
 
 
@@ -229,10 +240,10 @@ def get_active_banners(
 @router.put(
     "/update/{banner_id}",
     responses={
-        **BAD_REQUEST_RESPONSE,
-        **FORBIDDEN_RESPONSE,
-        **NOT_FOUND_RESPONSE,
-        **INTERNAL_SERVER_ERROR_RESPONSE,
+        400: BAD_REQUEST_RESPONSE[400],
+        403: FORBIDDEN_RESPONSE[403],
+        404: NOT_FOUND_RESPONSE[404],
+        500: INTERNAL_SERVER_ERROR_RESPONSE[500],
     },
 )
 def update_banner(
@@ -259,7 +270,7 @@ def update_banner(
         if not update_data:
             raise HTTPException(
                 status_code=400,
-                detail="No fields provided for update.",
+                detail=NO_UPDATE_FIELDS,
             )
         update_data.pop("tenantId", None)
         existing_banner = banners.find_one(
@@ -270,7 +281,7 @@ def update_banner(
         if not existing_banner:
             raise HTTPException(
                 status_code=404,
-                detail="Banner not found.",
+                detail=BANNER_NOT_FOUND,
             )
         admin_tenant_id(
             current_user,
@@ -296,7 +307,7 @@ def update_banner(
         if result.matched_count == 0:
             raise HTTPException(
                 status_code=404,
-                detail="Banner not found.",
+                detail=BANNER_NOT_FOUND,
             )
 
 
@@ -333,10 +344,10 @@ def update_banner(
 @router.delete(
     "/delete/{banner_id}",
     responses={
-        **BAD_REQUEST_RESPONSE,
-        **FORBIDDEN_RESPONSE,
-        **NOT_FOUND_RESPONSE,
-        **INTERNAL_SERVER_ERROR_RESPONSE,
+        400: BAD_REQUEST_RESPONSE[400],
+        403: FORBIDDEN_RESPONSE[403],
+        404: NOT_FOUND_RESPONSE[404],
+        500: INTERNAL_SERVER_ERROR_RESPONSE[500],
     },
 )
 def delete_banner(
@@ -363,7 +374,7 @@ def delete_banner(
         if not existing_banner:
             raise HTTPException(
                 status_code=404,
-                detail="Banner not found.",
+                detail=BANNER_NOT_FOUND,
             )
         admin_tenant_id(
             current_user,
@@ -379,7 +390,7 @@ def delete_banner(
         if result.deleted_count == 0:
             raise HTTPException(
                 status_code=404,
-                detail="Banner not found.",
+                detail=BANNER_NOT_FOUND,
             )
         return {
             "success": True,

@@ -26,6 +26,10 @@ from app.routes.response_metadata import (
     NOT_FOUND_RESPONSE,
     UNAUTHORIZED_RESPONSE,
 )
+from app.routes.detail_messages import (
+    INVALID_CREDENTIALS,
+    TENANT_NOT_FOUND_OR_INACTIVE,
+)
 router = APIRouter(
     prefix="/auth",
     tags=["Authentication"],
@@ -34,7 +38,10 @@ router = APIRouter(
 
 @router.post(
     "/register",
-    responses={**BAD_REQUEST_RESPONSE, **NOT_FOUND_RESPONSE},
+    responses={
+        400: BAD_REQUEST_RESPONSE[400],
+        404: NOT_FOUND_RESPONSE[404],
+    },
 )
 def register(
     user: RegisterUser,
@@ -52,7 +59,7 @@ def register(
     if not tenant:
         raise HTTPException(
             status_code=404,
-            detail="Tenant not found or inactive.",
+            detail=TENANT_NOT_FOUND_OR_INACTIVE,
         )
 
 
@@ -93,7 +100,7 @@ def register(
     }
 
 
-@router.post("/login", responses=UNAUTHORIZED_RESPONSE)
+@router.post("/login", responses={401: UNAUTHORIZED_RESPONSE[401]})
 def login(
     user: LoginUser,
 ):
@@ -112,7 +119,7 @@ def login(
         if not existing:
             raise HTTPException(
                 status_code=401,
-                detail="Invalid credentials.",
+                detail=INVALID_CREDENTIALS,
             )
         if not verify_password(
             user.password,
@@ -120,7 +127,7 @@ def login(
         ):
             raise HTTPException(
                 status_code=401,
-                detail="Invalid credentials.",
+                detail=INVALID_CREDENTIALS,
             )
         token = create_token({
             "userId": str(
@@ -164,7 +171,7 @@ def login(
         ):
             raise HTTPException(
                 status_code=401,
-                detail="Invalid credentials.",
+                detail=INVALID_CREDENTIALS,
             )
         token = create_token({
             "userId": str(
@@ -203,7 +210,7 @@ def login(
     if not existing:
         raise HTTPException(
             status_code=401,
-            detail="Invalid credentials.",
+            detail=INVALID_CREDENTIALS,
         )
     if not verify_password(
         user.password,
@@ -211,7 +218,7 @@ def login(
     ):
         raise HTTPException(
             status_code=401,
-            detail="Invalid credentials.",
+            detail=INVALID_CREDENTIALS,
         )
     token = create_token({
         "userId": str(
@@ -246,7 +253,7 @@ def login(
     }
 
 
-@router.post("/forgot-password", responses=NOT_FOUND_RESPONSE)
+@router.post("/forgot-password", responses={404: NOT_FOUND_RESPONSE[404]})
 def forgot_password(
     user: ForgotPasswordRequest,
 ):
@@ -281,7 +288,10 @@ def forgot_password(
 
 @router.post(
     "/reset-password",
-    responses={**BAD_REQUEST_RESPONSE, **INTERNAL_SERVER_ERROR_RESPONSE},
+    responses={
+        400: BAD_REQUEST_RESPONSE[400],
+        500: INTERNAL_SERVER_ERROR_RESPONSE[500],
+    },
 )
 def reset_password(
     payload: ResetPasswordRequest,

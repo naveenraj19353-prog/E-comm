@@ -3,6 +3,11 @@ from bson import ObjectId
 from datetime import datetime, timezone
 from app.database.mongo import tenants
 from app.models.tenant import CreateTenant, UpdateTenant, UpdateTenantTheme
+from app.routes.detail_messages import (
+    INVALID_TENANT_ID,
+    NO_UPDATE_FIELDS,
+    TENANT_NOT_FOUND,
+)
 from app.utils.auth_dependencies import (
     require_super_admin,
     require_admin,
@@ -23,7 +28,10 @@ router = APIRouter(
 
 @router.post(
     "/",
-    responses={**BAD_REQUEST_RESPONSE, **INTERNAL_SERVER_ERROR_RESPONSE},
+    responses={
+        400: BAD_REQUEST_RESPONSE[400],
+        500: INTERNAL_SERVER_ERROR_RESPONSE[500],
+    },
 )
 def create_tenant(
     tenant: CreateTenant,
@@ -121,7 +129,7 @@ def create_tenant(
         )
 
 
-@router.get("/", responses=FORBIDDEN_RESPONSE)
+@router.get("/", responses={403: FORBIDDEN_RESPONSE[403]})
 def get_tenants(
     current_user: dict = Depends(require_admin),
 ):
@@ -171,7 +179,10 @@ def get_tenants(
 
 @router.get(
     "/tenant-id/{tenant_id}",
-    responses={**FORBIDDEN_RESPONSE, **NOT_FOUND_RESPONSE},
+    responses={
+        403: FORBIDDEN_RESPONSE[403],
+        404: NOT_FOUND_RESPONSE[404],
+    },
 )
 def get_tenant_by_tenant_id(
     tenant_id: str,
@@ -193,7 +204,7 @@ def get_tenant_by_tenant_id(
     if not tenant:
         raise HTTPException(
             status_code=404,
-            detail="Tenant not found.",
+            detail=TENANT_NOT_FOUND,
         )
     tenant["_id"] = str(
         tenant["_id"]
@@ -208,7 +219,7 @@ def get_tenant_by_tenant_id(
     }
 
 
-@router.get("/slug/{slug}", responses=NOT_FOUND_RESPONSE)
+@router.get("/slug/{slug}", responses={404: NOT_FOUND_RESPONSE[404]})
 def get_tenant_by_slug(
     slug: str,
 ):
@@ -220,7 +231,7 @@ def get_tenant_by_slug(
     if not tenant:
         raise HTTPException(
             status_code=404,
-            detail="Tenant not found.",
+            detail=TENANT_NOT_FOUND,
         )
     tenant["_id"] = str(
         tenant["_id"]
@@ -241,7 +252,7 @@ def get_tenant_by_slug(
 
 @router.get(
     "/slug/{slug}/storefront-layout",
-    responses=NOT_FOUND_RESPONSE,
+    responses={404: NOT_FOUND_RESPONSE[404]},
 )
 def get_storefront_layout_by_slug(
     slug: str,
@@ -254,7 +265,7 @@ def get_storefront_layout_by_slug(
     if not tenant:
         raise HTTPException(
             status_code=404,
-            detail="Tenant not found.",
+            detail=TENANT_NOT_FOUND,
         )
     tenant["_id"] = str(tenant["_id"])
     tenant.pop("password", None)
@@ -274,9 +285,9 @@ def get_storefront_layout_by_slug(
 @router.get(
     "/{id}",
     responses={
-        **BAD_REQUEST_RESPONSE,
-        **FORBIDDEN_RESPONSE,
-        **NOT_FOUND_RESPONSE,
+        400: BAD_REQUEST_RESPONSE[400],
+        403: FORBIDDEN_RESPONSE[403],
+        404: NOT_FOUND_RESPONSE[404],
     },
 )
 def get_tenant_by_id(
@@ -288,7 +299,7 @@ def get_tenant_by_id(
     except Exception:
         raise HTTPException(
             status_code=400,
-            detail="Invalid tenant ID.",
+            detail=INVALID_TENANT_ID,
         )
     tenant = tenants.find_one({
         "_id": object_id
@@ -296,7 +307,7 @@ def get_tenant_by_id(
     if not tenant:
         raise HTTPException(
             status_code=404,
-            detail="Tenant not found.",
+            detail=TENANT_NOT_FOUND,
         )
 
 
@@ -323,7 +334,10 @@ def get_tenant_by_id(
 
 @router.put(
     "/{id}",
-    responses={**BAD_REQUEST_RESPONSE, **NOT_FOUND_RESPONSE},
+    responses={
+        400: BAD_REQUEST_RESPONSE[400],
+        404: NOT_FOUND_RESPONSE[404],
+    },
 )
 def update_tenant(
     id: str,
@@ -337,7 +351,7 @@ def update_tenant(
     except Exception:
         raise HTTPException(
             status_code=400,
-            detail="Invalid tenant ID.",
+            detail=INVALID_TENANT_ID,
         )
     update_data = tenant.model_dump(
         exclude_unset=True
@@ -345,7 +359,7 @@ def update_tenant(
     if not update_data:
         raise HTTPException(
             status_code=400,
-            detail="No fields provided for update.",
+            detail=NO_UPDATE_FIELDS,
         )
 
 
@@ -415,7 +429,7 @@ def update_tenant(
     if result.matched_count == 0:
         raise HTTPException(
             status_code=404,
-            detail="Tenant not found.",
+            detail=TENANT_NOT_FOUND,
         )
     updated = tenants.find_one({
         "_id": object_id
@@ -437,9 +451,9 @@ def update_tenant(
 @router.patch(
     "/{id}/theme",
     responses={
-        **BAD_REQUEST_RESPONSE,
-        **FORBIDDEN_RESPONSE,
-        **NOT_FOUND_RESPONSE,
+        400: BAD_REQUEST_RESPONSE[400],
+        403: FORBIDDEN_RESPONSE[403],
+        404: NOT_FOUND_RESPONSE[404],
     },
 )
 def update_tenant_theme(
@@ -452,14 +466,14 @@ def update_tenant_theme(
     except Exception:
         raise HTTPException(
             status_code=400,
-            detail="Invalid tenant ID.",
+            detail=INVALID_TENANT_ID,
         )
 
     tenant = tenants.find_one({"_id": object_id})
     if not tenant:
         raise HTTPException(
             status_code=404,
-            detail="Tenant not found.",
+            detail=TENANT_NOT_FOUND,
         )
 
     if current_user.get("role") != "super_admin":
@@ -485,7 +499,7 @@ def update_tenant_theme(
     if result.matched_count == 0:
         raise HTTPException(
             status_code=404,
-            detail="Tenant not found.",
+            detail=TENANT_NOT_FOUND,
         )
 
     updated = tenants.find_one({"_id": object_id})
@@ -500,7 +514,10 @@ def update_tenant_theme(
 
 @router.delete(
     "/{id}",
-    responses={**BAD_REQUEST_RESPONSE, **NOT_FOUND_RESPONSE},
+    responses={
+        400: BAD_REQUEST_RESPONSE[400],
+        404: NOT_FOUND_RESPONSE[404],
+    },
 )
 def delete_tenant(
     id: str,
@@ -513,7 +530,7 @@ def delete_tenant(
     except Exception:
         raise HTTPException(
             status_code=400,
-            detail="Invalid tenant ID.",
+            detail=INVALID_TENANT_ID,
         )
     result = tenants.delete_one({
         "_id": object_id
@@ -521,7 +538,7 @@ def delete_tenant(
     if result.deleted_count == 0:
         raise HTTPException(
             status_code=404,
-            detail="Tenant not found.",
+            detail=TENANT_NOT_FOUND,
         )
     return {
         "success": True,

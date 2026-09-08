@@ -39,7 +39,7 @@ router = APIRouter(
 )
 
 
-@router.get("/test-razorpay", responses=BAD_REQUEST_RESPONSE)
+@router.get("/test-razorpay", responses={400: BAD_REQUEST_RESPONSE[400]})
 def test_razorpay(current_user: dict = Depends(require_super_admin)):
     try:
         order = client.order.create(
@@ -67,11 +67,11 @@ def test_razorpay(current_user: dict = Depends(require_super_admin)):
 @router.post(
     "/create-order",
     responses={
-        **BAD_REQUEST_RESPONSE,
-        **FORBIDDEN_RESPONSE,
-        **NOT_FOUND_RESPONSE,
-        **INTERNAL_SERVER_ERROR_RESPONSE,
-        **BAD_GATEWAY_RESPONSE,
+        400: BAD_REQUEST_RESPONSE[400],
+        403: FORBIDDEN_RESPONSE[403],
+        404: NOT_FOUND_RESPONSE[404],
+        500: INTERNAL_SERVER_ERROR_RESPONSE[500],
+        502: BAD_GATEWAY_RESPONSE[502],
     },
 )
 def create_order(
@@ -164,9 +164,9 @@ def create_order(
 @router.post(
     "/verify",
     responses={
-        **BAD_REQUEST_RESPONSE,
-        **FORBIDDEN_RESPONSE,
-        **CONFLICT_RESPONSE,
+        400: BAD_REQUEST_RESPONSE[400],
+        403: FORBIDDEN_RESPONSE[403],
+        409: CONFLICT_RESPONSE[409],
     },
 )
 def verify_payment(
@@ -224,9 +224,9 @@ def verify_payment(
 @router.get(
     "/order/{order_id}",
     responses={
-        **BAD_REQUEST_RESPONSE,
-        **FORBIDDEN_RESPONSE,
-        **NOT_FOUND_RESPONSE,
+        400: BAD_REQUEST_RESPONSE[400],
+        403: FORBIDDEN_RESPONSE[403],
+        404: NOT_FOUND_RESPONSE[404],
     },
 )
 def get_payment_status(
@@ -270,7 +270,10 @@ def get_payment_status(
         )
 
 
-@router.get("/payment/{payment_id}", responses=BAD_REQUEST_RESPONSE)
+@router.get(
+    "/payment/{payment_id}",
+    responses={400: BAD_REQUEST_RESPONSE[400]},
+)
 def get_payment(
     payment_id: str,
     current_user: dict = Depends(require_admin),
@@ -293,7 +296,10 @@ def get_payment(
         )
 
 
-@router.post("/refund/{payment_id}", responses=BAD_REQUEST_RESPONSE)
+@router.post(
+    "/refund/{payment_id}",
+    responses={400: BAD_REQUEST_RESPONSE[400]},
+)
 def refund(
     payment_id: str,
     current_user: dict = Depends(require_admin),
@@ -313,9 +319,9 @@ def refund(
 @router.post(
     "/webhook",
     responses={
-        **BAD_REQUEST_RESPONSE,
-        **INTERNAL_SERVER_ERROR_RESPONSE,
-        **SERVICE_UNAVAILABLE_RESPONSE,
+        400: BAD_REQUEST_RESPONSE[400],
+        500: INTERNAL_SERVER_ERROR_RESPONSE[500],
+        503: SERVICE_UNAVAILABLE_RESPONSE[503],
     },
 )
 async def webhook(request: Request):

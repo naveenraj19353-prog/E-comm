@@ -4,8 +4,8 @@ from app.services.home_service import get_home_data
 router = APIRouter(prefix="/home", tags=["Home"])
 
 
-@router.get("", responses=INTERNAL_SERVER_ERROR_RESPONSE)
-@router.get("/", responses=INTERNAL_SERVER_ERROR_RESPONSE)
+@router.get("", responses={500: INTERNAL_SERVER_ERROR_RESPONSE[500]})
+@router.get("/", responses={500: INTERNAL_SERVER_ERROR_RESPONSE[500]})
 def get_home(
     tenantId: str,
     productLimit: int = Query(default=10, ge=1, le=50),
