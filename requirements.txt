@@ -12,3 +12,4 @@ email-validator
 pydantic
 razorpay
 requests
+boto3==1.43.89
