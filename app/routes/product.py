@@ -807,7 +807,7 @@ def _product_listing_parameters(
     responses={500: INTERNAL_SERVER_ERROR_RESPONSE[500]},
 )
 def get_all_products(
-    tenantId: str,
+    tenant_id: str = Query(..., alias="tenantId"),
     filters: dict = Depends(_product_filter_parameters),
     listing: dict = Depends(_product_listing_parameters),
 ):
@@ -824,10 +824,10 @@ def get_all_products(
     allow_inactive = _allow_inactive_products(
         listing["includeInactive"],
         listing["current_user"],
-        tenantId,
+        tenant_id,
     )
     query = _build_all_products_query(
-        tenantId,
+        tenant_id,
         allow_inactive,
         category_ids,
         brands,
@@ -851,7 +851,7 @@ def get_all_products(
         limit,
     )
     filter_data = get_tenant_product_filters(
-        tenantId,
+        tenant_id,
         allow_inactive,
     )
     return _assemble_all_products_response(
@@ -962,7 +962,7 @@ def search_product(
         filter_data,
     )
 def get_new_arrivals(
-    tenantId: str,
+    tenant_id: str = Query(..., alias="tenantId"),
     limit: int = 10,
 ):
     limit = min(
@@ -970,7 +970,7 @@ def get_new_arrivals(
         100,
     )
     query = {
-        "tenantId": tenantId,
+        "tenantId": tenant_id,
         "isActive": True,
         "inventory": {
             MONGO_ELEM_MATCH_OPERATOR: {
@@ -1020,7 +1020,7 @@ def get_new_arrivals(
 )
 def get_product(
     id: str,
-    tenantId: str,
+    tenant_id: str = Query(..., alias="tenantId"),
 ):
     if not ObjectId.is_valid(id):
         raise HTTPException(
@@ -1029,7 +1029,7 @@ def get_product(
         )
     query = {
         "_id": ObjectId(id),
-        "tenantId": tenantId,
+        "tenantId": tenant_id,
         "isActive": True,
     }
     try:
@@ -1222,7 +1222,7 @@ def update_product(
 )
 def delete_product(
     id: str,
-    tenantId: str,
+    tenant_id: str = Query(..., alias="tenantId"),
     current_user: dict = Depends(require_admin),
 ):
     if not ObjectId.is_valid(id):
@@ -1231,7 +1231,7 @@ def delete_product(
             detail=INVALID_PRODUCT_ID,
         )
     try:
-        scoped_tenant = admin_tenant_id(current_user, tenantId)
+        scoped_tenant = admin_tenant_id(current_user, tenant_id)
         result = products.delete_one(
             {
                 "_id": ObjectId(id),
@@ -1270,7 +1270,7 @@ def delete_product(
 )
 def get_product_inventory(
     id: str,
-    tenantId: str,
+    tenant_id: str = Query(..., alias="tenantId"),
 ):
     if not ObjectId.is_valid(id):
         raise HTTPException(
@@ -1281,7 +1281,7 @@ def get_product_inventory(
         product = products.find_one(
             {
                 "_id": ObjectId(id),
-                "tenantId": tenantId,
+                "tenantId": tenant_id,
                 "isActive": True,
             },
             {

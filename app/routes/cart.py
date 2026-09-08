@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 from bson import ObjectId
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from app.database.mongo import carts
 from app.models.cart import AddCart, UpdateCart
 from app.routes.detail_messages import PRODUCT_NOT_FOUND
@@ -188,7 +188,7 @@ def update_cart(
 @router.get("/{userId}", responses={403: FORBIDDEN_RESPONSE[403]})
 def get_cart(
     userId: str,
-    tenantId: str | None = None,
+    tenant_id: str | None = Query(default=None, alias="tenantId"),
     current_user: dict = Depends(require_customer),
 ):
     tenant_id, token_user_id = customer_scope(current_user)
@@ -251,7 +251,7 @@ def get_cart(
 def remove_from_cart(
     productId: str,
     userId: str | None = None,
-    tenantId: str | None = None,
+    tenant_id: str | None = Query(default=None, alias="tenantId"),
     variantId: str | None = None,
     current_user: dict = Depends(require_customer),
 ):
@@ -278,7 +278,7 @@ def remove_from_cart(
 @router.delete("/", responses={403: FORBIDDEN_RESPONSE[403]})
 def clear_cart(
     userId: str | None = None,
-    tenantId: str | None = None,
+    tenant_id: str | None = Query(default=None, alias="tenantId"),
     current_user: dict = Depends(require_customer),
 ):
     tenant_id, token_user_id = customer_scope(current_user)

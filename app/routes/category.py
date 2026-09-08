@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from bson import ObjectId
 from datetime import datetime, timezone
 from app.database.mongo import categories
@@ -63,13 +63,15 @@ def create_category(
 
 
 @router.get("/")
-def get_all_categories(tenantId: str):
+def get_all_categories(
+    tenant_id: str = Query(..., alias="tenantId"),
+):
     """
     Categories with at least one active product for the tenant.
     Built from the product catalog (same source as product filters),
     so new/updated product categories appear without a separate seed.
     """
-    data = get_catalog_categories(tenantId)
+    data = get_catalog_categories(tenant_id)
     return {
         "success": True,
         "count": len(data),
@@ -86,7 +88,7 @@ def get_all_categories(tenantId: str):
 )
 def get_category_by_id(
     id: str,
-    tenantId: str
+    tenant_id: str = Query(..., alias="tenantId"),
 ):
     if not ObjectId.is_valid(id):
         raise HTTPException(
@@ -96,7 +98,7 @@ def get_category_by_id(
     category = categories.find_one(
         {
             "_id": ObjectId(id),
-            "tenantId": tenantId,
+            "tenantId": tenant_id,
             "isActive": True
         }
     )
@@ -184,10 +186,10 @@ def update_category(
 )
 def delete_category(
     id: str,
-    tenantId: str,
+    tenant_id: str = Query(..., alias="tenantId"),
     current_user: dict = Depends(require_admin),
 ):
-    tenant_id = admin_tenant_id(current_user, tenantId)
+    tenant_id = admin_tenant_id(current_user, tenant_id)
     if not ObjectId.is_valid(id):
         raise HTTPException(
             status_code=400,

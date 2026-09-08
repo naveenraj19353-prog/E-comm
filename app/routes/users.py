@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from bson import ObjectId
 from datetime import datetime, timezone
 from app.database.mongo import users
@@ -26,10 +26,10 @@ router = APIRouter(prefix="/users", tags=["Users"])
     },
 )
 def get_users(
-    tenantId: str | None = None,
+    tenant_id: str | None = Query(default=None, alias="tenantId"),
     current_user: dict = Depends(require_admin),
 ):
-    tenant_id = admin_tenant_id(current_user, tenantId)
+    tenant_id = admin_tenant_id(current_user, tenant_id)
     result = []
     cursor = users.find(
         {"tenantId": tenant_id},
@@ -51,10 +51,10 @@ def get_users(
 )
 def get_user(
     id: str,
-    tenantId: str | None = None,
+    tenant_id: str | None = Query(default=None, alias="tenantId"),
     current_user: dict = Depends(require_admin),
 ):
-    tenant_id = admin_tenant_id(current_user, tenantId)
+    tenant_id = admin_tenant_id(current_user, tenant_id)
     if not ObjectId.is_valid(id):
         raise HTTPException(status_code=400, detail=INVALID_USER_ID)
     user = users.find_one(
@@ -78,10 +78,10 @@ def get_user(
 def update_user(
     id: str,
     request: UpdateUser,
-    tenantId: str | None = None,
+    tenant_id: str | None = Query(default=None, alias="tenantId"),
     current_user: dict = Depends(require_admin),
 ):
-    tenant_id = admin_tenant_id(current_user, tenantId)
+    tenant_id = admin_tenant_id(current_user, tenant_id)
     if not ObjectId.is_valid(id):
         raise HTTPException(status_code=400, detail=INVALID_USER_ID)
     update_data = request.model_dump(exclude_unset=True)
@@ -115,10 +115,10 @@ def update_user(
 )
 def delete_user(
     id: str,
-    tenantId: str | None = None,
+    tenant_id: str | None = Query(default=None, alias="tenantId"),
     current_user: dict = Depends(require_admin),
 ):
-    tenant_id = admin_tenant_id(current_user, tenantId)
+    tenant_id = admin_tenant_id(current_user, tenant_id)
     if not ObjectId.is_valid(id):
         raise HTTPException(status_code=400, detail=INVALID_USER_ID)
     result = users.delete_one({"_id": ObjectId(id), "tenantId": tenant_id})

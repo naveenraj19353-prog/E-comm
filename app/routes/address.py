@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 from bson import ObjectId
 from bson.errors import InvalidId
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from app.database.mongo import addresses
 from app.models.address import CreateAddress, UpdateAddress
 from app.routes.response_metadata import FORBIDDEN_RESPONSE
@@ -95,7 +95,7 @@ def create_address(
 )
 def get_addresses(
     userId: str,
-    tenantId: str | None = None,
+    tenant_id: str | None = Query(default=None, alias="tenantId"),
     current_user: dict = Depends(require_customer),
 ):
     tenant_id, token_user_id = customer_scope(current_user)
@@ -214,7 +214,7 @@ def update_address(
 )
 def delete_address(
     id: str,
-    tenantId: str | None = None,
+    tenant_id: str | None = Query(default=None, alias="tenantId"),
     current_user: dict = Depends(require_customer),
 ):
     tenant_id, user_id = customer_scope(current_user)

@@ -7,7 +7,7 @@ router = APIRouter(prefix="/home", tags=["Home"])
 @router.get("", responses={500: INTERNAL_SERVER_ERROR_RESPONSE[500]})
 @router.get("/", responses={500: INTERNAL_SERVER_ERROR_RESPONSE[500]})
 def get_home(
-    tenantId: str,
+    tenant_id: str = Query(..., alias="tenantId"),
     productLimit: int = Query(default=10, ge=1, le=50),
     categoryLimit: int = Query(default=12, ge=1, le=50),
 ):
@@ -15,7 +15,7 @@ def get_home(
 
 
         data = get_home_data(
-            tenant_id=tenantId, product_limit=productLimit, category_limit=categoryLimit
+            tenant_id=tenant_id, product_limit=productLimit, category_limit=categoryLimit
         )
 
 
