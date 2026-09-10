@@ -1,6 +1,8 @@
 import { useNavigate, useParams } from "react-router-dom";
 import { useTenantByTenantId } from "../hooks/useTenants";
 import styles from "../styles/AdminTenant.module.css";
+import { formatStorefrontHost } from "../../tenant/tenantHost";
+import { routes, storefrontNavigate } from "../../../routes/routes";
 export default function AdminTenant() {
     const { tenantId } = useParams();
     const navigate = useNavigate();
@@ -22,7 +24,8 @@ export default function AdminTenant() {
         </button>
       </div>);
     }
-    console.log(tenant);
+    const storeHost = formatStorefrontHost(tenant.slug);
+    const openStore = (path: string) => storefrontNavigate(navigate, path);
     return (<div className={styles.page}>
       
       <div className={styles.header}>
@@ -32,10 +35,10 @@ export default function AdminTenant() {
           </button>
           <div className={styles.eyebrow}>{tenant.tenantId}</div>
           <h1>{tenant.name}</h1>
-          <p>/{tenant.slug}</p>
+          <p>{storeHost}</p>
         </div>
         <div className={styles.headerActions}>
-          <button type="button" className={styles.layoutButton} onClick={() => navigate(`/${tenant.slug}/customize`)}>
+          <button type="button" className={styles.layoutButton} onClick={() => openStore(routes.customize(tenant.slug))}>
             Layout Studio
           </button>
           <button type="button" className={styles.editButton} onClick={() => navigate(`/admin/tenants/${tenant.tenantId}/edit`)}>
@@ -82,7 +85,7 @@ export default function AdminTenant() {
           
           <div className={styles.infoCard}>
             <span>Store Slug</span>
-            <strong>/{tenant.slug}</strong>
+            <strong>{storeHost}</strong>
           </div>
           
           <div className={styles.infoCard}>
@@ -124,10 +127,10 @@ export default function AdminTenant() {
           </div>
           <div className={styles.storeInfo}>
             <h3>{tenant.name}</h3>
-            <p>/{tenant.slug}</p>
+            <p>{storeHost}</p>
             <span>Theme: {tenant.theme || "green"}</span>
           </div>
-          <button type="button" className={styles.viewStoreButton} onClick={() => navigate(`/${tenant.slug}`)}>
+          <button type="button" className={styles.viewStoreButton} onClick={() => openStore(routes.home(tenant.slug))}>
             View Store →
           </button>
         </div>

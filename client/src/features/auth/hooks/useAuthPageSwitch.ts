@@ -6,6 +6,7 @@ import {
     resolveStorefrontReturnPath,
 } from "../loginRedirect";
 import { useStorefrontTenant } from "../../tenant/useTenant";
+import { routes, storefrontNavigate } from "../../../routes/routes";
 
 export function useAuthPageSwitch() {
     const navigate = useNavigate();
@@ -14,14 +15,14 @@ export function useAuthPageSwitch() {
 
     const goToRegister = useCallback(() => {
         const from = readLoginReturnPath(location.state);
-        navigate(`/${tenantSlug}/register`, {
+        storefrontNavigate(navigate, routes.register(tenantSlug), {
             state: from ? getLoginLocationState(from) : undefined,
         });
     }, [location.state, navigate, tenantSlug]);
 
     const goToLogin = useCallback(() => {
         const from = readLoginReturnPath(location.state);
-        navigate(`/${tenantSlug}/login`, {
+        storefrontNavigate(navigate, routes.login(tenantSlug), {
             state: getLoginLocationState(resolveStorefrontReturnPath(from, tenantSlug)),
         });
     }, [location.state, navigate, tenantSlug]);

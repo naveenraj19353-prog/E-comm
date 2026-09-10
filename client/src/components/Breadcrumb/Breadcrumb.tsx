@@ -12,8 +12,13 @@ const Breadcrumb = ({ items }: BreadcrumbProps) => {
     return (<nav className={styles.breadcrumb}>
       {items.map((item, index) => {
             const isLast = index === items.length - 1;
+            const isExternal = Boolean(item.href && /^https?:\/\//i.test(item.href));
             return (<div key={item.label} className={styles.item}>
-            {item.href && !isLast ? (<Link to={item.href}>{item.label}</Link>) : (<span className={styles.current}>{item.label}</span>)}
+            {item.href && !isLast ? (
+                isExternal
+                    ? <a href={item.href}>{item.label}</a>
+                    : <Link to={item.href}>{item.label}</Link>
+            ) : (<span className={styles.current}>{item.label}</span>)}
             {!isLast && <ChevronRight size={16}/>}
           </div>);
         })}

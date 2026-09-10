@@ -8,6 +8,7 @@ import PageLoader from "../../components/PageLoader";
 import styles from "./Profile.module.css";
 import EditProfileModal from "./EditProfileModal";
 import AuthModal from "../../components/Auth/AuthModal/AuthModal";
+import { routes, storefrontNavigate } from "../../routes/routes";
 const Profile = () => {
     const navigate = useNavigate();
     const { user, logout, } = useAuth();
@@ -17,13 +18,14 @@ const Profile = () => {
     const profileTenantId = user?.tenantId || tenantId;
     const userId = user?._id || "";
     const { profile, isLoading, isError, updateProfile, isUpdating, } = useProfile(profileTenantId, userId);
+    const go = (to: string, options?: { replace?: boolean }) => storefrontNavigate(navigate, to, options);
     const handleAuthSuccess = () => {
         setShowAuthModal(false);
         console.log("Authentication successful");
     };
     const handleClose = () => {
         if (tenantSlug) {
-            navigate(`/${tenantSlug}`);
+            go(routes.home(tenantSlug));
         }
         else {
             navigate("/");
@@ -35,7 +37,7 @@ const Profile = () => {
         }
         logout();
         if (tenantSlug) {
-            navigate(`/${tenantSlug}`, { replace: true });
+            go(routes.home(tenantSlug), { replace: true });
         }
         else {
             navigate("/", {
@@ -186,7 +188,7 @@ const Profile = () => {
           
           <button
             className={styles.quickCard}
-            onClick={() => navigate(tenantSlug ? `/${tenantSlug}/orders` : "/orders")}
+            onClick={() => go(tenantSlug ? routes.orders(tenantSlug) : "/orders")}
           >
             <div className={styles.quickIcon}>
               <Package size={22}/>

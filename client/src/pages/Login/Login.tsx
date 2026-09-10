@@ -76,7 +76,7 @@ export default function Login() {
             SA
           </div>
           <div>
-            <strong>OmniStore</strong>
+            <strong>Retail Cosmos</strong>
             <span>Administration</span>
           </div>
         </div>
@@ -166,7 +166,7 @@ export default function Login() {
           </div>
         </div>
         <p className={styles.footer}>
-          © {new Date().getFullYear()} OmniStore.
+          © {new Date().getFullYear()} Retail Cosmos.
           All rights reserved.
         </p>
       </section>

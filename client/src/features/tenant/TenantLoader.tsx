@@ -4,13 +4,14 @@ import { useQuery } from "@tanstack/react-query";
 import { useAppDispatch, useAppSelector } from "../../app/hooks";
 import PageLoader from "../../components/PageLoader";
 import { clearTenant, setTenant, setTenantSlug } from "./tenantSlice";
+import { getTenantSlugFromHostname } from "./tenantHost";
 import { getStorefrontLayout, getTenantBySlug } from "../admin/api/tenant.api";
 
 const TenantLoader = () => {
-    const { tenantSlug } = useParams();
+    const { tenantSlug: paramSlug } = useParams();
     const dispatch = useAppDispatch();
     const currentTenant = useAppSelector((state) => state.tenant.currentTenant);
-    const slug = tenantSlug?.trim().toLowerCase() || "";
+    const slug = (paramSlug || getTenantSlugFromHostname() || "").trim().toLowerCase();
 
     const tenantQuery = useQuery({
         queryKey: ["tenant", "slug", slug],

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { ShoppingCart, Palette } from "lucide-react";
 import styles from "../../styles/NavBar.module.css";
 import { useCart } from "../../features/cart/hooks/useCart";
@@ -10,6 +10,7 @@ import { useCategory } from "../../features/products/hooks/useCategory";
 import { useStorefrontTenant } from "../../features/tenant/useTenant";
 import { useLayoutSettings } from "../../theme/useThemeSettings";
 import { useCanManageStoreLayout } from "../../features/auth/useCanManageStoreLayout";
+import { routes, storefrontNavigate, withQuery } from "../../routes/routes";
 interface Category {
     _id?: string;
     categoryId?: string;
@@ -26,11 +27,9 @@ const getInitials = (name?: string) => {
 export default function Navbar() {
     const navigate = useNavigate();
     const navigateToLogin = useNavigateToLogin();
-    const { tenantSlug } = useParams<{
-        tenantSlug: string;
-    }>();
+    const { tenantSlug, tenantId: catalogTenantId } = useStorefrontTenant();
     const { user } = useAuth();
-    const catalogTenantId = useStorefrontTenant().tenantId;
+    const go = (to: string) => storefrontNavigate(navigate, to);
     const layoutSettings = useLayoutSettings();
     const canManageLayout = useCanManageStoreLayout();
     const { data: categoryResponse, isLoading: categoriesLoading } = useCategory(catalogTenantId);
@@ -69,7 +68,7 @@ export default function Navbar() {
         if (!search || !tenantSlug) {
             return;
         }
-        navigate(`/${tenantSlug}/products?search=${encodeURIComponent(search)}`);
+        go(withQuery(routes.products(tenantSlug), { search }));
         setSearchOpen(false);
         setMenuOpen(false);
     };
@@ -81,7 +80,7 @@ export default function Navbar() {
             category._id ||
             category.slug ||
             category.name;
-        navigate(`/${tenantSlug}/products?categoryIds=${encodeURIComponent(categoryId)}`);
+        go(withQuery(routes.products(tenantSlug), { categoryIds: categoryId }));
         setMenuOpen(false);
         setSearchOpen(false);
     };
@@ -89,7 +88,7 @@ export default function Navbar() {
         if (!tenantSlug) {
             return;
         }
-        navigate(`/${tenantSlug}`);
+        go(routes.home(tenantSlug));
         setMenuOpen(false);
         setSearchOpen(false);
     };
@@ -177,24 +176,24 @@ export default function Navbar() {
           {canManageLayout && (<button
             type="button"
             className={styles.iconButton}
-            onClick={() => navigate(`/${tenantSlug}/customize`)}
+            onClick={() => go(routes.customize(tenantSlug!))}
             aria-label="Open layout studio"
             title="Layout studio"
           >
             <Palette size={20} />
           </button>)}
 
-          <button type="button" className={styles.iconButton} onClick={() => navigate(`/${tenantSlug}/wishlist`)}>
+          <button type="button" className={styles.iconButton} onClick={() => go(routes.wishlist(tenantSlug!))}>
             <HeartIcon />
             {wishlistCount > 0 && (<span className={styles.badge}>{wishlistCount}</span>)}
           </button>
           
-          <button type="button" className={styles.iconButton} onClick={() => navigate(`/${tenantSlug}/cart`)}>
+          <button type="button" className={styles.iconButton} onClick={() => go(routes.cart(tenantSlug!))}>
             <ShoppingCart size={20}/>
             {cartCount > 0 && <span className={styles.badge}>{cartCount}</span>}
           </button>
           
-          {user ? (<button type="button" className={styles.avatar} onClick={() => navigate(`/${tenantSlug}/profile`)}>
+          {user ? (<button type="button" className={styles.avatar} onClick={() => go(routes.profile(tenantSlug!))}>
               {getInitials(user?.name)}
             </button>) : (<button type="button" className={styles.avatar} onClick={() => navigateToLogin()}>
               UK
@@ -245,26 +244,26 @@ export default function Navbar() {
         
         <div className={styles.mobileMenuFooter}>
           {canManageLayout && (<button type="button" onClick={() => {
-            navigate(`/${tenantSlug}/customize`);
+            go(routes.customize(tenantSlug!));
             setMenuOpen(false);
         }}>
             Layout studio
           </button>)}
           <button type="button" onClick={() => {
-            navigate(`/${tenantSlug}/wishlist`);
+            go(routes.wishlist(tenantSlug!));
             setMenuOpen(false);
         }}>
             Wishlist
           </button>
           <button type="button" onClick={() => {
-            navigate(`/${tenantSlug}/cart`);
+            go(routes.cart(tenantSlug!));
             setMenuOpen(false);
         }}>
             Cart
           </button>
           <button type="button" onClick={() => {
             if (user) {
-                navigate(`/${tenantSlug}/profile`);
+                go(routes.profile(tenantSlug!));
             }
             else {
                 navigateToLogin();

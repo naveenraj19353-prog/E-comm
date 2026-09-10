@@ -6,6 +6,7 @@ import { presetLabels, themePresets, type ThemePresetName } from "../../theme/th
 import ThemePreview from "./ThemePreview";
 import FooterContentEditor from "./FooterContentEditor";
 import styles from "./ThemeCustomizer.module.css";
+import { routes, storefrontNavigate } from "../../routes/routes";
 
 const previewTabs = [
     { id: "home", label: "Home" },
@@ -52,7 +53,7 @@ const ThemeCustomizer = () => {
     return (
         <div className={styles.page}>
             <header className={styles.topBar}>
-                <button type="button" className={styles.backButton} onClick={() => navigate(tenantSlug ? `/${tenantSlug}` : "/")}>
+                <button type="button" className={styles.backButton} onClick={() => storefrontNavigate(navigate, tenantSlug ? routes.home(tenantSlug) : "/")}>
                     <ArrowLeft size={18} />
                     Back to store
                 </button>

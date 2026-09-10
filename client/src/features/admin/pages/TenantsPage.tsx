@@ -3,6 +3,7 @@ import { useTenants } from "../hooks/useTenants";
 import styles from "../styles/TenantsPage.module.css";
 import { useAuth } from "../../auth/hooks/useAuth";
 import { getVisibleTenants } from "../utils/visibleTenants";
+import { formatStorefrontHost } from "../../tenant/tenantHost";
 
 export default function TenantsPage() {
     const navigate = useNavigate();
@@ -87,7 +88,7 @@ export default function TenantsPage() {
                                                 <Link to={`/admin/tenants/${tenant.tenantId}`}>
                                                     <div className={styles.tenantInfo}>
                                                         <strong>{tenant.name}</strong>
-                                                        <span>/{tenant.slug}</span>
+                                                        <span>{formatStorefrontHost(tenant.slug)}</span>
                                                     </div>
                                                 </Link>
                                             </div>

@@ -2,6 +2,7 @@ import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { CheckCircle2 } from "lucide-react";
 import { useStorefrontTenant } from "../../features/tenant/useTenant";
 import { routes } from "../../routes/routes";
+import { storefrontNavigate } from "../../routes/routes";
 import styles from "./ThankYou.module.css";
 
 interface ThankYouLocationState {
@@ -85,7 +86,7 @@ const ThankYou = () => {
                         <button
                             type="button"
                             className={styles.primaryButton}
-                            onClick={() => navigate(storeHome)}
+                            onClick={() => storefrontNavigate(navigate, storeHome)}
                         >
                             Continue shopping
                         </button>
@@ -93,7 +94,7 @@ const ThankYou = () => {
                             <button
                                 type="button"
                                 className={styles.secondaryButton}
-                                onClick={() => navigate(orderDetailPath)}
+                                onClick={() => storefrontNavigate(navigate, orderDetailPath)}
                             >
                                 View order
                             </button>

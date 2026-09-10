@@ -1,5 +1,7 @@
 import type { Location } from "react-router-dom";
 import type { User } from "./types";
+import { getTenantSlugFromHostname } from "../tenant/tenantHost";
+import { routes } from "../../routes/routes";
 
 export type LoginLocationState = {
     from?: string;
@@ -11,7 +13,10 @@ export function getReturnPath(location: Pick<Location, "pathname" | "search" | "
 }
 
 export function getStorefrontLoginPath(tenantSlug?: string): string {
-    return tenantSlug ? `/${tenantSlug}/login` : "/login";
+    if (!tenantSlug) {
+        return "/login";
+    }
+    return routes.login(tenantSlug);
 }
 
 export function readLoginReturnPath(state: unknown): string {
@@ -25,6 +30,21 @@ export function isStorefrontReturnPath(path: string, tenantSlug: string): boolea
     if (!path || !tenantSlug) {
         return false;
     }
+
+    // Subdomain mode: paths are /products, /cart, etc. (no slug prefix)
+    if (getTenantSlugFromHostname()) {
+        if (path === "/" || path.startsWith("/?")) {
+            return true;
+        }
+        if (path.startsWith("/login") || path.startsWith("/register")) {
+            return false;
+        }
+        if (path.startsWith("/admin")) {
+            return false;
+        }
+        return path.startsWith("/");
+    }
+
     const base = `/${tenantSlug}`;
     if (path === base) {
         return true;
@@ -42,7 +62,7 @@ export function resolveStorefrontReturnPath(from: string | undefined, tenantSlug
     if (from && isStorefrontReturnPath(from, tenantSlug)) {
         return from;
     }
-    return `/${tenantSlug}`;
+    return routes.home(tenantSlug);
 }
 
 export function getLoginLocationState(from: string, message?: string): LoginLocationState {
@@ -55,7 +75,7 @@ export function resolvePostLoginPath(
     tenantSlug: string,
 ): string {
     if (!user) {
-        return `/${tenantSlug}`;
+        return routes.home(tenantSlug);
     }
     if (user.role === "super_admin") {
         return "/admin";

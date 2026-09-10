@@ -1,12 +1,19 @@
 import { useParams } from "react-router-dom";
 import { useAppSelector } from "../../app/hooks";
+import { getTenantSlugFromHostname } from "./tenantHost";
+
 export const useStorefrontTenant = () => {
     const { tenantSlug } = useParams<{
         tenantSlug: string;
     }>();
     const tenant = useAppSelector((state) => state.tenant.currentTenant);
     const storedSlug = useAppSelector((state) => state.tenant.tenantSlug);
-    const slug = tenantSlug || tenant?.slug || storedSlug || "";
+    const slug =
+        tenantSlug
+        || getTenantSlugFromHostname()
+        || tenant?.slug
+        || storedSlug
+        || "";
     const tenantId = tenant?.tenantId || "";
     return {
         tenantSlug: slug,

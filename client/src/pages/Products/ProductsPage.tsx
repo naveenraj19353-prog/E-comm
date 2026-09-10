@@ -16,6 +16,7 @@ import { useProducts } from "../../features/products/hooks/useProducts";
 import { useDebounce } from "../../hooks/useDebounce";
 import { DEFAULT_MAX_PRICE, DEFAULT_MIN_PRICE, getApiPriceBounds, isActivePriceFilter, } from "../../features/products/filterUtils";
 import { useLayoutSettings } from "../../theme/useThemeSettings";
+import { routes } from "../../routes/routes";
 const Products = () => {
     const [searchParams, setSearchParams] = useSearchParams();
     const dispatch = useAppDispatch();
@@ -285,7 +286,7 @@ const Products = () => {
         <Breadcrumb items={[
                 {
                     label: "Home",
-                    href: `/${tenantSlug}`,
+                    href: routes.home(tenantSlug),
                 },
                 {
                     label: "Products",
@@ -311,7 +312,7 @@ const Products = () => {
       <Breadcrumb items={[
             {
                 label: "Home",
-                href: `/${tenantSlug}`,
+                href: routes.home(tenantSlug),
             },
             {
                 label: pageTitle,

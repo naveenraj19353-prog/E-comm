@@ -9,6 +9,7 @@ import {
     slugifyTenantValue,
     validateCreateTenantForm,
 } from "../utils/tenantForm.utils";
+import { formatStorefrontHost } from "../../tenant/tenantHost";
 
 export default function CreateTenant() {
     const navigate = useNavigate();
@@ -91,7 +92,7 @@ export default function CreateTenant() {
                     </button>
                     <span className={styles.eyebrow}>PLATFORM</span>
                     <h1>Create Tenant</h1>
-                    <p>Create a new store and its admin login on the OmniStore platform.</p>
+                    <p>Create a new store and its admin login on the Retail Cosmos platform.</p>
                 </div>
             </div>
 
@@ -131,7 +132,7 @@ export default function CreateTenant() {
                             onChange={(event) => handleSlugChange(event.target.value)}
                             placeholder="fashion-hub"
                         />
-                        <small>Storefront URL: /{slug || "fashion-hub"}</small>
+                        <small>Storefront URL: {formatStorefrontHost(slug || "fashion-hub")}</small>
                     </div>
 
                     <div className={styles.field}>

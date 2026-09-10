@@ -59,7 +59,7 @@ export default function AdminLayout() {
             O
           </div>
           <div>
-            <h2>OmniStore</h2>
+            <h2>Retail Cosmos</h2>
             <span>
               Admin Portal
             </span>

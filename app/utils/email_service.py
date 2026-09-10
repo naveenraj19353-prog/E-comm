@@ -20,7 +20,7 @@ def send_reset_email(user_email: str, reset_link: str) -> None:
     """
     msg = MIMEText(html, "html")
     msg["Subject"] = "Reset Password"
-    msg["From"] = EMAIL or "noreply@omnistore.local"
+    msg["From"] = EMAIL or "noreply@retailcosmos.com"
     msg["To"] = user_email
 
     if not EMAIL or not APP_PASSWORD:

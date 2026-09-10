@@ -18,7 +18,11 @@ export default defineConfig(({ mode }) => {
 
     return {
         plugins: [react()],
-        server: { proxy: apiProxy },
+        server: {
+            proxy: apiProxy,
+            // Allow shopsphere.localhost:5173 for local subdomain testing
+            allowedHosts: [".localhost", "localhost"],
+        },
         preview: { proxy: apiProxy },
     };
 });

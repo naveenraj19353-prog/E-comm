@@ -9,6 +9,7 @@ import Countdown from "./Countdown";
 import ProductCard from "../Sliders/ProductSlider/ProductCard";
 import type { Product } from "../../features/products/types";
 import { useStorefrontTenant } from "../../features/tenant/useTenant";
+import { routes, storefrontNavigate } from "../../routes/routes";
 interface DealOfTheDayProps {
     products: Product[];
     isWishlisted?: (productId: string) => boolean;
@@ -38,7 +39,7 @@ const DealOfTheDay = ({ products, isWishlisted, onToggleWishlist, onQuickAdd, }:
         <Countdown />
         <button type="button" className={styles.button} onClick={() => {
             if (tenantSlug) {
-                navigate(`/${tenantSlug}/products`);
+                storefrontNavigate(navigate, routes.products(tenantSlug));
             }
         }}>
           Shop Now

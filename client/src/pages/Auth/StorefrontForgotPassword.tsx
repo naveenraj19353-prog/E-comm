@@ -1,5 +1,6 @@
 import ForgotPasswordPage from "../Auth/ForgotPasswordPage";
 import { useStorefrontTenant } from "../../features/tenant/useTenant";
+import { routes } from "../../routes/routes";
 
 export default function StorefrontForgotPassword() {
     const { tenantId, tenantSlug } = useStorefrontTenant();
@@ -12,7 +13,7 @@ export default function StorefrontForgotPassword() {
         <ForgotPasswordPage
             mode="storefront"
             tenantId={tenantId}
-            loginPath={`/${tenantSlug}/login`}
+            loginPath={routes.login(tenantSlug)}
         />
     );
 }

@@ -5,12 +5,17 @@ import { useOrderDetail } from "../../features/orders/hooks/useOrders";
 import OrderDetailContent from "../../features/orders/components/OrderDetailContent";
 import PageLoader from "../../components/PageLoader";
 import styles from "./OrderDetail.module.css";
+import { routes, storefrontNavigate } from "../../routes/routes";
 
 const OrderDetail = () => {
     const navigate = useNavigate();
     const { orderId = "" } = useParams();
     const { tenantSlug } = useStorefrontTenant();
     const { data: order, isLoading, isError } = useOrderDetail(orderId);
+    const goOrders = () => storefrontNavigate(
+        navigate,
+        tenantSlug ? routes.orders(tenantSlug) : "/",
+    );
 
     if (isLoading) {
         return <PageLoader message="Loading order details..." />;
@@ -24,7 +29,7 @@ const OrderDetail = () => {
                     <button
                         type="button"
                         className={styles.backLink}
-                        onClick={() => navigate(tenantSlug ? `/${tenantSlug}/orders` : "/")}
+                        onClick={goOrders}
                     >
                         <ChevronLeft size={16} />
                         Back to orders
@@ -40,7 +45,7 @@ const OrderDetail = () => {
                 <button
                     type="button"
                     className={styles.backLink}
-                    onClick={() => navigate(tenantSlug ? `/${tenantSlug}/orders` : "/")}
+                    onClick={goOrders}
                 >
                     <ChevronLeft size={16} />
                     Back to orders

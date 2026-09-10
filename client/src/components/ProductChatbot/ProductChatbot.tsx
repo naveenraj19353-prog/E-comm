@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useProductChatbot } from "../../features/chatbot/hooks/useProductChatbot";
 import type { ChatProductResult } from "../../features/chatbot/types";
 import { useStorefrontTenant } from "../../features/tenant/useTenant";
-import { routes } from "../../routes/routes";
+import { routes, storefrontNavigate } from "../../routes/routes";
 import ProductImage from "../../components/ProductImage";
 import styles from "./ProductChatbot.module.css";
 
@@ -66,7 +66,7 @@ const ProductChatbot = () => {
                   {message.products && message.products.length > 0 && (<div className={styles.results}>
                       {message.products.map((product: ChatProductResult) => (<button key={product._id} type="button" className={styles.productCard} onClick={() => {
                             if (tenantSlug) {
-                                navigate(routes.product(tenantSlug, product._id));
+                                storefrontNavigate(navigate, routes.product(tenantSlug, product._id));
                                 setIsOpen(false);
                             }
                         }}>
