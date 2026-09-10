@@ -3,8 +3,6 @@ import { formatStorefrontHost, getStorefrontHref } from "../../features/tenant/t
 
 const demoStores = [
     { slug: "shopsphere", label: "ShopSphere", description: "Fashion & lifestyle" },
-    { slug: "megamart", label: "MegaMart", description: "Groceries & essentials" },
-    { slug: "urbancart", label: "UrbanCart", description: "Urban essentials" },
 ];
 
 export default function Welcome() {

@@ -60,12 +60,12 @@ const TenantLoader = () => {
         return <h1>Store not found</h1>;
     }
 
-    if (tenantQuery.isLoading || layoutQuery.isLoading || !currentTenant) {
-        return <PageLoader message="Loading store layout..." fullViewport />;
-    }
-
     if (tenantQuery.isError || layoutQuery.isError) {
         return <h1>Store not found</h1>;
+    }
+
+    if (tenantQuery.isLoading || layoutQuery.isLoading || !currentTenant) {
+        return <PageLoader message="Loading store layout..." fullViewport />;
     }
 
     return <Outlet />;
