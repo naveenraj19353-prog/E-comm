@@ -5,7 +5,7 @@ import boto3
 from botocore.exceptions import ClientError
 
 
-S3_BUCKET = "multi-tenant-ecomm-images"
+S3_BUCKET = "multi-tenant-ecomm-images-prod"
 S3_REGION = "eu-north-1"
 
 s3_client = boto3.client(

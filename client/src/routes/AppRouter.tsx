@@ -1,41 +1,44 @@
 import { createBrowserRouter } from "react-router-dom";
 import MainLayout from "../layouts/MainLayout";
-import Home from "../pages/Home";
-import Products from "../pages/Products";
-import ProductDetails from "../pages/ProductDetails/ProductDetails";
-import Wishlist from "../pages/Wishlist/Wishlist";
-import Cart from "../pages/Cart/Cart";
-import Checkout from "../pages/Checkout/Checkout";
-import ThankYou from "../pages/ThankYou";
-import MyOrders from "../pages/Orders/MyOrders";
-import OrderDetail from "../pages/Orders/OrderDetail";
-import Profile from "../pages/Profile/Profile";
 import TenantLoader from "../features/tenant/TenantLoader";
-import Login from "../pages/Login/Login";
-import StorefrontLogin from "../pages/Login/StorefrontLogin";
-import StorefrontRegister from "../pages/Register/StorefrontRegister";
-import StorefrontForgotPassword from "../pages/Auth/StorefrontForgotPassword";
-import StorefrontResetPassword from "../pages/Auth/StorefrontResetPassword";
-import AdminForgotPassword from "../pages/Auth/AdminForgotPassword";
-import AdminResetPassword from "../pages/Auth/AdminResetPassword";
-import LegacyAuthRedirect from "../pages/Login/LegacyAuthRedirect";
-import Logout from "../pages/Logout/Logout";
 import RequireStorefrontAuth from "../features/auth/RequireStorefrontAuth";
 import RequireStoreAdminAuth from "../features/auth/RequireStoreAdminAuth";
 import AdminLayout from "../features/admin/components/AdminLayout";
-import AdminDashboard from "../features/admin/pages/AdminDashboard";
-import AdminTenants from "../features/admin/pages/TenantsPage";
-import AdminTenant from "../features/admin/pages/AdminTenant";
-import EditTenant from "../features/admin/pages/EditTenant";
-import CreateTenant from "../features/admin/pages/CreateTenant";
-import AdminTenantProducts from "../features/admin/pages/AdminTenantProducts";
-import CreateProduct from "../features/admin/pages/CreateProduct";
-import BulkProductImport from "../features/admin/pages/BulkProductImport";
-import AdminTenantOrders from "../features/admin/pages/AdminTenantOrders";
-import AdminOrderDetail from "../features/admin/pages/AdminOrderDetail";
-import ThemeCustomizer from "../pages/ThemeCustomizer/ThemeCustomizer";
-import NotFound from "../pages/NotFound";
-import Welcome from "../pages/Welcome";
+import {
+    AdminDashboard,
+    AdminForgotPassword,
+    AdminOrderDetail,
+    AdminResetPassword,
+    AdminTenant,
+    AdminTenantOrders,
+    AdminTenantProducts,
+    AdminTenants,
+    BulkProductImport,
+    Cart,
+    Checkout,
+    CreateProduct,
+    CreateTenant,
+    EditTenant,
+    Home,
+    LegacyAuthRedirect,
+    Login,
+    Logout,
+    MyOrders,
+    NotFound,
+    OrderDetail,
+    ProductDetails,
+    Products,
+    Profile,
+    StorefrontForgotPassword,
+    StorefrontLogin,
+    StorefrontRegister,
+    StorefrontResetPassword,
+    ThankYou,
+    ThemeCustomizer,
+    Welcome,
+    Wishlist,
+} from "./LazyRouteComponents";
+
 export const router = createBrowserRouter([
     {
         path: "/",
