@@ -144,7 +144,7 @@ export default function Navbar() {
     return (<header className={`${styles.navbar} ${layoutSettings.stickyHeader ? styles.navbarSticky : styles.navbarStatic}`}>
       <div className={headerLayoutClass}>
         
-        <button type="button" className={styles.logo} onClick={handleHome}>
+        <button type="button" className={styles.logo} onClick={handleHome} aria-label="Home">
           <span className={styles.logoIcon}>{getInitials(tenantSlug)}</span>
           <span className={styles.logoText}>{tenantSlug}</span>
         </button>
@@ -183,23 +183,23 @@ export default function Navbar() {
             <Palette size={20} />
           </button>)}
 
-          <button type="button" className={styles.iconButton} onClick={() => go(routes.wishlist(tenantSlug!))}>
+          <button type="button" className={styles.iconButton} onClick={() => go(routes.wishlist(tenantSlug!))} aria-label="Wishlist">
             <HeartIcon />
             {wishlistCount > 0 && (<span className={styles.badge}>{wishlistCount}</span>)}
           </button>
           
-          <button type="button" className={styles.iconButton} onClick={() => go(routes.cart(tenantSlug!))}>
+          <button type="button" className={styles.iconButton} onClick={() => go(routes.cart(tenantSlug!))} aria-label="Cart">
             <ShoppingCart size={20}/>
             {cartCount > 0 && <span className={styles.badge}>{cartCount}</span>}
           </button>
           
-          {user ? (<button type="button" className={styles.avatar} onClick={() => go(routes.profile(tenantSlug!))}>
+          {user ? (<button type="button" className={styles.avatar} onClick={() => go(routes.profile(tenantSlug!))} aria-label="Account">
               {getInitials(user?.name)}
-            </button>) : (<button type="button" className={styles.avatar} onClick={() => navigateToLogin()}>
+            </button>) : (<button type="button" className={styles.avatar} onClick={() => navigateToLogin()} aria-label="Sign in">
               UK
             </button>)}
           
-          <button type="button" className={styles.menuButton} onClick={() => setMenuOpen((value) => !value)}>
+          <button type="button" className={styles.menuButton} onClick={() => setMenuOpen((value) => !value)} aria-label="Open menu" aria-expanded={menuOpen}>
             <span />
             <span />
             <span />
@@ -249,19 +249,19 @@ export default function Navbar() {
         }}>
             Layout studio
           </button>)}
-          <button type="button" onClick={() => {
+          <button type="button" aria-label="Mobile wishlist" onClick={() => {
             go(routes.wishlist(tenantSlug!));
             setMenuOpen(false);
         }}>
             Wishlist
           </button>
-          <button type="button" onClick={() => {
+          <button type="button" aria-label="Mobile cart" onClick={() => {
             go(routes.cart(tenantSlug!));
             setMenuOpen(false);
         }}>
             Cart
           </button>
-          <button type="button" onClick={() => {
+          <button type="button" aria-label={user ? "Mobile account" : "Mobile sign in"} onClick={() => {
             if (user) {
                 go(routes.profile(tenantSlug!));
             }
