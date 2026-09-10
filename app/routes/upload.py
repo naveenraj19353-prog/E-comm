@@ -54,7 +54,7 @@ async def upload_image_file(
         )
 
     try:
-        image_url = upload_image(
+        uploaded = upload_image(
             file=file,
             tenant_id=tenant_id,
             folder=folder,
@@ -63,7 +63,8 @@ async def upload_image_file(
         return {
             "success": True,
             "message": "Image uploaded successfully.",
-            "url": image_url,
+            "key": uploaded["key"],
+            "url": uploaded["url"],
         }
 
     except ValueError as e:
@@ -76,5 +77,5 @@ async def upload_image_file(
         print("S3 UPLOAD ERROR:", str(e))
         raise HTTPException(
             status_code=500,
-            detail="Failed to upload image.",
+            detail=str(e) or "Failed to upload image.",
         )

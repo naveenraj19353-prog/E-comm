@@ -113,6 +113,10 @@ export const API_ENDPOINTS = {
         GET: "/home/",
     },
 
+    UPLOAD: {
+        IMAGE: "/upload/image",
+    },
+
     BANNER: {
         CREATE: "/banner/create",
         GET_ALL: "/banner/get-all",

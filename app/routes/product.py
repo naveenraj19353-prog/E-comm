@@ -25,6 +25,11 @@ from app.utils.auth_dependencies import (
     get_optional_user,
     require_admin,
 )
+from app.services.s3_service import (
+    collect_image_keys,
+    delete_tenant_image_keys,
+    validate_tenant_image_key,
+)
 from app.utils.product_serialize import (
     calculate_total_stock,
     serialize_product,
@@ -57,27 +62,59 @@ def calculate_final_price(
         ),
         2,
     )
+def _normalize_image_key(
+    image_value: str,
+    tenant_id: str,
+    folder: str,
+) -> str:
+    """Accept a raw S3 key or a presigned/public URL that contains one."""
+    from urllib.parse import unquote, urlparse
+
+    cleaned = image_value.strip()
+    try:
+        return validate_tenant_image_key(
+            cleaned,
+            tenant_id,
+            folder,
+        )
+    except ValueError:
+        pass
+
+    path = unquote(urlparse(cleaned).path or "").lstrip("/")
+    try:
+        return validate_tenant_image_key(
+            path,
+            tenant_id,
+            folder,
+        )
+    except ValueError as error:
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid image key.",
+        ) from error
+
+
 def validate_images(
     images: dict,
-):
+    tenant_id: str,
+    folder: str = "products",
+) -> dict:
     """
     Expected:
     {
         "Green": [
-            "https://...",
-            "https://..."
-        ],
-        "Red": [
-            "https://...",
-            "https://..."
+            "tenants/{tenantId}/products/uuid.jpg"
         ]
     }
+
+    Also accepts temporary S3 URLs and rewrites them to keys.
     """
     if not isinstance(images, dict):
         raise HTTPException(
             status_code=400,
             detail="Images must be an object grouped by color.",
         )
+    normalized: dict[str, list[str]] = {}
     for color, image_list in images.items():
         if not isinstance(color, str) or not color.strip():
             raise HTTPException(
@@ -92,23 +129,33 @@ def validate_images(
                     "must be an array."
                 ),
             )
-        for image_url in image_list:
-            if not isinstance(image_url, str):
+        cleaned_list: list[str] = []
+        for image_value in image_list:
+            if not isinstance(image_value, str):
                 raise HTTPException(
                     status_code=400,
                     detail=(
-                        f"Image URL for color "
+                        f"Image key for color "
                         f"'{color}' must be a string."
                     ),
                 )
-            if not image_url.strip():
+            if not image_value.strip():
                 raise HTTPException(
                     status_code=400,
                     detail=(
-                        f"Image URL for color "
+                        f"Image key for color "
                         f"'{color}' cannot be empty."
                     ),
                 )
+            cleaned_list.append(
+                _normalize_image_key(
+                    image_value,
+                    tenant_id,
+                    folder,
+                )
+            )
+        normalized[color.strip()] = cleaned_list
+    return normalized
 
 
 def _inventory_item_values(item: dict) -> tuple[str, str, str]:
@@ -278,9 +325,10 @@ def create_product(
         )
 
 
-    images = product.images
-    validate_images(
-        images
+    images = validate_images(
+        product.images,
+        tenant_id,
+        "products",
     )
     validate_color_images_against_inventory(
         inventory,
@@ -1103,10 +1151,15 @@ def _validate_updated_images(
     update_data: dict,
     inventory: list | None,
     db_product: dict,
+    tenant_id: str,
 ) -> None:
     if "images" in update_data:
-        images = update_data["images"]
-        validate_images(images)
+        images = validate_images(
+            update_data["images"],
+            tenant_id,
+            "products",
+        )
+        update_data["images"] = images
         inventory_for_validation = (
             inventory
             if inventory is not None
@@ -1137,6 +1190,7 @@ def _update_final_price(update_data: dict, db_product: dict) -> None:
 def _prepare_product_update(
     product: UpdateProduct,
     db_product: dict,
+    tenant_id: str,
 ) -> dict:
     update_data = product.model_dump(
         exclude_unset=True,
@@ -1145,7 +1199,7 @@ def _prepare_product_update(
     update_data.pop("tenantId", None)
     _validate_product_update_values(update_data)
     inventory = _prepare_updated_inventory(update_data)
-    _validate_updated_images(update_data, inventory, db_product)
+    _validate_updated_images(update_data, inventory, db_product, tenant_id)
     _update_final_price(update_data, db_product)
     update_data["updatedAt"] = datetime.now(timezone.utc)
     return update_data
@@ -1175,6 +1229,16 @@ def _persist_product_update(
             status_code=404,
             detail=PRODUCT_NOT_FOUND,
         )
+
+
+def _cleanup_removed_product_images(
+    tenant_id: str,
+    old_images,
+    new_images,
+) -> None:
+    removed_keys = collect_image_keys(old_images) - collect_image_keys(new_images)
+    if removed_keys:
+        delete_tenant_image_keys(removed_keys, tenant_id, "products")
 
 
 @router.put(
@@ -1210,8 +1274,17 @@ def update_product(
             detail=PRODUCT_NOT_FOUND,
         )
 
-    update_data = _prepare_product_update(product, db_product)
+    update_data = _prepare_product_update(product, db_product, tenant_id)
     _persist_product_update(object_id, tenant_id, update_data)
+
+    # Mongo write succeeds first; then remove unused S3 objects.
+    if "images" in update_data:
+        _cleanup_removed_product_images(
+            tenant_id,
+            db_product.get("images"),
+            update_data.get("images"),
+        )
+
     return {
         "success": True,
         "message": "Product updated successfully.",
@@ -1238,12 +1311,26 @@ def delete_product(
         )
     try:
         scoped_tenant = admin_tenant_id(current_user, tenant_id)
+        db_product = products.find_one(
+            {
+                "_id": ObjectId(id),
+                "tenantId": scoped_tenant,
+            }
+        )
+        if not db_product:
+            raise HTTPException(
+                status_code=404,
+                detail=PRODUCT_NOT_FOUND,
+            )
+
         result = products.delete_one(
             {
                 "_id": ObjectId(id),
                 "tenantId": scoped_tenant,
             }
         )
+    except HTTPException:
+        raise
     except Exception as e:
         print(
             "ERROR deleting product:",
@@ -1252,12 +1339,18 @@ def delete_product(
         raise HTTPException(
             status_code=500,
             detail="Failed to delete product.",
-        )
+        ) from e
     if result.deleted_count == 0:
         raise HTTPException(
             status_code=404,
             detail=PRODUCT_NOT_FOUND,
         )
+
+    delete_tenant_image_keys(
+        collect_image_keys(db_product.get("images")),
+        scoped_tenant,
+        "products",
+    )
     return {
         "success": True,
         "message": (

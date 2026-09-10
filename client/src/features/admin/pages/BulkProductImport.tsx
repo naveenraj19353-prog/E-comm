@@ -55,6 +55,7 @@ export default function BulkProductImport() {
             const resolved = await resolveAllProductImages(
                 products,
                 buildImageFileMap(mergedFiles),
+                tenantId,
             );
             setProducts(resolved.products);
             setImageErrors(resolved.imageErrors);
@@ -84,6 +85,7 @@ export default function BulkProductImport() {
                 const resolved = await resolveAllProductImages(
                     parsed.products,
                     buildImageFileMap(uploadedImageFiles),
+                    tenantId,
                 );
                 setProducts(resolved.products);
                 setImageErrors(resolved.imageErrors);
@@ -184,7 +186,7 @@ export default function BulkProductImport() {
                     <span className={styles.eyebrow}>{tenant.tenantId}</span>
                     <h1>Bulk Product Import</h1>
                     <p>
-                        Upload an Excel file for <strong>{tenant.name}</strong>. Use `imagePath`, `imagePath1`, `imagePath2`, etc. Local paths are converted to base64 when you upload matching image files or a ZIP.
+                        Upload an Excel file for <strong>{tenant.name}</strong>. Use `imagePath`, `imagePath1`, `imagePath2`, etc. Local paths are uploaded to S3 when you provide matching image files or a ZIP.
                     </p>
                 </div>
                 <div className={styles.headerActions}>
@@ -222,7 +224,7 @@ export default function BulkProductImport() {
             <div className={styles.card}>
                 <h2>2. Image files (for local paths)</h2>
                 <p>
-                    Browsers cannot read `C:\...` directly. Upload a folder, individual files, or a ZIP — we match by filename and convert to base64.
+                    Browsers cannot read `C:\...` directly. Upload a folder, individual files, or a ZIP — we match by filename and upload each image to S3.
                 </p>
                 <div className={styles.uploadRow}>
                     <input
