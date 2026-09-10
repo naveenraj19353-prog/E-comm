@@ -1,5 +1,6 @@
 import * as XLSX from "xlsx";
 import JSZip from "jszip";
+import { uploadImageToS3 } from "../api/upload.api";
 
 const IMAGE_EXTENSION_PATTERN = /\.(png|jpe?g|webp|gif|bmp|svg)$/i;
 
@@ -205,22 +206,10 @@ export const mergeImageFiles = (...groups: File[][]) => {
     return Array.from(merged.values());
 };
 
-export const fileToBase64 = (file: File) => {
-    return new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => {
-            resolve(String(reader.result));
-        };
-        reader.onerror = () => {
-            reject(new Error(`Unable to read ${file.name}`));
-        };
-        reader.readAsDataURL(file);
-    });
-};
-
 export const resolveImageValue = async (
     rawPath: string,
     fileMap: Map<string, File>,
+    tenantId: string,
 ) => {
     const trimmed = rawPath.trim();
     if (!trimmed) {
@@ -229,7 +218,19 @@ export const resolveImageValue = async (
             error: "Empty image path",
         };
     }
-    if (isRemoteImageUrl(trimmed) || isDataUrl(trimmed)) {
+    if (isDataUrl(trimmed)) {
+        return {
+            value: "",
+            error: "Base64 images are not supported. Upload the image file instead.",
+        };
+    }
+    if (isRemoteImageUrl(trimmed)) {
+        return {
+            value: "",
+            error: "Remote image URLs are not supported. Upload the image file instead.",
+        };
+    }
+    if (/^tenants\/[a-zA-Z0-9_-]+\/products\/[^/\\]+$/.test(trimmed)) {
         return {
             value: trimmed,
         };
@@ -242,10 +243,18 @@ export const resolveImageValue = async (
             error: `No uploaded image file matches "${basenameFromPath(trimmed)}"`,
         };
     }
-    const base64 = await fileToBase64(file);
-    return {
-        value: base64,
-    };
+    try {
+        const uploaded = await uploadImageToS3(file, tenantId, "products");
+        return {
+            value: uploaded.key,
+        };
+    }
+    catch {
+        return {
+            value: "",
+            error: `Failed to upload "${file.name}" to S3`,
+        };
+    }
 };
 
 const toNumber = (value: unknown, fallback = 0) => {
@@ -396,6 +405,7 @@ export const parseExcelToProducts = (buffer: ArrayBuffer): ParsedBulkImport => {
 export const resolveProductImages = async (
     product: BulkProductDraft,
     fileMap: Map<string, File>,
+    tenantId: string,
 ) => {
     const resolvedImages: Record<string, string[]> = {};
     const errors: string[] = [];
@@ -404,7 +414,7 @@ export const resolveProductImages = async (
         const uniquePaths = Array.from(new Set(paths.map((path) => path.trim()).filter(Boolean)));
         const resolvedForColor: string[] = [];
         for (const path of uniquePaths) {
-            const result = await resolveImageValue(path, fileMap);
+            const result = await resolveImageValue(path, fileMap, tenantId);
             if (result.error) {
                 errors.push(`${product.name} (${color}): ${result.error} — "${path}"`);
                 continue;
@@ -427,12 +437,13 @@ export const resolveProductImages = async (
 export const resolveAllProductImages = async (
     products: BulkProductDraft[],
     fileMap: Map<string, File>,
+    tenantId: string,
 ) => {
     const resolvedProducts: BulkProductDraft[] = [];
     const imageErrors: string[] = [];
 
     for (const product of products) {
-        const { images, errors } = await resolveProductImages(product, fileMap);
+        const { images, errors } = await resolveProductImages(product, fileMap, tenantId);
         imageErrors.push(...errors);
         resolvedProducts.push({
             ...product,
@@ -508,7 +519,7 @@ export const downloadBulkImportTemplate = () => {
         {
             Field: "imagePath",
             Required: "No",
-            Description: "Single image column. Supports URLs or local paths.",
+            Description: "Local filename/path. Matching uploaded files are saved to S3.",
         },
         {
             Field: "imagePath1, imagePath2, ...",
@@ -518,7 +529,7 @@ export const downloadBulkImportTemplate = () => {
         {
             Field: "Images upload",
             Required: "No",
-            Description: "Upload a folder or ZIP of image files. Local paths match by filename.",
+            Description: "Upload a folder or ZIP of image files. Local paths match by filename and upload to S3.",
         },
     ];
     const rows = [
@@ -537,7 +548,7 @@ export const downloadBulkImportTemplate = () => {
             variantId: "",
             imagePath: "C:\\images\\shirt-black-front.jpg",
             imagePath1: "C:\\images\\shirt-black-back.jpg",
-            imagePath2: "https://example.com/shirt-black-side.jpg",
+            imagePath2: "",
         },
         {
             productId: "",
@@ -571,7 +582,7 @@ export const downloadBulkImportTemplate = () => {
             variantId: "",
             imagePath: "C:\\photos\\sneakers-blue.png",
             imagePath1: "C:\\photos\\sneakers-blue-sole.png",
-            imagePath2: "https://example.com/sneakers-lifestyle.jpg",
+            imagePath2: "",
         },
     ];
     const instructionsSheet = XLSX.utils.json_to_sheet(instructions);

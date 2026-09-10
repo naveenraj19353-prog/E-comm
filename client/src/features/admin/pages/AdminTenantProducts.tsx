@@ -2,8 +2,11 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import ProductImage from "../../../components/ProductImage";
 import { getFirstProductImage } from "../../products/inventory";
+import { uploadImageToS3 } from "../api/upload.api";
 import { useDeleteProduct, useProducts, useUpdateProduct, } from "../hooks/useTenantProducts";
 import { useTenantByTenantId } from "../hooks/useTenants";
+import type { ProductImageRef } from "../utils/s3Image";
+import { hasUnresolvedImageRefs, imageRefsToKeys, toProductImageRef } from "../utils/s3Image";
 import styles from "../styles/AdminTenantProducts.module.css";
 
 interface ProductInventory {
@@ -44,37 +47,38 @@ interface EditForm {
     sizes: string;
     colors: string;
     inventory: ProductInventory[];
-    images: Record<string, string[]>;
+    images: Record<string, ProductImageRef[]>;
     isActive: boolean;
 }
 
 const normalizeProductImages = (
     images?: Record<string, string[]> | string[] | null,
-): Record<string, string[]> => {
+): Record<string, ProductImageRef[]> => {
     if (Array.isArray(images)) {
-        const urls = images.filter((item) => typeof item === "string" && item.trim());
-        return urls.length ? { Default: urls } : {};
+        const refs = images
+            .map((item) => (typeof item === "string" ? toProductImageRef(item) : null))
+            .filter((item): item is ProductImageRef => Boolean(item));
+        return refs.length ? { Default: refs } : {};
     }
     if (!images || typeof images !== "object") {
         return {};
     }
-    const normalized: Record<string, string[]> = {};
+    const normalized: Record<string, ProductImageRef[]> = {};
     for (const [color, rawValue] of Object.entries(images)) {
         const key = color.trim() || "Default";
         const value = rawValue as string[] | string;
-        if (Array.isArray(value)) {
-            const urls = value.filter((item) => typeof item === "string" && item.trim());
-            if (urls.length) {
-                normalized[key] = urls;
-            }
-        } else if (typeof value === "string" && value.trim()) {
-            normalized[key] = [value.trim()];
+        const values = Array.isArray(value) ? value : [value];
+        const refs = values
+            .map((item) => (typeof item === "string" ? toProductImageRef(item) : null))
+            .filter((item): item is ProductImageRef => Boolean(item));
+        if (refs.length) {
+            normalized[key] = refs;
         }
     }
     return normalized;
 };
 
-const getProductColors = (product: Product, images: Record<string, string[]>): string[] => {
+const getProductColors = (product: Product, images: Record<string, ProductImageRef[]>): string[] => {
     const colors = new Set<string>();
     for (const item of product.inventory || []) {
         const color = item.color?.trim();
@@ -304,26 +308,14 @@ export default function AdminTenantProducts() {
             isActive: Boolean(product.isActive),
         });
     };
-    const convertImageToBase64 = (file: File): Promise<string> => {
-        return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = () => {
-                if (typeof reader.result === "string") {
-                    resolve(reader.result);
-                }
-                else {
-                    reject(new Error("Unable to convert image to Base64"));
-                }
-            };
-            reader.onerror = () => {
-                reject(new Error("Failed to read image"));
-            };
-            reader.readAsDataURL(file);
-        });
-    };
     const handleImageSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
         const files = event.target.files;
         if (!files || files.length === 0) {
+            return;
+        }
+        if (!tenantId) {
+            alert("Tenant ID is missing.");
+            event.target.value = "";
             return;
         }
         const selectedFiles = Array.from(files);
@@ -335,18 +327,27 @@ export default function AdminTenantProducts() {
         }
         const color = imageUploadColor.trim() || "Default";
         try {
-            const base64Images = await Promise.all(selectedFiles.map((file) => convertImageToBase64(file)));
+            const uploadedImages = await Promise.all(
+                selectedFiles.map(async (file) => {
+                    const uploaded = await uploadImageToS3(file, tenantId, "products");
+                    return {
+                        key: uploaded.key,
+                        previewUrl: uploaded.url,
+                        name: file.name,
+                    } satisfies ProductImageRef;
+                }),
+            );
             setEditForm((prev) => ({
                 ...prev,
                 images: {
                     ...prev.images,
-                    [color]: [...(prev.images[color] || []), ...base64Images],
+                    [color]: [...(prev.images[color] || []), ...uploadedImages],
                 },
             }));
         }
         catch (error) {
-            console.error("Failed to convert image:", error);
-            alert("Failed to process image.");
+            console.error("Failed to upload image:", error);
+            alert("Failed to upload image to S3.");
         }
         event.target.value = "";
     };
@@ -460,7 +461,7 @@ export default function AdminTenantProducts() {
                     variantId: `${newColor.toLowerCase().replace(/\s+/g, "-")}-${size.toLowerCase().replace(/\s+/g, "-")}`,
                 };
             });
-            const nextImages: Record<string, string[]> = {};
+            const nextImages: Record<string, ProductImageRef[]> = {};
             for (const [color, urls] of Object.entries(prev.images)) {
                 if (color.trim().toLowerCase() === oldNormalized) {
                     nextImages[newColor] = urls;
@@ -627,14 +628,18 @@ export default function AdminTenantProducts() {
         const inventoryColors = new Set(
             inventory.map((item) => item.color.trim().toLowerCase()),
         );
+        if (hasUnresolvedImageRefs(editForm.images)) {
+            alert("Some images are still Base64/legacy URLs. Re-upload them so they save to S3.");
+            return;
+        }
         const images = Object.fromEntries(
-            Object.entries(editForm.images)
-                .map(([color, urls]) => [
+            Object.entries(imageRefsToKeys(editForm.images))
+                .map(([color, keys]) => [
                     color.trim() || "Default",
-                    urls.filter((url) => typeof url === "string" && url.trim()),
+                    keys,
                 ] as const)
-                .filter(([color, urls]) =>
-                    urls.length > 0 && inventoryColors.has(color.toLowerCase()),
+                .filter(([color, keys]) =>
+                    keys.length > 0 && inventoryColors.has(color.toLowerCase()),
                 ),
         );
         try {
@@ -1141,13 +1146,13 @@ export default function AdminTenantProducts() {
                     PNG, JPG, JPEG or WEBP
                   </span>
                 </div>
-                {Object.entries(editForm.images).map(([color, urls]) => (
+                {Object.entries(editForm.images).map(([color, refs]) => (
                   <div key={color} className={styles.imageColorGroup}>
                     <strong>{color}</strong>
                     <div className={styles.imagePreviewGrid}>
-                      {urls.map((image, index) => (
-                        <div key={`${color}-${image.slice(0, 30)}-${index}`} className={styles.imagePreview}>
-                          <img src={image} alt={`${color} ${index + 1}`}/>
+                      {refs.map((image, index) => (
+                        <div key={`${color}-${image.key || image.previewUrl.slice(0, 30)}-${index}`} className={styles.imagePreview}>
+                          <img src={image.previewUrl} alt={`${color} ${index + 1}`}/>
                           <button type="button" className={styles.removeImageButton} onClick={() => handleRemoveImage(color, index)}>
                             ×
                           </button>

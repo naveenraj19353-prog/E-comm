@@ -96,16 +96,22 @@ def _first_grouped_image(images: dict):
 
 
 def get_variant_image(product: dict, color: str | None):
-    images = product.get("images", {})
-    if isinstance(images, list):
-        return images[0] if images else None
-    if not isinstance(images, dict):
-        return None
+    from app.utils.product_serialize import _resolve_image_for_response
 
-    selected_images = images.get(color) if color else None
-    if isinstance(selected_images, list) and selected_images:
-        return selected_images[0]
-    return _first_grouped_image(images)
+    images = product.get("images", {})
+    raw_image = None
+    if isinstance(images, list):
+        raw_image = images[0] if images else None
+    elif isinstance(images, dict):
+        selected_images = images.get(color) if color else None
+        if isinstance(selected_images, list) and selected_images:
+            raw_image = selected_images[0]
+        else:
+            raw_image = _first_grouped_image(images)
+
+    if not isinstance(raw_image, str) or not raw_image.strip():
+        return None
+    return _resolve_image_for_response(raw_image) or None
 
 
 def variant_stock(variant: dict | None) -> int:

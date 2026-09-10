@@ -36,6 +36,23 @@ CORS_ORIGINS = _split_csv(os.getenv("CORS_ORIGINS", _default_cors))
 ENVIRONMENT = os.getenv("ENVIRONMENT", "development").lower()
 IS_PRODUCTION = ENVIRONMENT == "production"
 
+S3_BUCKET = _env("S3_BUCKET") or "multi-tenant-ecomm-images-prod"
+S3_REGION = _env("S3_REGION") or "eu-north-1"
+AWS_ACCESS_KEY_ID = _env("AWS_ACCESS_KEY_ID")
+AWS_SECRET_ACCESS_KEY = _env("AWS_SECRET_ACCESS_KEY")
+
+# Local Windows sometimes fails CA verification (corporate proxy/AV).
+# Keep true in production/EC2. Set S3_VERIFY_SSL=false only for local debugging.
+_s3_verify = (_env("S3_VERIFY_SSL") or "true").lower()
+S3_VERIFY_SSL = _s3_verify not in {"0", "false", "no", "off"}
+
+try:
+    S3_PRESIGNED_URL_EXPIRES = int(_env("S3_PRESIGNED_URL_EXPIRES") or "3600")
+except ValueError:
+    S3_PRESIGNED_URL_EXPIRES = 3600
+if S3_PRESIGNED_URL_EXPIRES <= 0:
+    S3_PRESIGNED_URL_EXPIRES = 3600
+
 
 def validate_required_settings() -> None:
     missing = []

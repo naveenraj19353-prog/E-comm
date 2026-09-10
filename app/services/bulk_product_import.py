@@ -123,8 +123,7 @@ def upsert_bulk_product(
     for entry in inventory:
         entry["stock"] = int(entry.get("stock", 0))
 
-    images = item.images or {}
-    validate_images(images)
+    images = validate_images(item.images or {}, tenant_id, "products")
     if images:
         validate_color_images_against_inventory(inventory, images)
 

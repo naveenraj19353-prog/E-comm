@@ -2,7 +2,10 @@ import { useRef, useState } from "react";
 import type { ChangeEvent, FormEvent } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
+import { uploadImageToS3 } from "../api/upload.api";
 import { useCreateProduct } from "../hooks/useTenantProducts";
+import type { ProductImageRef } from "../utils/s3Image";
+import { hasUnresolvedImageRefs, imageRefsToKeys } from "../utils/s3Image";
 import styles from "../styles/CreateProduct.module.css";
 interface InventoryRow {
     variantId: string;
@@ -11,10 +14,7 @@ interface InventoryRow {
     stock: string;
 }
 interface ColorImages {
-    [color: string]: string[];
-}
-interface ColorImageNames {
-    [color: string]: string[];
+    [color: string]: ProductImageRef[];
 }
 export default function CreateProduct() {
     const navigate = useNavigate();
@@ -34,7 +34,7 @@ export default function CreateProduct() {
     const [newSize, setNewSize] = useState("");
     const [inventory, setInventory] = useState<InventoryRow[]>([]);
     const [colorImages, setColorImages] = useState<ColorImages>({});
-    const [colorImageNames, setColorImageNames] = useState<ColorImageNames>({});
+    const [isUploadingImages, setIsUploadingImages] = useState(false);
     const [error, setError] = useState("");
     const basePriceNumber = Number(basePrice) || 0;
     const marginNumber = Number(marginPercentage) || 0;
@@ -88,11 +88,6 @@ export default function CreateProduct() {
             delete updated[color];
             return updated;
         });
-        setColorImageNames((previous) => {
-            const updated = { ...previous };
-            delete updated[color];
-            return updated;
-        });
     };
     const handleAddSize = () => {
         const size = newSize.trim();
@@ -135,9 +130,13 @@ export default function CreateProduct() {
             }
             : item));
     };
-    const handleImageSelect = (event: ChangeEvent<HTMLInputElement>) => {
+    const handleImageSelect = async (event: ChangeEvent<HTMLInputElement>) => {
         const files = Array.from(event.target.files || []);
         if (!files.length || !imageUploadColor) {
+            return;
+        }
+        if (!tenantId) {
+            setError("Tenant ID is missing.");
             return;
         }
         setError("");
@@ -159,47 +158,43 @@ export default function CreateProduct() {
             }
             return;
         }
-        Promise.all(validFiles.map((file) => new Promise<{
-            base64: string;
-            name: string;
-        }>((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = () => {
-                resolve({
-                    base64: String(reader.result),
-                    name: file.name,
-                });
-            };
-            reader.onerror = () => {
-                reject(new Error(`Unable to read ${file.name}`));
-            };
-            reader.readAsDataURL(file);
-        })))
-            .then((selectedImages) => {
+        setIsUploadingImages(true);
+        try {
+            const uploadedImages = await Promise.all(
+                validFiles.map(async (file) => {
+                    const uploaded = await uploadImageToS3(file, tenantId, "products");
+                    return {
+                        key: uploaded.key,
+                        previewUrl: uploaded.url,
+                        name: file.name,
+                    } satisfies ProductImageRef;
+                }),
+            );
             setColorImages((previous) => ({
                 ...previous,
                 [imageUploadColor]: [
                     ...(previous[imageUploadColor] || []),
-                    ...selectedImages.map((item) => item.base64),
+                    ...uploadedImages,
                 ],
             }));
-            setColorImageNames((previous) => ({
-                ...previous,
-                [imageUploadColor]: [
-                    ...(previous[imageUploadColor] || []),
-                    ...selectedImages.map((item) => item.name),
-                ],
-            }));
-        })
-            .catch((imageError) => {
-            console.error("Failed to read images:", imageError);
-            setError("Failed to load selected images.");
-        })
-            .finally(() => {
+        }
+        catch (imageError) {
+            console.error("Failed to upload images:", imageError);
+            const detail = axios.isAxiosError(imageError)
+                ? imageError.response?.data?.detail
+                : null;
+            setError(
+                typeof detail === "string"
+                    ? detail
+                    : "Failed to upload selected images to S3.",
+            );
+        }
+        finally {
+            setIsUploadingImages(false);
             if (fileInputRef.current) {
                 fileInputRef.current.value = "";
             }
-        });
+        }
     };
     const handleChooseImages = (color: string) => {
         setImageUploadColor(color);
@@ -212,10 +207,6 @@ export default function CreateProduct() {
             ...previous,
             [color]: (previous[color] || []).filter((_, imageIndex) => imageIndex !== index),
         }));
-        setColorImageNames((previous) => ({
-            ...previous,
-            [color]: (previous[color] || []).filter((_, imageIndex) => imageIndex !== index),
-        }));
     };
     const handleSetPrimaryImage = (color: string, index: number) => {
         if (index === 0) {
@@ -225,15 +216,6 @@ export default function CreateProduct() {
             const updated = [...(previous[color] || [])];
             const [selectedImage] = updated.splice(index, 1);
             updated.unshift(selectedImage);
-            return {
-                ...previous,
-                [color]: updated,
-            };
-        });
-        setColorImageNames((previous) => {
-            const updated = [...(previous[color] || [])];
-            const [selectedName] = updated.splice(index, 1);
-            updated.unshift(selectedName);
             return {
                 ...previous,
                 [color]: updated,
@@ -307,6 +289,10 @@ export default function CreateProduct() {
                 return;
             }
         }
+        if (hasUnresolvedImageRefs(colorImages)) {
+            setError("Some images failed to upload to S3. Remove them and try again.");
+            return;
+        }
         const inventoryPayload = inventory.map((item) => ({
             variantId: item.variantId,
             color: item.color,
@@ -328,7 +314,7 @@ export default function CreateProduct() {
                 sizes,
                 colors,
                 inventory: inventoryPayload,
-                images: colorImages,
+                images: imageRefsToKeys(colorImages),
             });
             navigate(`/admin/tenants/${tenantId}/products`);
         }
@@ -670,7 +656,6 @@ export default function CreateProduct() {
             <div className={styles.colorImageSections}>
               {colors.map((color) => {
                 const images = colorImages[color] || [];
-                const names = colorImageNames[color] || [];
                 return (<div key={color} className={styles.colorImageSection}>
                     <div className={styles.colorImageHeader}>
                       <div>
@@ -683,28 +668,28 @@ export default function CreateProduct() {
                         </p>
                       </div>
 
-                      <button type="button" className={styles.chooseImageButton} onClick={() => handleChooseImages(color)}>
-                        + Add Images
+                      <button type="button" className={styles.chooseImageButton} onClick={() => handleChooseImages(color)} disabled={isUploadingImages}>
+                        {isUploadingImages && imageUploadColor === color ? "Uploading..." : "+ Add Images"}
                       </button>
                     </div>
 
                     {images.length > 0 && (<div className={styles.imageGrid}>
-                        {images.map((image, index) => (<div className={`${styles.imageCard} ${index === 0 ? styles.primaryImageCard : ""}`} key={`${image}-${index}`}>
+                        {images.map((image, index) => (<div className={`${styles.imageCard} ${index === 0 ? styles.primaryImageCard : ""}`} key={`${image.key}-${index}`}>
                             <div className={styles.imageWrapper}>
-                              <img src={image} alt={names[index] || `${color} image ${index + 1}`}/>
+                              <img src={image.previewUrl} alt={image.name || `${color} image ${index + 1}`}/>
 
                               {index === 0 && (<span className={styles.primaryBadge}>
                                   Primary
                                 </span>)}
 
-                              <button type="button" className={styles.removeImageButton} onClick={() => handleRemoveColorImage(color, index)} aria-label={`Remove ${names[index] || "image"}`}>
+                              <button type="button" className={styles.removeImageButton} onClick={() => handleRemoveColorImage(color, index)} aria-label={`Remove ${image.name || "image"}`}>
                                 ×
                               </button>
                             </div>
 
                             <div className={styles.imageInfo}>
-                              <span className={styles.imageName} title={names[index]}>
-                                {names[index] || `Image ${index + 1}`}
+                              <span className={styles.imageName} title={image.name}>
+                                {image.name || `Image ${index + 1}`}
                               </span>
 
                               {index !== 0 && (<button type="button" className={styles.primaryButton} onClick={() => handleSetPrimaryImage(color, index)}>
@@ -734,11 +719,11 @@ export default function CreateProduct() {
         
 
         <div className={styles.footer}>
-          <button type="button" className={styles.cancelButton} onClick={handleBack} disabled={createProductMutation.isPending}>
+          <button type="button" className={styles.cancelButton} onClick={handleBack} disabled={createProductMutation.isPending || isUploadingImages}>
             Cancel
           </button>
 
-          <button type="submit" className={styles.createButton} disabled={createProductMutation.isPending}>
+          <button type="submit" className={styles.createButton} disabled={createProductMutation.isPending || isUploadingImages}>
             {createProductMutation.isPending ? (<>
                 <span className={styles.spinner}/>
                 Creating...

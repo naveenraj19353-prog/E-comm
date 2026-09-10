@@ -20,21 +20,41 @@ def sanitize_image_url(url: str | None) -> str:
     return value
 
 
+def _resolve_image_for_response(value: str) -> str:
+    """
+    Convert stored S3 object keys to temporary presigned URLs.
+    Leave legacy http(s)/data URLs unchanged so existing catalog data still loads.
+    """
+    cleaned = sanitize_image_url(value)
+    if not cleaned:
+        return ""
+
+    from app.services.s3_service import generate_presigned_url, is_s3_object_key
+
+    if not is_s3_object_key(cleaned):
+        return cleaned
+
+    try:
+        return generate_presigned_url(cleaned)
+    except RuntimeError:
+        return ""
+
+
 def _normalize_image_list(images: list) -> list[str]:
     normalized = []
     for item in images:
         if not isinstance(item, str):
             continue
-        cleaned = sanitize_image_url(item)
-        if cleaned:
-            normalized.append(cleaned)
+        resolved = _resolve_image_for_response(item)
+        if resolved:
+            normalized.append(resolved)
     return normalized
 
 
 def _normalize_color_images(image_list: object) -> list[str]:
     if isinstance(image_list, str):
-        cleaned = sanitize_image_url(image_list)
-        return [cleaned] if cleaned else []
+        resolved = _resolve_image_for_response(image_list)
+        return [resolved] if resolved else []
     if isinstance(image_list, list):
         return _normalize_image_list(image_list)
     return []

@@ -64,9 +64,8 @@ class CreateProduct(BaseModel):
         ],
         "images": {
             "Green": [
-                "https://example.com/green-1.jpg",
-                "https://example.com/green-2.jpg",
-                "https://example.com/green-3.jpg"
+                "tenants/shopsphere/products/uuid-1.jpg",
+                "tenants/shopsphere/products/uuid-2.jpg"
             ]
         }
     }
@@ -102,7 +101,12 @@ class CreateProduct(BaseModel):
 
 
     images: dict[str, list[str]] = Field(
-        default_factory=dict
+        default_factory=dict,
+        description=(
+            "S3 object keys grouped by color. "
+            "Example: "
+            '{"Green": ["tenants/shopsphere/products/uuid.jpg"]}'
+        ),
     )
 
 
