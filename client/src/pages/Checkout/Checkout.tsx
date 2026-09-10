@@ -26,7 +26,7 @@ import type { Address } from "../../features/address/types/address.types";
 import type { DeliveryOption } from "./CheckoutLayout/CheckoutMain/DeliveryMethod/DeliveryMethod";
 import type { PaymentMethodType } from "./CheckoutLayout/CheckoutMain/PaymentMethod/PaymentMethod";
 import { RAZORPAY_KEY_ID } from "../../constants/api";
-import { routes } from "../../routes/routes";
+import { routes, storefrontNavigate } from "../../routes/routes";
 
 const Checkout = () => {
     const navigate = useNavigate();
@@ -137,7 +137,7 @@ const Checkout = () => {
             return;
         }
         if (params.orderId) {
-            navigate(routes.thankYou(tenantSlug, params.orderId), {
+            storefrontNavigate(navigate, routes.thankYou(tenantSlug, params.orderId), {
                 replace: true,
                 state: {
                     amount: params.amount,
@@ -147,7 +147,7 @@ const Checkout = () => {
             });
             return;
         }
-        navigate(routes.home(tenantSlug), { replace: true });
+        storefrontNavigate(navigate, routes.home(tenantSlug), { replace: true });
     };
 
     const handlePlaceOrder = async () => {
@@ -220,7 +220,7 @@ const Checkout = () => {
                 key: RAZORPAY_KEY_ID,
                 amount: orderData.amountInPaise,
                 currency: "INR" as const,
-                name: "OmniStore",
+                name: "Retail Cosmos",
                 description: "E-commerce Order Payment",
                 order_id: orderData.orderId,
                 method: razorpayMethod,

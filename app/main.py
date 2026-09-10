@@ -6,7 +6,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pymongo.errors import PyMongoError
 
-from app.config import CORS_ORIGINS
+from app.config import CORS_ORIGIN_REGEX, CORS_ORIGINS
 from app.database.indexes import ensure_indexes
 from app.database.mongo import client
 from app.routes.auth import router as auth_router
@@ -46,6 +46,7 @@ app = FastAPI(lifespan=lifespan)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=CORS_ORIGINS,
+    allow_origin_regex=CORS_ORIGIN_REGEX or None,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

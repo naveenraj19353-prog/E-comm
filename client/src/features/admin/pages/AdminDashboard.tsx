@@ -3,6 +3,7 @@ import { useAuth } from "../../auth/hooks/useAuth";
 import { useTenants } from "../hooks/useTenants";
 import styles from "../styles/AdminDashboard.module.css";
 import { getVisibleTenants } from "../utils/visibleTenants";
+import { formatStorefrontHost } from "../../tenant/tenantHost";
 
 export default function AdminDashboard() {
     const { user } = useAuth();
@@ -26,7 +27,7 @@ export default function AdminDashboard() {
                     <span className={styles.eyebrow}>ADMINISTRATION</span>
                     <h1 className={styles.title}>Dashboard</h1>
                     <p className={styles.subtitle}>
-                        Manage your OmniStore platform and tenants.
+                        Manage your Retail Cosmos platform and tenants.
                     </p>
                 </div>
                 {isSuperAdmin && (
@@ -54,7 +55,7 @@ export default function AdminDashboard() {
                     </div>
                     <div className={styles.statCard}>
                         <span>Platform</span>
-                        <strong>OmniStore</strong>
+                        <strong>Retail Cosmos</strong>
                     </div>
                 </section>
             )}
@@ -91,7 +92,7 @@ export default function AdminDashboard() {
                             </div>
                             <div className={styles.tenantInfo}>
                                 <strong>{tenant.name}</strong>
-                                <span>/{tenant.slug}</span>
+                                <span>{formatStorefrontHost(tenant.slug)}</span>
                             </div>
                             <div className={styles.tenantId}>{tenant.tenantId}</div>
                             <span className={tenant.isActive ? styles.active : styles.inactive}>

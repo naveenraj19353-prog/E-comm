@@ -1,6 +1,7 @@
 import { ArrowRight } from "lucide-react";
 import styles from "./Cart.module.css";
 import { useNavigate } from "react-router-dom";
+import { routes, storefrontNavigate } from "../../routes/routes";
 interface CartSummaryProps {
     cartCount: number;
     grandTotal: number;
@@ -32,7 +33,7 @@ const CartSummary = ({ cartCount, grandTotal, tenantId }: CartSummaryProps) => {
         </div>
         <strong>₹{grandTotal.toLocaleString("en-IN")}</strong>
       </div>
-      <button type="button" className={styles.checkout} onClick={() => navigate(`/${tenantId}/checkout`)}>
+      <button type="button" className={styles.checkout} onClick={() => storefrontNavigate(navigate, routes.checkout(tenantId))}>
         Proceed To Checkout
         <ArrowRight size={18}/>
       </button>

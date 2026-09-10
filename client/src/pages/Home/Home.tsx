@@ -11,6 +11,7 @@ import { useLayoutSettings } from "../../theme/useThemeSettings";
 import Testimonials from "../../components/Testimonials/Testimonials";
 import { testimonials as dummyTestimonials } from "../../components/Testimonials/dummyTestimonials";
 import { useStorefrontProductActions } from "../../features/storefront/hooks/useStorefrontProductActions";
+import { routes, storefrontNavigate, withQuery } from "../../routes/routes";
 
 const Home = () => {
     const { tenantId, tenantSlug } = useStorefrontTenant();
@@ -18,6 +19,7 @@ const Home = () => {
     const navigate = useNavigate();
     const { data: homeData, isLoading, isError, refetch } = useHome(tenantId);
     const { handleWishlist, handleAddToCart, isProductWishlisted } = useStorefrontProductActions();
+    const go = (to: string) => storefrontNavigate(navigate, to);
 
     if (isLoading) {
         return <PageLoader message="Loading store..." />;
@@ -59,7 +61,9 @@ const Home = () => {
                     <CategorySlider
                         tenantId={tenantId}
                         onCategoryClick={(category) => {
-                            navigate(`/${tenantSlug}/products?categoryIds=${encodeURIComponent(category._id || category.name)}`);
+                            go(withQuery(routes.products(tenantSlug), {
+                                categoryIds: category._id || category.name,
+                            }));
                         }}
                     />
                 </section>

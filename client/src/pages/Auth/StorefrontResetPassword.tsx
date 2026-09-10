@@ -1,5 +1,6 @@
 import ResetPasswordPage from "./ResetPasswordPage";
 import { useStorefrontTenant } from "../../features/tenant/useTenant";
+import { routes } from "../../routes/routes";
 
 export default function StorefrontResetPassword() {
     const { tenantSlug } = useStorefrontTenant();
@@ -7,7 +8,7 @@ export default function StorefrontResetPassword() {
     return (
         <ResetPasswordPage
             defaultLoginPath={
-                tenantSlug ? `/${tenantSlug}/login` : "/login"
+                tenantSlug ? routes.login(tenantSlug) : "/login"
             }
         />
     );

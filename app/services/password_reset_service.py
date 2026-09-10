@@ -3,13 +3,28 @@ from typing import Literal
 
 from fastapi import HTTPException
 
-from app.config import FRONTEND_URL
+from app.config import FRONTEND_URL, ROOT_DOMAIN, TENANT_SUBDOMAIN_ROUTING
 from app.database.mongo import tenants, users
 
 AccountKind = Literal["customer", "admin", "super_admin"]
 CollectionName = Literal["users", "tenants"]
 
 RESET_TOKEN_MINUTES = 15
+
+
+def _use_tenant_subdomains() -> bool:
+    if not TENANT_SUBDOMAIN_ROUTING:
+        return False
+    host = FRONTEND_URL.lower()
+    if (
+        "localhost" in host
+        or "127.0.0.1" in host
+        or "netlify.app" in host
+        or "vercel.app" in host
+        or "amplifyapp.com" in host
+    ):
+        return False
+    return True
 
 
 def _normalize_email(email: str) -> str:
@@ -90,6 +105,11 @@ def build_reset_link(
 ) -> str:
     base = FRONTEND_URL.rstrip("/")
     if account_kind == "customer" and tenant_slug:
+        if _use_tenant_subdomains():
+            return (
+                f"https://{tenant_slug}.{ROOT_DOMAIN}"
+                f"/reset-password?token={token}"
+            )
         return f"{base}/{tenant_slug}/reset-password?token={token}"
     return f"{base}/admin/reset-password?token={token}"
 

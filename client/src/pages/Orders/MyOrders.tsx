@@ -12,6 +12,7 @@ import PageLoader from "../../components/PageLoader";
 import AuthModal from "../../components/Auth/AuthModal/AuthModal";
 import ProductImage from "../../components/ProductImage";
 import styles from "./MyOrders.module.css";
+import { routes, storefrontNavigate } from "../../routes/routes";
 
 const MyOrders = () => {
     const navigate = useNavigate();
@@ -19,13 +20,14 @@ const MyOrders = () => {
     const { tenantSlug, tenantId } = useStorefrontTenant();
     const userId = user?._id || "";
     const { data: orders = [], isLoading, isError } = useUserOrders(userId);
+    const go = (to: string) => storefrontNavigate(navigate, to);
 
     if (!user) {
         return (
             <div className={styles.page}>
                 <AuthModal
                     tenantId={tenantId}
-                    onClose={() => navigate(tenantSlug ? `/${tenantSlug}` : "/")}
+                    onClose={() => go(tenantSlug ? routes.home(tenantSlug) : "/")}
                     onSuccess={() => undefined}
                 />
             </div>
@@ -57,7 +59,7 @@ const MyOrders = () => {
                         <button
                             type="button"
                             className={styles.shopButton}
-                            onClick={() => navigate(tenantSlug ? `/${tenantSlug}/products` : "/")}
+                            onClick={() => go(tenantSlug ? routes.products(tenantSlug) : "/")}
                         >
                             Start shopping
                         </button>
@@ -69,17 +71,17 @@ const MyOrders = () => {
                                 key={order.orderId}
                                 className={styles.card}
                                 onClick={() =>
-                                    navigate(
+                                    go(
                                         tenantSlug
-                                            ? `/${tenantSlug}/orders/${order.orderId}`
+                                            ? routes.orderDetail(tenantSlug, order.orderId)
                                             : `/orders/${order.orderId}`,
                                     )
                                 }
                                 onKeyDown={(event) => {
                                     if (event.key === "Enter" || event.key === " ") {
-                                        navigate(
+                                        go(
                                             tenantSlug
-                                                ? `/${tenantSlug}/orders/${order.orderId}`
+                                                ? routes.orderDetail(tenantSlug, order.orderId)
                                                 : `/orders/${order.orderId}`,
                                         );
                                     }
@@ -154,7 +156,7 @@ const MyOrders = () => {
                 <button
                     type="button"
                     className={styles.backLink}
-                    onClick={() => navigate(tenantSlug ? `/${tenantSlug}/profile` : "/")}
+                    onClick={() => go(tenantSlug ? routes.profile(tenantSlug) : "/")}
                 >
                     <ChevronLeft size={16} />
                     Back to profile

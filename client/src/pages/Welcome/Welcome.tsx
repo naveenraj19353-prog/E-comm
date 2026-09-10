@@ -1,5 +1,5 @@
-import { Link } from "react-router-dom";
 import styles from "./Welcome.module.css";
+import { formatStorefrontHost, getStorefrontHref } from "../../features/tenant/tenantHost";
 
 const demoStores = [
     { slug: "shopsphere", label: "ShopSphere", description: "Fashion & lifestyle" },
@@ -12,7 +12,7 @@ export default function Welcome() {
         <div className={styles.page}>
             <main className={styles.card}>
                 <p className={styles.eyebrow}>Multi-tenant e-commerce</p>
-                <h1 className={styles.title}>Welcome to OmniStore</h1>
+                <h1 className={styles.title}>Welcome to Retail Cosmos</h1>
                 <p className={styles.lead}>
                     Pick a storefront below or sign in to the admin panel to manage
                     tenants, products, and themes.
@@ -23,8 +23,8 @@ export default function Welcome() {
                     <ul className={styles.storeList}>
                         {demoStores.map((store) => (
                             <li key={store.slug}>
-                                <Link
-                                    to={`/${store.slug}`}
+                                <a
+                                    href={getStorefrontHref(store.slug)}
                                     className={styles.storeLink}
                                 >
                                     <span className={styles.storeName}>
@@ -33,16 +33,19 @@ export default function Welcome() {
                                     <span className={styles.storeDesc}>
                                         {store.description}
                                     </span>
-                                </Link>
+                                    <span className={styles.storeDesc}>
+                                        {formatStorefrontHost(store.slug)}
+                                    </span>
+                                </a>
                             </li>
                         ))}
                     </ul>
                 </section>
 
                 <div className={styles.actions}>
-                    <Link to="/admin/login" className={styles.adminLink}>
+                    <a href="/admin/login" className={styles.adminLink}>
                         Admin login
-                    </Link>
+                    </a>
                 </div>
             </main>
         </div>

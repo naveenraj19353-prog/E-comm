@@ -30,8 +30,17 @@ APP_PASSWORD = os.getenv("APP_PASSWORD")
 
 FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173").rstrip("/")
 
+# Used for customer password-reset links when TENANT_SUBDOMAIN_ROUTING is enabled.
+ROOT_DOMAIN = (_env("ROOT_DOMAIN") or "retailcosmos.com").lower()
+_tenant_subdomain = (_env("TENANT_SUBDOMAIN_ROUTING") or "auto").lower()
+TENANT_SUBDOMAIN_ROUTING = _tenant_subdomain not in {"0", "false", "no", "off", "path"}
+
 _default_cors = "http://localhost:5173,http://127.0.0.1:5173"
 CORS_ORIGINS = _split_csv(os.getenv("CORS_ORIGINS", _default_cors))
+# Allows https://shopsphere.retailcosmos.com and https://retailcosmos.com
+CORS_ORIGIN_REGEX = _env("CORS_ORIGIN_REGEX") or (
+    r"https://([a-z0-9-]+\.)?retailcosmos\.com"
+)
 
 ENVIRONMENT = os.getenv("ENVIRONMENT", "development").lower()
 IS_PRODUCTION = ENVIRONMENT == "production"

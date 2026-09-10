@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { routes } from "../../../routes/routes";
+import { routes, storefrontNavigate } from "../../../routes/routes";
 import { useStorefrontTenant } from "../../tenant/useTenant";
 export const useProductNavigation = () => {
     const navigate = useNavigate();
@@ -8,7 +8,7 @@ export const useProductNavigation = () => {
         if (!tenantSlug || !productId) {
             return;
         }
-        navigate(routes.product(tenantSlug, productId));
+        storefrontNavigate(navigate, routes.product(tenantSlug, productId));
     };
     return { goToProduct };
 };

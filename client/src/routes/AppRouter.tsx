@@ -1,6 +1,7 @@
 import { createBrowserRouter } from "react-router-dom";
 import MainLayout from "../layouts/MainLayout";
 import TenantLoader from "../features/tenant/TenantLoader";
+import { getTenantSlugFromHostname } from "../features/tenant/tenantHost";
 import RequireStorefrontAuth from "../features/auth/RequireStorefrontAuth";
 import RequireStoreAdminAuth from "../features/auth/RequireStoreAdminAuth";
 import AdminLayout from "../features/admin/components/AdminLayout";
@@ -39,11 +40,97 @@ import {
     Wishlist,
 } from "./LazyRouteComponents";
 
-export const router = createBrowserRouter([
+const hostTenantSlug = getTenantSlugFromHostname();
+
+const storefrontChildRoutes = [
     {
-        path: "/",
-        element: <Welcome />,
+        path: "customize",
+        element: (
+            <RequireStoreAdminAuth>
+                <ThemeCustomizer />
+            </RequireStoreAdminAuth>
+        ),
     },
+    {
+        element: <MainLayout />,
+        children: [
+            {
+                index: true,
+                element: <Home />,
+            },
+            {
+                path: "products",
+                element: <Products />,
+            },
+            {
+                path: "product-details/:productId",
+                element: <ProductDetails />,
+            },
+            {
+                path: "wishlist",
+                element: <Wishlist />,
+            },
+            {
+                path: "cart",
+                element: <Cart />,
+            },
+            {
+                path: "checkout",
+                element: (
+                    <RequireStorefrontAuth>
+                        <Checkout />
+                    </RequireStorefrontAuth>
+                ),
+            },
+            {
+                path: "thank-you/:orderId",
+                element: (
+                    <RequireStorefrontAuth>
+                        <ThankYou />
+                    </RequireStorefrontAuth>
+                ),
+            },
+            {
+                path: "login",
+                element: <StorefrontLogin />,
+            },
+            {
+                path: "register",
+                element: <StorefrontRegister />,
+            },
+            {
+                path: "forgot-password",
+                element: <StorefrontForgotPassword />,
+            },
+            {
+                path: "reset-password",
+                element: <StorefrontResetPassword />,
+            },
+            {
+                path: "profile",
+                element: <Profile />,
+            },
+            {
+                path: "orders",
+                element: (
+                    <RequireStorefrontAuth>
+                        <MyOrders />
+                    </RequireStorefrontAuth>
+                ),
+            },
+            {
+                path: "orders/:orderId",
+                element: (
+                    <RequireStorefrontAuth>
+                        <OrderDetail />
+                    </RequireStorefrontAuth>
+                ),
+            },
+        ],
+    },
+];
+
+const adminRoutes = [
     {
         path: "/admin/login",
         element: <Login />,
@@ -107,97 +194,29 @@ export const router = createBrowserRouter([
             },
         ],
     },
-    {
-        path: "/:tenantSlug",
-        element: <TenantLoader />,
-        children: [
+];
+
+export const router = createBrowserRouter([
+    ...(hostTenantSlug
+        ? [
             {
-                path: "customize",
-                element: (
-                    <RequireStoreAdminAuth>
-                        <ThemeCustomizer />
-                    </RequireStoreAdminAuth>
-                ),
+                path: "/",
+                element: <TenantLoader />,
+                children: storefrontChildRoutes,
+            },
+        ]
+        : [
+            {
+                path: "/",
+                element: <Welcome />,
             },
             {
-                element: <MainLayout />,
-                children: [
-                    {
-                        index: true,
-                        element: <Home />,
-                    },
-                    {
-                        path: "products",
-                        element: <Products />,
-                    },
-                    {
-                        path: "product-details/:productId",
-                        element: <ProductDetails />,
-                    },
-                    {
-                        path: "wishlist",
-                        element: <Wishlist />,
-                    },
-                    {
-                        path: "cart",
-                        element: <Cart />,
-                    },
-                    {
-                        path: "checkout",
-                        element: (
-                            <RequireStorefrontAuth>
-                                <Checkout />
-                            </RequireStorefrontAuth>
-                        ),
-                    },
-                    {
-                        path: "thank-you/:orderId",
-                        element: (
-                            <RequireStorefrontAuth>
-                                <ThankYou />
-                            </RequireStorefrontAuth>
-                        ),
-                    },
-                    {
-                        path: "login",
-                        element: <StorefrontLogin />,
-                    },
-                    {
-                        path: "register",
-                        element: <StorefrontRegister />,
-                    },
-                    {
-                        path: "forgot-password",
-                        element: <StorefrontForgotPassword />,
-                    },
-                    {
-                        path: "reset-password",
-                        element: <StorefrontResetPassword />,
-                    },
-                    {
-                        path: "profile",
-                        element: <Profile />,
-                    },
-                    {
-                        path: "orders",
-                        element: (
-                            <RequireStorefrontAuth>
-                                <MyOrders />
-                            </RequireStorefrontAuth>
-                        ),
-                    },
-                    {
-                        path: "orders/:orderId",
-                        element: (
-                            <RequireStorefrontAuth>
-                                <OrderDetail />
-                            </RequireStorefrontAuth>
-                        ),
-                    },
-                ],
+                path: "/:tenantSlug",
+                element: <TenantLoader />,
+                children: storefrontChildRoutes,
             },
-        ],
-    },
+        ]),
+    ...adminRoutes,
     {
         path: "/register",
         element: <LegacyAuthRedirect mode="register"/>,

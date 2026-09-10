@@ -6,6 +6,7 @@ import {
     resolveLoginReturnPath,
 } from "../loginRedirect";
 import { useStorefrontTenant } from "../../tenant/useTenant";
+import { storefrontNavigate } from "../../../routes/routes";
 
 export function useNavigateToLogin() {
     const navigate = useNavigate();
@@ -14,7 +15,7 @@ export function useNavigateToLogin() {
 
     return useCallback((returnPath?: string) => {
         const from = resolveLoginReturnPath(returnPath, location, location.state);
-        navigate(getStorefrontLoginPath(tenantSlug), {
+        storefrontNavigate(navigate, getStorefrontLoginPath(tenantSlug), {
             state: getLoginLocationState(from),
         });
     }, [location, navigate, tenantSlug]);
