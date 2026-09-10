@@ -17,6 +17,7 @@ import { useDebounce } from "../../hooks/useDebounce";
 import { DEFAULT_MAX_PRICE, DEFAULT_MIN_PRICE, getApiPriceBounds, isActivePriceFilter, } from "../../features/products/filterUtils";
 import { useLayoutSettings } from "../../theme/useThemeSettings";
 import { routes } from "../../routes/routes";
+import { SeoHead } from "../../features/seo";
 const Products = () => {
     const [searchParams, setSearchParams] = useSearchParams();
     const dispatch = useAppDispatch();
@@ -308,7 +309,18 @@ const Products = () => {
         : hasCategory
             ? urlCategories.join(", ")
             : "Products";
+    const seoDescription = hasSearch
+        ? `Search results for ${urlSearch} at ${tenantSlug}.`
+        : hasCategory
+            ? `Browse ${pageTitle} products at ${tenantSlug}.`
+            : `Browse products at ${tenantSlug} on Retail Cosmos.`;
     return (<div className={styles.page}>
+      <SeoHead
+        title={`${pageTitle} · ${tenantSlug}`}
+        description={seoDescription}
+        path="/products"
+        tenantSlug={tenantSlug}
+      />
       <Breadcrumb items={[
             {
                 label: "Home",

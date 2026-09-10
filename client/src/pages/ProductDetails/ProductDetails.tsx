@@ -10,13 +10,22 @@ import { useWishlist } from "../../features/wishlist/hooks/useWishlist";
 import { useNavigateToLogin } from "../../features/auth/hooks/useNavigateToLogin";
 import { useProductDetails } from "../../features/products/hooks/useProductDetails";
 import { useReviews } from "../../features/reviews/hooks/useReviews";
+import {
+    SeoHead,
+    buildCanonicalUrl,
+    buildProductJsonLd,
+} from "../../features/seo";
+import {
+    getFirstProductImage,
+    isProductOutOfStock,
+} from "../../features/products/inventory";
 const ProductDetails = () => {
     const { productId } = useParams<{
         tenantSlug: string;
         productId: string;
     }>();
     const { user, isAuthenticated } = useAuth();
-    const { tenantId } = useStorefrontTenant();
+    const { tenantId, tenantSlug } = useStorefrontTenant();
     const navigateToLogin = useNavigateToLogin();
     const { data: productResponse, isLoading: productLoading, isError: productIsError, } = useProductDetails(productId || "", tenantId);
     const product = productResponse?.data || null;
@@ -129,14 +138,44 @@ const ProductDetails = () => {
         }
     };
     if (productLoading) {
-        return <PageLoader message="Loading product..." />;
+        return (<><SeoHead title="Product" description="Loading product details." path={`/product-details/${productId || ""}`} tenantSlug={tenantSlug} /><PageLoader message="Loading product..." /></>);
     }
     if (productIsError || !product) {
         return (<div className={styles.state}>
+        <SeoHead title="Product not found" description="This product could not be found." path={`/product-details/${productId || ""}`} tenantSlug={tenantSlug} noIndex />
         <h2>Product Not Found</h2>
         <p>Unable to load this product.</p>
       </div>);
     }
-    return (<ProductDetailsView product={product} reviews={reviews} isWishlisted={isWishlisted} isAddingToCart={isAdding} onAddToCart={handleAddToCart} onWishlist={handleWishlist} onWriteReview={handleWriteReview} showReviewForm={showReviewForm} reviewRating={reviewRating} reviewTitle={reviewTitle} reviewComment={reviewComment} onReviewRatingChange={setReviewRating} onReviewTitleChange={setReviewTitle} onReviewCommentChange={setReviewComment} onSubmitReview={handleSubmitReview} isSubmittingReview={isSubmittingReview} reviewsLoading={reviewsLoading}/>);
+
+    const image = getFirstProductImage(product.images);
+    const productPath = `/product-details/${product._id}`;
+    const productUrl = buildCanonicalUrl(productPath, tenantSlug);
+    const inStock = !isProductOutOfStock(product);
+
+    return (<>
+      <SeoHead
+        title={product.name}
+        description={(product.description || `${product.name} at ${tenantSlug}`).slice(0, 320)}
+        path={productPath}
+        tenantSlug={tenantSlug}
+        image={image || null}
+        type="product"
+        jsonLdId={`product-${product._id}`}
+        jsonLd={buildProductJsonLd({
+          name: product.name,
+          description: product.description || product.name,
+          url: productUrl,
+          image: image || null,
+          brand: product.brand,
+          sku: product._id,
+          price: product.finalPrice ?? product.price,
+          availability: inStock ? "InStock" : "OutOfStock",
+          ratingValue: product.averageRating,
+          reviewCount: product.reviewCount,
+        })}
+      />
+      <ProductDetailsView product={product} reviews={reviews} isWishlisted={isWishlisted} isAddingToCart={isAdding} onAddToCart={handleAddToCart} onWishlist={handleWishlist} onWriteReview={handleWriteReview} showReviewForm={showReviewForm} reviewRating={reviewRating} reviewTitle={reviewTitle} reviewComment={reviewComment} onReviewRatingChange={setReviewRating} onReviewTitleChange={setReviewTitle} onReviewCommentChange={setReviewComment} onSubmitReview={handleSubmitReview} isSubmittingReview={isSubmittingReview} reviewsLoading={reviewsLoading}/>
+    </>);
 };
 export default ProductDetails;

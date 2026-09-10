@@ -1,9 +1,16 @@
 import { NavLink, Outlet, Navigate, useLocation, } from "react-router-dom";
 import { useAuth } from "../../auth/hooks/useAuth";
+import { usePageSeo } from "../../seo";
 import styles from "../styles/AdminLayout.module.css";
 export default function AdminLayout() {
     const location = useLocation();
     const { user, isAuthenticated, logout } = useAuth();
+    usePageSeo({
+        title: "Admin",
+        description: "Retail Cosmos admin portal.",
+        path: location.pathname,
+        noIndex: true,
+    });
     if (!isAuthenticated || !user) {
         return (<Navigate to="/admin/login" replace state={{
                 from: location.pathname,

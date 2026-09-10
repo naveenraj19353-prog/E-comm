@@ -12,17 +12,39 @@ import Testimonials from "../../components/Testimonials/Testimonials";
 import { testimonials as dummyTestimonials } from "../../components/Testimonials/dummyTestimonials";
 import { useStorefrontProductActions } from "../../features/storefront/hooks/useStorefrontProductActions";
 import { routes, storefrontNavigate, withQuery } from "../../routes/routes";
+import {
+    SeoHead,
+    buildCanonicalUrl,
+    buildOrganizationJsonLd,
+    buildWebSiteJsonLd,
+} from "../../features/seo";
 
 const Home = () => {
-    const { tenantId, tenantSlug } = useStorefrontTenant();
+    const { tenantId, tenantSlug, tenant } = useStorefrontTenant();
     const layoutSettings = useLayoutSettings();
     const navigate = useNavigate();
     const { data: homeData, isLoading, isError, refetch } = useHome(tenantId);
     const { handleWishlist, handleAddToCart, isProductWishlisted } = useStorefrontProductActions();
     const go = (to: string) => storefrontNavigate(navigate, to);
 
+    const storeName = tenant?.name || tenantSlug || "Store";
+    const storeUrl = buildCanonicalUrl("/", tenantSlug);
+    const storeDescription =
+        tenant?.footerContent?.description?.trim() ||
+        `Shop ${storeName} on Retail Cosmos — products, deals, and more.`;
+
     if (isLoading) {
-        return <PageLoader message="Loading store..." />;
+        return (
+            <>
+                <SeoHead
+                    title={storeName}
+                    description={storeDescription}
+                    path="/"
+                    tenantSlug={tenantSlug}
+                />
+                <PageLoader message="Loading store..." />
+            </>
+        );
     }
 
     if (isError) {
@@ -50,6 +72,25 @@ const Home = () => {
 
     return (
         <main className={styles.home}>
+            <SeoHead
+                title={storeName}
+                description={storeDescription}
+                path="/"
+                tenantSlug={tenantSlug}
+                jsonLdId="store-home"
+                jsonLd={[
+                    buildOrganizationJsonLd({
+                        name: storeName,
+                        url: storeUrl,
+                        description: storeDescription,
+                    }),
+                    buildWebSiteJsonLd({
+                        name: storeName,
+                        url: storeUrl,
+                        searchUrlTemplate: `${buildCanonicalUrl("/products", tenantSlug)}?search={search_term_string}`,
+                    }),
+                ]}
+            />
             {layoutSettings.showHomeBanner && (
                 <section className={`${styles.bannerSection} ${layoutSettings.homeBannerStyle === "contained" ? styles.bannerContained : ""}`}>
                     <BannerSlider banners={banners} />
