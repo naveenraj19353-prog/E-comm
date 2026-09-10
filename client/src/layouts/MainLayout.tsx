@@ -4,6 +4,7 @@ import Footer from "../components/Footer";
 import ProductChatbot from "../components/ProductChatbot/ProductChatbot";
 import { useStorefrontTenant } from "../features/tenant/useTenant";
 import { useFooterContent } from "../theme/useFooterContent";
+import StorefrontSeoDefaults from "../features/seo/StorefrontSeoDefaults";
 import styles from "./MainLayout.module.css";
 const MainLayout = () => {
     const { tenantSlug, tenantId } = useStorefrontTenant();
@@ -15,6 +16,7 @@ const MainLayout = () => {
         localStorage.setItem("ecommerce_tenantId", tenantId);
     }
     return (<div className={styles.shell}>
+      <StorefrontSeoDefaults />
       <Navbar />
       <main className={styles.main}>
         <Outlet />

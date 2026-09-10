@@ -1,5 +1,6 @@
 import styles from "./Welcome.module.css";
 import { formatStorefrontHost, getStorefrontHref } from "../../features/tenant/tenantHost";
+import { SeoHead, buildOrganizationJsonLd } from "../../features/seo";
 
 const demoStores = [
     { slug: "shopsphere", label: "ShopSphere", description: "Fashion & lifestyle" },
@@ -8,6 +9,17 @@ const demoStores = [
 export default function Welcome() {
     return (
         <div className={styles.page}>
+            <SeoHead
+                title="Retail Cosmos"
+                description="Multi-tenant e-commerce on Retail Cosmos. Browse demo stores or sign in to manage tenants, products, and themes."
+                path="/"
+                jsonLdId="platform"
+                jsonLd={buildOrganizationJsonLd({
+                    name: "Retail Cosmos",
+                    url: typeof window !== "undefined" ? window.location.origin : "https://retailcosmos.com",
+                    description: "Multi-tenant e-commerce platform.",
+                })}
+            />
             <main className={styles.card}>
                 <p className={styles.eyebrow}>Multi-tenant e-commerce</p>
                 <h1 className={styles.title}>Welcome to Retail Cosmos</h1>
