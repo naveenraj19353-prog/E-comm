@@ -320,6 +320,7 @@ const Products = () => {
         description={seoDescription}
         path="/products"
         tenantSlug={tenantSlug}
+        noIndex={hasSearch}
       />
       <Breadcrumb items={[
             {

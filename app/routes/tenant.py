@@ -4,8 +4,8 @@ from typing import Annotated
 from bson import ObjectId
 from fastapi import APIRouter, Depends, HTTPException
 
-from app.database.mongo import tenants
-from app.models.tenant import CreateTenant, UpdateTenant, UpdateTenantTheme
+from app.database.mongo import products, tenants
+from app.models.tenant import CreateTenant, RegisterStore, UpdateTenant, UpdateTenantTheme
 from app.routes.detail_messages import (
     INVALID_TENANT_ID,
     NO_UPDATE_FIELDS,
@@ -18,11 +18,64 @@ from app.routes.response_metadata import (
     NOT_FOUND_RESPONSE,
 )
 from app.services.storefront_layout import build_storefront_layout
+from app.services.tenant_service import create_tenant_document
 from app.utils.auth_dependencies import (
     require_admin,
     require_super_admin,
 )
+from app.utils.category_catalog import _first_product_image
 from app.utils.hash import hash_password
+from app.utils.jwt_handler import create_token
+from app.utils.product_serialize import _resolve_image_for_response
+
+
+def _safe_resolve_image(value: str | None) -> str | None:
+    if not isinstance(value, str) or not value.strip():
+        return None
+    try:
+        resolved = _resolve_image_for_response(value.strip())
+    except Exception:
+        return value.strip()
+    return resolved or None
+
+
+def _public_tenant_preview(tenant: dict) -> dict:
+    tenant_id = str(tenant.get("tenantId") or "")
+    product_query = {
+        "tenantId": tenant_id,
+        "isActive": True,
+    }
+    product_count = products.count_documents(product_query)
+    preview_images: list[str] = []
+    for product in products.find(product_query).sort("createdAt", -1).limit(8):
+        raw = _first_product_image(product.get("images"))
+        resolved = _safe_resolve_image(raw)
+        if resolved and resolved not in preview_images:
+            preview_images.append(resolved)
+        if len(preview_images) >= 4:
+            break
+
+    theme_colors = tenant.get("themeColors") or {}
+    accent = None
+    if isinstance(theme_colors, dict):
+        accent = theme_colors.get("primary") or theme_colors.get("secondary")
+
+    logo = _safe_resolve_image(tenant.get("logo") if isinstance(tenant.get("logo"), str) else None)
+    cover = preview_images[0] if preview_images else logo
+
+    return {
+        "tenantId": tenant_id,
+        "slug": tenant.get("slug"),
+        "name": tenant.get("name"),
+        "logo": logo,
+        "theme": tenant.get("theme") or "Custom",
+        "accent": accent or "#7c3aed",
+        "productCount": int(product_count),
+        "coverImage": cover,
+        "previewImages": preview_images,
+        "dataIsolation": "Fully Isolated",
+    }
+
 
 router = APIRouter(
     prefix="/tenants",
@@ -42,94 +95,86 @@ def create_tenant(
     current_user: Annotated[dict, Depends(require_super_admin)],
 ):
     try:
-        tenant_id = tenant.tenantId.strip().lower()
-        name = tenant.name.strip()
-        slug = tenant.slug.strip().lower()
-        email = str(tenant.email).strip().lower()
-
-
-        existing_tenant = tenants.find_one({
-            "tenantId": tenant_id
-        })
-        if existing_tenant:
-            raise HTTPException(
-                status_code=400,
-                detail="Tenant ID already exists.",
-            )
-
-
-        existing_slug = tenants.find_one({
-            "slug": slug
-        })
-        if existing_slug:
-            raise HTTPException(
-                status_code=400,
-                detail="Tenant slug already exists.",
-            )
-
-
-        existing_email = tenants.find_one({
-            "email": email
-        })
-        if existing_email:
-            raise HTTPException(
-                status_code=400,
-                detail="Tenant email already exists.",
-            )
-
-
-        hashed_password = hash_password(
-            tenant.password
-        )
-
-
-        now = datetime.now(timezone.utc)
-
-
-        payload = {
-            "tenantId": tenant_id,
-            "name": name,
-            "slug": slug,
-            "logo": tenant.logo or "",
-            "theme": tenant.theme or "green",
-            "email": email,
-            "password": hashed_password,
-            "isActive": True,
-            "createdAt": now,
-            "updatedAt": now,
-        }
-
-
-        result = tenants.insert_one(
-            payload
-        )
-
-
-        response_data = {
-            **payload,
-            "_id": str(result.inserted_id),
-        }
-        response_data.pop(
-            "password",
-            None,
+        response_data = create_tenant_document(
+            tenant_id=tenant.tenantId,
+            name=tenant.name,
+            slug=tenant.slug,
+            email=str(tenant.email),
+            password=tenant.password,
+            logo=tenant.logo or "",
+            theme=tenant.theme or "green",
         )
         return {
             "success": True,
             "message": "Tenant created successfully.",
-            "tenantId": tenant_id,
-            "id": str(result.inserted_id),
+            "tenantId": response_data["tenantId"],
+            "id": response_data["_id"],
             "data": response_data,
         }
     except HTTPException:
         raise
     except Exception as e:
-        print(
-            "CREATE TENANT ERROR:",
-            str(e),
-        )
+        print("CREATE TENANT ERROR:", str(e))
         raise HTTPException(
             status_code=500,
             detail="Failed to create tenant.",
+        )
+
+
+@router.post(
+    "/register",
+    responses={
+        400: BAD_REQUEST_RESPONSE[400],
+        500: INTERNAL_SERVER_ERROR_RESPONSE[500],
+    },
+)
+def register_store(payload: RegisterStore):
+    """Public self-serve store creation (no super-admin required)."""
+    try:
+        slug = payload.slug.strip().lower()
+        # Self-serve: tenantId matches slug for simple storefront URLs.
+        response_data = create_tenant_document(
+            tenant_id=slug,
+            name=payload.name,
+            slug=slug,
+            email=str(payload.email),
+            password=payload.password,
+            logo="",
+            theme="green",
+        )
+        token = create_token(
+            {
+                "userId": response_data["_id"],
+                "tenantId": response_data["tenantId"],
+                "tenantMongoId": response_data["_id"],
+                "email": response_data["email"],
+                "role": "admin",
+                "name": response_data["name"],
+            }
+        )
+        return {
+            "success": True,
+            "message": "Store created successfully.",
+            "access_token": token,
+            "token_type": "Bearer",
+            "tenantId": response_data["tenantId"],
+            "slug": response_data["slug"],
+            "data": response_data,
+            "user": {
+                "userId": response_data["_id"],
+                "name": response_data["name"],
+                "email": response_data["email"],
+                "tenantId": response_data["tenantId"],
+                "role": "admin",
+            },
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        print("REGISTER STORE ERROR:", str(e))
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to create store.",
         )
 
 
@@ -286,6 +331,53 @@ def get_storefront_layout_by_slug(
             **layout,
         },
     }
+
+
+@router.get("/public")
+def get_public_tenants():
+    """Active tenants for marketing / welcome demos (no auth, no secrets)."""
+    try:
+        cursor = tenants.find(
+            {"isActive": True},
+            {
+                "password": 0,
+                "email": 0,
+                "adminEmail": 0,
+            },
+        ).sort("createdAt", -1)
+
+        data = []
+        for tenant in cursor:
+            try:
+                data.append(_public_tenant_preview(tenant))
+            except Exception as preview_error:
+                print("PUBLIC TENANT PREVIEW ERROR:", str(preview_error))
+                data.append(
+                    {
+                        "tenantId": str(tenant.get("tenantId") or ""),
+                        "slug": tenant.get("slug"),
+                        "name": tenant.get("name") or "Store",
+                        "logo": None,
+                        "theme": tenant.get("theme") or "Custom",
+                        "accent": "#7c3aed",
+                        "productCount": 0,
+                        "coverImage": None,
+                        "previewImages": [],
+                        "dataIsolation": "Fully Isolated",
+                    }
+                )
+
+        return {
+            "success": True,
+            "count": len(data),
+            "data": data,
+        }
+    except Exception as e:
+        print("PUBLIC TENANTS ERROR:", str(e))
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to load public tenants.",
+        )
 
 
 @router.get(

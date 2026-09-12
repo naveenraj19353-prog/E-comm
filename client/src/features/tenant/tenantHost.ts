@@ -56,7 +56,7 @@ export function isOnTenantSubdomain(hostname?: string): boolean {
  * Prefer tenant subdomains on the production root domain.
  * Keep path mode on localhost / Netlify / Vercel betas.
  */
-export function useSubdomainStorefrontUrls(hostname?: string): boolean {
+export function shouldUseSubdomainStorefrontUrls(hostname?: string): boolean {
     const mode = (import.meta.env.VITE_TENANT_ROUTING || "auto").trim().toLowerCase();
     if (mode === "path") {
         return false;
@@ -86,7 +86,7 @@ export function getStorefrontOrigin(slug: string, hostname?: string): string {
         return window.location.origin;
     }
 
-    if (!useSubdomainStorefrontUrls(hostname)) {
+    if (!shouldUseSubdomainStorefrontUrls(hostname)) {
         return window.location.origin;
     }
 
@@ -111,7 +111,7 @@ export function getStorefrontHref(slug: string, path = "/"): string {
         return suffix || "/";
     }
 
-    if (useSubdomainStorefrontUrls()) {
+    if (shouldUseSubdomainStorefrontUrls()) {
         return `${getStorefrontOrigin(cleanSlug)}${suffix || ""}`;
     }
 
@@ -121,7 +121,7 @@ export function getStorefrontHref(slug: string, path = "/"): string {
 /** Display label for admin UI, e.g. shopsphere.retailcosmos.com */
 export function formatStorefrontHost(slug: string): string {
     const cleanSlug = (slug || "your-store").trim().toLowerCase() || "your-store";
-    if (useSubdomainStorefrontUrls()) {
+    if (shouldUseSubdomainStorefrontUrls()) {
         return `${cleanSlug}.${getRootDomain()}`;
     }
     return `/${cleanSlug}`;

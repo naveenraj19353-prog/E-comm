@@ -37,7 +37,7 @@ export const useThemeCustomizer = () => {
     const layoutSource = getStorefrontLayoutSource(tenant);
     const baseDraft = useMemo(() => resolveThemeDraft(tenant, slug), [tenant, slug]);
     const [draft, setDraft] = useState<ThemeDraft>(baseDraft);
-    const [activeTab, setActiveTab] = useState<"colors" | "home" | "catalog" | "components" | "chrome" | "footer">("home");
+    const [activeTab, setActiveTab] = useState<"colors" | "home" | "catalog" | "components" | "chrome" | "footer" | "platform">("home");
     const [previewTab, setPreviewTab] = useState<"home" | "products" | "detail" | "cart" | "wishlist">("home");
     const [statusMessage, setStatusMessage] = useState("");
     const [isSaving, setIsSaving] = useState(false);

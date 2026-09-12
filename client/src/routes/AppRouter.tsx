@@ -18,6 +18,7 @@ import {
     Cart,
     Checkout,
     CreateProduct,
+    CreateStore,
     CreateTenant,
     EditTenant,
     Home,
@@ -37,6 +38,7 @@ import {
     ThankYou,
     ThemeCustomizer,
     Welcome,
+    WelcomeHome,
     Wishlist,
 } from "./LazyRouteComponents";
 
@@ -197,6 +199,14 @@ const adminRoutes = [
 ];
 
 export const router = createBrowserRouter([
+    {
+        path: "/create-store",
+        element: <CreateStore />,
+    },
+    {
+        path: "/welcome-alt",
+        element: <Welcome />,
+    },
     ...(hostTenantSlug
         ? [
             {
@@ -208,7 +218,7 @@ export const router = createBrowserRouter([
         : [
             {
                 path: "/",
-                element: <Welcome />,
+                element: <WelcomeHome />,
             },
             {
                 path: "/:tenantSlug",

@@ -32,6 +32,9 @@ const Home = () => {
     const storeDescription =
         tenant?.footerContent?.description?.trim() ||
         `Shop ${storeName} on Retail Cosmos — products, deals, and more.`;
+    const storeImage =
+        tenant?.logo?.trim() ||
+        "/images/welcome/fashion-hero.png";
 
     if (isLoading) {
         return (
@@ -41,6 +44,8 @@ const Home = () => {
                     description={storeDescription}
                     path="/"
                     tenantSlug={tenantSlug}
+                    image={storeImage}
+                    noIndex
                 />
                 <PageLoader message="Loading store..." />
             </>
@@ -50,6 +55,13 @@ const Home = () => {
     if (isError) {
         return (
             <div className={styles.error}>
+                <SeoHead
+                    title={`${storeName} unavailable`}
+                    description={`Unable to load ${storeName} right now.`}
+                    path="/"
+                    tenantSlug={tenantSlug}
+                    noIndex
+                />
                 <h2>Unable to load store</h2>
                 <button onClick={() => refetch()}>Retry</button>
             </div>
@@ -77,6 +89,10 @@ const Home = () => {
                 description={storeDescription}
                 path="/"
                 tenantSlug={tenantSlug}
+                image={
+                    banners[0]?.image ||
+                    storeImage
+                }
                 jsonLdId="store-home"
                 jsonLd={[
                     buildOrganizationJsonLd({

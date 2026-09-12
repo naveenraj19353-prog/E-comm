@@ -1,8 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { Heart, ShoppingBag, Star, Minus, Plus, } from "lucide-react";
+import { FaWhatsapp } from "react-icons/fa";
 import styles from "./ProductDetails.module.css";
 import type { Product, ProductInventory, } from "../../features/products/types";
 import { getColorValue } from "../../utils/productColors";
+import {
+    buildProductWhatsAppText,
+    openWhatsAppShare,
+} from "../../utils/whatsappShare";
 interface ProductInfoProps {
     product: Product;
     selectedColor: string;
@@ -15,8 +20,10 @@ interface ProductInfoProps {
     isAddingToCart: boolean;
     onAddToCart: (productId: string, quantity: number, variantId?: string) => void | Promise<void>;
     onWishlist: (productId: string) => void | Promise<void>;
+    shareUrl: string;
+    storeName?: string;
 }
-const ProductInfo = ({ product, selectedColor, selectedSize, availableSizes, selectedVariant, onColorChange, onSizeChange, isWishlisted, isAddingToCart, onAddToCart, onWishlist, }: ProductInfoProps) => {
+const ProductInfo = ({ product, selectedColor, selectedSize, availableSizes, selectedVariant, onColorChange, onSizeChange, isWishlisted, isAddingToCart, onAddToCart, onWishlist, shareUrl, storeName, }: ProductInfoProps) => {
     const [quantity, setQuantity] = useState(1);
     const availableColors = useMemo(() => {
         const colors = new Set<string>();
@@ -39,6 +46,16 @@ const ProductInfo = ({ product, selectedColor, selectedSize, availableSizes, sel
     };
     const handleColorChange = (color: string) => {
         onColorChange(color);
+    };
+    const handleWhatsAppShare = () => {
+        openWhatsAppShare(
+            buildProductWhatsAppText({
+                name: product.name,
+                price: product.finalPrice ?? product.price,
+                url: shareUrl,
+                storeName,
+            }),
+        );
     };
     return (<div className={styles.info}>
       
@@ -157,6 +174,15 @@ const ProductInfo = ({ product, selectedColor, selectedSize, availableSizes, sel
           <Heart size={20} fill={isWishlisted
             ? "currentColor"
             : "none"}/>
+        </button>
+        <button
+          type="button"
+          className={styles.whatsappShareButton}
+          onClick={handleWhatsAppShare}
+          aria-label="Share on WhatsApp"
+          title="Share on WhatsApp"
+        >
+          <FaWhatsapp size={20} />
         </button>
       </div>
     </div>);

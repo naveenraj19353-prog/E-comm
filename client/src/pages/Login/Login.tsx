@@ -2,6 +2,7 @@ import { useState, type FormEvent } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import styles from "../../styles/Auth.module.css";
 import { useAuth } from "../../features/auth/hooks/useAuth";
+import { SeoHead } from "../../features/seo";
 
 export default function Login() {
     const navigate = useNavigate();
@@ -69,6 +70,12 @@ export default function Login() {
         }
     };
     return (<main className={styles.authPage}>
+      <SeoHead
+        title="Admin login"
+        description="Sign in to the Retail Cosmos admin portal."
+        path="/admin/login"
+        noIndex
+      />
       <section className={styles.authCard}>
         
         <div className={styles.brand}>

@@ -2,6 +2,7 @@ import { useMemo, useState, type FormEvent } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import axios from "axios";
 import { resetPasswordApi } from "../../features/auth/api/auth.api";
+import { SeoHead } from "../../features/seo";
 import styles from "../../styles/Auth.module.css";
 
 interface ResetPasswordPageProps {
@@ -73,6 +74,16 @@ export default function ResetPasswordPage({
 
     return (
         <main className={styles.authPage}>
+            <SeoHead
+                title="Reset password"
+                description="Set a new password for your Retail Cosmos account."
+                path={
+                    defaultLoginPath.startsWith("/admin")
+                        ? "/admin/reset-password"
+                        : undefined
+                }
+                noIndex
+            />
             <section className={styles.authCard}>
                 <div className={styles.heading}>
                     <span className={styles.eyebrow}>PASSWORD RESET</span>

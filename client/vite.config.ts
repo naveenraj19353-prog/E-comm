@@ -1,5 +1,6 @@
 import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
+import { productOgDevPlugin } from "./vite.productOgDev.ts";
 
 const LOCAL_API = "http://127.0.0.1:8000";
 
@@ -17,7 +18,7 @@ export default defineConfig(({ mode }) => {
     };
 
     return {
-        plugins: [react()],
+        plugins: [react(), productOgDevPlugin(proxyTarget)],
         server: {
             proxy: apiProxy,
             // Allow shopsphere.localhost:5173 for local subdomain testing

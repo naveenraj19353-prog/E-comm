@@ -15,6 +15,8 @@ interface ProductDetailsViewProps {
     isAddingToCart: boolean;
     onAddToCart: (productId: string, quantity: number, variantId?: string) => void | Promise<void>;
     onWishlist: (productId: string) => void | Promise<void>;
+    shareUrl: string;
+    storeName?: string;
     onWriteReview: () => void;
     showReviewForm: boolean;
     reviewRating: number;
@@ -27,7 +29,7 @@ interface ProductDetailsViewProps {
     isSubmittingReview: boolean;
     reviewsLoading?: boolean;
 }
-const ProductDetailsView = ({ product, reviews, isWishlisted, isAddingToCart, onAddToCart, onWishlist, onWriteReview, showReviewForm, reviewRating, reviewTitle, reviewComment, onReviewRatingChange, onReviewTitleChange, onReviewCommentChange, onSubmitReview, isSubmittingReview, reviewsLoading = false, }: ProductDetailsViewProps) => {
+const ProductDetailsView = ({ product, reviews, isWishlisted, isAddingToCart, onAddToCart, onWishlist, shareUrl, storeName, onWriteReview, showReviewForm, reviewRating, reviewTitle, reviewComment, onReviewRatingChange, onReviewTitleChange, onReviewCommentChange, onSubmitReview, isSubmittingReview, reviewsLoading = false, }: ProductDetailsViewProps) => {
     const firstAvailableColor = useMemo(() => {
         return (product.inventory?.find((item) => item.stock > 0)?.color || "");
     }, [product.inventory]);
@@ -66,7 +68,7 @@ const ProductDetailsView = ({ product, reviews, isWishlisted, isAddingToCart, on
       <section className={`${styles.productSection} ${detailLayoutClass}`}>
         <ProductGallery product={product} selectedColor={selectedColor}/>
         <div className={styles.infoColumn}>
-          <ProductInfo product={product} selectedColor={selectedColor} selectedSize={selectedSize} availableSizes={availableSizes} selectedVariant={selectedVariant} onColorChange={handleColorChange} onSizeChange={setSelectedSize} isWishlisted={isWishlisted} isAddingToCart={isAddingToCart} onAddToCart={onAddToCart} onWishlist={onWishlist}/>
+          <ProductInfo product={product} selectedColor={selectedColor} selectedSize={selectedSize} availableSizes={availableSizes} selectedVariant={selectedVariant} onColorChange={handleColorChange} onSizeChange={setSelectedSize} isWishlisted={isWishlisted} isAddingToCart={isAddingToCart} onAddToCart={onAddToCart} onWishlist={onWishlist} shareUrl={shareUrl} storeName={storeName}/>
           <ProductDelivery />
         </div>
       </section>

@@ -1,0 +1,275 @@
+{
+  "seo": {
+    "title": "Retail Cosmos",
+    "description": "One platform. Every store. Multi-tenant ecommerce with self-serve merchant signup, isolated tenant data, and a shared commerce engine."
+  },
+  "brand": "Retail Cosmos",
+  "nav": {
+    "links": [
+      { "label": "Explore", "href": "#tenant-demo" },
+      { "label": "How It Works", "href": "#how-it-works" },
+      { "label": "Features", "href": "#architecture" },
+      { "label": "Resources", "href": "#tech" }
+    ],
+    "signIn": { "label": "Login", "href": "/admin/login" },
+    "primaryCta": { "label": "Launch Your Store", "href": "/create-store" }
+  },
+  "hero": {
+    "headline": "One Platform. Every Store.",
+    "lead": "Launch your store on Retail Cosmos, the intelligent platform that powers thousands of unique commerce experiences through shared infrastructure.",
+    "primaryCta": { "label": "Explore How It Works", "href": "#how-it-works" },
+    "secondaryCta": { "label": "Launch a Store", "href": "/create-store" },
+    "tabletImage": "/images/welcome/fashion-hero.png",
+    "floaters": [
+      {
+        "image": "/images/welcome/fashion-2.jpg",
+        "label": "Lookbook",
+        "position": "top"
+      },
+      {
+        "image": "/images/welcome/fashion-5.jpg",
+        "label": "New drop",
+        "position": "mid"
+      },
+      {
+        "image": "/images/welcome/fashion-8.jpg",
+        "label": "Boutique",
+        "position": "bottom"
+      }
+    ],
+    "rail": [
+      "/images/welcome/fashion-1.jpg",
+      "/images/welcome/fashion-3.jpg",
+      "/images/welcome/fashion-4.jpg",
+      "/images/welcome/fashion-6.jpg",
+      "/images/welcome/fashion-7.jpg",
+      "/images/welcome/demo-store.jpg"
+    ]
+  },
+  "tenantSwitcher": {
+    "id": "tenant-demo",
+    "eyebrow": "Tenant Switching Demo",
+    "title": "Experience Multi-Tenant Customization",
+    "lead": "Each store keeps its own theme and layout controls in Store layout studio — same platform, unique identity.",
+    "studioLabel": "Store layout studio",
+    "tenants": [
+      {
+        "id": "shopsphere",
+        "slug": "shopsphere",
+        "label": "SHOPSPHERE",
+        "category": "Fashion",
+        "url": "shopsphere.retailcosmos.com",
+        "theme": "Premium Fashion",
+        "stock": "14,300+ Products",
+        "data": "Fully Isolated",
+        "accent": "#7c3aed",
+        "screen": "/images/welcome/demo-store.jpg",
+        "products": [
+          "/images/welcome/fashion-1.jpg",
+          "/images/welcome/fashion-2.jpg",
+          "/images/welcome/fashion-3.jpg",
+          "/images/welcome/fashion-4.jpg"
+        ]
+      },
+      {
+        "id": "unimart",
+        "slug": null,
+        "label": "UNIMART",
+        "category": "General",
+        "url": "unimart.retailcosmos.com",
+        "theme": "Marketplace Clean",
+        "stock": "8,200+ Products",
+        "data": "Fully Isolated",
+        "accent": "#2563eb",
+        "screen": "/images/welcome/market-1.jpg",
+        "products": [
+          "/images/welcome/market-1.jpg",
+          "/images/welcome/market-2.jpg",
+          "/images/welcome/market-3.jpg",
+          "/images/welcome/market-4.jpg"
+        ]
+      },
+      {
+        "id": "activestreet",
+        "slug": null,
+        "label": "ACTIVE_STREET",
+        "category": "Electronics",
+        "url": "activestreet.retailcosmos.com",
+        "theme": "Tech Bold",
+        "stock": "5,400+ Products",
+        "data": "Fully Isolated",
+        "accent": "#06b6d4",
+        "screen": "/images/welcome/tech-1.jpg",
+        "products": [
+          "/images/welcome/tech-1.jpg",
+          "/images/welcome/tech-2.jpg",
+          "/images/welcome/tech-3.jpg",
+          "/images/welcome/tech-4.jpg"
+        ]
+      }
+    ]
+  },
+  "platformDiagram": {
+    "id": "how-it-works",
+    "title": "One Platform. Many Stores.",
+    "caption": "Unified backend. Unique identities.",
+    "core": {
+      "title": "RETAIL COSMOS Platform Core",
+      "items": ["DB", "API", "S3"]
+    },
+    "stores": [
+      {
+        "name": "ShopSphere",
+        "tag": "Fashion",
+        "live": true,
+        "image": "/images/welcome/fashion-2.jpg"
+      },
+      {
+        "name": "UniMart",
+        "tag": "Marketplace",
+        "live": false,
+        "image": "/images/welcome/market-2.jpg"
+      },
+      {
+        "name": "Active Street",
+        "tag": "Electronics",
+        "live": false,
+        "image": "/images/welcome/tech-2.jpg"
+      },
+      {
+        "name": "Future Store",
+        "tag": "Your brand",
+        "live": false,
+        "image": "/images/welcome/fashion-4.jpg"
+      }
+    ]
+  },
+  "isolation": {
+    "id": "architecture",
+    "eyebrow": "Tenant Isolation Architecture",
+    "title": "Security and Isolation at Scale",
+    "promise": "Your data remains yours. Guaranteed.",
+    "tenants": [
+      {
+        "name": "ShopSphere",
+        "tone": "violet",
+        "items": ["Products", "Orders", "Customers", "Banners"]
+      },
+      {
+        "name": "UniMart",
+        "tone": "green",
+        "items": ["Products", "Orders", "Customers", "Banners"]
+      }
+    ],
+    "sharedTitle": "SHARED COMMERCE ENGINE",
+    "sharedItems": ["Auth", "API", "Payments", "S3", "Infrastructure"]
+  },
+  "roles": {
+    "id": "roles",
+    "title": "The 4 Major Actors & Workflows",
+    "items": [
+      {
+        "id": "customer",
+        "label": "CUSTOMER",
+        "tone": "customer",
+        "steps": ["Browse catalog", "Add to cart", "Checkout", "Order receipt"],
+        "image": "/images/welcome/fashion-3.jpg"
+      },
+      {
+        "id": "tenant-admin",
+        "label": "TENANT ADMIN",
+        "tone": "tenant",
+        "steps": ["Store dashboard", "Product management", "Orders", "Customization"],
+        "image": "/images/welcome/admin-dash.jpg"
+      },
+      {
+        "id": "super-admin",
+        "label": "SUPER ADMIN",
+        "tone": "super",
+        "steps": ["Manage tenants", "System config", "Monitoring", "Platform health"],
+        "image": "/images/welcome/market-3.jpg"
+      },
+      {
+        "id": "storefronts",
+        "label": "STOREFRONTS",
+        "tone": "storefront",
+        "steps": ["Domain resolved", "Theme loaded", "Products fetched", "Store rendered"],
+        "image": "/images/welcome/tech-3.jpg"
+      }
+    ]
+  },
+  "tech": {
+    "id": "tech",
+    "title": "Built on Reliable Infrastructure",
+    "lead": "A modern stack for multi-tenant commerce — fast storefronts, a typed API, durable data, media at scale, and checkout that converts.",
+    "items": [
+      {
+        "id": "react",
+        "label": "React",
+        "detail": "Frontend",
+        "blurb": "Component-driven storefronts with snappy UX"
+      },
+      {
+        "id": "vite",
+        "label": "Vite",
+        "detail": "Build",
+        "blurb": "Instant HMR locally, lean production bundles"
+      },
+      {
+        "id": "fastapi",
+        "label": "FastAPI",
+        "detail": "API",
+        "blurb": "Typed REST for tenants, catalog, and checkout"
+      },
+      {
+        "id": "mongodb",
+        "label": "MongoDB",
+        "detail": "Database",
+        "blurb": "Flexible documents with per-tenant isolation"
+      },
+      {
+        "id": "s3",
+        "label": "AWS S3",
+        "detail": "Media",
+        "blurb": "Product images and banners at CDN scale"
+      },
+      {
+        "id": "razorpay",
+        "label": "Razorpay",
+        "detail": "Payments",
+        "blurb": "Secure Indian payments baked into checkout"
+      }
+    ]
+  },
+  "footer": {
+    "brand": "Retail Cosmos",
+    "tagline": "Multi-tenant ecommerce platform",
+    "ctaTitle": "Ready to launch your store?",
+    "ctaLead": "Spin up a branded storefront on shared infrastructure — isolated data, live catalog, and admin from day one.",
+    "image": "/images/welcome/fashion-hero.png",
+    "links": [
+      {
+        "id": "launch",
+        "label": "Launch a store",
+        "href": "/create-store",
+        "detail": "Create your merchant account",
+        "tone": "primary"
+      },
+      {
+        "id": "admin",
+        "label": "Admin login",
+        "href": "/admin/login",
+        "detail": "Manage products & orders",
+        "tone": "secondary"
+      },
+      {
+        "id": "demo",
+        "label": "Demo store",
+        "href": "/shopsphere",
+        "detail": "Browse ShopSphere live",
+        "tone": "secondary"
+      }
+    ],
+    "copyright": "Multi-tenant ecommerce for modern brands."
+  }
+}

@@ -1,6 +1,20 @@
 User-agent: *
 Allow: /
+Allow: /create-store
+Allow: /shopsphere
 
 Disallow: /admin
+Disallow: /admin/
+Disallow: /*/cart
+Disallow: /*/checkout
+Disallow: /*/wishlist
+Disallow: /*/profile
+Disallow: /*/orders
+Disallow: /*/thank-you
+Disallow: /*/login
+Disallow: /*/register
+Disallow: /*/forgot-password
+Disallow: /*/reset-password
+Disallow: /*/customize
 
 Sitemap: https://retailcosmos.com/sitemap.xml

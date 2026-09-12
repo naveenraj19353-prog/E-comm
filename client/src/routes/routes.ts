@@ -1,7 +1,7 @@
 import {
     getStorefrontHref,
     getTenantSlugFromHostname,
-    useSubdomainStorefrontUrls,
+    shouldUseSubdomainStorefrontUrls,
 } from "../features/tenant/tenantHost";
 
 function withTenantPath(tenant: string, suffix: string): string {
@@ -15,7 +15,7 @@ function withTenantPath(tenant: string, suffix: string): string {
     }
 
     // On apex with subdomain routing: absolute tenant host URL.
-    if (useSubdomainStorefrontUrls() && cleanTenant) {
+    if (shouldUseSubdomainStorefrontUrls() && cleanTenant) {
         return getStorefrontHref(cleanTenant, cleanSuffix);
     }
 

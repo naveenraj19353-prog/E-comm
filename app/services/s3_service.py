@@ -204,6 +204,27 @@ def generate_presigned_url(
         raise RuntimeError("Failed to generate image URL.") from error
 
 
+def get_object_bytes(s3_key: str) -> tuple[bytes, str]:
+    """Fetch raw object bytes + content type for stable OG image responses."""
+    key = (s3_key or "").strip()
+    if not key:
+        raise RuntimeError("Missing image key.")
+
+    try:
+        response = _s3_client().get_object(
+            Bucket=S3_BUCKET,
+            Key=key,
+        )
+        body = response["Body"].read()
+        content_type = str(response.get("ContentType") or "image/jpeg")
+        return body, content_type
+    except NoCredentialsError as error:
+        raise _credentials_error(error) from error
+    except (ClientError, BotoCoreError) as error:
+        logger.exception("Failed to read S3 object %s", key)
+        raise RuntimeError("Failed to load image.") from error
+
+
 def delete_image(s3_key: str) -> None:
     """Delete an image from S3 using its object key."""
     key = (s3_key or "").strip()

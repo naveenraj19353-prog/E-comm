@@ -25,7 +25,7 @@ const ProductDetails = () => {
         productId: string;
     }>();
     const { user, isAuthenticated } = useAuth();
-    const { tenantId, tenantSlug } = useStorefrontTenant();
+    const { tenantId, tenantSlug, tenant } = useStorefrontTenant();
     const navigateToLogin = useNavigateToLogin();
     const { data: productResponse, isLoading: productLoading, isError: productIsError, } = useProductDetails(productId || "", tenantId);
     const product = productResponse?.data || null;
@@ -138,7 +138,7 @@ const ProductDetails = () => {
         }
     };
     if (productLoading) {
-        return (<><SeoHead title="Product" description="Loading product details." path={`/product-details/${productId || ""}`} tenantSlug={tenantSlug} /><PageLoader message="Loading product..." /></>);
+        return (<><SeoHead title="Product" description="Loading product details." path={`/product-details/${productId || ""}`} tenantSlug={tenantSlug} noIndex /><PageLoader message="Loading product..." /></>);
     }
     if (productIsError || !product) {
         return (<div className={styles.state}>
@@ -152,22 +152,30 @@ const ProductDetails = () => {
     const productPath = `/product-details/${product._id}`;
     const productUrl = buildCanonicalUrl(productPath, tenantSlug);
     const inStock = !isProductOutOfStock(product);
+    const storeName = tenant?.name || tenantSlug || "Store";
+    const priceLabel = `₹${(product.finalPrice ?? product.price).toLocaleString("en-IN")}`;
+    const ogTitle = `${product.name} - ${priceLabel}`;
+    const ogDescription = (
+        product.description?.trim() ||
+        `${product.name} available now at ${storeName}.`
+    ).slice(0, 220);
 
     return (<>
       <SeoHead
-        title={product.name}
-        description={(product.description || `${product.name} at ${tenantSlug}`).slice(0, 320)}
+        title={ogTitle}
+        description={`${ogDescription}${ogDescription.includes(priceLabel) ? "" : ` · ${priceLabel}`}`}
         path={productPath}
         tenantSlug={tenantSlug}
         image={image || null}
         type="product"
+        siteName={storeName}
         jsonLdId={`product-${product._id}`}
         jsonLd={buildProductJsonLd({
           name: product.name,
           description: product.description || product.name,
           url: productUrl,
           image: image || null,
-          brand: product.brand,
+          brand: product.brand || storeName,
           sku: product._id,
           price: product.finalPrice ?? product.price,
           availability: inStock ? "InStock" : "OutOfStock",
@@ -175,7 +183,7 @@ const ProductDetails = () => {
           reviewCount: product.reviewCount,
         })}
       />
-      <ProductDetailsView product={product} reviews={reviews} isWishlisted={isWishlisted} isAddingToCart={isAdding} onAddToCart={handleAddToCart} onWishlist={handleWishlist} onWriteReview={handleWriteReview} showReviewForm={showReviewForm} reviewRating={reviewRating} reviewTitle={reviewTitle} reviewComment={reviewComment} onReviewRatingChange={setReviewRating} onReviewTitleChange={setReviewTitle} onReviewCommentChange={setReviewComment} onSubmitReview={handleSubmitReview} isSubmittingReview={isSubmittingReview} reviewsLoading={reviewsLoading}/>
+      <ProductDetailsView product={product} reviews={reviews} isWishlisted={isWishlisted} isAddingToCart={isAdding} onAddToCart={handleAddToCart} onWishlist={handleWishlist} shareUrl={productUrl} storeName={storeName} onWriteReview={handleWriteReview} showReviewForm={showReviewForm} reviewRating={reviewRating} reviewTitle={reviewTitle} reviewComment={reviewComment} onReviewRatingChange={setReviewRating} onReviewTitleChange={setReviewTitle} onReviewCommentChange={setReviewComment} onSubmitReview={handleSubmitReview} isSubmittingReview={isSubmittingReview} reviewsLoading={reviewsLoading}/>
     </>);
 };
 export default ProductDetails;

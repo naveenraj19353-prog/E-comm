@@ -88,6 +88,15 @@ class CreateTenant(BaseModel):
     )
 
 
+class RegisterStore(BaseModel):
+    """Public self-serve store signup. tenantId is set to slug server-side."""
+
+    name: str = Field(..., min_length=2, max_length=100)
+    slug: str = Field(..., min_length=2, max_length=48)
+    email: EmailStr
+    password: str = Field(..., min_length=6, max_length=128)
+
+
 class UpdateTenant(BaseModel):
     name: Optional[str] = Field(
         default=None,

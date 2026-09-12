@@ -1,0 +1,131 @@
+{
+  "seo": {
+    "title": "Retail Cosmos — One platform. Every store.",
+    "description": "Launch your own storefront on Retail Cosmos. Multi-tenant ecommerce with self-serve signup, isolated data, layout studio, and Razorpay checkout."
+  },
+  "brand": "Retail Cosmos",
+  "nav": {
+    "links": [
+      { "label": "Stores", "href": "#stores" },
+      { "label": "Studio", "href": "#studio" },
+      { "label": "Features", "href": "#features" },
+      { "label": "Get started", "href": "#build" }
+    ],
+    "signIn": { "label": "Log in", "href": "/admin/login" },
+    "primaryCta": { "label": "Create store", "href": "/create-store" }
+  },
+  "hero": {
+    "prefix": "One platform.",
+    "rotating": [
+      "Every store.",
+      "Your brand.",
+      "Isolated data.",
+      "Shared engine."
+    ],
+    "lead": "Retail Cosmos is multi-tenant ecommerce — each merchant gets their own storefront, catalog, and theme on shared infrastructure.",
+    "primaryCta": { "label": "Create your store", "href": "/create-store" },
+    "secondaryCta": { "label": "Open live demo", "href": "/shopsphere" },
+    "image": "/images/welcome/fashion-5.jpg"
+  },
+  "stores": {
+    "id": "stores",
+    "titleWhite": "One platform. Many stores.",
+    "titleGray": "Fashion, market, tech — each tenant keeps its own brand and catalog.",
+    "tiles": [
+      {
+        "image": "/images/welcome/fashion-8.jpg",
+        "brand": "ShopSphere",
+        "href": "/shopsphere"
+      },
+      {
+        "image": "/images/welcome/market-2.jpg",
+        "brand": "Market",
+        "href": "/create-store"
+      },
+      {
+        "image": "/images/welcome/tech-1.jpg",
+        "brand": "Tech hub",
+        "href": "/create-store"
+      }
+    ]
+  },
+  "studio": {
+    "id": "studio",
+    "title": "Customize without rebuilding",
+    "lead": "Store layout studio controls home, catalog, header, footer, and colors — same platform, unique look per tenant.",
+    "image": "/images/welcome/studio-home.png",
+    "cta": { "label": "Create store", "href": "/create-store" }
+  },
+  "features": {
+    "id": "features",
+    "cards": [
+      {
+        "title": "Isolated tenants",
+        "body": "Products, orders, theme, and customers stay separate per store — on one shared commerce engine.",
+        "image": "/images/welcome/admin-dash.jpg"
+      },
+      {
+        "title": "Catalog & checkout",
+        "body": "Variants, bulk import, cart, wishlist, and Razorpay payments ready for every storefront.",
+        "image": "/images/welcome/studio-catalog.png"
+      },
+      {
+        "title": "Share-ready products",
+        "body": "WhatsApp share with Open Graph previews so product links show image, name, and price.",
+        "image": "/images/welcome/demo-store.jpg"
+      }
+    ]
+  },
+  "stories": {
+    "id": "stories",
+    "title": "Built for merchants and operators",
+    "items": [
+      {
+        "image": "/images/welcome/fashion-5.jpg",
+        "title": "Launch a store",
+        "body": "Pick a name and URL, then list products the same day — no custom infrastructure."
+      },
+      {
+        "image": "/images/welcome/market-1.jpg",
+        "title": "Grow the catalog",
+        "body": "Bulk import, banners, and layout controls scale as inventory grows."
+      },
+      {
+        "image": "/images/welcome/tech-2.jpg",
+        "title": "Run many brands",
+        "body": "Operate multiple storefronts from one platform with tenant isolation."
+      }
+    ]
+  },
+  "build": {
+    "id": "build",
+    "title": "Get started in three steps",
+    "steps": [
+      { "n": "01", "title": "Create your store" },
+      { "n": "02", "title": "Add products & theme" },
+      { "n": "03", "title": "Connect Razorpay" }
+    ],
+    "cta": { "label": "Create your store", "href": "/create-store" }
+  },
+  "footer": {
+    "columns": [
+      {
+        "title": "Retail Cosmos",
+        "links": [
+          { "label": "Create a store", "href": "/create-store" },
+          { "label": "Admin login", "href": "/admin/login" },
+          { "label": "Classic welcome", "href": "/welcome-alt" }
+        ]
+      },
+      {
+        "title": "Explore",
+        "links": [
+          { "label": "Live demo", "href": "/shopsphere" },
+          { "label": "Studio", "href": "#studio" },
+          { "label": "Get started", "href": "#build" }
+        ]
+      }
+    ],
+    "legal": "© Retail Cosmos"
+  }
+}

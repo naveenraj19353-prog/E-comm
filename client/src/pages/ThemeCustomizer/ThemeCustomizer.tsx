@@ -5,6 +5,7 @@ import { useStorefrontTenant } from "../../features/tenant/useTenant";
 import { presetLabels, themePresets, type ThemePresetName } from "../../theme/themePresets";
 import ThemePreview from "./ThemePreview";
 import FooterContentEditor from "./FooterContentEditor";
+import CustomizationOverview from "./CustomizationOverview";
 import styles from "./ThemeCustomizer.module.css";
 import { routes, storefrontNavigate } from "../../routes/routes";
 
@@ -17,6 +18,7 @@ const previewTabs = [
 ] as const;
 
 const editorTabs = [
+    { id: "platform", label: "Platform" },
     { id: "home", label: "Home" },
     { id: "catalog", label: "Catalog" },
     { id: "components", label: "Components" },
@@ -88,6 +90,23 @@ const ThemeCustomizer = () => {
                     </nav>
 
                     <div className={styles.panelBody}>
+                        {activeTab === "platform" && (
+                            <CustomizationOverview
+                                onJumpToTab={(tabId) => {
+                                    if (
+                                        tabId === "home" ||
+                                        tabId === "catalog" ||
+                                        tabId === "components" ||
+                                        tabId === "chrome" ||
+                                        tabId === "footer" ||
+                                        tabId === "colors"
+                                    ) {
+                                        setActiveTab(tabId);
+                                    }
+                                }}
+                            />
+                        )}
+
                         {activeTab === "home" && (
                             <div className={styles.fieldGrid}>
                                 <Toggle label="Show home banner" checked={draft.layoutSettings.showHomeBanner} onChange={(v) => updateLayout("showHomeBanner", v)} />

@@ -24,6 +24,8 @@ export const API_ENDPOINTS = {
     TENANTS: {
         LIST: "/tenants/",
         CREATE: "/tenants/",
+        REGISTER: "/tenants/register",
+        PUBLIC: "/tenants/public",
         byId: (id: string) => `/tenants/${id}`,
         byTenantId: (tenantId: string) => `/tenants/tenant-id/${tenantId}`,
         bySlug: (slug: string) => `/tenants/slug/${slug}`,

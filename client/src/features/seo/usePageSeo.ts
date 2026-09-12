@@ -12,12 +12,17 @@ export type PageSeoInput = {
   tenantSlug?: string | null;
   image?: string | null;
   type?: "website" | "product" | "article";
+  /** Overrides og:site_name (defaults to Retail Cosmos). */
+  siteName?: string | null;
   /** noindex for private / auth / admin surfaces */
   noIndex?: boolean;
 };
 
 const DEFAULT_DESCRIPTION =
   "Retail Cosmos — multi-tenant storefronts for fashion, lifestyle, and more.";
+
+/** Default share image for pages that do not pass a custom OG image. */
+export const DEFAULT_OG_IMAGE = "/images/welcome/fashion-hero.png";
 
 const setMeta = (
   attr: "name" | "property",
@@ -89,36 +94,35 @@ export const applyPageSeo = ({
   tenantSlug,
   image,
   type = "website",
+  siteName,
   noIndex = false,
 }: PageSeoInput) => {
-  const fullTitle = title.includes("Retail Cosmos")
-    ? title
-    : `${title} | Retail Cosmos`;
+  const brand = (siteName || "Retail Cosmos").trim() || "Retail Cosmos";
+  const fullTitle =
+    title.includes(brand) || title.includes("Retail Cosmos")
+      ? title
+      : `${title} | ${brand}`;
   document.title = fullTitle;
 
   const desc = description.trim().slice(0, 320) || DEFAULT_DESCRIPTION;
   const canonical = buildCanonicalUrl(path, tenantSlug);
-  const imageUrl = image ? absoluteUrl(image) : undefined;
+  const imageUrl = absoluteUrl(image?.trim() || DEFAULT_OG_IMAGE);
 
   setMeta("name", "description", desc);
   setMeta("name", "robots", noIndex ? "noindex, nofollow" : "index, follow");
   setLink("canonical", canonical);
 
-  setMeta("property", "og:site_name", "Retail Cosmos");
+  setMeta("property", "og:site_name", brand);
   setMeta("property", "og:title", fullTitle);
   setMeta("property", "og:description", desc);
   setMeta("property", "og:type", type === "product" ? "product" : "website");
   setMeta("property", "og:url", canonical);
-  if (imageUrl) {
-    setMeta("property", "og:image", imageUrl);
-  }
+  setMeta("property", "og:image", imageUrl);
 
-  setMeta("name", "twitter:card", imageUrl ? "summary_large_image" : "summary");
+  setMeta("name", "twitter:card", "summary_large_image");
   setMeta("name", "twitter:title", fullTitle);
   setMeta("name", "twitter:description", desc);
-  if (imageUrl) {
-    setMeta("name", "twitter:image", imageUrl);
-  }
+  setMeta("name", "twitter:image", imageUrl);
 };
 
 /** React hook: apply document head SEO whenever inputs change. */
@@ -132,6 +136,7 @@ export const usePageSeo = (seo: PageSeoInput) => {
     seo.tenantSlug,
     seo.image,
     seo.type,
+    seo.siteName,
     seo.noIndex,
   ]);
 };

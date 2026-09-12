@@ -2,6 +2,7 @@ import { useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import axios from "axios";
 import { forgotPasswordApi } from "../../features/auth/api/auth.api";
+import { SeoHead } from "../../features/seo";
 import styles from "../../styles/Auth.module.css";
 
 interface ForgotPasswordPageProps {
@@ -64,6 +65,12 @@ export default function ForgotPasswordPage({
 
     return (
         <main className={styles.authPage}>
+            <SeoHead
+                title="Forgot password"
+                description="Reset your Retail Cosmos account password."
+                path={mode === "admin" ? "/admin/forgot-password" : undefined}
+                noIndex
+            />
             <section className={styles.authCard}>
                 <div className={styles.heading}>
                     <span className={styles.eyebrow}>

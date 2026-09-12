@@ -1,5 +1,10 @@
 export { default as SeoHead } from "./SeoHead";
-export { usePageSeo, applyPageSeo, buildCanonicalUrl } from "./usePageSeo";
+export {
+  usePageSeo,
+  applyPageSeo,
+  buildCanonicalUrl,
+  DEFAULT_OG_IMAGE,
+} from "./usePageSeo";
 export type { PageSeoInput } from "./usePageSeo";
 export {
   useJsonLd,

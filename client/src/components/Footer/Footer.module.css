@@ -77,7 +77,7 @@ a {
     opacity 0.3s ease;
 }
 a:hover {
-  color: var(--primary);
+  /* color: var(--primary); */
   opacity: 1;
 }
 .bottom {

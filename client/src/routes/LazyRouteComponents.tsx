@@ -32,3 +32,5 @@ export const AdminOrderDetail = lazy(() => import("../features/admin/pages/Admin
 export const ThemeCustomizer = lazy(() => import("../pages/ThemeCustomizer/ThemeCustomizer"));
 export const NotFound = lazy(() => import("../pages/NotFound"));
 export const Welcome = lazy(() => import("../pages/Welcome"));
+export const WelcomeHome = lazy(() => import("../pages/WelcomeHome"));
+export const CreateStore = lazy(() => import("../pages/CreateStore"));
