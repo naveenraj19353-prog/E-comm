@@ -47,18 +47,20 @@ const Products = () => {
     const urlMaxPrice = searchParams.get("maxPrice");
     const urlRating = searchParams.get("rating");
     useEffect(() => {
-        const minPrice = urlMinPrice ? Number(urlMinPrice) : DEFAULT_MIN_PRICE;
-        const maxPrice = urlMaxPrice ? Number(urlMaxPrice) : DEFAULT_MAX_PRICE;
+        const minPrice = urlMinPrice ? Number(urlMinPrice) : undefined;
+        const maxPrice = urlMaxPrice ? Number(urlMaxPrice) : undefined;
         const ratingValue = urlRating !== null ? Number(urlRating) : null;
+        const hasUrlPrice =
+            minPrice !== undefined &&
+            maxPrice !== undefined &&
+            Number.isFinite(minPrice) &&
+            Number.isFinite(maxPrice);
         dispatch(setFilters({
             categories: urlCategories,
             colors: urlColors,
             sizes: urlSizes,
             brands: urlBrands,
-            priceRange: [
-                Number.isFinite(minPrice) ? minPrice : DEFAULT_MIN_PRICE,
-                Number.isFinite(maxPrice) ? maxPrice : DEFAULT_MAX_PRICE,
-            ],
+            ...(hasUrlPrice ? { priceRange: [minPrice, maxPrice] } : {}),
             rating: ratingValue !== null && Number.isFinite(ratingValue)
                 ? ratingValue
                 : null,
@@ -127,7 +129,7 @@ const Products = () => {
     const apiPriceBounds = getApiPriceBounds(debouncedPriceRange, catalogPriceMin, catalogPriceMax);
     const productsQuery = useProducts({
         tenantId,
-        limit: 20,
+        limit: 12,
         categoryIds,
         colors: urlColors.length > 0
             ? urlColors
@@ -159,6 +161,39 @@ const Products = () => {
         }
         dispatch(setCatalogFilter(catalogFilter));
     }, [catalogFilter, dispatch]);
+
+    // Align Redux price slider to catalog bounds on load (no URL price params).
+    // Prevents default [0, 100000] from being sent as minPrice/maxPrice.
+    useEffect(() => {
+        if (!storedCatalogFilter?.price) {
+            return;
+        }
+        if (urlMinPrice !== null || urlMaxPrice !== null) {
+            return;
+        }
+        const catalogMin = storedCatalogFilter.price.min;
+        const catalogMax = Math.max(storedCatalogFilter.price.max, catalogMin);
+        const [currentMin, currentMax] = filters.priceRange;
+        const isUnsetDefault =
+            currentMin === DEFAULT_MIN_PRICE && currentMax === DEFAULT_MAX_PRICE;
+        if (!isUnsetDefault) {
+            return;
+        }
+        if (currentMin === catalogMin && currentMax === catalogMax) {
+            return;
+        }
+        dispatch(
+            setFilters({
+                priceRange: [catalogMin, catalogMax],
+            }),
+        );
+    }, [
+        storedCatalogFilter,
+        urlMinPrice,
+        urlMaxPrice,
+        filters.priceRange,
+        dispatch,
+    ]);
     const handleSortChange = (value: string) => {
         switch (value) {
             case "priceAsc":

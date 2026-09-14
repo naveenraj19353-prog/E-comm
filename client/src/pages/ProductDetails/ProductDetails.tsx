@@ -34,9 +34,20 @@ const ProductDetails = () => {
     const [reviewRating, setReviewRating] = useState(0);
     const [reviewTitle, setReviewTitle] = useState("");
     const [reviewComment, setReviewComment] = useState("");
-    const cartUserId = user?._id || "";
-    const { addToCart, isAdding } = useCart(cartUserId, tenantId);
-    const { wishlist, addToWishlist, removeFromWishlist } = useWishlist(cartUserId, tenantId);
+    const cartUserId =
+        isAuthenticated && user?.role === "customer" && user._id ? user._id : "";
+    const cartTenantId =
+        isAuthenticated && user?.role === "customer"
+            ? (user.tenantId || tenantId || "")
+            : "";
+    const { addToCart, isAdding } = useCart(cartUserId, cartTenantId, {
+        enabled: Boolean(cartUserId && cartTenantId),
+    });
+    const { wishlist, addToWishlist, removeFromWishlist } = useWishlist(
+        cartUserId,
+        cartTenantId,
+        { enabled: Boolean(cartUserId && cartTenantId) },
+    );
     const isWishlisted = product
         ? wishlist.some((item) => item.productId === product._id)
         : false;

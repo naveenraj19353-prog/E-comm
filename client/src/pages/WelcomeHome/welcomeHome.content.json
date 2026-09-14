@@ -6,10 +6,10 @@
   "brand": "Retail Cosmos",
   "nav": {
     "links": [
-      { "label": "Stores", "href": "#stores" },
-      { "label": "Studio", "href": "#studio" },
-      { "label": "Features", "href": "#features" },
-      { "label": "Get started", "href": "#build" }
+      { "label": "Overview", "href": "#intro" },
+      { "label": "Platform", "href": "#platform" },
+      { "label": "1 minute", "href": "#one-minute" },
+      { "label": "Studio", "href": "#studio" }
     ],
     "signIn": { "label": "Log in", "href": "/admin/login" },
     "primaryCta": { "label": "Create store", "href": "/create-store" }
@@ -22,30 +22,91 @@
       "Isolated data.",
       "Shared engine."
     ],
-    "lead": "Retail Cosmos is multi-tenant ecommerce — each merchant gets their own storefront, catalog, and theme on shared infrastructure.",
+    "lead": "",
     "primaryCta": { "label": "Create your store", "href": "/create-store" },
     "secondaryCta": { "label": "Open live demo", "href": "/shopsphere" },
-    "image": "/images/welcome/fashion-5.jpg"
+    "image": "/images/welcome/banner/slide-01.png?v=6",
+    "images": [
+      "/images/welcome/banner/slide-01.png?v=6",
+      "/images/welcome/banner/slide-02.png?v=6",
+      "/images/welcome/banner/slide-03.png?v=6",
+      "/images/welcome/banner/slide-04.png?v=6",
+      "/images/welcome/banner/slide-05.png?v=6",
+      "/images/welcome/banner/slide-06.png?v=6",
+      "/images/welcome/banner/slide-07.png?v=6",
+      "/images/welcome/banner/slide-08.png?v=6",
+      "/images/welcome/banner/slide-09.png?v=6",
+      "/images/welcome/banner/slide-10.png?v=6",
+      "/images/welcome/banner/slide-11.png?v=6"
+    ]
   },
-  "stores": {
-    "id": "stores",
-    "titleWhite": "One platform. Many stores.",
-    "titleGray": "Fashion, market, tech — each tenant keeps its own brand and catalog.",
-    "tiles": [
+  "introLoop": {
+    "id": "intro",
+    "eyebrow": "Product overview",
+    "title": "See Retail Cosmos in motion.",
+    "titleAccent": "Built for real retail.",
+    "lead": "A short branded walkthrough of how merchants set up, sell, and grow on one connected platform—complete with motion, overlays, and clear product storytelling.",
+    "src": "/videos/welcome/intro-loop.mp4?v=2",
+    "unmuteLabel": "Turn sound on",
+    "muteLabel": "Mute",
+    "ariaLabel": "Retail Cosmos product overview video"
+  },
+  "platform": {
+    "id": "platform",
+    "eyebrow": "The modern retail commerce platform",
+    "titleLine1": "One platform.",
+    "titleLine2": "Every way you sell.",
+    "lead": "Add your products once. Manage inventory, orders, customers and fulfilment from one place — and sell across your online store, social channels, marketplaces, POS and more.",
+    "primaryCta": { "label": "Start Your Store", "href": "/create-store" },
+    "secondaryCta": { "label": "Open live demo", "href": "/shopsphere" },
+    "trust": [
+      { "icon": "building", "label": "Built for growing businesses" },
+      { "icon": "zap", "label": "Go live in days, not months" },
+      { "icon": "heart", "label": "Trusted by modern retailers" }
+    ],
+    "orbitCenter": {
+      "title": "Retail Cosmos",
+      "subtitle": "Your Retail Universe. Connected."
+    },
+    "orbit": [
+      { "label": "Online Store", "icon": "store" },
+      { "label": "ONDC & New Channels", "icon": "network" },
+      { "label": "POS", "icon": "pos" },
+      { "label": "Shipping & Fulfilment", "icon": "truck" },
+      { "label": "Customers", "icon": "users" },
+      { "label": "Insights", "icon": "chart" },
+      { "label": "Payments", "icon": "wallet" },
+      { "label": "Social Commerce", "icon": "social" },
+      { "label": "Marketplaces", "icon": "market" }
+    ],
+    "orbitNote": "Add once. Sell everywhere.",
+    "footerLine": "A brighter future for Indian retail"
+  },
+  "video": {
+    "id": "one-minute",
+    "eyebrow": "See it in one minute",
+    "title": "From zero to live store.",
+    "titleAccent": "In 60 seconds.",
+    "lead": "Watch a complete online store come together—setup, product cataloging, and immediate live publishing—with synchronized motion, text overlays, and Retail Cosmos branding.",
+    "src": "/videos/welcome/create-store-1-min.mp4",
+    "poster": "/images/welcome/studio-home.png",
+    "playLabel": "Play walkthrough",
+    "durationLabel": "1:00",
+    "steps": [
       {
-        "image": "/images/welcome/fashion-8.jpg",
-        "brand": "ShopSphere",
-        "href": "/shopsphere"
+        "num": "01",
+        "label": "Setup",
+        "detail": "Create your store and brand basics"
       },
       {
-        "image": "/images/welcome/market-2.jpg",
-        "brand": "Market",
-        "href": "/create-store"
+        "num": "02",
+        "label": "Catalog",
+        "detail": "Add products and go inventory-ready"
       },
       {
-        "image": "/images/welcome/tech-1.jpg",
-        "brand": "Tech hub",
-        "href": "/create-store"
+        "num": "03",
+        "label": "Publish",
+        "detail": "Launch live and start selling"
       }
     ]
   },
@@ -53,59 +114,10 @@
     "id": "studio",
     "title": "Customize without rebuilding",
     "lead": "Store layout studio controls home, catalog, header, footer, and colors — same platform, unique look per tenant.",
-    "image": "/images/welcome/studio-home.png",
-    "cta": { "label": "Create store", "href": "/create-store" }
-  },
-  "features": {
-    "id": "features",
-    "cards": [
-      {
-        "title": "Isolated tenants",
-        "body": "Products, orders, theme, and customers stay separate per store — on one shared commerce engine.",
-        "image": "/images/welcome/admin-dash.jpg"
-      },
-      {
-        "title": "Catalog & checkout",
-        "body": "Variants, bulk import, cart, wishlist, and Razorpay payments ready for every storefront.",
-        "image": "/images/welcome/studio-catalog.png"
-      },
-      {
-        "title": "Share-ready products",
-        "body": "WhatsApp share with Open Graph previews so product links show image, name, and price.",
-        "image": "/images/welcome/demo-store.jpg"
-      }
-    ]
-  },
-  "stories": {
-    "id": "stories",
-    "title": "Built for merchants and operators",
-    "items": [
-      {
-        "image": "/images/welcome/fashion-5.jpg",
-        "title": "Launch a store",
-        "body": "Pick a name and URL, then list products the same day — no custom infrastructure."
-      },
-      {
-        "image": "/images/welcome/market-1.jpg",
-        "title": "Grow the catalog",
-        "body": "Bulk import, banners, and layout controls scale as inventory grows."
-      },
-      {
-        "image": "/images/welcome/tech-2.jpg",
-        "title": "Run many brands",
-        "body": "Operate multiple storefronts from one platform with tenant isolation."
-      }
-    ]
-  },
-  "build": {
-    "id": "build",
-    "title": "Get started in three steps",
-    "steps": [
-      { "n": "01", "title": "Create your store" },
-      { "n": "02", "title": "Add products & theme" },
-      { "n": "03", "title": "Connect Razorpay" }
-    ],
-    "cta": { "label": "Create your store", "href": "/create-store" }
+    "src": "/videos/welcome/customize-theme-layout.mp4",
+    "poster": "/images/welcome/studio-home.png",
+    "playLabel": "Watch customization",
+    "durationLabel": "Demo"
   },
   "footer": {
     "columns": [
@@ -113,8 +125,7 @@
         "title": "Retail Cosmos",
         "links": [
           { "label": "Create a store", "href": "/create-store" },
-          { "label": "Admin login", "href": "/admin/login" },
-          { "label": "Classic welcome", "href": "/welcome-alt" }
+          { "label": "Admin login", "href": "/admin/login" }
         ]
       },
       {
@@ -122,7 +133,7 @@
         "links": [
           { "label": "Live demo", "href": "/shopsphere" },
           { "label": "Studio", "href": "#studio" },
-          { "label": "Get started", "href": "#build" }
+          { "label": "Create store", "href": "/create-store" }
         ]
       }
     ],

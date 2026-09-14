@@ -5,7 +5,8 @@ import { useAppDispatch, useAppSelector } from "../../app/hooks";
 import PageLoader from "../../components/PageLoader";
 import { clearTenant, setTenant, setTenantSlug } from "./tenantSlice";
 import { getTenantSlugFromHostname } from "./tenantHost";
-import { getStorefrontLayout, getTenantBySlug } from "../admin/api/tenant.api";
+import { getTenantBySlug } from "../admin/api/tenant.api";
+import type { Tenant } from "../../types/tenant";
 
 const TenantLoader = () => {
     const { tenantSlug: paramSlug } = useParams();
@@ -13,18 +14,16 @@ const TenantLoader = () => {
     const currentTenant = useAppSelector((state) => state.tenant.currentTenant);
     const slug = (paramSlug || getTenantSlugFromHostname() || "").trim().toLowerCase();
 
+    // Single request — /tenants/slug/:slug already includes storefrontLayout.
     const tenantQuery = useQuery({
         queryKey: ["tenant", "slug", slug],
         queryFn: () => getTenantBySlug(slug),
         enabled: Boolean(slug),
         retry: false,
-    });
-
-    const layoutQuery = useQuery({
-        queryKey: ["storefront-layout", slug],
-        queryFn: () => getStorefrontLayout(slug),
-        enabled: Boolean(slug),
-        retry: false,
+        staleTime: 5 * 60 * 1000,
+        refetchOnMount: false,
+        refetchOnWindowFocus: false,
+        refetchOnReconnect: false,
     });
 
     useEffect(() => {
@@ -37,34 +36,38 @@ const TenantLoader = () => {
     }, [slug, dispatch]);
 
     useEffect(() => {
-        if (!tenantQuery.data || !layoutQuery.data) {
+        if (!tenantQuery.data) {
             return;
         }
-        const tenant = {
-            ...tenantQuery.data,
-            storefrontLayout: {
-                theme: layoutQuery.data.theme,
-                themeColors: layoutQuery.data.themeColors,
-                layoutSettings: layoutQuery.data.layoutSettings,
-                footerContent: layoutQuery.data.footerContent,
-                isCustomized: layoutQuery.data.isCustomized,
-                source: layoutQuery.data.source,
-            },
+        const data = tenantQuery.data as Tenant;
+        const layout = data.storefrontLayout;
+        const tenant: Tenant = {
+            ...data,
+            storefrontLayout: layout
+                ? {
+                    theme: layout.theme,
+                    themeColors: layout.themeColors,
+                    layoutSettings: layout.layoutSettings,
+                    footerContent: layout.footerContent,
+                    isCustomized: layout.isCustomized,
+                    source: layout.source,
+                }
+                : null,
         };
         dispatch(setTenant(tenant));
         localStorage.setItem("ecommerce_tenantId", tenant.tenantId);
         localStorage.setItem("ecommerce_tenantSlug", tenant.slug);
-    }, [tenantQuery.data, layoutQuery.data, dispatch]);
+    }, [tenantQuery.data, dispatch]);
 
     if (!slug) {
         return <h1>Store not found</h1>;
     }
 
-    if (tenantQuery.isError || layoutQuery.isError) {
+    if (tenantQuery.isError) {
         return <h1>Store not found</h1>;
     }
 
-    if (tenantQuery.isLoading || layoutQuery.isLoading || !currentTenant) {
+    if (tenantQuery.isLoading || !currentTenant) {
         return <PageLoader message="Loading store layout..." fullViewport />;
     }
 

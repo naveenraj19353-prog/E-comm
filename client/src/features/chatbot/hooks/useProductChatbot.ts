@@ -1,5 +1,7 @@
 import axios from "axios";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useAppSelector } from "../../../app/hooks";
 import { getProducts } from "../../products/api/product.api";
 import type { ProductFilter, ProductFilterCategory } from "../../products/types";
 import {
@@ -30,77 +32,72 @@ const createWelcomeMessage = (text: string): ChatMessage => ({
 
 export const useProductChatbot = (tenantId: string) => {
     const [isOpen, setIsOpen] = useState(false);
+    const [hasOpened, setHasOpened] = useState(false);
     const [input, setInput] = useState("");
     const [isSearching, setIsSearching] = useState(false);
-    const [isCatalogLoading, setIsCatalogLoading] = useState(false);
-    const [catalogFilter, setCatalogFilter] = useState<ProductFilter | null>(null);
+    const storedCatalogFilter = useAppSelector(
+        (state) => state.products.catalogFilter,
+    );
     const [catalogError, setCatalogError] = useState<string | null>(null);
-    const [categories, setCategories] = useState<ProductFilterCategory[]>([]);
     const [messages, setMessages] = useState<ChatMessage[]>([
-        createWelcomeMessage("Hi! Loading store catalog..."),
+        createWelcomeMessage(buildWelcomeMessage(null)),
     ]);
 
+    const openChat = useCallback(() => {
+        setHasOpened(true);
+        setIsOpen(true);
+    }, []);
+
+    // Reuse catalog from products page when available; otherwise fetch once on first open.
+    const catalogQuery = useQuery({
+        queryKey: ["chatbot-catalog", tenantId],
+        queryFn: async () => {
+            const response = await getProducts({
+                tenantId,
+                page: 1,
+                limit: 1,
+            });
+            return response.filter ?? null;
+        },
+        enabled: Boolean(tenantId) && hasOpened && !storedCatalogFilter,
+        staleTime: 5 * 60 * 1000,
+        refetchOnMount: false,
+        refetchOnWindowFocus: false,
+        retry: 1,
+    });
+
+    const catalogFilter: ProductFilter | null =
+        storedCatalogFilter ?? catalogQuery.data ?? null;
+    const categories: ProductFilterCategory[] = catalogFilter?.category ?? [];
+    const isCatalogLoading =
+        hasOpened && !storedCatalogFilter && catalogQuery.isFetching;
+
     useEffect(() => {
-        if (!tenantId) {
-            setCatalogFilter(null);
-            setCategories([]);
-            setCatalogError(null);
-            setMessages([createWelcomeMessage(buildWelcomeMessage(null))]);
+        if (catalogQuery.isError) {
+            const message = getChatbotErrorMessage(
+                catalogQuery.error,
+                "Unable to load category filters.",
+            );
+            setCatalogError(message);
+            setMessages([createWelcomeMessage(buildWelcomeMessage(null, message))]);
             return;
         }
-
-        let mounted = true;
-        const loadCatalog = async () => {
-            setIsCatalogLoading(true);
-            setCatalogError(null);
-            try {
-                const response = await getProducts({
-                    tenantId,
-                    page: 1,
-                    limit: 1,
-                });
-                if (!mounted) {
-                    return;
+        setCatalogError(null);
+        if (catalogFilter || hasOpened) {
+            setMessages((current) => {
+                if (current.length !== 1 || current[0]?.role !== "bot") {
+                    return current;
                 }
-                const filter = response.filter ?? null;
-                setCatalogFilter(filter);
-                setCategories(filter?.category ?? []);
-                const welcomeText = buildWelcomeMessage(filter);
-                setMessages((current) => current.map((message, index) => index === 0 && message.role === "bot" && !message.products
-                    ? { ...message, text: welcomeText }
-                    : message));
-            }
-            catch (error) {
-                if (!mounted) {
-                    return;
-                }
-                const message = getChatbotErrorMessage(
-                    error,
-                    "Unable to load category filters.",
-                );
-                setCatalogError(message);
-                setCatalogFilter(null);
-                setCategories([]);
-                const welcomeText = buildWelcomeMessage(null, message);
-                setMessages((current) => current.map((message, index) => index === 0 && message.role === "bot" && !message.products
-                    ? { ...message, text: welcomeText }
-                    : message));
-            }
-            finally {
-                if (mounted) {
-                    setIsCatalogLoading(false);
-                }
-            }
-        };
-
-        void loadCatalog();
-        return () => {
-            mounted = false;
-        };
-    }, [tenantId]);
+                return [createWelcomeMessage(buildWelcomeMessage(catalogFilter))];
+            });
+        }
+    }, [catalogFilter, catalogQuery.error, catalogQuery.isError, hasOpened]);
 
     const quickPrompts = useMemo(() => buildQuickPrompts(catalogFilter), [catalogFilter]);
-    const inputPlaceholder = useMemo(() => buildInputPlaceholder(catalogFilter, categories), [catalogFilter, categories]);
+    const inputPlaceholder = useMemo(
+        () => buildInputPlaceholder(catalogFilter, categories),
+        [catalogFilter, categories],
+    );
 
     const sendMessage = useCallback(async (rawText: string) => {
         const text = rawText.trim();
@@ -187,7 +184,14 @@ export const useProductChatbot = (tenantId: string) => {
 
     return {
         isOpen,
-        setIsOpen,
+        setIsOpen: (open: boolean | ((prev: boolean) => boolean)) => {
+            const next = typeof open === "function" ? open(isOpen) : open;
+            if (next) {
+                openChat();
+                return;
+            }
+            setIsOpen(false);
+        },
         input,
         setInput,
         messages,

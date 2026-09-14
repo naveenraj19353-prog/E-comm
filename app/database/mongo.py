@@ -1,3 +1,5 @@
+import os
+
 import certifi
 from pymongo import MongoClient
 from pymongo.server_api import ServerApi
@@ -6,11 +8,21 @@ from app.config import DATABASE_NAME, MONGO_URI, validate_required_settings
 
 validate_required_settings()
 
+# Python 3.14 on some Windows setups fails Atlas TLS with the system CA store.
+# Prefer certifi; optionally allow insecure TLS for local/dev via env.
+_MONGO_TLS_INSECURE = (
+    (os.getenv("MONGO_TLS_INSECURE") or "").strip().lower()
+    in {"1", "true", "yes", "on"}
+)
+os.environ.setdefault("SSL_CERT_FILE", certifi.where())
+os.environ.setdefault("REQUESTS_CA_BUNDLE", certifi.where())
+
 
 def _mongo_client_kwargs(uri: str) -> dict:
     options: dict = {
-        "serverSelectionTimeoutMS": 30000,
-        "connectTimeoutMS": 20000,
+        "serverSelectionTimeoutMS": 15000,
+        "connectTimeoutMS": 10000,
+        "socketTimeoutMS": 20000,
         "retryWrites": True,
         # Keep BSON UTC datetimes timezone-aware when reading them back.
         "tz_aware": True,
@@ -18,6 +30,8 @@ def _mongo_client_kwargs(uri: str) -> dict:
     if uri.startswith("mongodb+srv://") or "tls=true" in uri.lower():
         options["tlsCAFile"] = certifi.where()
         options["server_api"] = ServerApi("1")
+        if _MONGO_TLS_INSECURE:
+            options["tlsAllowInvalidCertificates"] = True
     return options
 
 

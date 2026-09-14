@@ -16,7 +16,7 @@ export const useProducts = (params: Omit<ProductQueryParams, "page">) => {
             params.search ?? "",
             params.sortBy ?? "createdAt",
             params.sortOrder ?? "desc",
-            params.limit ?? 20,
+            params.limit ?? 12,
         ],
         initialPageParam: 1,
         queryFn: ({ pageParam }) => {
