@@ -53,6 +53,9 @@ export default function AdminTenant() {
           <button type="button" className={styles.productsButton} onClick={() => navigate(`/admin/tenants/${tenant.tenantId}/banners`)}>
             Manage Banners
           </button>
+          <button type="button" className={styles.ordersButton} onClick={() => navigate(`/admin/tenants/${tenant.tenantId}/shipping/delhivery`)}>
+            Delhivery Shipping
+          </button>
         </div>
       </div>
       
@@ -181,6 +184,15 @@ export default function AdminTenant() {
             <div>
               <strong>Manage Banners</strong>
               <span>Upload home hero images, titles, and CTAs.</span>
+            </div>
+            <b>→</b>
+          </button>
+
+          <button type="button" className={styles.actionCard} onClick={() => navigate(`/admin/tenants/${tenant.tenantId}/shipping/delhivery`)}>
+            <div className={styles.actionIcon}>⬡</div>
+            <div>
+              <strong>Delhivery Shipping</strong>
+              <span>Connect API token and register pickup location.</span>
             </div>
             <b>→</b>
           </button>

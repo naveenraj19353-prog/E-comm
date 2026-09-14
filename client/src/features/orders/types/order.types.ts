@@ -33,6 +33,15 @@ export interface OrderCustomer {
     email?: string;
 }
 
+export interface OrderCourier {
+    provider?: string;
+    waybill?: string;
+    trackingUrl?: string;
+    labelUrl?: string;
+    pickupLocation?: string;
+    shippedAt?: string;
+}
+
 export interface Order {
     orderId: string;
     razorpayOrderId?: string;
@@ -43,10 +52,13 @@ export interface Order {
     shipping?: number;
     totalAmount: number;
     paymentStatus?: string;
+    paymentMethod?: string;
+    deliveryMethod?: string;
     orderStatus?: OrderStatus;
     address?: OrderAddress | null;
     addressId?: string | null;
     customer?: OrderCustomer;
+    courier?: OrderCourier | null;
     createdAt?: string;
     updatedAt?: string;
 }

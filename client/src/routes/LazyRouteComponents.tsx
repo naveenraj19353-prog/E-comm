@@ -30,6 +30,9 @@ export const BulkProductImport = lazy(() => import("../features/admin/pages/Bulk
 export const AdminTenantOrders = lazy(() => import("../features/admin/pages/AdminTenantOrders"));
 export const AdminOrderDetail = lazy(() => import("../features/admin/pages/AdminOrderDetail"));
 export const AdminTenantBanners = lazy(() => import("../features/admin/pages/AdminTenantBanners"));
+export const DelhiverySettingsPage = lazy(
+    () => import("../features/admin/pages/DelhiverySettingsPage"),
+);
 export const ThemeCustomizer = lazy(() => import("../pages/ThemeCustomizer/ThemeCustomizer"));
 export const NotFound = lazy(() => import("../pages/NotFound"));
 export const Welcome = lazy(() => import("../pages/Welcome"));

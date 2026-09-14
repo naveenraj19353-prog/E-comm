@@ -15,6 +15,7 @@ import {
     AdminTenantProducts,
     AdminTenantBanners,
     AdminTenants,
+    DelhiverySettingsPage,
     BulkProductImport,
     Cart,
     Checkout,
@@ -196,6 +197,10 @@ const adminRoutes = [
                     {
                         path: ":tenantId/banners",
                         element: <AdminTenantBanners />,
+                    },
+                    {
+                        path: ":tenantId/shipping/delhivery",
+                        element: <DelhiverySettingsPage />,
                     },
                 ],
             },

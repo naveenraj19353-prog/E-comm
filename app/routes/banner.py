@@ -18,6 +18,15 @@ from app.routes.response_metadata import (
     NOT_FOUND_RESPONSE,
 )
 from app.utils.auth_dependencies import admin_tenant_id, require_admin
+from app.utils.product_serialize import resolve_banner_images
+
+
+def _serialize_banner(banner: dict) -> dict:
+    data = dict(banner)
+    if "_id" in data:
+        data["_id"] = str(data["_id"])
+    return resolve_banner_images(data)
+
 
 router = APIRouter(
     prefix="/banner",
@@ -129,12 +138,7 @@ def get_banners(
         )
         data = []
         for banner in banner_list:
-            banner["_id"] = str(
-                banner["_id"]
-            )
-            data.append(
-                banner
-            )
+            data.append(_serialize_banner(banner))
         return {
             "success": True,
             "data": data,
@@ -218,12 +222,7 @@ def get_active_banners(
         )
         data = []
         for banner in banner_list:
-            banner["_id"] = str(
-                banner["_id"]
-            )
-            data.append(
-                banner
-            )
+            data.append(_serialize_banner(banner))
         return {
             "success": True,
             "data": data,
@@ -322,15 +321,10 @@ def update_banner(
                 ),
             }
         )
-        updated_banner[
-            "_id"
-        ] = str(
-            updated_banner["_id"]
-        )
         return {
             "success": True,
             "message": "Banner updated successfully.",
-            "data": updated_banner,
+            "data": _serialize_banner(updated_banner or {}),
         }
     except HTTPException:
         raise

@@ -28,6 +28,7 @@ from app.routes.upload import router as upload_router
 from app.routes.tenant import router as tenant_router
 from app.routes.super_admin import router as super_admin_router
 from app.routes.og import router as og_router
+from app.routes.delhivery import router as delhivery_router
 
 logger = logging.getLogger(__name__)
 
@@ -72,6 +73,7 @@ app.include_router(upload_router)
 app.include_router(tenant_router)
 app.include_router(super_admin_router)
 app.include_router(og_router)
+app.include_router(delhivery_router)
 
 
 def _database_status() -> tuple[str, str | None]:

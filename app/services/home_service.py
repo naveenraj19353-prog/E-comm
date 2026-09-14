@@ -4,7 +4,7 @@ from app.database.mongo import (
     banners,
 )
 from app.utils.category_catalog import get_catalog_categories
-from app.utils.product_serialize import serialize_product
+from app.utils.product_serialize import resolve_banner_images, serialize_product
 
 
 def get_products_by_cursor(cursor):
@@ -201,8 +201,9 @@ def get_home_data(
     )
     banner_data = []
     for banner in banner_cursor:
-        banner["_id"] = str(banner["_id"])
-        banner_data.append(banner)
+        item = dict(banner)
+        item["_id"] = str(item["_id"])
+        banner_data.append(resolve_banner_images(item))
 
 
     return {

@@ -338,13 +338,18 @@ def _checkout_totals(
     subtotal: float,
     discount: float,
     delivery_method: str,
+    *,
+    shipping_override: float | None = None,
 ) -> tuple[str, float, float]:
     normalized_delivery = (
         delivery_method
         if delivery_method in {"standard", "express"}
         else "standard"
     )
-    shipping = calculate_shipping(subtotal, normalized_delivery)
+    if shipping_override is not None:
+        shipping = round(float(shipping_override), 2)
+    else:
+        shipping = calculate_shipping(subtotal, normalized_delivery)
     net_subtotal = max(subtotal - discount, 0)
     grand_total = round(net_subtotal + shipping, 2)
     if grand_total <= 0:
@@ -353,6 +358,78 @@ def _checkout_totals(
             detail="Invalid checkout amount.",
         )
     return normalized_delivery, shipping, grand_total
+
+
+def _delhivery_shipping(
+    tenant_id: str,
+    address: dict | None,
+    delivery_method: str,
+) -> tuple[float | None, list[dict], dict]:
+    """Return (selected_fee, options, meta). fee None => use legacy calc."""
+    from app.services.delhivery_service import DelhiveryError, DelhiveryService
+    from app.services.shipping_context import get_active_delhivery_context
+
+    ctx = get_active_delhivery_context(tenant_id)
+    if not ctx:
+        return None, [], {"provider": None, "serviceable": None}
+
+    dest_pin = "".join(
+        ch for ch in str((address or {}).get("postalCode") or "") if ch.isdigit()
+    )
+    if len(dest_pin) != 6:
+        # Address not ready yet — keep legacy fee until pin is known.
+        return None, [], {
+            "provider": "delhivery",
+            "serviceable": None,
+            "message": "Select a delivery address to calculate Delhivery rates.",
+        }
+
+    service = DelhiveryService()
+    try:
+        serviceability = service.check_small_parcel_serviceability(tenant_id, dest_pin)
+    except DelhiveryError as error:
+        raise HTTPException(
+            status_code=400,
+            detail=str(error) or "Unable to check delivery for this pincode.",
+        ) from error
+
+    if not serviceability.get("serviceable"):
+        raise HTTPException(
+            status_code=400,
+            detail="Delhivery does not deliver to this pincode.",
+        )
+
+    try:
+        options = service.get_checkout_rate_options(
+            tenant_id,
+            origin_pin=ctx["originPin"],
+            destination_pin=dest_pin,
+        )
+    except DelhiveryError:
+        options = []
+
+    if not options:
+        # Connected but rates unavailable — fall back to legacy fees.
+        return None, [], {
+            "provider": "delhivery",
+            "serviceable": True,
+            "message": "Using standard shipping fees (rate quote unavailable).",
+        }
+
+    normalized = (
+        delivery_method if delivery_method in {"standard", "express"} else "standard"
+    )
+    selected = next((opt for opt in options if opt.get("id") == normalized), options[0])
+    return (
+        float(selected["shippingCost"]),
+        options,
+        {
+            "provider": "delhivery",
+            "serviceable": True,
+            "originPin": ctx["originPin"],
+            "destinationPin": dest_pin,
+        },
+    )
 
 
 def calculate_checkout(
@@ -371,16 +448,22 @@ def calculate_checkout(
         coupon_code,
         subtotal,
     )
-    normalized_delivery, shipping, grand_total = _checkout_totals(
-        subtotal,
-        discount,
-        delivery_method,
-    )
     address = resolve_shipping_address(
         tenant_id,
         user_id,
         address_id=address_id,
         required=require_address,
+    )
+    shipping_override, shipping_options, shipping_meta = _delhivery_shipping(
+        tenant_id,
+        address,
+        delivery_method,
+    )
+    normalized_delivery, shipping, grand_total = _checkout_totals(
+        subtotal,
+        discount,
+        delivery_method,
+        shipping_override=shipping_override,
     )
     return {
         "items": items,
@@ -391,4 +474,7 @@ def calculate_checkout(
         "grandTotal": grand_total,
         "deliveryMethod": normalized_delivery,
         "address": address,
+        "shippingProvider": shipping_meta.get("provider"),
+        "shippingOptions": shipping_options,
+        "shippingMeta": shipping_meta,
     }
