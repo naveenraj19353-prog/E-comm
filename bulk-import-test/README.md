@@ -5,7 +5,7 @@ Use this folder to test bulk product upload.
 ## Prerequisites
 
 - Backend running
-- Tenant **shopsphere** with the required categories already configured
+- Tenant **your-store** with the required categories already configured
 - Admin login
 
 ## Files
@@ -18,7 +18,7 @@ Use this folder to test bulk product upload.
 
 ## Test steps
 
-1. Open **Admin → Tenants → shopsphere → Products → Bulk Import**
+1. Open **Admin → Tenants → your-store → Products → Bulk Import**
 2. Upload **test-products.xlsx**
 3. Upload **test-images.zip** (or choose the **images** folder)
 4. Check preview: 2 products, images resolved for Black + Blue

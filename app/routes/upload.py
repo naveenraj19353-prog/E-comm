@@ -24,7 +24,7 @@ async def upload_image_file(
     Upload an image to S3.
 
     Example:
-    POST /upload/image?tenantId=shopsphere&folder=products
+    POST /upload/image?tenantId=your-store&folder=products
     """
 
     tenant_id = admin_tenant_id(

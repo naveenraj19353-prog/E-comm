@@ -1,7 +1,7 @@
 User-agent: *
 Allow: /
 Allow: /create-store
-Allow: /shopsphere
+Allow: /your-store
 
 Disallow: /admin
 Disallow: /admin/

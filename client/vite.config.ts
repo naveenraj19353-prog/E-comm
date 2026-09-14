@@ -21,7 +21,7 @@ export default defineConfig(({ mode }) => {
         plugins: [react(), productOgDevPlugin(proxyTarget)],
         server: {
             proxy: apiProxy,
-            // Allow shopsphere.localhost:5173 for local subdomain testing
+            // Allow your-store.localhost:5173 for local subdomain testing
             allowedHosts: [".localhost", "localhost"],
         },
         preview: { proxy: apiProxy },

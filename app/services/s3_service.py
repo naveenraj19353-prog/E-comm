@@ -127,7 +127,7 @@ def upload_image(
     Upload an image to S3 and return object key + temporary URL.
 
     Example key:
-    tenants/shopsphere/products/uuid.jpg
+    tenants/your-store/products/uuid.jpg
     """
     if folder not in ALLOWED_FOLDERS:
         raise ValueError(

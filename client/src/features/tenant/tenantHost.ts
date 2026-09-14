@@ -18,9 +18,9 @@ function normalizeHost(hostname?: string): string {
 }
 
 /**
- * shopsphere.retailcosmos.com → "shopsphere"
+ * your-store.retailcosmos.com → "your-store"
  * www.retailcosmos.com / retailcosmos.com / netlify → null
- * shopsphere.localhost → "shopsphere" (local subdomain testing)
+ * your-store.localhost → "your-store" (local subdomain testing)
  */
 export function getTenantSlugFromHostname(hostname?: string): string | null {
     const host = normalizeHost(hostname);
@@ -92,7 +92,7 @@ export function getStorefrontOrigin(slug: string, hostname?: string): string {
 
     const protocol = window.location.protocol === "http:" ? "http:" : "https:";
     const root = getRootDomain();
-    // Local subdomain testing: shopsphere.localhost:5173
+    // Local subdomain testing: your-store.localhost:5173
     if (normalizeHost(hostname) === "localhost" || normalizeHost(hostname).endsWith(".localhost")) {
         const port = window.location.port ? `:${window.location.port}` : "";
         return `${protocol}//${cleanSlug}.localhost${port}`;
@@ -118,7 +118,7 @@ export function getStorefrontHref(slug: string, path = "/"): string {
     return `/${cleanSlug}${suffix}`;
 }
 
-/** Display label for admin UI, e.g. shopsphere.retailcosmos.com */
+/** Display label for admin UI, e.g. your-store.retailcosmos.com */
 export function formatStorefrontHost(slug: string): string {
     const cleanSlug = (slug || "your-store").trim().toLowerCase() || "your-store";
     if (shouldUseSubdomainStorefrontUrls()) {

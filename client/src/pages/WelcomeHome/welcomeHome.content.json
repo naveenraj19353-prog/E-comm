@@ -24,7 +24,7 @@
     ],
     "lead": "",
     "primaryCta": { "label": "Create your store", "href": "/create-store" },
-    "secondaryCta": { "label": "Open live demo", "href": "/shopsphere" },
+    "secondaryCta": { "label": "Open live demo", "href": "/your-store" },
     "image": "/images/welcome/banner/slide-01.png?v=6",
     "images": [
       "/images/welcome/banner/slide-01.png?v=6",
@@ -58,7 +58,7 @@
     "titleLine2": "Every way you sell.",
     "lead": "Add your products once. Manage inventory, orders, customers and fulfilment from one place — and sell across your online store, social channels, marketplaces, POS and more.",
     "primaryCta": { "label": "Start Your Store", "href": "/create-store" },
-    "secondaryCta": { "label": "Open live demo", "href": "/shopsphere" },
+    "secondaryCta": { "label": "Open live demo", "href": "/your-store" },
     "trust": [
       { "icon": "building", "label": "Built for growing businesses" },
       { "icon": "zap", "label": "Go live in days, not months" },
@@ -131,7 +131,7 @@
       {
         "title": "Explore",
         "links": [
-          { "label": "Live demo", "href": "/shopsphere" },
+          { "label": "Live demo", "href": "/your-store" },
           { "label": "Studio", "href": "#studio" },
           { "label": "Create store", "href": "/create-store" }
         ]

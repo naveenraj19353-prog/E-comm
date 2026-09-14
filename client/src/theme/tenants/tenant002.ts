@@ -1,7 +1,7 @@
 export const themes = {
     tenant001: {
         tenantId: "tenant001",
-        name: "ShopSphere",
+        name: "Your Store",
         colors: {
             primary: "#2f6b52",
             secondary: "#4c8a6d",
