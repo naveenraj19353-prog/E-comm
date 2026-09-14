@@ -255,6 +255,71 @@
   font-weight: 600;
 }
 
+.cancelledBanner {
+  margin-bottom: 1.25rem;
+  padding: 0.875rem 1rem;
+  border: 0.0625rem solid #f1d0d0;
+  border-radius: 0.75rem;
+  background: #fff6f6;
+  color: #b23f3f;
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.courierCard {
+  margin-bottom: 1.25rem;
+  padding: 1rem 1.1rem;
+  border: 0.0625rem solid #e3ebe6;
+  border-radius: 0.85rem;
+  background: #fbfcfa;
+}
+
+.courierHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.courierHeader h2 {
+  margin: 0.15rem 0 0;
+  color: #17211d;
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.courierActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.courierMeta {
+  margin: 0.75rem 0 0;
+  color: #5a6761;
+  font-size: 0.85rem;
+}
+
+.courierMessage {
+  margin: 0.55rem 0 0;
+  color: #234837;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.trackLink {
+  color: #2f6b52;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.trackLink:hover {
+  text-decoration: underline;
+}
+
 .state {
   display: flex;
   flex-direction: column;

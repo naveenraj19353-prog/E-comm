@@ -31,6 +31,18 @@ export interface CheckoutPreviewData {
     shipping: number;
     grandTotal: number;
     deliveryMethod: DeliveryMethodType;
+    shippingProvider?: string | null;
+    shippingOptions?: Array<{
+        id: DeliveryMethodType;
+        mode: string;
+        estimatedDays: number;
+        shippingCost: number;
+    }>;
+    shippingMeta?: {
+        provider?: string | null;
+        serviceable?: boolean | null;
+        message?: string;
+    };
 }
 
 export interface CheckoutPreviewResponse {

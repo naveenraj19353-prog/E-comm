@@ -127,6 +127,20 @@ export const API_ENDPOINTS = {
         delete: (bannerId: string) => `/banner/delete/${bannerId}`,
     },
 
+    DELHIVERY: {
+        SETTINGS: "/shipping/delhivery/settings",
+        TEST: "/shipping/delhivery/test",
+        SERVICEABILITY: "/shipping/delhivery/serviceability",
+        SERVICEABILITY_HEAVY: "/shipping/delhivery/serviceability/heavy",
+        WAREHOUSE: "/shipping/delhivery/warehouse",
+        WAYBILLS: "/shipping/delhivery/waybills",
+        RATE: "/shipping/delhivery/rate",
+        SHIPMENTS: "/shipping/delhivery/shipments",
+        PICKUP: "/shipping/delhivery/pickup",
+        track: (awb: string) => `/shipping/delhivery/track/${awb}`,
+        label: (shipmentId: string) => `/shipping/delhivery/shipments/${shipmentId}/label`,
+    },
+
     SUPER_ADMIN: {
         DASHBOARD: "/super-admin/dashboard",
     },

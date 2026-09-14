@@ -334,9 +334,25 @@ def _serialize_order(order: dict, customer: dict | None = None) -> dict:
         "orderStatus": order.get("orderStatus"),
         "address": address_payload,
         "addressId": address_id,
+        "paymentMethod": order.get("paymentMethod"),
+        "deliveryMethod": order.get("deliveryMethod"),
+        "courier": _serialize_courier(order.get("courier")),
         "createdAt": order.get("createdAt"),
         "updatedAt": order.get("updatedAt"),
     }
     if customer:
         payload["customer"] = customer
     return payload
+
+
+def _serialize_courier(courier) -> dict | None:
+    if not isinstance(courier, dict):
+        return None
+    return {
+        "provider": courier.get("provider"),
+        "waybill": courier.get("waybill"),
+        "trackingUrl": courier.get("trackingUrl"),
+        "labelUrl": courier.get("labelUrl"),
+        "pickupLocation": courier.get("pickupLocation"),
+        "shippedAt": courier.get("shippedAt"),
+    }

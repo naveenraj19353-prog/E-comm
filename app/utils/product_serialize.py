@@ -131,3 +131,18 @@ def serialize_product(product: dict) -> dict:
     images = normalize_product_images(product.get("images", {}))
     product["images"] = images
     return product
+
+
+def resolve_banner_images(banner: dict) -> dict:
+    """Resolve S3 keys on banner image fields to temporary URLs."""
+    data = dict(banner)
+    for field in ("image", "mobileImage"):
+        raw = data.get(field)
+        if not isinstance(raw, str) or not raw.strip():
+            continue
+        try:
+            resolved = _resolve_image_for_response(raw.strip())
+        except Exception:
+            resolved = raw.strip()
+        data[field] = resolved or raw.strip()
+    return data

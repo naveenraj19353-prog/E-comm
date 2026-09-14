@@ -50,6 +50,22 @@ S3_REGION = _env("S3_REGION") or "eu-north-1"
 AWS_ACCESS_KEY_ID = _env("AWS_ACCESS_KEY_ID")
 AWS_SECRET_ACCESS_KEY = _env("AWS_SECRET_ACCESS_KEY")
 
+# Delhivery One — host only (no tenant tokens here).
+# staging → staging-express; production/live → track.delhivery.com
+DELHIVERY_ENV = (_env("DELHIVERY_ENV") or "staging").lower()
+_DELHIVERY_HOSTS = {
+    "staging": "https://staging-express.delhivery.com",
+    "production": "https://track.delhivery.com",
+    "live": "https://track.delhivery.com",
+}
+DELHIVERY_BASE_URL = (
+    _env("DELHIVERY_BASE_URL")
+    or _DELHIVERY_HOSTS.get(DELHIVERY_ENV)
+    or _DELHIVERY_HOSTS["staging"]
+).rstrip("/")
+# Optional dedicated key for Fernet; falls back to SECRET_KEY-derived key.
+TOKEN_ENCRYPTION_KEY = _env("TOKEN_ENCRYPTION_KEY")
+
 # Local Windows sometimes fails CA verification (corporate proxy/AV).
 # Keep true in production/EC2. Set S3_VERIFY_SSL=false only for local debugging.
 _s3_verify = (_env("S3_VERIFY_SSL") or "true").lower()

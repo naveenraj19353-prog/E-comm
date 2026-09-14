@@ -210,12 +210,32 @@ const Checkout = () => {
                 deliveryMethod,
             });
 
+            // Checkout.js expects a method map, not a string like "upi".
             const razorpayMethod =
                 paymentMethod === "card"
-                    ? "card"
+                    ? { card: true, upi: false, netbanking: false, wallet: false }
                     : paymentMethod === "netbanking"
-                      ? "netbanking"
-                      : "upi";
+                      ? {
+                            card: false,
+                            upi: false,
+                            netbanking: true,
+                            wallet: false,
+                        }
+                      : {
+                            card: false,
+                            upi: true,
+                            netbanking: false,
+                            wallet: false,
+                        };
+
+            const contactDigits = String(selectedAddress.phone || "").replace(
+                /\D/g,
+                "",
+            );
+            const contact =
+                contactDigits.length === 12 && contactDigits.startsWith("91")
+                    ? contactDigits.slice(2)
+                    : contactDigits.slice(-10);
 
             const options = {
                 key: RAZORPAY_KEY_ID,
@@ -227,12 +247,12 @@ const Checkout = () => {
                 method: razorpayMethod,
                 prefill: {
                     name: selectedAddress.fullName,
-                    contact: selectedAddress.phone,
+                    contact: contact || undefined,
                 },
                 notes: {
                     tenantId: user.tenantId,
                     userId: user._id,
-                } as unknown as string,
+                },
                 theme: {
                     color: "#2f6b52",
                 },
@@ -323,6 +343,8 @@ const Checkout = () => {
                             <DeliveryMethod
                                 subtotal={summary.subtotal}
                                 selectedMethod={deliveryMethod}
+                                shippingOptions={checkoutPreview?.shippingOptions}
+                                shippingProvider={checkoutPreview?.shippingProvider}
                                 onDeliveryChange={handleDeliveryChange}
                             />
                             <CouponSection

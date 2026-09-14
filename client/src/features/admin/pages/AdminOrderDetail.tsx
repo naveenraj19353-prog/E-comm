@@ -1,5 +1,7 @@
 import { useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
+import axios from "axios";
 import {
     useAdminOrderDetail,
     useAdminOrders,
@@ -11,6 +13,11 @@ import {
     orderStatusLabel,
 } from "../../orders/api/order.api";
 import type { OrderStatus } from "../../orders/types/order.types";
+import {
+    createDelhiveryShipment,
+    requestDelhiveryPickup,
+    trackDelhiveryAwb,
+} from "../api/delhivery.api";
 import PageLoader from "../../../components/PageLoader";
 import styles from "../styles/AdminOrderDetail.module.css";
 
@@ -39,38 +46,44 @@ const nextActions: Partial<
     ],
 };
 
+function errMsg(err: unknown, fallback: string) {
+    if (!axios.isAxiosError(err)) return fallback;
+    const detail = err.response?.data?.detail;
+    if (typeof detail === "string") return detail;
+    if (detail && typeof detail === "object" && "message" in detail) {
+        return String((detail as { message?: string }).message || fallback);
+    }
+    return fallback;
+}
+
 export default function AdminOrderDetail() {
     const { tenantId = "", orderId = "" } = useParams();
     const navigate = useNavigate();
+    const queryClient = useQueryClient();
     const [isUpdating, setIsUpdating] = useState(false);
+    const [isShipping, setIsShipping] = useState(false);
+    const [isPickup, setIsPickup] = useState(false);
+    const [shipMessage, setShipMessage] = useState("");
+    const [trackInfo, setTrackInfo] = useState("");
     const { data: order, isLoading, isError } = useAdminOrderDetail(orderId, tenantId);
     const { updateOrderStatus } = useAdminOrders(tenantId);
 
     const status = order?.orderStatus || "confirmed";
 
     const actions = useMemo(() => {
-        if (!order?.orderStatus) {
-            return [];
-        }
+        if (!order?.orderStatus) return [];
         return nextActions[order.orderStatus] || [];
     }, [order?.orderStatus]);
 
     const activeStepIndex = useMemo(() => {
-        if (status === "cancelled") {
-            return -1;
-        }
+        if (status === "cancelled") return -1;
         return STATUS_STEPS.indexOf(status);
     }, [status]);
 
     const handleStatusUpdate = async (orderStatus: OrderStatus) => {
-        if (!order) {
-            return;
-        }
+        if (!order) return;
         if (orderStatus === "cancelled") {
-            const confirmed = window.confirm("Cancel this order? Stock will be restored.");
-            if (!confirmed) {
-                return;
-            }
+            if (!window.confirm("Cancel this order? Stock will be restored.")) return;
         }
         setIsUpdating(true);
         try {
@@ -80,9 +93,58 @@ export default function AdminOrderDetail() {
         }
     };
 
-    if (isLoading) {
-        return <PageLoader message="Loading order..." />;
-    }
+    const handleShip = async () => {
+        if (!order) return;
+        setIsShipping(true);
+        setShipMessage("");
+        try {
+            const result = await createDelhiveryShipment(tenantId, order.orderId);
+            setShipMessage(
+                `${result.message || "Shipped"} · AWB ${result.data.awb}`,
+            );
+            await queryClient.invalidateQueries({
+                queryKey: ["orders", "admin", "detail", tenantId, orderId],
+            });
+        } catch (err) {
+            setShipMessage(errMsg(err, "Could not create Delhivery shipment."));
+        } finally {
+            setIsShipping(false);
+        }
+    };
+
+    const handleTrack = async () => {
+        const awb = order?.courier?.waybill;
+        if (!awb) return;
+        try {
+            const data = await trackDelhiveryAwb(tenantId, awb);
+            setTrackInfo(
+                [data.status || "Status unknown", data.location].filter(Boolean).join(" · "),
+            );
+        } catch (err) {
+            setTrackInfo(errMsg(err, "Tracking failed."));
+        }
+    };
+
+    const handlePickup = async () => {
+        setIsPickup(true);
+        setShipMessage("");
+        try {
+            const result = await requestDelhiveryPickup(tenantId, {});
+            setShipMessage(
+                `${result.message || "Pickup requested"}`
+                + (result.data.pickupId ? ` · pickup ${result.data.pickupId}` : "")
+                + (result.data.expectedPackageCount
+                    ? ` · ${result.data.expectedPackageCount} package(s)`
+                    : ""),
+            );
+        } catch (err) {
+            setShipMessage(errMsg(err, "Pickup request failed."));
+        } finally {
+            setIsPickup(false);
+        }
+    };
+
+    if (isLoading) return <PageLoader message="Loading order..." />;
 
     if (isError || !order) {
         return (
@@ -98,6 +160,11 @@ export default function AdminOrderDetail() {
             </div>
         );
     }
+
+    const canShip =
+        !order.courier?.waybill &&
+        status !== "cancelled" &&
+        status !== "delivered";
 
     return (
         <div className={styles.page}>
@@ -138,8 +205,8 @@ export default function AdminOrderDetail() {
                                         action.status === "cancelled"
                                             ? styles.cancelButton
                                             : action.primary
-                                                ? styles.primaryButton
-                                                : styles.actionButton
+                                              ? styles.primaryButton
+                                              : styles.actionButton
                                     }
                                     disabled={isUpdating}
                                     onClick={() => handleStatusUpdate(action.status)}
@@ -170,11 +237,77 @@ export default function AdminOrderDetail() {
                 </div>
             )}
 
-            {status === "cancelled" && (
-                <div className={styles.cancelledBanner}>
-                    This order was cancelled. Stock has been restored.
+            <section className={styles.courierCard}>
+                <div className={styles.courierHeader}>
+                    <div>
+                        <span className={styles.eyebrow}>DELHIVERY</span>
+                        <h2>Shipment</h2>
+                    </div>
+                    <div className={styles.courierActions}>
+                        {canShip ? (
+                            <button
+                                type="button"
+                                className={styles.primaryButton}
+                                disabled={isShipping}
+                                onClick={handleShip}
+                            >
+                                {isShipping ? "Creating..." : "Ship with Delhivery"}
+                            </button>
+                        ) : null}
+                        {order.courier?.waybill ? (
+                            <button
+                                type="button"
+                                className={styles.actionButton}
+                                onClick={handleTrack}
+                            >
+                                Refresh tracking
+                            </button>
+                        ) : null}
+                        {order.courier?.waybill ? (
+                            <button
+                                type="button"
+                                className={styles.primaryButton}
+                                disabled={isPickup}
+                                onClick={handlePickup}
+                            >
+                                {isPickup ? "Requesting..." : "Request pickup"}
+                            </button>
+                        ) : null}
+                        {order.courier?.trackingUrl ? (
+                            <a
+                                className={styles.trackLink}
+                                href={order.courier.trackingUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                            >
+                                Open tracking
+                            </a>
+                        ) : null}
+                        {order.courier?.labelUrl ? (
+                            <a
+                                className={styles.trackLink}
+                                href={order.courier.labelUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                            >
+                                Packing slip
+                            </a>
+                        ) : null}
+                    </div>
                 </div>
-            )}
+                {order.courier?.waybill ? (
+                    <p className={styles.courierMeta}>
+                        AWB <strong>{order.courier.waybill}</strong>
+                    </p>
+                ) : (
+                    <p className={styles.courierMeta}>
+                        No AWB yet. Creates a Delhivery shipment using the shop pickup
+                        location and this order&apos;s address.
+                    </p>
+                )}
+                {shipMessage ? <p className={styles.courierMessage}>{shipMessage}</p> : null}
+                {trackInfo ? <p className={styles.courierMessage}>{trackInfo}</p> : null}
+            </section>
 
             <OrderDetailContent
                 order={order}

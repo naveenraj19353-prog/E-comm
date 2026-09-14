@@ -19,12 +19,21 @@ export interface DeliveryOption {
 interface DeliveryMethodProps {
     subtotal?: number;
     selectedMethod?: DeliveryMethodType;
+    shippingOptions?: Array<{
+        id: DeliveryMethodType;
+        mode: string;
+        estimatedDays: number;
+        shippingCost: number;
+    }>;
+    shippingProvider?: string | null;
     onDeliveryChange?: (option: DeliveryOption) => void;
 }
 
 const DeliveryMethod = ({
     subtotal = 0,
     selectedMethod = "standard",
+    shippingOptions,
+    shippingProvider,
     onDeliveryChange,
 }: DeliveryMethodProps) => {
     const [selectedId, setSelectedId] = useState<DeliveryMethodType>(selectedMethod);
@@ -34,6 +43,19 @@ const DeliveryMethod = ({
     }, [selectedMethod]);
 
     const deliveryOptions = useMemo((): DeliveryOption[] => {
+        if (shippingProvider === "delhivery" && shippingOptions?.length) {
+            return shippingOptions.map((opt) => ({
+                id: opt.id,
+                name: opt.mode === "Express" ? "Express Delivery" : "Standard Delivery",
+                description:
+                    opt.id === "express"
+                        ? "Faster Delhivery Express service."
+                        : "Delhivery Surface delivery.",
+                estimatedTime: `${opt.estimatedDays} business days`,
+                price: opt.shippingCost,
+            }));
+        }
+
         const baseShipping =
             subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : STANDARD_SHIPPING_FEE;
         const standardDescription =
@@ -57,7 +79,7 @@ const DeliveryMethod = ({
                 price: baseShipping + EXPRESS_DELIVERY_FEE,
             },
         ];
-    }, [subtotal]);
+    }, [subtotal, shippingOptions, shippingProvider]);
 
     const handleSelect = (option: DeliveryOption) => {
         setSelectedId(option.id);
@@ -70,7 +92,11 @@ const DeliveryMethod = ({
                 <div>
                     <span className={styles.eyebrow}>DELIVERY</span>
                     <h2>Choose delivery method</h2>
-                    <p>Select how you would like to receive your order.</p>
+                    <p>
+                        {shippingProvider === "delhivery"
+                            ? "Live Delhivery rates for your delivery pincode."
+                            : "Select how you would like to receive your order."}
+                    </p>
                 </div>
             </div>
             <div className={styles.options}>
@@ -101,14 +127,8 @@ const DeliveryMethod = ({
                                 </div>
                                 <p>{option.description}</p>
                                 <span className={styles.estimated}>
-                                    <Clock size={14} />
-                                    {option.estimatedTime}
+                                    <Check size={14} /> {option.estimatedTime}
                                 </span>
-                            </div>
-                            <div
-                                className={`${styles.radio} ${isSelected ? styles.radioSelected : ""}`}
-                            >
-                                {isSelected && <Check size={13} />}
                             </div>
                         </button>
                     );

@@ -1,9 +1,12 @@
 from pymongo import ASCENDING, IndexModel
 from app.database.mongo import (
+    carts,
     orders,
     payment_intents,
+    shipping_integrations,
+    shipping_locations,
+    shipments,
     users,
-    carts,
 )
 
 
@@ -54,6 +57,37 @@ def ensure_indexes() -> None:
             IndexModel(
                 [("tenantId", ASCENDING), ("userId", ASCENDING)],
                 name="carts_tenant_user",
+            ),
+        ]
+    )
+    shipping_integrations.create_indexes(
+        [
+            IndexModel(
+                [("tenantId", ASCENDING), ("provider", ASCENDING)],
+                unique=True,
+                name="shipping_integrations_tenant_provider_unique",
+            ),
+        ]
+    )
+    shipping_locations.create_indexes(
+        [
+            IndexModel(
+                [("tenantId", ASCENDING), ("provider", ASCENDING), ("name", ASCENDING)],
+                unique=True,
+                name="shipping_locations_tenant_provider_name_unique",
+            ),
+        ]
+    )
+    shipments.create_indexes(
+        [
+            IndexModel(
+                [("tenantId", ASCENDING), ("orderId", ASCENDING), ("provider", ASCENDING)],
+                unique=True,
+                name="shipments_tenant_order_provider_unique",
+            ),
+            IndexModel(
+                [("tenantId", ASCENDING), ("awb", ASCENDING)],
+                name="shipments_tenant_awb",
             ),
         ]
     )
