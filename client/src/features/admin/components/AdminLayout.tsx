@@ -95,6 +95,14 @@ export default function AdminLayout() {
                 <span>⧉</span>
                 Orders
             </NavLink>)}
+
+          {isAdmin &&
+            user.tenantId && (<NavLink to={`/admin/tenants/${user.tenantId}/banners`} className={({ isActive }) => `${styles.navItem} ${isActive
+                ? styles.active
+                : ""}`}>
+                <span>▣</span>
+                Banners
+            </NavLink>)}
           
           {isAdmin &&
             user.tenantId && (<NavLink to={`/admin/tenants/${user.tenantId}`} className={({ isActive }) => `${styles.navItem} ${isActive

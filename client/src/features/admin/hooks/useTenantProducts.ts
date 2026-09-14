@@ -14,6 +14,7 @@ export interface CreateProductPayload {
     name: string;
     description: string;
     categoryId: string;
+    brand?: string;
     basePrice?: number;
     marginPercentage?: number;
     price: number;
@@ -30,6 +31,7 @@ export interface UpdateProductPayload {
     name: string;
     description: string;
     categoryId: string;
+    brand?: string;
     price: number;
     discountPercentage: number;
     stock?: number;

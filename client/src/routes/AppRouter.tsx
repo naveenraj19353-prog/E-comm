@@ -13,6 +13,7 @@ import {
     AdminTenant,
     AdminTenantOrders,
     AdminTenantProducts,
+    AdminTenantBanners,
     AdminTenants,
     BulkProductImport,
     Cart,
@@ -191,6 +192,10 @@ const adminRoutes = [
                     {
                         path: ":tenantId/orders/:orderId",
                         element: <AdminOrderDetail />,
+                    },
+                    {
+                        path: ":tenantId/banners",
+                        element: <AdminTenantBanners />,
                     },
                 ],
             },

@@ -23,6 +23,7 @@ interface Product {
     name: string;
     description?: string;
     categoryId?: string;
+    brand?: string;
     price?: number;
     discountPercentage?: number;
     finalPrice?: number;
@@ -41,6 +42,7 @@ interface EditForm {
     name: string;
     description: string;
     categoryId: string;
+    brand: string;
     price: string;
     discountPercentage: string;
     stock: string;
@@ -118,6 +120,7 @@ export default function AdminTenantProducts() {
         name: "",
         description: "",
         categoryId: "",
+        brand: "",
         price: "",
         discountPercentage: "",
         stock: "",
@@ -290,6 +293,7 @@ export default function AdminTenantProducts() {
             name: product.name || "",
             description: product.description || "",
             categoryId: product.categoryId || "",
+            brand: product.brand || "",
             price: String(product.price ?? ""),
             discountPercentage: String(product.discountPercentage ?? ""),
             stock: String(product.totalStock ?? product.stock ?? ""),
@@ -650,6 +654,7 @@ export default function AdminTenantProducts() {
                     name: editForm.name.trim(),
                     description: editForm.description.trim(),
                     categoryId: editForm.categoryId.trim(),
+                    brand: editForm.brand.trim() || undefined,
                     price: Number(editForm.price),
                     discountPercentage: Number(editForm.discountPercentage),
                     inventory,
@@ -931,6 +936,13 @@ export default function AdminTenantProducts() {
                 ...editForm,
                 categoryId: event.target.value,
             })}/>
+              </div>
+              <div className={styles.formGroup}>
+                <label>Brand</label>
+                <input value={editForm.brand} onChange={(event) => setEditForm({
+                ...editForm,
+                brand: event.target.value,
+            })} placeholder="Example: Levi's"/>
               </div>
               <div className={`${styles.formGroup} ${styles.fullWidth}`}>
                 <label>Description</label>

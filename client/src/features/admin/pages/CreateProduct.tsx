@@ -25,6 +25,7 @@ export default function CreateProduct() {
     const [name, setName] = useState("");
     const [description, setDescription] = useState("");
     const [categoryId, setCategoryId] = useState("");
+    const [brand, setBrand] = useState("");
     const [basePrice, setBasePrice] = useState("");
     const [marginPercentage, setMarginPercentage] = useState("");
     const [discountPercentage, setDiscountPercentage] = useState("");
@@ -305,6 +306,7 @@ export default function CreateProduct() {
                 name: name.trim(),
                 description: description.trim(),
                 categoryId: categoryId.trim(),
+                brand: brand.trim() || undefined,
                 basePrice: Number(basePrice),
                 marginPercentage: Number(marginPercentage) || 0,
                 price: calculatedPrice,
@@ -406,6 +408,18 @@ export default function CreateProduct() {
               <input id="category" type="text" value={categoryId} onChange={(event) => setCategoryId(event.target.value)} placeholder="Example: WOMENS_FASHION"/>
 
               <small>Enter the category ID.</small>
+            </div>
+
+            <div className={styles.field}>
+              <label htmlFor="product-brand">Brand</label>
+              <input
+                id="product-brand"
+                type="text"
+                value={brand}
+                onChange={(event) => setBrand(event.target.value)}
+                placeholder="Example: Levi's, Tanishq, Nike"
+              />
+              <small>Optional. Used in storefront filters and product details.</small>
             </div>
 
             

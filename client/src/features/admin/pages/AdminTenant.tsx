@@ -50,6 +50,9 @@ export default function AdminTenant() {
           <button type="button" className={styles.ordersButton} onClick={() => navigate(`/admin/tenants/${tenant.tenantId}/orders`)}>
             Manage Orders
           </button>
+          <button type="button" className={styles.productsButton} onClick={() => navigate(`/admin/tenants/${tenant.tenantId}/banners`)}>
+            Manage Banners
+          </button>
         </div>
       </div>
       
@@ -169,6 +172,15 @@ export default function AdminTenant() {
             <div>
               <strong>Manage Products</strong>
               <span>View and manage products for this tenant.</span>
+            </div>
+            <b>→</b>
+          </button>
+
+          <button type="button" className={styles.actionCard} onClick={() => navigate(`/admin/tenants/${tenant.tenantId}/banners`)}>
+            <div className={styles.actionIcon}>▣</div>
+            <div>
+              <strong>Manage Banners</strong>
+              <span>Upload home hero images, titles, and CTAs.</span>
             </div>
             <b>→</b>
           </button>
