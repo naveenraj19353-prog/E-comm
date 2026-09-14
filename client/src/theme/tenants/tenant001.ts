@@ -1,6 +1,6 @@
 export default {
     tenantId: "TENANT001",
-    name: "ShopSphere",
+    name: "Your Store",
     colors: {
         primary: "#2563EB",
         secondary: "#3B82F6",

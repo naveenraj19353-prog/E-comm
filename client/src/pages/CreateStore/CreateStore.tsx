@@ -118,7 +118,7 @@ export default function CreateStore() {
               className={styles.input}
               value={name}
               onChange={(e) => handleNameChange(e.target.value)}
-              placeholder="ShopSphere"
+              placeholder="Your Store"
               autoComplete="organization"
               required
             />
@@ -132,7 +132,7 @@ export default function CreateStore() {
                 className={styles.input}
                 value={slug}
                 onChange={(e) => setSlug(normalizeTenantId(e.target.value))}
-                placeholder="shopsphere"
+                placeholder="your-store"
                 autoComplete="off"
                 required
               />

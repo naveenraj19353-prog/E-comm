@@ -40,7 +40,7 @@ class CreateProduct(BaseModel):
     Create product request.
     Example:
     {
-        "tenantId": "shopsphere",
+        "tenantId": "your-store",
         "name": "Levis Casual Top",
         "description": "...",
         "categoryId": "WOMENS_FASHION",
@@ -64,8 +64,8 @@ class CreateProduct(BaseModel):
         ],
         "images": {
             "Green": [
-                "tenants/shopsphere/products/uuid-1.jpg",
-                "tenants/shopsphere/products/uuid-2.jpg"
+                "tenants/your-store/products/uuid-1.jpg",
+                "tenants/your-store/products/uuid-2.jpg"
             ]
         }
     }
@@ -105,7 +105,7 @@ class CreateProduct(BaseModel):
         description=(
             "S3 object keys grouped by color. "
             "Example: "
-            '{"Green": ["tenants/shopsphere/products/uuid.jpg"]}'
+            '{"Green": ["tenants/your-store/products/uuid.jpg"]}'
         ),
     )
 
@@ -230,7 +230,7 @@ class VariantStockRequest(BaseModel):
     Request used to check stock for a particular variant.
     Example:
     {
-        "tenantId": "shopsphere",
+        "tenantId": "your-store",
         "variantId": "green-xl"
     }
     """

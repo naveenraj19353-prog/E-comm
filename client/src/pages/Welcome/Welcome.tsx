@@ -292,7 +292,7 @@ export default function Welcome() {
               <div className={styles.tabletBezel}>
                 <img
                   src={c.hero.tabletImage}
-                  alt="ShopSphere fashion storefront on tablet"
+                  alt="Your Store fashion storefront on tablet"
                 />
               </div>
             </div>
@@ -642,7 +642,7 @@ export default function Welcome() {
               <AppLink to="/create-store" className={styles.footerPrimary}>
                 Launch a store
               </AppLink>
-              <AppLink to="/shopsphere" className={styles.footerSecondary}>
+              <AppLink to="/your-store" className={styles.footerSecondary}>
                 Open demo store
               </AppLink>
             </div>

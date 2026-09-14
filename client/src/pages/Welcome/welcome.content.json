@@ -54,11 +54,11 @@
     "studioLabel": "Store layout studio",
     "tenants": [
       {
-        "id": "shopsphere",
-        "slug": "shopsphere",
-        "label": "SHOPSPHERE",
+        "id": "your-store",
+        "slug": "your-store",
+        "label": "YOUR-STORE",
         "category": "Fashion",
-        "url": "shopsphere.retailcosmos.com",
+        "url": "your-store.retailcosmos.com",
         "theme": "Premium Fashion",
         "stock": "14,300+ Products",
         "data": "Fully Isolated",
@@ -119,7 +119,7 @@
     },
     "stores": [
       {
-        "name": "ShopSphere",
+        "name": "Your Store",
         "tag": "Fashion",
         "live": true,
         "image": "/images/welcome/fashion-2.jpg"
@@ -151,7 +151,7 @@
     "promise": "Your data remains yours. Guaranteed.",
     "tenants": [
       {
-        "name": "ShopSphere",
+        "name": "Your Store",
         "tone": "violet",
         "items": ["Products", "Orders", "Customers", "Banners"]
       },
@@ -265,8 +265,8 @@
       {
         "id": "demo",
         "label": "Demo store",
-        "href": "/shopsphere",
-        "detail": "Browse ShopSphere live",
+        "href": "/your-store",
+        "detail": "Browse Your Store live",
         "tone": "secondary"
       }
     ],
