@@ -841,7 +841,7 @@ def _product_filter_parameters(
 def _product_listing_parameters(
     current_user: Annotated[dict | None, Depends(get_optional_user)],
     page: int = 1,
-    limit: int = 20,
+    limit: int = 12,
     sort_by: Annotated[str, Query(alias="sortBy")] = "createdAt",
     sort_order: Annotated[str, Query(alias="sortOrder")] = "desc",
     include_inactive: Annotated[bool, Query(alias="includeInactive")] = False,

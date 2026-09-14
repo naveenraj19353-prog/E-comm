@@ -13,11 +13,18 @@ export function useStorefrontProductActions(options: UseStorefrontProductActions
     const { trackAddingProductId = false } = options;
     const { tenantId: storeTenantId } = useStorefrontTenant();
     const user = useAppSelector((state) => state.auth.user);
+    const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
     const navigateToLogin = useNavigateToLogin();
-    const tenantId = user?.tenantId || storeTenantId;
-    const userId = user?._id ?? "";
-    const { addToCart } = useCart(userId, tenantId);
-    const { wishlist, addToWishlist, removeFromWishlist } = useWishlist(userId, tenantId);
+    const isCustomer =
+        isAuthenticated && user?.role === "customer" && Boolean(user._id);
+    const tenantId = isCustomer ? (user!.tenantId || storeTenantId || "") : "";
+    const userId = isCustomer ? user!._id : "";
+    const { addToCart } = useCart(userId, tenantId, { enabled: isCustomer });
+    const { wishlist, addToWishlist, removeFromWishlist } = useWishlist(
+        userId,
+        tenantId,
+        { enabled: isCustomer },
+    );
     const [addingProductId, setAddingProductId] = useState<string | null>(null);
 
     const ensureAuthenticated = useCallback(() => {

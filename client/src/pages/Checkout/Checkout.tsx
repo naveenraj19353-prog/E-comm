@@ -32,13 +32,14 @@ const Checkout = () => {
     const navigate = useNavigate();
     const queryClient = useQueryClient();
     const { Razorpay } = useRazorpay();
-    const { user } = useAuth();
-    const { tenantSlug } = useStorefrontTenant();
+    const { user, isAuthenticated } = useAuth();
+    const { tenantSlug, tenantId: storeTenantId } = useStorefrontTenant();
     const navigateToLogin = useNavigateToLogin();
-    const { cart, grandTotal, isLoading } = useCart(
-        user?._id as string,
-        user?.tenantId as string,
-    );
+    const isCustomer =
+        isAuthenticated && user?.role === "customer" && Boolean(user._id);
+    const cartUserId = isCustomer ? user!._id : "";
+    const cartTenantId = isCustomer ? (user!.tenantId || storeTenantId || "") : "";
+    const { cart, grandTotal, isLoading } = useCart(cartUserId, cartTenantId);
     const { createOrder, verifyPayment, isCreatingOrder, isVerifyingPayment } =
         usePayment();
     const { placeCodOrder, isPlacingCodOrder } = useCheckout();

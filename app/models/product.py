@@ -200,7 +200,7 @@ class ProductSearchRequest(BaseModel):
         ge=1
     )
     limit: int = Field(
-        default=20,
+        default=12,
         ge=1,
         le=100
     )

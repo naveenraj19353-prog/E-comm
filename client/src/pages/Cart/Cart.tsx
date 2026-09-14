@@ -10,9 +10,13 @@ import styles from "./Cart.module.css";
 import { useAuth } from "../../features/auth/hooks/useAuth";
 import { useStorefrontTenant } from "../../features/tenant/useTenant";
 const Cart = () => {
-    const user = useAuth().user;
+    const { user, isAuthenticated } = useAuth();
     const { tenantId, tenantSlug } = useStorefrontTenant();
-    const { cart, grandTotal, cartCount, isLoading, isUpdating, isRemoving, isClearing, updateCart, removeFromCart, clearCart, } = useCart(user?._id as string, user?.tenantId || tenantId);
+    const isCustomer =
+        isAuthenticated && user?.role === "customer" && Boolean(user._id);
+    const cartUserId = isCustomer ? user!._id : "";
+    const cartTenantId = isCustomer ? (user!.tenantId || tenantId || "") : "";
+    const { cart, grandTotal, cartCount, isLoading, isUpdating, isRemoving, isClearing, updateCart, removeFromCart, clearCart, } = useCart(cartUserId, cartTenantId);
     const layoutSettings = useLayoutSettings();
     if (isLoading) {
         return <CartLoading />;

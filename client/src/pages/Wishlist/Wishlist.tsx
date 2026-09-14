@@ -7,10 +7,21 @@ import PageLoader from "../../components/PageLoader";
 import styles from "./Wishlist.module.css";
 import ProductCard from "../../components/ProductCard/UniCard/ProductCard";
 import { useAuth } from "../../features/auth/hooks/useAuth";
+import { useStorefrontTenant } from "../../features/tenant/useTenant";
 const Wishlist = () => {
-    const user = useAuth().user;
-    const { wishlist, wishlistCount, isLoading, removeFromWishlist } = useWishlist(user?._id as string, user?.tenantId as string);
-    const { addToCart } = useCart(user?._id as string, user?.tenantId as string);
+    const { user, isAuthenticated } = useAuth();
+    const { tenantId: storeTenantId } = useStorefrontTenant();
+    const isCustomer =
+        isAuthenticated && user?.role === "customer" && Boolean(user._id);
+    const wishlistUserId = isCustomer ? user!._id : "";
+    const wishlistTenantId = isCustomer
+        ? (user!.tenantId || storeTenantId || "")
+        : "";
+    const { wishlist, wishlistCount, isLoading, removeFromWishlist } = useWishlist(
+        wishlistUserId,
+        wishlistTenantId,
+    );
+    const { addToCart } = useCart(wishlistUserId, wishlistTenantId);
     const [addingProductId, setAddingProductId] = useState<string | null>(null);
     const layoutSettings = useLayoutSettings();
     if (isLoading) {

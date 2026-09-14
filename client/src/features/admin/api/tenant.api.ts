@@ -9,9 +9,13 @@ export const getTenantById = async (id: string): Promise<Tenant> => {
     const response = await apiClient.get<SingleTenantResponse>(API_ENDPOINTS.TENANTS.byId(id));
     return response.data.data;
 };
-export const getTenantBySlug = async (slug: string): Promise<Tenant> => {
+export const getTenantBySlug = async (slug: string): Promise<Tenant & {
+    storefrontLayout?: StorefrontLayout | null;
+}> => {
     const response = await apiClient.get<SingleTenantResponse>(API_ENDPOINTS.TENANTS.bySlug(slug));
-    return response.data.data;
+    return response.data.data as Tenant & {
+        storefrontLayout?: StorefrontLayout | null;
+    };
 };
 export const getStorefrontLayout = async (slug: string): Promise<StorefrontLayout & {
     tenantId: string;
