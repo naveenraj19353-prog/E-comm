@@ -1,7 +1,7 @@
 {
   "seo": {
     "title": "Retail Cosmos",
-    "description": "One platform. Every store. Multi-tenant ecommerce with self-serve merchant signup, isolated tenant data, and a shared commerce engine."
+    "description": "One platform. Every way you sell. Multi-tenant ecommerce with self-serve merchant signup, isolated tenant data, and a shared commerce engine."
   },
   "brand": "Retail Cosmos",
   "nav": {
@@ -15,7 +15,7 @@
     "primaryCta": { "label": "Launch Your Store", "href": "/create-store" }
   },
   "hero": {
-    "headline": "One Platform. Every Store.",
+    "headline": "One Platform. Every way you sell.",
     "lead": "Launch your store on Retail Cosmos, the intelligent platform that powers thousands of unique commerce experiences through shared infrastructure.",
     "primaryCta": { "label": "Explore How It Works", "href": "#how-it-works" },
     "secondaryCta": { "label": "Launch a Store", "href": "/create-store" },
@@ -111,7 +111,7 @@
   },
   "platformDiagram": {
     "id": "how-it-works",
-    "title": "One Platform. Many Stores.",
+    "title": "One Platform. Every way you sell.",
     "caption": "Unified backend. Unique identities.",
     "core": {
       "title": "RETAIL COSMOS Platform Core",
