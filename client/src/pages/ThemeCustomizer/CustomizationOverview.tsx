@@ -69,7 +69,7 @@ export default function CustomizationOverview({
         onMouseEnter={() => setPaused(true)}
         onMouseLeave={() => setPaused(false)}
       >
-        <h3>One Platform. Many Stores.</h3>
+        <h3>One Platform. Every way you sell.</h3>
         <p className={styles.lead}>
           Live tenants on Retail Cosmos — same engine, isolated catalogs and
           themes.

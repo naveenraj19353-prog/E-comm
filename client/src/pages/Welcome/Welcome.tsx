@@ -255,7 +255,7 @@ export default function Welcome() {
             <h1>
               One Platform.
               <br />
-              Every Store.
+              Every way you sell.
             </h1>
             <p>{c.hero.lead}</p>
             <div className={styles.heroCtas}>

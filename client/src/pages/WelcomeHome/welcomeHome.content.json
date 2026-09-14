@@ -1,6 +1,6 @@
 {
   "seo": {
-    "title": "Retail Cosmos — One platform. Every store.",
+    "title": "Retail Cosmos — One platform. Every way you sell.",
     "description": "Launch your own storefront on Retail Cosmos. Multi-tenant ecommerce with self-serve signup, isolated data, layout studio, and Razorpay checkout."
   },
   "brand": "Retail Cosmos",
@@ -17,7 +17,7 @@
   "hero": {
     "prefix": "One platform.",
     "rotating": [
-      "Every store.",
+      "Every way you sell.",
       "Your brand.",
       "Isolated data.",
       "Shared engine."
