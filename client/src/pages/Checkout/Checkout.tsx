@@ -249,10 +249,6 @@ const Checkout = () => {
                     name: selectedAddress.fullName,
                     contact: contact || undefined,
                 },
-                notes: {
-                    tenantId: user.tenantId,
-                    userId: user._id,
-                },
                 theme: {
                     color: "#2f6b52",
                 },
