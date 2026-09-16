@@ -6,7 +6,7 @@ import logging
 from datetime import datetime, timezone
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
 from pymongo.errors import PyMongoError
 
 from app.database.mongo import orders, shipping_integrations, shipping_locations, shipments
@@ -24,6 +24,7 @@ from app.services.delhivery_service import (
     DelhiveryService,
 )
 from app.services.shipping_context import get_active_delhivery_context
+from app.services.whatsapp_notification_service import send_shipment_created
 from app.utils.auth_dependencies import admin_tenant_id, require_admin
 from app.utils.secret_crypto import encrypt_secret, mask_secret, decrypt_secret
 from bson import ObjectId
@@ -352,6 +353,7 @@ def calculate_rate(
 @router.post("/shipments")
 def create_shipment(
     body: CreateDelhiveryShipmentRequest,
+    background_tasks: BackgroundTasks,
     current_user: Annotated[dict, Depends(require_admin)],
     tenant_id: Annotated[str | None, Query(alias="tenantId")] = None,
 ):
@@ -378,6 +380,7 @@ def create_shipment(
         {"tenantId": scoped, "orderId": str(order["_id"]), "provider": PROVIDER}
     )
     if existing and existing.get("awb"):
+        send_shipment_created(background_tasks, str(order["_id"]))
         return {
             "success": True,
             "message": "Shipment already exists.",
@@ -473,6 +476,7 @@ def create_shipment(
             {"tenantId": scoped, "orderId": str(order["_id"]), "provider": PROVIDER}
         )
         if raced and raced.get("awb"):
+            send_shipment_created(background_tasks, str(order["_id"]))
             return {
                 "success": True,
                 "message": "Shipment already exists.",
@@ -500,6 +504,7 @@ def create_shipment(
     if body.markShipped and status in {"confirmed", "processing"}:
         order_set["orderStatus"] = "shipped"
     orders.update_one({"_id": order["_id"]}, {"$set": order_set})
+    send_shipment_created(background_tasks, str(order["_id"]))
 
     return {
         "success": True,

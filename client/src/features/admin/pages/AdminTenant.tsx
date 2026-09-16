@@ -52,6 +52,9 @@ export default function AdminTenant() {
           <button type="button" className={styles.productsButton} onClick={() => navigate(`/admin/tenants/${tenant.tenantId}/customers`)}>
             Customers
           </button>
+          <button type="button" className={styles.productsButton} onClick={() => navigate(`/admin/tenants/${tenant.tenantId}/integrations/periskope`)}>
+            WhatsApp
+          </button>
           {tenant.businessType === "menu" ? (
             <button type="button" className={styles.ordersButton} onClick={() => navigate(`/admin/tenants/${tenant.tenantId}/menu`)}>
               Menu Desk
@@ -202,6 +205,15 @@ export default function AdminTenant() {
             <div>
               <strong>Manage Products</strong>
               <span>View and manage products for this tenant.</span>
+            </div>
+            <b>→</b>
+          </button>
+
+          <button type="button" className={styles.actionCard} onClick={() => navigate(`/admin/tenants/${tenant.tenantId}/integrations/periskope`)}>
+            <div className={styles.actionIcon}>◌</div>
+            <div>
+              <strong>WhatsApp Notifications</strong>
+              <span>Configure Periskope events and review delivery attempts.</span>
             </div>
             <b>→</b>
           </button>

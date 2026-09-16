@@ -152,6 +152,14 @@ export const API_ENDPOINTS = {
         label: (shipmentId: string) => `/shipping/delhivery/shipments/${shipmentId}/label`,
     },
 
+    PERISKOPE: {
+        SETTINGS: "/integrations/periskope/settings",
+        TEST: "/integrations/periskope/test",
+        NOTIFICATIONS: "/integrations/periskope/notifications",
+        retry: (notificationId: string) =>
+            `/integrations/periskope/notifications/${notificationId}/retry`,
+    },
+
     SUPER_ADMIN: {
         DASHBOARD: "/super-admin/dashboard",
     },

@@ -25,6 +25,20 @@ RAZORPAY_KEY_ID = os.getenv("RAZORPAY_KEY_ID")
 RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET")
 RAZORPAY_WEBHOOK_SECRET = os.getenv("RAZORPAY_WEBHOOK_SECRET")
 
+PERISKOPE_API_KEY = _env("PERISKOPE_API_KEY")
+PERISKOPE_PHONE = _env("PERISKOPE_PHONE")
+PERISKOPE_BASE_URL = (
+    _env("PERISKOPE_BASE_URL") or "https://api.periskope.app/v1"
+).rstrip("/")
+PERISKOPE_WEBHOOK_SIGNING_KEY = _env("PERISKOPE_WEBHOOK_SIGNING_KEY")
+try:
+    PERISKOPE_TIMEOUT_SECONDS = float(
+        _env("PERISKOPE_TIMEOUT_SECONDS") or "10"
+    )
+except ValueError:
+    PERISKOPE_TIMEOUT_SECONDS = 10.0
+_periskope_verify_ssl = (_env("PERISKOPE_VERIFY_SSL") or "true").lower()
+
 EMAIL = os.getenv("EMAIL")
 APP_PASSWORD = os.getenv("APP_PASSWORD")
 
@@ -48,6 +62,11 @@ CORS_ORIGIN_REGEX = _env("CORS_ORIGIN_REGEX") or (
 
 ENVIRONMENT = os.getenv("ENVIRONMENT", "development").lower()
 IS_PRODUCTION = ENVIRONMENT == "production"
+PERISKOPE_VERIFY_SSL = (
+    True
+    if IS_PRODUCTION
+    else _periskope_verify_ssl not in {"0", "false", "no", "off"}
+)
 
 S3_BUCKET = _env("S3_BUCKET") or "multi-tenant-ecomm-images-prod"
 S3_REGION = _env("S3_REGION") or "eu-north-1"

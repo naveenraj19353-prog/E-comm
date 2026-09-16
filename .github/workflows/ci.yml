@@ -69,6 +69,13 @@ jobs:
       - name: Check Python syntax
         run: python -m compileall app
 
+      - name: Backend unit tests
+        env:
+          MONGO_URI: mongodb://localhost:27017
+          DATABASE_NAME: retail_cosmos_test
+          SECRET_KEY: ci-test-secret
+        run: python -m unittest discover -s tests -p "test_*.py"
+
   sonarqube:
     name: SonarQube Analysis
     runs-on: ubuntu-latest
