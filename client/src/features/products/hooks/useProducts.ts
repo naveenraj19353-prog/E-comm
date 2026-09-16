@@ -10,6 +10,7 @@ export const useProducts = (params: Omit<ProductQueryParams, "page">) => {
             params.colors ?? [],
             params.sizes ?? [],
             params.brands ?? [],
+            params.foodTypes ?? [],
             params.minPrice ?? null,
             params.maxPrice ?? null,
             params.rating ?? null,

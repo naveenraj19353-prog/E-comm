@@ -86,6 +86,10 @@ export function useStorefrontProductActions(options: UseStorefrontProductActions
         if (!ensureAuthenticated()) {
             return;
         }
+        if (!variantId) {
+            console.log("No available variant selected");
+            return;
+        }
         try {
             if (trackAddingProductId) {
                 setAddingProductId(productId);

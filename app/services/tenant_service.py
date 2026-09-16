@@ -64,6 +64,7 @@ def create_tenant_document(
     slug: str,
     email: str,
     password: str,
+    business_type: str,
     logo: str = "",
     theme: str = "green",
 ) -> dict:
@@ -71,6 +72,13 @@ def create_tenant_document(
     slug = validate_slug(slug)
     name = name.strip()
     email = email.strip().lower()
+    business_type = (business_type or "").strip().lower()
+
+    if business_type not in {"retail", "service", "menu"}:
+        raise HTTPException(
+            status_code=400,
+            detail="Business type must be retail, service, or menu.",
+        )
 
     if len(name) < 2:
         raise HTTPException(status_code=400, detail="Store name is required.")
@@ -93,6 +101,7 @@ def create_tenant_document(
         "tenantId": tenant_id,
         "name": name,
         "slug": slug,
+        "businessType": business_type,
         "logo": logo or "",
         "theme": theme or "green",
         "email": email,

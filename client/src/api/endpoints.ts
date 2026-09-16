@@ -11,6 +11,7 @@ export const API_ENDPOINTS = {
 
     AUTH: {
         LOGIN: "/auth/login",
+        MENU_LOGIN: "/auth/menu-login",
         REGISTER: "/auth/register",
         FORGOT_PASSWORD: "/auth/forgot-password",
         RESET_PASSWORD: "/auth/reset-password",
@@ -104,11 +105,21 @@ export const API_ENDPOINTS = {
     ORDERS: {
         CREATE: "/orders/",
         COD: "/orders/cod",
+        MENU: "/orders/menu",
         ADMIN_LIST: "/orders/admin/list",
         adminDetail: (orderId: string) => `/orders/admin/detail/${orderId}`,
         adminStatus: (orderId: string) => `/orders/admin/${orderId}/status`,
         detail: (orderId: string) => `/orders/detail/${orderId}`,
         byUserId: (userId: string) => `/orders/${userId}`,
+    },
+
+    MENU: {
+        DAILY_PASSWORD: "/menu/daily-password",
+        ROTATE_DAILY_PASSWORD: "/menu/daily-password/rotate",
+        CARTS: "/menu/carts",
+        cartPaymentDone: (userId: string) =>
+            `/menu/carts/${userId}/payment-done`,
+        paymentDone: (orderId: string) => `/menu/orders/${orderId}/payment-done`,
     },
 
     HOME: {

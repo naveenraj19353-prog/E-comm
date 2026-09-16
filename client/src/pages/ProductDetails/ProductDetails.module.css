@@ -379,6 +379,22 @@
     3rem;
   gap: 0.625rem;
   margin-top: 0.75rem;
+  align-items: center;
+}
+
+/* Service: no quantity stepper — CTA + wishlist + WhatsApp */
+.actionRowService {
+  grid-template-columns:
+    minmax(0, 1fr)
+    3rem
+    3rem;
+}
+
+.actionRowService .addToCart {
+  min-width: 0;
+  padding-inline: 1rem;
+  font-size: 0.8125rem;
+  letter-spacing: 0.01em;
 }
 .quantityControl {
   height: 3rem;
@@ -955,11 +971,17 @@
     grid-template-columns: 1fr 3rem 3rem;
     gap: 0.5rem;
   }
+  .actionRowService {
+    grid-template-columns: minmax(0, 1fr) 3rem 3rem;
+  }
   .quantityControl {
     grid-column: 1 / -1;
     width: fit-content;
   }
   .addToCart {
+    grid-column: 1;
+  }
+  .actionRowService .addToCart {
     grid-column: 1;
   }
   .wishlistButton {

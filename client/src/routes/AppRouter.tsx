@@ -5,6 +5,7 @@ import { getTenantSlugFromHostname } from "../features/tenant/tenantHost";
 import RequireStorefrontAuth from "../features/auth/RequireStorefrontAuth";
 import RequireStoreAdminAuth from "../features/auth/RequireStoreAdminAuth";
 import AdminLayout from "../features/admin/components/AdminLayout";
+import RequireTenantBusinessType from "../features/admin/components/RequireTenantBusinessType";
 import {
     AdminDashboard,
     AdminForgotPassword,
@@ -12,6 +13,8 @@ import {
     AdminResetPassword,
     AdminTenant,
     AdminTenantOrders,
+    AdminMenuDesk,
+    AdminCustomers,
     AdminTenantProducts,
     AdminTenantBanners,
     AdminTenants,
@@ -179,6 +182,10 @@ const adminRoutes = [
                         element: <AdminTenantProducts />,
                     },
                     {
+                        path: ":tenantId/customers",
+                        element: <AdminCustomers />,
+                    },
+                    {
                         path: ":tenantId/products/create",
                         element: <CreateProduct />,
                     },
@@ -188,19 +195,45 @@ const adminRoutes = [
                     },
                     {
                         path: ":tenantId/orders",
-                        element: <AdminTenantOrders />,
+                        element: (
+                            <RequireTenantBusinessType allowed={["retail"]}>
+                                <AdminTenantOrders />
+                            </RequireTenantBusinessType>
+                        ),
+                    },
+                    {
+                        path: ":tenantId/menu",
+                        element: (
+                            <RequireTenantBusinessType allowed={["menu"]}>
+                                <AdminMenuDesk />
+                            </RequireTenantBusinessType>
+                        ),
                     },
                     {
                         path: ":tenantId/orders/:orderId",
-                        element: <AdminOrderDetail />,
+                        element: (
+                            <RequireTenantBusinessType allowed={["retail"]}>
+                                <AdminOrderDetail />
+                            </RequireTenantBusinessType>
+                        ),
                     },
                     {
                         path: ":tenantId/banners",
-                        element: <AdminTenantBanners />,
+                        element: (
+                            <RequireTenantBusinessType
+                                allowed={["retail", "service"]}
+                            >
+                                <AdminTenantBanners />
+                            </RequireTenantBusinessType>
+                        ),
                     },
                     {
                         path: ":tenantId/shipping/delhivery",
-                        element: <DelhiverySettingsPage />,
+                        element: (
+                            <RequireTenantBusinessType allowed={["retail"]}>
+                                <DelhiverySettingsPage />
+                            </RequireTenantBusinessType>
+                        ),
                     },
                 ],
             },

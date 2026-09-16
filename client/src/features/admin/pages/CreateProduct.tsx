@@ -1,11 +1,18 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { ChangeEvent, FormEvent } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import { uploadImageToS3 } from "../api/upload.api";
 import { useCreateProduct } from "../hooks/useTenantProducts";
+import { useTenantByTenantId } from "../hooks/useTenants";
 import type { ProductImageRef } from "../utils/s3Image";
 import { hasUnresolvedImageRefs, imageRefsToKeys } from "../utils/s3Image";
+import {
+    SERVICE_DEFAULT_COLOR,
+    SERVICE_DEFAULT_SIZE,
+    isMenuBusiness,
+    isServiceBusiness,
+} from "../../tenant/businessMode";
 import styles from "../styles/CreateProduct.module.css";
 interface InventoryRow {
     variantId: string;
@@ -19,6 +26,12 @@ interface ColorImages {
 export default function CreateProduct() {
     const navigate = useNavigate();
     const { tenantId } = useParams();
+    const { data: tenant } = useTenantByTenantId(tenantId || "");
+    const isServiceMode = isServiceBusiness(tenant?.businessType);
+    const isMenuMode = isMenuBusiness(tenant?.businessType);
+    const isSimpleListing = isServiceMode;
+    const defaultListingColor = SERVICE_DEFAULT_COLOR;
+    const defaultListingSize = SERVICE_DEFAULT_SIZE;
     const createProductMutation = useCreateProduct();
     const fileInputRef = useRef<HTMLInputElement | null>(null);
     const [imageUploadColor, setImageUploadColor] = useState("");
@@ -26,9 +39,12 @@ export default function CreateProduct() {
     const [description, setDescription] = useState("");
     const [categoryId, setCategoryId] = useState("");
     const [brand, setBrand] = useState("");
+    const [location, setLocation] = useState("");
+    const [foodType, setFoodType] = useState<"" | "veg" | "non_veg">("");
     const [basePrice, setBasePrice] = useState("");
     const [marginPercentage, setMarginPercentage] = useState("");
     const [discountPercentage, setDiscountPercentage] = useState("");
+    const [serviceAvailable, setServiceAvailable] = useState(true);
     const [colors, setColors] = useState<string[]>([]);
     const [sizes, setSizes] = useState<string[]>([]);
     const [newColor, setNewColor] = useState("");
@@ -39,9 +55,35 @@ export default function CreateProduct() {
     const [error, setError] = useState("");
     const basePriceNumber = Number(basePrice) || 0;
     const marginNumber = Number(marginPercentage) || 0;
-    const discountNumber = Number(discountPercentage) || 0;
+    const discountNumber = isServiceMode ? 0 : Number(discountPercentage) || 0;
     const calculatedPrice = basePriceNumber + (basePriceNumber * marginNumber) / 100;
     const finalPrice = calculatedPrice - (calculatedPrice * discountNumber) / 100;
+
+    useEffect(() => {
+        if (!isSimpleListing) {
+            return;
+        }
+        if (isServiceMode) {
+            setDiscountPercentage("");
+        }
+        setColors([defaultListingColor]);
+        setSizes([defaultListingSize]);
+        setInventory([
+            {
+                variantId: "standard-one-size",
+                color: defaultListingColor,
+                size: defaultListingSize,
+                stock: serviceAvailable ? "1" : "0",
+            },
+        ]);
+        setImageUploadColor(defaultListingColor);
+    }, [
+        defaultListingColor,
+        defaultListingSize,
+        isServiceMode,
+        isSimpleListing,
+        serviceAvailable,
+    ]);
     const createVariantId = (color: string, size: string) => {
         return `${color}-${size}`
             .trim()
@@ -242,6 +284,14 @@ export default function CreateProduct() {
             setError("Category is required.");
             return;
         }
+        if (isServiceMode && !location.trim()) {
+            setError("Service location is required.");
+            return;
+        }
+        if (isMenuMode && !foodType) {
+            setError("Select Veg or Non-Veg.");
+            return;
+        }
         if (!basePrice || Number(basePrice) <= 0) {
             setError("Enter a valid base price.");
             return;
@@ -251,9 +301,65 @@ export default function CreateProduct() {
             setError("Margin must be between 0 and 1000.");
             return;
         }
-        if (discountPercentage &&
+        if (!isServiceMode && discountPercentage &&
             (Number(discountPercentage) < 0 || Number(discountPercentage) > 100)) {
             setError("Discount must be between 0 and 100.");
+            return;
+        }
+        if (isSimpleListing) {
+            if (!colorImages[defaultListingColor]?.length) {
+                setError("Please upload at least one image.");
+                return;
+            }
+            if (hasUnresolvedImageRefs(colorImages)) {
+                setError("Some images failed to upload to S3. Remove them and try again.");
+                return;
+            }
+            const stock = serviceAvailable ? 1 : 0;
+            try {
+                await createProductMutation.mutateAsync({
+                    tenantId,
+                    name: name.trim(),
+                    description: description.trim(),
+                    categoryId: categoryId.trim(),
+                    location: isServiceMode
+                        ? location.trim()
+                        : undefined,
+                    foodType: isMenuMode
+                        ? foodType || undefined
+                        : undefined,
+                    basePrice: Number(basePrice),
+                    marginPercentage: Number(marginPercentage) || 0,
+                    price: calculatedPrice,
+                    discountPercentage: discountNumber,
+                    finalPrice,
+                    stock,
+                    sizes: [defaultListingSize],
+                    colors: [defaultListingColor],
+                    inventory: [
+                        {
+                            variantId: "standard-one-size",
+                            color: defaultListingColor,
+                            size: defaultListingSize,
+                            stock,
+                        },
+                    ],
+                    images: imageRefsToKeys(colorImages),
+                });
+                navigate(`/admin/tenants/${tenantId}/products`);
+            }
+            catch (createError) {
+                console.error("Failed to create product:", createError);
+                if (axios.isAxiosError(createError)) {
+                    setError(createError.response?.data?.detail || "Failed to create product.");
+                }
+                else if (createError instanceof Error) {
+                    setError(createError.message);
+                }
+                else {
+                    setError("Failed to create product.");
+                }
+            }
             return;
         }
         if (!colors.length) {
@@ -306,7 +412,8 @@ export default function CreateProduct() {
                 name: name.trim(),
                 description: description.trim(),
                 categoryId: categoryId.trim(),
-                brand: brand.trim() || undefined,
+                brand: isMenuMode ? undefined : brand.trim() || undefined,
+                foodType: isMenuMode ? foodType || undefined : undefined,
                 basePrice: Number(basePrice),
                 marginPercentage: Number(marginPercentage) || 0,
                 price: calculatedPrice,
@@ -411,15 +518,55 @@ export default function CreateProduct() {
             </div>
 
             <div className={styles.field}>
-              <label htmlFor="product-brand">Brand</label>
-              <input
-                id="product-brand"
-                type="text"
-                value={brand}
-                onChange={(event) => setBrand(event.target.value)}
-                placeholder="Example: Levi's, Tanishq, Nike"
-              />
-              <small>Optional. Used in storefront filters and product details.</small>
+              {isServiceMode ? (
+                <>
+                  <label htmlFor="service-location">
+                    Location
+                    <span>*</span>
+                  </label>
+                  <input
+                    id="service-location"
+                    type="text"
+                    value={location}
+                    onChange={(event) => setLocation(event.target.value)}
+                    placeholder="Example: Bengaluru, Room 204, Spa Wing"
+                  />
+                  <small>Where this service is available or delivered.</small>
+                </>
+              ) : isMenuMode ? (
+                <>
+                  <label htmlFor="food-type">
+                    Food Type
+                    <span>*</span>
+                  </label>
+                  <select
+                    id="food-type"
+                    value={foodType}
+                    onChange={(event) =>
+                      setFoodType(
+                        event.target.value as "" | "veg" | "non_veg",
+                      )
+                    }
+                  >
+                    <option value="">Select Veg or Non-Veg</option>
+                    <option value="veg">Veg</option>
+                    <option value="non_veg">Non-Veg</option>
+                  </select>
+                  <small>Used to identify vegetarian and non-vegetarian items.</small>
+                </>
+              ) : (
+                <>
+                  <label htmlFor="product-brand">Brand</label>
+                  <input
+                    id="product-brand"
+                    type="text"
+                    value={brand}
+                    onChange={(event) => setBrand(event.target.value)}
+                    placeholder="Example: Levi's, Tanishq, Nike"
+                  />
+                  <small>Optional. Used in storefront filters and product details.</small>
+                </>
+              )}
             </div>
 
             
@@ -500,12 +647,16 @@ export default function CreateProduct() {
               <label htmlFor="discount">Discount</label>
 
               <div className={styles.inputWithSuffix}>
-                <input id="discount" type="number" min="0" max="100" step="0.01" value={discountPercentage} onChange={(event) => setDiscountPercentage(event.target.value)} placeholder="0"/>
+                <input id="discount" type="number" min="0" max="100" step="0.01" value={discountPercentage} onChange={(event) => setDiscountPercentage(event.target.value)} placeholder="0" disabled={isServiceMode}/>
 
                 <span>%</span>
               </div>
 
-              <small>Optional customer discount.</small>
+              <small>
+                {isServiceMode
+                  ? "Not used for service listings."
+                  : "Optional customer discount."}
+              </small>
             </div>
 
             
@@ -529,17 +680,35 @@ export default function CreateProduct() {
         <section className={styles.section}>
           <div className={styles.sectionHeader}>
             <div>
-              <h2>Product Variants</h2>
+              <h2>{isSimpleListing ? "Availability" : "Product Variants"}</h2>
 
               <p>
-                Add colors and sizes. Stock is maintained separately for each
-                combination.
+                {isServiceMode
+                  ? "Services do not use color, size, discount, or quantity. Mark the listing available or unavailable."
+                  : "Add colors and sizes. Stock is maintained separately for each combination."}
               </p>
             </div>
           </div>
 
-          
-
+          {isSimpleListing ? (
+            <div className={styles.field}>
+              <label htmlFor="listing-availability">Status</label>
+              <select
+                id="listing-availability"
+                value={serviceAvailable ? "available" : "unavailable"}
+                onChange={(event) =>
+                  setServiceAvailable(event.target.value === "available")
+                }
+              >
+                <option value="available">Available</option>
+                <option value="unavailable">Unavailable</option>
+              </select>
+              <small>
+                Customers see Available or Unavailable — no variants.
+              </small>
+            </div>
+          ) : (
+            <>
           <div className={styles.variantCreator}>
             
 
@@ -652,6 +821,8 @@ export default function CreateProduct() {
                 </table>
               </div>
             </div>)}
+            </>
+          )}
         </section>
 
         
@@ -661,7 +832,11 @@ export default function CreateProduct() {
               <div>
                 <h2>Product Images</h2>
 
-                <p>Upload images separately for each color.</p>
+                <p>
+                  {isServiceMode
+                    ? "Upload images for this service listing."
+                    : "Upload images separately for each color."}
+                </p>
               </div>
             </div>
 
@@ -673,7 +848,9 @@ export default function CreateProduct() {
                 return (<div key={color} className={styles.colorImageSection}>
                     <div className={styles.colorImageHeader}>
                       <div>
-                        <h3>{color}</h3>
+                        <h3>
+                          {isSimpleListing ? "Listing images" : color}
+                        </h3>
 
                         <p>
                           {images.length > 0

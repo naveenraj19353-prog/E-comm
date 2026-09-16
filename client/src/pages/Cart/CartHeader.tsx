@@ -4,8 +4,14 @@ interface CartHeaderProps {
     cartCount: number;
     isClearing: boolean;
     onClearCart: () => void;
+    showClearCart?: boolean;
 }
-const CartHeader = ({ cartCount, isClearing, onClearCart, }: CartHeaderProps) => {
+const CartHeader = ({
+    cartCount,
+    isClearing,
+    onClearCart,
+    showClearCart = true,
+}: CartHeaderProps) => {
     return (<div className={styles.header}>
       <div className={styles.headerMain}>
         <div className={styles.eyebrow}>
@@ -16,9 +22,11 @@ const CartHeader = ({ cartCount, isClearing, onClearCart, }: CartHeaderProps) =>
         <p>
           {cartCount} {cartCount === 1 ? "item" : "items"} in your cart
         </p>
-        <button type="button" className={styles.clearCart} onClick={onClearCart} disabled={isClearing}>
-          {isClearing ? "Clearing..." : "Clear Cart"}
-        </button>
+        {showClearCart ? (
+          <button type="button" className={styles.clearCart} onClick={onClearCart} disabled={isClearing}>
+            {isClearing ? "Clearing..." : "Clear Cart"}
+          </button>
+        ) : null}
       </div>
     </div>);
 };

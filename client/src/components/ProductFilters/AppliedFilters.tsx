@@ -88,6 +88,23 @@ const AppliedFilters = () => {
     );
     setSearchParams(params);
   };
+  const removeFoodType = (foodType: "veg" | "non_veg") => {
+    const params = new URLSearchParams(searchParams);
+    const foodTypes = params
+      .getAll("foodTypes")
+      .filter((item) => item !== foodType) as Array<"veg" | "non_veg">;
+    params.delete("foodTypes");
+    foodTypes.forEach((item) => {
+      params.append("foodTypes", item);
+    });
+    params.set("page", "1");
+    dispatch(
+      setFilters({
+        foodTypes,
+      }),
+    );
+    setSearchParams(params);
+  };
   const removeRating = () => {
     const params = new URLSearchParams(searchParams);
     params.delete("rating");
@@ -123,6 +140,7 @@ const AppliedFilters = () => {
     filters.colors.length > 0 ||
     filters.sizes.length > 0 ||
     filters.brands.length > 0 ||
+    filters.foodTypes.length > 0 ||
     filters.rating !== null ||
     hasPriceFilter;
   if (!hasFilters) {
@@ -178,6 +196,17 @@ const AppliedFilters = () => {
             onClick={() => removeBrand(brand)}
           >
             {brand}
+            <X size={14} />
+          </button>
+        ))}
+        {filters.foodTypes.map((foodType) => (
+          <button
+            type="button"
+            key={`food-type-${foodType}`}
+            className={styles.chip}
+            onClick={() => removeFoodType(foodType)}
+          >
+            {foodType === "veg" ? "Veg" : "Non-Veg"}
             <X size={14} />
           </button>
         ))}

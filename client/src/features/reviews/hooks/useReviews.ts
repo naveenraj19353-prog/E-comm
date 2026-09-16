@@ -1,12 +1,22 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createReview, getProductReviews } from "../api/reviews.api";
 import type { CreateReviewRequest } from "../types";
-export const useReviews = (productId: string, tenantId: string) => {
+
+type UseReviewsOptions = {
+    enabled?: boolean;
+};
+
+export const useReviews = (
+    productId: string,
+    tenantId: string,
+    options: UseReviewsOptions = {},
+) => {
     const queryClient = useQueryClient();
     const reviewsQuery = useQuery({
         queryKey: ["reviews", productId, tenantId],
         queryFn: () => getProductReviews(productId, tenantId),
-        enabled: Boolean(productId && tenantId),
+        enabled:
+            options.enabled !== false && Boolean(productId && tenantId),
     });
     const createReviewMutation = useMutation({
         mutationFn: (payload: CreateReviewRequest) => createReview(payload),

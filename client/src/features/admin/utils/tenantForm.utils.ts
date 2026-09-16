@@ -1,3 +1,5 @@
+import { isBusinessType } from "../../../constants/businessTypes";
+
 export const slugifyTenantValue = (value: string): string =>
     value
         .toLowerCase()
@@ -16,6 +18,7 @@ export interface CreateTenantFormValues {
     name: string;
     slug: string;
     tenantId: string;
+    businessType: string;
     logo: string;
     theme: string;
     email: string;
@@ -34,6 +37,9 @@ export const validateCreateTenantForm = (
     }
     if (!values.tenantId.trim() || values.tenantId.trim().length < 2) {
         return "Tenant ID must be at least 2 characters.";
+    }
+    if (!isBusinessType(values.businessType)) {
+        return "Select a business type: retail, service, or menu.";
     }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(values.email.trim())) {
         return "Enter a valid admin email address.";

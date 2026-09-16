@@ -84,7 +84,9 @@ def get_current_user(
             ),
             "phone": user.get(
                 "phone"
-            ),
+            ) or payload.get("phone"),
+            "counterNumber": user.get("counterNumber")
+                or payload.get("counterNumber"),
             "role": user.get(
                 "role"
             ),

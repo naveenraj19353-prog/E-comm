@@ -15,6 +15,8 @@ export interface CreateProductPayload {
     description: string;
     categoryId: string;
     brand?: string;
+    location?: string;
+    foodType?: "veg" | "non_veg";
     basePrice?: number;
     marginPercentage?: number;
     price: number;
@@ -32,6 +34,8 @@ export interface UpdateProductPayload {
     description: string;
     categoryId: string;
     brand?: string;
+    location?: string;
+    foodType?: "veg" | "non_veg";
     price: number;
     discountPercentage: number;
     stock?: number;

@@ -25,9 +25,11 @@ export const AdminTenant = lazy(() => import("../features/admin/pages/AdminTenan
 export const EditTenant = lazy(() => import("../features/admin/pages/EditTenant"));
 export const CreateTenant = lazy(() => import("../features/admin/pages/CreateTenant"));
 export const AdminTenantProducts = lazy(() => import("../features/admin/pages/AdminTenantProducts"));
+export const AdminCustomers = lazy(() => import("../features/admin/pages/AdminCustomers"));
 export const CreateProduct = lazy(() => import("../features/admin/pages/CreateProduct"));
 export const BulkProductImport = lazy(() => import("../features/admin/pages/BulkProductImport"));
 export const AdminTenantOrders = lazy(() => import("../features/admin/pages/AdminTenantOrders"));
+export const AdminMenuDesk = lazy(() => import("../features/admin/pages/AdminMenuDesk"));
 export const AdminOrderDetail = lazy(() => import("../features/admin/pages/AdminOrderDetail"));
 export const AdminTenantBanners = lazy(() => import("../features/admin/pages/AdminTenantBanners"));
 export const DelhiverySettingsPage = lazy(

@@ -1,0 +1,169 @@
+.page {
+  width: 100%;
+}
+
+.header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.backButton {
+  display: block;
+  margin-bottom: 0.75rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #64736c;
+  cursor: pointer;
+}
+
+.eyebrow {
+  color: #2f6b52;
+  font-size: 0.6875rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}
+
+.header h1 {
+  margin: 0.25rem 0;
+  color: #17211d;
+  font-size: 1.75rem;
+}
+
+.header p {
+  margin: 0;
+  color: #77827d;
+}
+
+.search {
+  width: min(24rem, 100%);
+  padding: 0.7rem 0.85rem;
+  border: 0.0625rem solid #dce4df;
+  border-radius: 0.65rem;
+  background: #fff;
+}
+
+.tableWrap {
+  overflow-x: auto;
+  border: 0.0625rem solid #e5ebe7;
+  border-radius: 0.875rem;
+  background: #fff;
+}
+
+.table {
+  width: 100%;
+  min-width: 58rem;
+  border-collapse: collapse;
+}
+
+.table th,
+.table td {
+  padding: 0.9rem 1rem;
+  border-bottom: 0.0625rem solid #edf1ee;
+  text-align: left;
+  vertical-align: top;
+}
+
+.table th {
+  background: #f7faf8;
+  color: #64736c;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.table td {
+  color: #27332e;
+  font-size: 0.84rem;
+}
+
+.table td > strong,
+.table td > span {
+  display: block;
+}
+
+.table td > span {
+  margin-top: 0.25rem;
+  color: #84918b;
+  font-size: 0.75rem;
+}
+
+.activity {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(10rem, 1fr));
+  gap: 1rem;
+}
+
+.categories {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.categories span {
+  padding: 0.2rem 0.5rem;
+  border-radius: 999px;
+  background: #edf7f0;
+  color: #2f6b52;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.activity strong {
+  display: block;
+  margin-bottom: 0.3rem;
+}
+
+.activity ul {
+  margin: 0;
+  padding-left: 1rem;
+}
+
+.activity li,
+.activity span {
+  color: #64736c;
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
+.active,
+.inactive {
+  display: inline-flex !important;
+  width: fit-content;
+  padding: 0.25rem 0.55rem;
+  border-radius: 999px;
+  font-weight: 700;
+}
+
+.active {
+  background: #ecfdf3;
+  color: #167345 !important;
+}
+
+.inactive {
+  background: #fff1f2;
+  color: #be123c !important;
+}
+
+.state {
+  padding: 3rem 1rem;
+  border: 0.0625rem solid #e5ebe7;
+  border-radius: 0.875rem;
+  background: #fff;
+  color: #77827d;
+  text-align: center;
+}
+
+@media (max-width: 48rem) {
+  .header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .search {
+    width: 100%;
+  }
+}

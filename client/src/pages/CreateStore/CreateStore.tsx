@@ -8,6 +8,10 @@ import {
   formatStorefrontHost,
 } from "../../features/tenant/tenantHost";
 import {
+  BUSINESS_TYPE_OPTIONS,
+  type BusinessType,
+} from "../../constants/businessTypes";
+import {
   getApiErrorMessage,
   normalizeTenantId,
   slugifyTenantValue,
@@ -19,6 +23,7 @@ export default function CreateStore() {
   const dispatch = useDispatch();
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
+  const [businessType, setBusinessType] = useState<BusinessType | "">("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -43,6 +48,10 @@ export default function CreateStore() {
       setError("Choose a store URL of at least 2 characters.");
       return;
     }
+    if (!businessType) {
+      setError("Select a business type: retail, service, or menu.");
+      return;
+    }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
       setError("Enter a valid email address.");
       return;
@@ -61,6 +70,7 @@ export default function CreateStore() {
       const response = await registerStoreApi({
         name: name.trim(),
         slug: cleanSlug,
+        businessType,
         email: email.trim().toLowerCase(),
         password,
       });
@@ -103,8 +113,8 @@ export default function CreateStore() {
           <p className={styles.eyebrow}>Merchant signup</p>
           <h1 className={styles.title}>Create your store</h1>
           <p className={styles.lead}>
-            Pick a name and URL. You&apos;ll manage products, orders, and theme
-            from your admin panel — shoppers visit{" "}
+            Pick a name, URL, and business type. You&apos;ll manage products,
+            orders, and theme from your admin panel — shoppers visit{" "}
             <span className={styles.mono}>{previewHost}</span>.
           </p>
         </div>
@@ -150,6 +160,36 @@ export default function CreateStore() {
               ) : null}
             </span>
           </label>
+
+          <fieldset className={styles.typeFieldset}>
+            <legend className={styles.typeLegend}>
+              Business type <span aria-hidden="true">*</span>
+            </legend>
+            <div
+              className={styles.typeOptions}
+              role="radiogroup"
+              aria-label="Business type"
+            >
+              {BUSINESS_TYPE_OPTIONS.map((option) => (
+                <label
+                  key={option.value}
+                  className={`${styles.typeOption} ${
+                    businessType === option.value ? styles.typeOptionSelected : ""
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="businessType"
+                    value={option.value}
+                    checked={businessType === option.value}
+                    onChange={() => setBusinessType(option.value)}
+                  />
+                  <span className={styles.typeLabel}>{option.label}</span>
+                  <span className={styles.typeHint}>{option.hint}</span>
+                </label>
+              ))}
+            </div>
+          </fieldset>
 
           <label className={styles.label}>
             Admin email

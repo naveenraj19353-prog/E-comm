@@ -63,6 +63,8 @@ export const orderStatusLabel: Record<OrderStatus, string> = {
     shipped: "Shipped",
     delivered: "Delivered",
     cancelled: "Cancelled",
+    open: "Open",
+    closed: "Closed",
 };
 
 export const formatOrderDate = (value?: string): string => {

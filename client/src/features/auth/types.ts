@@ -5,11 +5,19 @@ export interface User {
     tenantId?: string | null;
     _id: string;
     userId?: string;
+    phone?: string;
+    counterNumber?: string;
 }
 export interface LoginRequest {
     tenantId: string | null;
     email: string;
     password: string;
+}
+export interface MenuLoginRequest {
+    tenantId: string;
+    phone: string;
+    password: string;
+    counterNumber: string;
 }
 export interface LoginResponse {
     success: boolean;

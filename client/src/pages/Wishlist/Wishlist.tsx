@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Heart } from "lucide-react";
 import { useWishlist } from "../../features/wishlist/hooks/useWishlist";
 import { useCart } from "../../features/cart/hooks/useCart";
@@ -7,10 +7,13 @@ import PageLoader from "../../components/PageLoader";
 import styles from "./Wishlist.module.css";
 import ProductCard from "../../components/ProductCard/UniCard/ProductCard";
 import { useAuth } from "../../features/auth/hooks/useAuth";
+import { useNavigateToLogin } from "../../features/auth/hooks/useNavigateToLogin";
 import { useStorefrontTenant } from "../../features/tenant/useTenant";
+
 const Wishlist = () => {
     const { user, isAuthenticated } = useAuth();
     const { tenantId: storeTenantId } = useStorefrontTenant();
+    const navigateToLogin = useNavigateToLogin();
     const isCustomer =
         isAuthenticated && user?.role === "customer" && Boolean(user._id);
     const wishlistUserId = isCustomer ? user!._id : "";
@@ -24,6 +27,16 @@ const Wishlist = () => {
     const { addToCart } = useCart(wishlistUserId, wishlistTenantId);
     const [addingProductId, setAddingProductId] = useState<string | null>(null);
     const layoutSettings = useLayoutSettings();
+
+    useEffect(() => {
+        if (!isCustomer) {
+            navigateToLogin();
+        }
+    }, [isCustomer, navigateToLogin]);
+
+    if (!isCustomer) {
+        return null;
+    }
     if (isLoading) {
         return <PageLoader message="Loading your wishlist..." />;
     }

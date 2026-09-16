@@ -1,9 +1,11 @@
 import apiClient from "../../../api/client";
 import { API_ENDPOINTS } from "../../../api/endpoints";
+import type { BusinessType } from "../../../constants/businessTypes";
 
 export type RegisterStorePayload = {
   name: string;
   slug: string;
+  businessType: BusinessType;
   email: string;
   password: string;
 };

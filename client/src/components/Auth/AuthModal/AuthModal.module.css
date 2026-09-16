@@ -1,12 +1,12 @@
 .overlay {
   position: fixed;
   inset: 0;
-  z-index: 9999;
+  z-index: 100000;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 1.5rem;
-  background: color-mix(in srgb, var(--text-black) 58%, transparent);
+  background: color-mix(in srgb, var(--text-black, #111111) 58%, transparent);
   backdrop-filter: blur(0.5rem);
   -webkit-backdrop-filter: blur(0.5rem);
   animation: overlayIn 0.2s ease;
@@ -17,9 +17,10 @@
   max-height: calc(100vh - 3rem);
   overflow-y: auto;
   padding: 2.375rem;
-  background: var(--surface);
-  border: 0.0625rem solid var(--border);
+  background: var(--surface, #ffffff);
+  border: 0.0625rem solid var(--border, #e5e7eb);
   border-radius: 1.5rem;
+  color: var(--text, #111111);
   box-shadow:
     0 1.875rem 5rem color-mix(in srgb, var(--text-black) 22%, transparent),
     0 0.5rem 1.5rem color-mix(in srgb, var(--text-black) 8%, transparent);

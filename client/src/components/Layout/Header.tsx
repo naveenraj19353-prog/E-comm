@@ -186,12 +186,34 @@ export default function Navbar() {
             <Palette size={20} />
           </button>)}
 
-          <button type="button" className={styles.iconButton} onClick={() => go(routes.wishlist(tenantSlug!))} aria-label="Wishlist">
+          <button
+            type="button"
+            className={styles.iconButton}
+            onClick={() => {
+              if (!isCustomer) {
+                navigateToLogin(undefined, () => go(routes.wishlist(tenantSlug!)));
+                return;
+              }
+              go(routes.wishlist(tenantSlug!));
+            }}
+            aria-label="Wishlist"
+          >
             <HeartIcon />
             {wishlistCount > 0 && (<span className={styles.badge}>{wishlistCount}</span>)}
           </button>
           
-          <button type="button" className={styles.iconButton} onClick={() => go(routes.cart(tenantSlug!))} aria-label="Cart">
+          <button
+            type="button"
+            className={styles.iconButton}
+            onClick={() => {
+              if (!isCustomer) {
+                navigateToLogin(undefined, () => go(routes.cart(tenantSlug!)));
+                return;
+              }
+              go(routes.cart(tenantSlug!));
+            }}
+            aria-label="Cart"
+          >
             <ShoppingCart size={20}/>
             {cartCount > 0 && <span className={styles.badge}>{cartCount}</span>}
           </button>
@@ -253,19 +275,29 @@ export default function Navbar() {
             Layout studio
           </button>)}
           <button type="button" aria-label="Mobile wishlist" onClick={() => {
-            go(routes.wishlist(tenantSlug!));
+            if (!isCustomer) {
+                navigateToLogin(undefined, () => go(routes.wishlist(tenantSlug!)));
+            }
+            else {
+                go(routes.wishlist(tenantSlug!));
+            }
             setMenuOpen(false);
         }}>
             Wishlist
           </button>
           <button type="button" aria-label="Mobile cart" onClick={() => {
-            go(routes.cart(tenantSlug!));
+            if (!isCustomer) {
+                navigateToLogin(undefined, () => go(routes.cart(tenantSlug!)));
+            }
+            else {
+                go(routes.cart(tenantSlug!));
+            }
             setMenuOpen(false);
         }}>
             Cart
           </button>
-          <button type="button" aria-label={user ? "Mobile account" : "Mobile sign in"} onClick={() => {
-            if (user) {
+          <button type="button" aria-label={isCustomer ? "Mobile account" : "Mobile sign in"} onClick={() => {
+            if (isCustomer) {
                 go(routes.profile(tenantSlug!));
             }
             else {
@@ -273,7 +305,7 @@ export default function Navbar() {
             }
             setMenuOpen(false);
         }}>
-            {user ? "Account" : "Sign in"}
+            {isCustomer ? "Account" : "Sign in"}
           </button>
         </div>
       </aside>

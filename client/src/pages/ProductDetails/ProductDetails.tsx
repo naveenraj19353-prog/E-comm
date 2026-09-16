@@ -19,6 +19,7 @@ import {
     getFirstProductImage,
     isProductOutOfStock,
 } from "../../features/products/inventory";
+import { isMenuBusiness, isServiceBusiness } from "../../features/tenant/businessMode";
 const ProductDetails = () => {
     const { productId } = useParams<{
         tenantSlug: string;
@@ -26,20 +27,22 @@ const ProductDetails = () => {
     }>();
     const { user, isAuthenticated } = useAuth();
     const { tenantId, tenantSlug, tenant } = useStorefrontTenant();
+    const isServiceMode = isServiceBusiness(tenant?.businessType);
+    const isMenuMode = isMenuBusiness(tenant?.businessType);
     const navigateToLogin = useNavigateToLogin();
+    const isCustomer =
+        isAuthenticated && user?.role === "customer" && Boolean(user._id);
     const { data: productResponse, isLoading: productLoading, isError: productIsError, } = useProductDetails(productId || "", tenantId);
     const product = productResponse?.data || null;
-    const { reviews, isLoading: reviewsLoading, addReview, isCreating: isSubmittingReview, } = useReviews(productId || "", tenantId);
+    const { reviews, isLoading: reviewsLoading, addReview, isCreating: isSubmittingReview, } = useReviews(productId || "", tenantId, {
+        enabled: Boolean(productId && tenantId && !isServiceMode),
+    });
     const [showReviewForm, setShowReviewForm] = useState(false);
     const [reviewRating, setReviewRating] = useState(0);
     const [reviewTitle, setReviewTitle] = useState("");
     const [reviewComment, setReviewComment] = useState("");
-    const cartUserId =
-        isAuthenticated && user?.role === "customer" && user._id ? user._id : "";
-    const cartTenantId =
-        isAuthenticated && user?.role === "customer"
-            ? (user.tenantId || tenantId || "")
-            : "";
+    const cartUserId = isCustomer ? user!._id : "";
+    const cartTenantId = isCustomer ? (user!.tenantId || tenantId || "") : "";
     const { addToCart, isAdding } = useCart(cartUserId, cartTenantId, {
         enabled: Boolean(cartUserId && cartTenantId),
     });
@@ -55,17 +58,21 @@ const ProductDetails = () => {
         navigateToLogin();
     };
     const handleAddToCart = async (selectedProductId: string, quantity: number, variantId?: string) => {
-        if (!isAuthenticated || !user) {
+        if (!isCustomer || !user) {
             requireLogin();
             return;
         }
         if (!variantId) {
-            alert("Please select an available color and size.");
+            alert(
+                isServiceMode
+                    ? "This service is currently unavailable."
+                    : "Please select an available color and size.",
+            );
             return;
         }
         try {
             await addToCart({
-                tenantId,
+                tenantId: cartTenantId || tenantId,
                 userId: user._id,
                 productId: selectedProductId,
                 quantity,
@@ -77,7 +84,7 @@ const ProductDetails = () => {
         }
     };
     const handleWishlist = async (selectedProductId: string) => {
-        if (!isAuthenticated || !user) {
+        if (!isCustomer || !user) {
             requireLogin();
             return;
         }
@@ -98,7 +105,7 @@ const ProductDetails = () => {
         }
     };
     const handleWriteReview = () => {
-        if (!isAuthenticated || !user) {
+        if (!isCustomer || !user) {
             requireLogin();
             return;
         }
@@ -108,7 +115,7 @@ const ProductDetails = () => {
         if (!product) {
             return;
         }
-        if (!isAuthenticated || !user) {
+        if (!isCustomer || !user) {
             requireLogin();
             return;
         }
@@ -190,11 +197,33 @@ const ProductDetails = () => {
           sku: product._id,
           price: product.finalPrice ?? product.price,
           availability: inStock ? "InStock" : "OutOfStock",
-          ratingValue: product.averageRating,
-          reviewCount: product.reviewCount,
+          ratingValue: isServiceMode ? undefined : product.averageRating,
+          reviewCount: isServiceMode ? undefined : product.reviewCount,
         })}
       />
-      <ProductDetailsView product={product} reviews={reviews} isWishlisted={isWishlisted} isAddingToCart={isAdding} onAddToCart={handleAddToCart} onWishlist={handleWishlist} shareUrl={productUrl} storeName={storeName} onWriteReview={handleWriteReview} showReviewForm={showReviewForm} reviewRating={reviewRating} reviewTitle={reviewTitle} reviewComment={reviewComment} onReviewRatingChange={setReviewRating} onReviewTitleChange={setReviewTitle} onReviewCommentChange={setReviewComment} onSubmitReview={handleSubmitReview} isSubmittingReview={isSubmittingReview} reviewsLoading={reviewsLoading}/>
+      <ProductDetailsView
+        product={product}
+        reviews={isServiceMode ? [] : reviews}
+        isWishlisted={isWishlisted}
+        isAddingToCart={isAdding}
+        onAddToCart={handleAddToCart}
+        onWishlist={handleWishlist}
+        shareUrl={productUrl}
+        storeName={storeName}
+        isServiceMode={isServiceMode}
+        isMenuMode={isMenuMode}
+        onWriteReview={handleWriteReview}
+        showReviewForm={showReviewForm}
+        reviewRating={reviewRating}
+        reviewTitle={reviewTitle}
+        reviewComment={reviewComment}
+        onReviewRatingChange={setReviewRating}
+        onReviewTitleChange={setReviewTitle}
+        onReviewCommentChange={setReviewComment}
+        onSubmitReview={handleSubmitReview}
+        isSubmittingReview={isSubmittingReview}
+        reviewsLoading={isServiceMode ? false : reviewsLoading}
+      />
     </>);
 };
 export default ProductDetails;

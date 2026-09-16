@@ -10,6 +10,10 @@ import {
     validateCreateTenantForm,
 } from "../utils/tenantForm.utils";
 import { formatStorefrontHost } from "../../tenant/tenantHost";
+import {
+    BUSINESS_TYPE_OPTIONS,
+    type BusinessType,
+} from "../../../constants/businessTypes";
 
 export default function CreateTenant() {
     const navigate = useNavigate();
@@ -18,6 +22,7 @@ export default function CreateTenant() {
     const [slug, setSlug] = useState("");
     const [tenantId, setTenantId] = useState("");
     const [tenantIdEdited, setTenantIdEdited] = useState(false);
+    const [businessType, setBusinessType] = useState<BusinessType | "">("");
     const [logo, setLogo] = useState("");
     const [theme, setTheme] = useState("green");
     const [email, setEmail] = useState("");
@@ -50,6 +55,7 @@ export default function CreateTenant() {
             name,
             slug,
             tenantId,
+            businessType,
             logo,
             theme,
             email,
@@ -66,6 +72,7 @@ export default function CreateTenant() {
                 tenantId: tenantId.trim().toLowerCase(),
                 name: name.trim(),
                 slug: slug.trim().toLowerCase(),
+                businessType: businessType as BusinessType,
                 logo: logo.trim(),
                 theme,
                 email: email.trim().toLowerCase(),
@@ -151,6 +158,33 @@ export default function CreateTenant() {
                             placeholder="fashion-hub"
                         />
                         <small>Used for admin login. Auto-filled from slug; you can customize it.</small>
+                    </div>
+
+                    <div className={styles.field}>
+                        <label htmlFor="tenant-business-type">
+                            Business type
+                            <span>*</span>
+                        </label>
+                        <select
+                            id="tenant-business-type"
+                            value={businessType}
+                            onChange={(event) =>
+                                setBusinessType(event.target.value as BusinessType | "")
+                            }
+                            required
+                        >
+                            <option value="" disabled>
+                                Select type
+                            </option>
+                            {BUSINESS_TYPE_OPTIONS.map((option) => (
+                                <option key={option.value} value={option.value}>
+                                    {option.label}
+                                </option>
+                            ))}
+                        </select>
+                        <small>
+                            Retail = products · Service = bookings · Menu = food ordering
+                        </small>
                     </div>
 
                     <div className={styles.field}>
@@ -247,6 +281,13 @@ export default function CreateTenant() {
                             <div>
                                 <strong>{name || "Store Name"}</strong>
                                 <span>/{slug || "store-slug"}</span>
+                                <span>
+                                    Type:{" "}
+                                    {businessType
+                                        ? businessType.charAt(0).toUpperCase() +
+                                          businessType.slice(1)
+                                        : "—"}
+                                </span>
                                 <span>Admin: {email || "owner@business.com"}</span>
                             </div>
                         </div>

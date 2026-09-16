@@ -1,6 +1,8 @@
-from typing import Optional
+from typing import Literal, Optional
 
 from pydantic import BaseModel, EmailStr, Field
+
+BusinessType = Literal["retail", "service", "menu"]
 
 
 class ThemeColors(BaseModel):
@@ -78,6 +80,7 @@ class CreateTenant(BaseModel):
         min_length=2,
         max_length=100,
     )
+    businessType: BusinessType
     logo: Optional[str] = ""
     theme: Optional[str] = "green"
     email: EmailStr
@@ -93,6 +96,7 @@ class RegisterStore(BaseModel):
 
     name: str = Field(..., min_length=2, max_length=100)
     slug: str = Field(..., min_length=2, max_length=48)
+    businessType: BusinessType
     email: EmailStr
     password: str = Field(..., min_length=6, max_length=128)
 
@@ -108,6 +112,7 @@ class UpdateTenant(BaseModel):
         min_length=2,
         max_length=100,
     )
+    businessType: Optional[BusinessType] = None
     logo: Optional[str] = None
     theme: Optional[str] = None
     themeColors: Optional[ThemeColors] = None

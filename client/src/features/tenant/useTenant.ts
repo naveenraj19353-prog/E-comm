@@ -14,7 +14,7 @@ export const useStorefrontTenant = () => {
         || tenant?.slug
         || storedSlug
         || "";
-    const tenantId = tenant?.tenantId || "";
+    const tenantId = tenant?.tenantId || tenant?._id || "";
     return {
         tenantSlug: slug,
         tenantId,

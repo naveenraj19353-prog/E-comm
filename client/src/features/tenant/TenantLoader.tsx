@@ -6,6 +6,7 @@ import PageLoader from "../../components/PageLoader";
 import { clearTenant, setTenant, setTenantSlug } from "./tenantSlice";
 import { getTenantSlugFromHostname } from "./tenantHost";
 import { getTenantBySlug } from "../admin/api/tenant.api";
+import { StorefrontAuthModalProvider } from "./StorefrontAuthModal";
 import type { Tenant } from "../../types/tenant";
 
 const TenantLoader = () => {
@@ -71,7 +72,11 @@ const TenantLoader = () => {
         return <PageLoader message="Loading store layout..." fullViewport />;
     }
 
-    return <Outlet />;
+    return (
+        <StorefrontAuthModalProvider>
+            <Outlet />
+        </StorefrontAuthModalProvider>
+    );
 };
 
 export default TenantLoader;

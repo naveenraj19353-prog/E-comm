@@ -3,6 +3,10 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useTenantByTenantId, useUpdateTenant } from "../hooks/useTenants";
 import styles from "../styles/EditTenant.module.css";
 import type { SubmitEvent } from "react";
+import {
+    BUSINESS_TYPE_OPTIONS,
+    type BusinessType,
+} from "../../../constants/businessTypes";
 export default function EditTenant() {
     const { tenantId } = useParams();
     const navigate = useNavigate();
@@ -34,6 +38,9 @@ function EditTenantForm({ tenant }: EditTenantFormProps) {
     const [slug, setSlug] = useState(tenant.slug || "");
     const [logo, setLogo] = useState(tenant.logo || "");
     const [theme, setTheme] = useState(tenant.theme || "green");
+    const [businessType, setBusinessType] = useState<BusinessType>(
+        tenant.businessType || "retail",
+    );
     const [isActive, setIsActive] = useState(tenant.isActive ?? true);
     const [error, setError] = useState("");
     const handleSubmit = async (event: SubmitEvent<HTMLFormElement>) => {
@@ -53,6 +60,7 @@ function EditTenantForm({ tenant }: EditTenantFormProps) {
                 payload: {
                     name: name.trim(),
                     slug: slug.trim(),
+                    businessType,
                     logo: logo.trim(),
                     theme,
                     isActive,
@@ -126,6 +134,25 @@ function EditTenantForm({ tenant }: EditTenantFormProps) {
               </div>)}
           </div>
           
+          <div className={styles.field}>
+            <label htmlFor="tenant-business-type">
+              Business type
+              <span>*</span>
+            </label>
+            <select
+              id="tenant-business-type"
+              value={businessType}
+              onChange={(event) => setBusinessType(event.target.value as BusinessType)}
+            >
+              {BUSINESS_TYPE_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+            <small>Retail = products · Service = bookings · Menu = food ordering</small>
+          </div>
+
           <div className={styles.field}>
             <label htmlFor="tenant-theme">Theme</label>
             <select id="tenant-theme" value={theme} onChange={(event) => setTheme(event.target.value)}>

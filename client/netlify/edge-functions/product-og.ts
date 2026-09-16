@@ -6,20 +6,31 @@
  * (no trailing slash)
  */
 
+type DenoEnv = { env: { get(key: string): string | undefined } };
+
+/** Netlify Edge runs on Deno; avoid bare `Deno` so Vite/TS IDE stays clean. */
+function edgeEnv(key: string): string | undefined {
+  const runtime = globalThis as typeof globalThis & { Deno?: DenoEnv };
+  return runtime.Deno?.env.get(key);
+}
+
 const BOT_UA =
   /whatsapp|facebookexternalhit|facebot|twitterbot|linkedinbot|slackbot|discordbot|telegrambot|googlebot|bingbot|baiduspider|duckduckbot|embedly|quora link preview|pinterest|redditbot|applebot|semrushbot|preview/i;
 
 const PRODUCT_PATH =
   /^(?:\/([^/]+))?\/product-details\/([a-f\d]{24})\/?$/i;
 
-function tenantFromHost(hostname: string, rootDomain: string): string | null {
+function tenantFromHost(hostname: string, tenantBaseDomain: string): string | null {
   const host = hostname.toLowerCase();
-  const root = rootDomain.toLowerCase();
-  if (!host.endsWith(`.${root}`)) {
+  const base = tenantBaseDomain.toLowerCase();
+  if (host === base || host === `www.${base}`) {
     return null;
   }
-  const sub = host.slice(0, -(root.length + 1));
-  if (!sub || sub === "www" || sub === "api") {
+  if (!host.endsWith(`.${base}`)) {
+    return null;
+  }
+  const sub = host.slice(0, -(base.length + 1));
+  if (!sub || sub.includes(".") || sub === "www" || sub === "api" || sub === "store") {
     return null;
   }
   return sub;
@@ -39,15 +50,17 @@ export default async (request: Request, context: { next: () => Promise<Response>
 
   const pathTenant = match[1] ? match[1].toLowerCase() : null;
   const productId = match[2];
-  const rootDomain = Deno.env.get("ROOT_DOMAIN") || "retailcosmos.com";
-  const hostTenant = tenantFromHost(url.hostname, rootDomain);
+  const tenantBaseDomain =
+    edgeEnv("TENANT_BASE_DOMAIN") ||
+    `store.${edgeEnv("ROOT_DOMAIN") || "retailcosmos.com"}`;
+  const hostTenant = tenantFromHost(url.hostname, tenantBaseDomain);
   const tenantSlug = hostTenant || pathTenant;
 
   if (!tenantSlug || !productId) {
     return context.next();
   }
 
-  const apiBase = (Deno.env.get("API_BASE_URL") || "https://api.retailcosmos.com").replace(
+  const apiBase = (edgeEnv("API_BASE_URL") || "https://api.retailcosmos.com").replace(
     /\/$/,
     "",
   );
