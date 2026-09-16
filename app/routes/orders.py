@@ -7,6 +7,7 @@ from pymongo import DESCENDING
 
 from app.database.mongo import orders, users
 from app.models.checkout import CreateCodOrder
+from app.models.menu import PlaceMenuOrderRequest
 from app.models.orders import UpdateOrderStatus
 from app.routes.detail_messages import ORDER_NOT_FOUND
 from app.routes.response_metadata import (
@@ -17,6 +18,7 @@ from app.routes.response_metadata import (
     INTERNAL_SERVER_ERROR_RESPONSE,
     NOT_FOUND_RESPONSE,
 )
+from app.services.menu_service import fulfill_menu_order, normalize_counter_number
 from app.services.order_fulfillment import fulfill_cod_order, restore_variant_stock
 from app.utils.auth_dependencies import (
     admin_tenant_id,
@@ -33,6 +35,8 @@ ADMIN_STATUS_TRANSITIONS: dict[str, set[str]] = {
     "shipped": {"delivered", "cancelled"},
     "delivered": set(),
     "cancelled": set(),
+    "open": {"closed", "cancelled"},
+    "closed": set(),
 }
 
 
@@ -72,6 +76,51 @@ def create_cod_order(
     except Exception as error:
         print("COD order error:", str(error))
         raise HTTPException(status_code=500, detail="Unable to place COD order.")
+
+
+@router.post(
+    "/menu",
+    responses={
+        400: BAD_REQUEST_RESPONSE[400],
+        403: FORBIDDEN_RESPONSE[403],
+        404: NOT_FOUND_RESPONSE[404],
+        409: CONFLICT_RESPONSE[409],
+        500: INTERNAL_SERVER_ERROR_RESPONSE[500],
+    },
+)
+def create_menu_order(
+    current_user: Annotated[dict, Depends(require_customer)],
+    request: PlaceMenuOrderRequest = PlaceMenuOrderRequest(),
+):
+    tenant_id, user_id = customer_scope(current_user)
+    counter_number = (
+        request.counterNumber
+        or current_user.get("counterNumber")
+        or ""
+    )
+    phone = current_user.get("phone") or ""
+    if not counter_number:
+        raise HTTPException(
+            status_code=400,
+            detail="Table / room number is required. Please sign in again.",
+        )
+    if not phone:
+        raise HTTPException(
+            status_code=400,
+            detail="Mobile number missing from session. Please sign in again.",
+        )
+    try:
+        return fulfill_menu_order(
+            tenant_id=tenant_id,
+            user_id=user_id,
+            counter_number=normalize_counter_number(str(counter_number)),
+            phone=str(phone),
+        )
+    except HTTPException:
+        raise
+    except Exception as error:
+        print("Menu order error:", str(error))
+        raise HTTPException(status_code=500, detail="Unable to place menu order.")
 
 
 @router.get(
@@ -336,6 +385,10 @@ def _serialize_order(order: dict, customer: dict | None = None) -> dict:
         "addressId": address_id,
         "paymentMethod": order.get("paymentMethod"),
         "deliveryMethod": order.get("deliveryMethod"),
+        "channel": order.get("channel"),
+        "counterNumber": order.get("counterNumber"),
+        "phone": order.get("phone"),
+        "paidAt": order.get("paidAt"),
         "courier": _serialize_courier(order.get("courier")),
         "createdAt": order.get("createdAt"),
         "updatedAt": order.get("updatedAt"),

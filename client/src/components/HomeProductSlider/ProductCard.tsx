@@ -8,6 +8,11 @@ import styles from "./ProductCard.module.css";
 import { isProductOutOfStock, getProductImagesForColor } from "../../features/products/inventory";
 import ProductImage from "../ProductImage";
 import { useProductNavigation } from "../../features/products/hooks/useProductNavigation";
+import { useStorefrontTenant } from "../../features/tenant/useTenant";
+import {
+    addToListLabel,
+    isServiceBusiness,
+} from "../../features/tenant/businessMode";
 import { getColorValue } from "./ProductCard.utils";
 import { ArrowIcon, BagIcon, HeartIcon, StarIcon } from "./ProductCardIcons";
 import { useProductVariantSelection } from "./useProductVariantSelection";
@@ -48,6 +53,8 @@ export default function ProductCard({
     isAdding = false,
 }: ProductCardProps) {
     const { goToProduct } = useProductNavigation();
+    const { tenant } = useStorefrontTenant();
+    const isServiceMode = isServiceBusiness(tenant?.businessType);
     const {
         _id,
         name,
@@ -66,23 +73,30 @@ export default function ProductCard({
         availableSizes,
         selectedColor,
         selectedSize,
-        selectedVariant,
+        selectedVariant: retailVariant,
         selectColor,
         selectSize,
     } = useProductVariantSelection(inventory);
 
+    const selectedVariant = isServiceMode
+        ? inventory.find((item) => item.stock > 0) || inventory[0]
+        : retailVariant;
+
     const isOutOfStock = isProductOutOfStock(product);
     const validImages = useMemo(
-        () => getProductImagesForColor(images, selectedColor),
-        [images, selectedColor],
+        () =>
+            getProductImagesForColor(
+                images,
+                isServiceMode
+                    ? inventory[0]?.color || selectedColor
+                    : selectedColor,
+            ),
+        [images, selectedColor, isServiceMode, inventory],
     );
 
     const handleWishlist = (event: React.MouseEvent<HTMLButtonElement>) => {
         event.stopPropagation();
-        if (!onWishlist) {
-            return;
-        }
-        onWishlist(_id, !isWishlisted);
+        onWishlist?.(_id, !isWishlisted);
     };
 
     const handleAddToCart = (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -90,12 +104,13 @@ export default function ProductCard({
         if (isAdding) {
             return;
         }
-        if (!selectedVariant) {
-            console.log("No available variant selected");
-            return;
-        }
-        console.log("Adding selected variant:", selectedVariant);
-        onAddToCart?.(_id, selectedVariant.variantId, selectedVariant.color, selectedVariant.size);
+        // Always notify parent so guests can open the login modal first.
+        onAddToCart?.(
+            _id,
+            selectedVariant?.variantId || "",
+            selectedVariant?.color || "",
+            selectedVariant?.size || "",
+        );
     };
 
     const handleCardClick = () => {
@@ -107,12 +122,16 @@ export default function ProductCard({
     };
 
     const cartButtonLabel = isOutOfStock
-        ? "Out of Stock"
+        ? isServiceMode
+            ? "Unavailable"
+            : "Out of Stock"
         : isAdding
             ? "Adding..."
             : !selectedVariant
-                ? "Select Variant"
-                : "Add to Cart";
+                ? isServiceMode
+                    ? "Unavailable"
+                    : "Select Variant"
+                : addToListLabel(isServiceMode);
 
     return (
         <article
@@ -176,7 +195,7 @@ export default function ProductCard({
                     />
                 )}
                 <div className={styles.gradient} />
-                {discountPercentage > 0 && (
+                {(!isServiceMode && discountPercentage > 0) && (
                     <div className={styles.discount}>{discountPercentage}% OFF</div>
                 )}
                 <button
@@ -207,7 +226,7 @@ export default function ProductCard({
                         </button>
                     </>
                 )}
-                {typeof averageRating === "number" && (
+                {!isServiceMode && typeof averageRating === "number" && (
                     <div className={styles.rating}>
                         <span>{averageRating.toFixed(1)}</span>
                         <StarIcon />
@@ -215,12 +234,17 @@ export default function ProductCard({
                         <span>{reviewCount}</span>
                     </div>
                 )}
+                {isServiceMode && (
+                    <div className={styles.rating}>
+                        <span>{isOutOfStock ? "Unavailable" : "Available"}</span>
+                    </div>
+                )}
                 <div className={styles.cartContainer}>
                     <button
                         type="button"
                         className={styles.cartButton}
                         onClick={handleAddToCart}
-                        disabled={isAdding || isOutOfStock || !selectedVariant}
+                        disabled={isAdding}
                     >
                         <BagIcon />
                         <span>{cartButtonLabel}</span>
@@ -229,7 +253,7 @@ export default function ProductCard({
             </div>
             <div className={styles.info}>
                 <h3 className={styles.name}>{name}</h3>
-                {availableColors.length > 0 && (
+                {!isServiceMode && availableColors.length > 0 && (
                     <div className={styles.colorSection}>
                         <span className={styles.optionLabel}>Color:</span>
                         <div className={styles.colorOptions}>
@@ -254,7 +278,7 @@ export default function ProductCard({
                         </div>
                     </div>
                 )}
-                {availableSizes.length > 0 && (
+                {!isServiceMode && availableSizes.length > 0 && (
                     <div className={styles.sizeSection}>
                         <span className={styles.optionLabel}>Size:</span>
                         <div className={styles.sizeOptions}>
@@ -279,12 +303,12 @@ export default function ProductCard({
                     <span className={styles.finalPrice}>
                         ₹{finalPrice?.toLocaleString("en-IN")}
                     </span>
-                    {price > finalPrice && (
+                    {!isServiceMode && price > finalPrice && (
                         <span className={styles.originalPrice}>
                             ₹{price.toLocaleString("en-IN")}
                         </span>
                     )}
-                    {discountPercentage > 0 && (
+                    {!isServiceMode && discountPercentage > 0 && (
                         <span className={styles.discountPill}>
                             {discountPercentage}% OFF
                         </span>

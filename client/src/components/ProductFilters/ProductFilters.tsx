@@ -1,6 +1,11 @@
 import { useMemo } from "react";
 import { useAppDispatch, useAppSelector } from "../../app/hooks";
 import { setFilters, clearFilters } from "../../features/products/productSlice";
+import { useStorefrontTenant } from "../../features/tenant/useTenant";
+import {
+  isMenuBusiness,
+  isServiceBusiness,
+} from "../../features/tenant/businessMode";
 import FilterSection from "./FilterSection";
 import PriceRange from "./PriceRange";
 import RatingFilter from "./RatingFilter";
@@ -10,12 +15,16 @@ import styles from "./ProductFilters.module.css";
 
 const ProductFilters = () => {
   const dispatch = useAppDispatch();
+  const { tenant } = useStorefrontTenant();
+  const isServiceMode = isServiceBusiness(tenant?.businessType);
+  const isMenuMode = isMenuBusiness(tenant?.businessType);
   const filters = useAppSelector((state) => state.products.filters);
   const catalogFilter = useAppSelector((state) => state.products.catalogFilter);
   const categories = catalogFilter?.category ?? [];
   const colors = catalogFilter?.color ?? [];
   const sizes = catalogFilter?.size ?? [];
   const brands = catalogFilter?.brand ?? [];
+  const foodTypes = catalogFilter?.foodType ?? [];
   const priceMin = catalogFilter?.price?.min ?? 0;
   const priceMax = Math.max(catalogFilter?.price?.max ?? 0, priceMin);
   const hasPriceRange = Boolean(catalogFilter) && priceMax > priceMin;
@@ -31,11 +40,16 @@ const ProductFilters = () => {
   const activeFilterCount = useMemo(() => {
     let count = 0;
     count += filters.categories.length;
-    count += filters.colors.length;
-    count += filters.sizes.length;
+    if (!isServiceMode) {
+      count += filters.colors.length;
+      count += filters.sizes.length;
+      if (filters.rating !== null) {
+        count += 1;
+      }
+    }
     count += filters.brands.length;
-    if (filters.rating !== null) {
-      count += 1;
+    if (isMenuMode) {
+      count += filters.foodTypes.length;
     }
     if (!isDefaultPrice) {
       count += 1;
@@ -44,7 +58,7 @@ const ProductFilters = () => {
       count += 1;
     }
     return count;
-  }, [filters, isDefaultPrice]);
+  }, [filters, isDefaultPrice, isMenuMode, isServiceMode]);
   const toggleCategory = (id: string) => {
     dispatch(
       setFilters({
@@ -60,6 +74,15 @@ const ProductFilters = () => {
         brands: filters.brands.includes(brand)
           ? filters.brands.filter((item) => item !== brand)
           : [...filters.brands, brand],
+      }),
+    );
+  };
+  const toggleFoodType = (foodType: "veg" | "non_veg") => {
+    dispatch(
+      setFilters({
+        foodTypes: filters.foodTypes.includes(foodType)
+          ? filters.foodTypes.filter((item) => item !== foodType)
+          : [...filters.foodTypes, foodType],
       }),
     );
   };
@@ -113,6 +136,22 @@ const ProductFilters = () => {
           </div>
         </FilterSection>
       )}
+      {isMenuMode && foodTypes.length > 0 && (
+        <FilterSection title="Food Type">
+          <div className={styles.list}>
+            {foodTypes.map((foodType) => (
+              <label key={foodType} className={styles.checkbox}>
+                <input
+                  type="checkbox"
+                  checked={filters.foodTypes.includes(foodType)}
+                  onChange={() => toggleFoodType(foodType)}
+                />
+                <span>{foodType === "veg" ? "Veg" : "Non-Veg"}</span>
+              </label>
+            ))}
+          </div>
+        </FilterSection>
+      )}
       {brands.length > 0 && (
         <FilterSection title="Brand">
           <div className={styles.list}>
@@ -145,19 +184,21 @@ const ProductFilters = () => {
           />
         </FilterSection>
       )}
-      <FilterSection title="Rating">
-        <RatingFilter
-          value={filters.rating}
-          onChange={(rating) =>
-            dispatch(
-              setFilters({
-                rating,
-              }),
-            )
-          }
-        />
-      </FilterSection>
-      {colors.length > 0 && (
+      {!isServiceMode && (
+        <FilterSection title="Rating">
+          <RatingFilter
+            value={filters.rating}
+            onChange={(rating) =>
+              dispatch(
+                setFilters({
+                  rating,
+                }),
+              )
+            }
+          />
+        </FilterSection>
+      )}
+      {!isServiceMode && colors.length > 0 && (
         <FilterSection title="Colors">
           <ColorFilter
             colors={colors}
@@ -172,7 +213,7 @@ const ProductFilters = () => {
           />
         </FilterSection>
       )}
-      {sizes.length > 0 && (
+      {!isServiceMode && sizes.length > 0 && (
         <FilterSection title="Sizes">
           <SizeFilter
             sizes={sizes}

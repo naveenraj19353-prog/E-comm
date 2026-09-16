@@ -3,7 +3,9 @@ export type OrderStatus =
     | "processing"
     | "shipped"
     | "delivered"
-    | "cancelled";
+    | "cancelled"
+    | "open"
+    | "closed";
 
 export interface OrderItem {
     productId: string;
@@ -55,6 +57,10 @@ export interface Order {
     paymentMethod?: string;
     deliveryMethod?: string;
     orderStatus?: OrderStatus;
+    channel?: string;
+    counterNumber?: string;
+    phone?: string;
+    paidAt?: string;
     address?: OrderAddress | null;
     addressId?: string | null;
     customer?: OrderCustomer;
@@ -62,7 +68,6 @@ export interface Order {
     createdAt?: string;
     updatedAt?: string;
 }
-
 export interface OrdersResponse {
     success: boolean;
     count: number;

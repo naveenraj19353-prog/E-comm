@@ -1,10 +1,18 @@
 import { NavLink, Outlet, Navigate, useLocation, } from "react-router-dom";
 import { useAuth } from "../../auth/hooks/useAuth";
 import { usePageSeo } from "../../seo";
+import { useTenantByTenantId } from "../hooks/useTenants";
+import { isMenuBusiness, isRetailBusiness } from "../../tenant/businessMode";
 import styles from "../styles/AdminLayout.module.css";
 export default function AdminLayout() {
     const location = useLocation();
     const { user, isAuthenticated, logout } = useAuth();
+    const { data: adminTenant } = useTenantByTenantId(
+        user?.role === "admin" ? user.tenantId || "" : "",
+    );
+    const showMenuDesk = isMenuBusiness(adminTenant?.businessType);
+    const showRetailExtras = isRetailBusiness(adminTenant?.businessType);
+    const showBanners = !showMenuDesk;
     usePageSeo({
         title: "Admin",
         description: "Retail Cosmos admin portal.",
@@ -89,7 +97,8 @@ export default function AdminLayout() {
             </NavLink>)}
           
           {isAdmin &&
-            user.tenantId && (<NavLink to={`/admin/tenants/${user.tenantId}/orders`} className={({ isActive }) => `${styles.navItem} ${isActive
+            user.tenantId &&
+            showRetailExtras && (<NavLink to={`/admin/tenants/${user.tenantId}/orders`} className={({ isActive }) => `${styles.navItem} ${isActive
                 ? styles.active
                 : ""}`}>
                 <span>⧉</span>
@@ -97,7 +106,25 @@ export default function AdminLayout() {
             </NavLink>)}
 
           {isAdmin &&
-            user.tenantId && (<NavLink to={`/admin/tenants/${user.tenantId}/banners`} className={({ isActive }) => `${styles.navItem} ${isActive
+            user.tenantId &&
+            showMenuDesk && (<NavLink to={`/admin/tenants/${user.tenantId}/menu`} className={({ isActive }) => `${styles.navItem} ${isActive
+                ? styles.active
+                : ""}`}>
+                <span>▤</span>
+                Menu Desk
+            </NavLink>)}
+
+          {isAdmin &&
+            user.tenantId && (<NavLink to={`/admin/tenants/${user.tenantId}/customers`} className={({ isActive }) => `${styles.navItem} ${isActive
+                ? styles.active
+                : ""}`}>
+                <span>◎</span>
+                Customers
+            </NavLink>)}
+
+          {isAdmin &&
+            user.tenantId &&
+            showBanners && (<NavLink to={`/admin/tenants/${user.tenantId}/banners`} className={({ isActive }) => `${styles.navItem} ${isActive
                 ? styles.active
                 : ""}`}>
                 <span>▣</span>
@@ -105,7 +132,8 @@ export default function AdminLayout() {
             </NavLink>)}
 
           {isAdmin &&
-            user.tenantId && (<NavLink to={`/admin/tenants/${user.tenantId}/shipping/delhivery`} className={({ isActive }) => `${styles.navItem} ${isActive
+            user.tenantId &&
+            showRetailExtras && (<NavLink to={`/admin/tenants/${user.tenantId}/shipping/delhivery`} className={({ isActive }) => `${styles.navItem} ${isActive
                 ? styles.active
                 : ""}`}>
                 <span>⬡</span>

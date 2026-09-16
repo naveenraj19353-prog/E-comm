@@ -30,16 +30,20 @@ APP_PASSWORD = os.getenv("APP_PASSWORD")
 
 FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173").rstrip("/")
 
-# Used for customer password-reset links when TENANT_SUBDOMAIN_ROUTING is enabled.
+# Apex marketing domain. Tenant storefronts live under TENANT_BASE_DOMAIN.
 ROOT_DOMAIN = (_env("ROOT_DOMAIN") or "retailcosmos.com").lower()
+# e.g. store.retailcosmos.com → https://test.store.retailcosmos.com
+TENANT_BASE_DOMAIN = (
+    _env("TENANT_BASE_DOMAIN") or f"store.{ROOT_DOMAIN}"
+).lower()
 _tenant_subdomain = (_env("TENANT_SUBDOMAIN_ROUTING") or "auto").lower()
 TENANT_SUBDOMAIN_ROUTING = _tenant_subdomain not in {"0", "false", "no", "off", "path"}
 
 _default_cors = "http://localhost:5173,http://127.0.0.1:5173"
 CORS_ORIGINS = _split_csv(os.getenv("CORS_ORIGINS", _default_cors))
-# Allows https://your-store.retailcosmos.com and https://retailcosmos.com
+# Allows https://test.store.retailcosmos.com and https://retailcosmos.com
 CORS_ORIGIN_REGEX = _env("CORS_ORIGIN_REGEX") or (
-    r"https://([a-z0-9-]+\.)?retailcosmos\.com"
+    r"https://([a-z0-9-]+\.)*retailcosmos\.com"
 )
 
 ENVIRONMENT = os.getenv("ENVIRONMENT", "development").lower()

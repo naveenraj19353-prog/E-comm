@@ -3,7 +3,7 @@ from typing import Literal
 
 from fastapi import HTTPException
 
-from app.config import FRONTEND_URL, ROOT_DOMAIN
+from app.config import FRONTEND_URL, TENANT_BASE_DOMAIN
 from app.database.mongo import tenants, users
 from app.services.storefront_url import use_tenant_subdomains
 
@@ -96,7 +96,7 @@ def build_reset_link(
     if account_kind == "customer" and tenant_slug:
         if _use_tenant_subdomains():
             return (
-                f"https://{tenant_slug}.{ROOT_DOMAIN}"
+                f"https://{tenant_slug}.{TENANT_BASE_DOMAIN}"
                 f"/reset-password?token={token}"
             )
         return f"{base}/{tenant_slug}/reset-password?token={token}"

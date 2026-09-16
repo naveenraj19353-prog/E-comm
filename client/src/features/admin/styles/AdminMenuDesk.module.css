@@ -1,0 +1,235 @@
+.page {
+  padding: 1.5rem;
+  max-width: 72rem;
+  margin: 0 auto;
+}
+
+.header {
+  margin-bottom: 1.5rem;
+}
+
+.backButton {
+  border: 0;
+  background: transparent;
+  color: var(--secondary, #64748b);
+  cursor: pointer;
+  margin-bottom: 0.75rem;
+  padding: 0;
+}
+
+.eyebrow {
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--secondary, #64748b);
+}
+
+.header h1 {
+  margin: 0.25rem 0;
+  font-size: 1.75rem;
+}
+
+.header p {
+  margin: 0;
+  color: var(--secondary, #64748b);
+}
+
+.passwordCard {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.25rem;
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: 1rem;
+  background: var(--surface, #fff);
+  margin-bottom: 1.25rem;
+}
+
+.passwordCard h2 {
+  margin: 0 0 0.35rem;
+  font-size: 1.125rem;
+}
+
+.passwordCard p {
+  margin: 0;
+  color: var(--secondary, #64748b);
+  font-size: 0.875rem;
+}
+
+.passwordReveal {
+  margin-top: 0.75rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.passwordReveal strong {
+  font-size: 1.5rem;
+  letter-spacing: 0.12em;
+  font-family: ui-monospace, monospace;
+}
+
+.passwordHint {
+  margin-top: 0.5rem !important;
+}
+
+.sectionTitle {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.25rem;
+}
+
+.filterTabs {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.filterTab {
+  border: 1px solid var(--border, #e2e8f0);
+  background: var(--surface, #fff);
+  border-radius: 999px;
+  padding: 0.4rem 0.9rem;
+  cursor: pointer;
+}
+
+.filterTabActive {
+  background: var(--primary, #0f766e);
+  border-color: var(--primary, #0f766e);
+  color: #fff;
+}
+
+.tableInput {
+  min-width: 12rem;
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: 0.65rem;
+  padding: 0.55rem 0.75rem;
+}
+
+.tableGroups {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.tableGroup {
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: 1rem;
+  background: var(--surface, #fff);
+  overflow: hidden;
+}
+
+.tableHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.9rem 1.1rem;
+  border-bottom: 1px solid var(--border, #e2e8f0);
+  background: color-mix(in srgb, var(--background, #f8fafc) 80%, white);
+}
+
+.tableHeader h2 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.orderList {
+  display: grid;
+  gap: 0.85rem;
+  padding: 1rem;
+}
+
+.orderCard {
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: 0.85rem;
+  padding: 0.9rem;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.orderMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem 1rem;
+  align-items: center;
+  font-size: 0.875rem;
+  color: var(--secondary, #64748b);
+}
+
+.orderMeta strong {
+  color: var(--text, #0f172a);
+  font-size: 1rem;
+}
+
+.itemList {
+  margin: 0;
+  padding-left: 1.1rem;
+  color: var(--text, #0f172a);
+  font-size: 0.875rem;
+}
+
+.primaryButton,
+.secondaryButton {
+  border: 0;
+  border-radius: 0.7rem;
+  padding: 0.65rem 1rem;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.primaryButton {
+  background: var(--primary, #0f766e);
+  color: #fff;
+}
+
+.primaryButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.secondaryButton {
+  background: var(--background, #f1f5f9);
+  color: var(--text, #0f172a);
+}
+
+.closedBadge {
+  display: inline-flex;
+  width: fit-content;
+  padding: 0.35rem 0.7rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--success, #16a34a) 14%, white);
+  color: var(--success, #15803d);
+  font-size: 0.8rem;
+  font-weight: 650;
+}
+
+.state {
+  padding: 2rem 1rem;
+  text-align: center;
+  color: var(--secondary, #64748b);
+}
+
+@media (max-width: 640px) {
+  .passwordCard {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .filters {
+    flex-direction: column;
+  }
+
+  .tableInput {
+    width: 100%;
+  }
+}

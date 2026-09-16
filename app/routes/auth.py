@@ -7,6 +7,7 @@ from app.models.user import (
     ForgotPasswordRequest,
     ResetPasswordRequest,
 )
+from app.models.menu import MenuLoginRequest
 from app.utils.hash import (
     hash_password,
     verify_password,
@@ -19,6 +20,13 @@ from app.services.password_reset_service import (
     reset_password_with_token,
     resolve_reset_account,
     save_reset_token,
+)
+from app.services.menu_service import (
+    normalize_counter_number,
+    normalize_phone,
+    require_menu_tenant,
+    upsert_menu_guest,
+    verify_daily_password,
 )
 from app.routes.response_metadata import (
     BAD_REQUEST_RESPONSE,
@@ -249,6 +257,48 @@ def login(
                 "tenantId"
             ),
             "role": "customer",
+        },
+    }
+
+
+@router.post(
+    "/menu-login",
+    responses={
+        400: BAD_REQUEST_RESPONSE[400],
+        401: UNAUTHORIZED_RESPONSE[401],
+        404: NOT_FOUND_RESPONSE[404],
+    },
+)
+def menu_login(payload: MenuLoginRequest):
+    tenant_id = payload.tenantId.strip().lower()
+    require_menu_tenant(tenant_id)
+    phone = normalize_phone(payload.phone)
+    counter_number = normalize_counter_number(payload.counterNumber)
+    verify_daily_password(tenant_id, payload.password.strip())
+    guest = upsert_menu_guest(tenant_id, phone, counter_number)
+    token = create_token(
+        {
+            "userId": str(guest["_id"]),
+            "tenantId": tenant_id,
+            "email": guest.get("email"),
+            "role": "customer",
+            "name": guest.get("name") or f"Guest {phone[-4:]}",
+            "phone": phone,
+            "counterNumber": counter_number,
+        }
+    )
+    return {
+        "success": True,
+        "access_token": token,
+        "token_type": "Bearer",
+        "user": {
+            "userId": str(guest["_id"]),
+            "name": guest.get("name"),
+            "email": guest.get("email"),
+            "tenantId": tenant_id,
+            "role": "customer",
+            "phone": phone,
+            "counterNumber": counter_number,
         },
     }
 

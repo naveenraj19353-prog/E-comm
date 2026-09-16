@@ -25,6 +25,22 @@ def ensure_indexes() -> None:
                 [("tenantId", ASCENDING), ("userId", ASCENDING)],
                 name="orders_tenant_user",
             ),
+            IndexModel(
+                [
+                    ("tenantId", ASCENDING),
+                    ("channel", ASCENDING),
+                    ("counterNumber", ASCENDING),
+                ],
+                name="orders_tenant_channel_counter",
+            ),
+            IndexModel(
+                [
+                    ("tenantId", ASCENDING),
+                    ("channel", ASCENDING),
+                    ("orderStatus", ASCENDING),
+                ],
+                name="orders_tenant_channel_status",
+            ),
         ]
     )
     payment_intents.create_indexes(
@@ -48,6 +64,14 @@ def ensure_indexes() -> None:
                 name="users_email_tenant_unique",
                 partialFilterExpression={
                     "email": {"$exists": True, "$type": "string"},
+                },
+            ),
+            IndexModel(
+                [("tenantId", ASCENDING), ("phone", ASCENDING)],
+                unique=True,
+                name="users_tenant_phone_unique",
+                partialFilterExpression={
+                    "phone": {"$exists": True, "$type": "string", "$gt": ""},
                 },
             ),
         ]

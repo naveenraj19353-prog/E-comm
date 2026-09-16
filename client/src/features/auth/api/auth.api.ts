@@ -1,6 +1,12 @@
 import apiClient from "../../../api/client";
 import { API_ENDPOINTS } from "../../../api/endpoints";
-import type { LoginRequest, LoginResponse, RegisterRequest, RegisterResponse, } from "../types";
+import type {
+    LoginRequest,
+    LoginResponse,
+    MenuLoginRequest,
+    RegisterRequest,
+    RegisterResponse,
+} from "../types";
 import type {
     ForgotPasswordRequest,
     ForgotPasswordResponse,
@@ -10,6 +16,12 @@ import type {
 
 export const loginApi = async (payload: LoginRequest): Promise<LoginResponse> => {
     const response = await apiClient.post(API_ENDPOINTS.AUTH.LOGIN, payload);
+    return response.data;
+};
+export const menuLoginApi = async (
+    payload: MenuLoginRequest,
+): Promise<LoginResponse> => {
+    const response = await apiClient.post(API_ENDPOINTS.AUTH.MENU_LOGIN, payload);
     return response.data;
 };
 export const registerApi = async (payload: RegisterRequest): Promise<RegisterResponse> => {

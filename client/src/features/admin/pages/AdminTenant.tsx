@@ -2,6 +2,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useTenantByTenantId } from "../hooks/useTenants";
 import styles from "../styles/AdminTenant.module.css";
 import { formatStorefrontHost } from "../../tenant/tenantHost";
+import { isRetailBusiness } from "../../tenant/businessMode";
 import { routes, storefrontNavigate } from "../../../routes/routes";
 export default function AdminTenant() {
     const { tenantId } = useParams();
@@ -25,6 +26,7 @@ export default function AdminTenant() {
       </div>);
     }
     const storeHost = formatStorefrontHost(tenant.slug);
+    const isRetail = isRetailBusiness(tenant.businessType);
     const openStore = (path: string) => storefrontNavigate(navigate, path);
     return (<div className={styles.page}>
       
@@ -47,15 +49,30 @@ export default function AdminTenant() {
           <button type="button" className={styles.productsButton} onClick={() => navigate(`/admin/tenants/${tenant.tenantId}/products`)}>
             Manage Products
           </button>
-          <button type="button" className={styles.ordersButton} onClick={() => navigate(`/admin/tenants/${tenant.tenantId}/orders`)}>
-            Manage Orders
+          <button type="button" className={styles.productsButton} onClick={() => navigate(`/admin/tenants/${tenant.tenantId}/customers`)}>
+            Customers
           </button>
-          <button type="button" className={styles.productsButton} onClick={() => navigate(`/admin/tenants/${tenant.tenantId}/banners`)}>
-            Manage Banners
-          </button>
-          <button type="button" className={styles.ordersButton} onClick={() => navigate(`/admin/tenants/${tenant.tenantId}/shipping/delhivery`)}>
-            Delhivery Shipping
-          </button>
+          {tenant.businessType === "menu" ? (
+            <button type="button" className={styles.ordersButton} onClick={() => navigate(`/admin/tenants/${tenant.tenantId}/menu`)}>
+              Menu Desk
+            </button>
+          ) : (
+            <>
+              {isRetail ? (
+                <button type="button" className={styles.ordersButton} onClick={() => navigate(`/admin/tenants/${tenant.tenantId}/orders`)}>
+                  Manage Orders
+                </button>
+              ) : null}
+              <button type="button" className={styles.productsButton} onClick={() => navigate(`/admin/tenants/${tenant.tenantId}/banners`)}>
+                Manage Banners
+              </button>
+              {isRetail ? (
+                <button type="button" className={styles.ordersButton} onClick={() => navigate(`/admin/tenants/${tenant.tenantId}/shipping/delhivery`)}>
+                  Delhivery Shipping
+                </button>
+              ) : null}
+            </>
+          )}
         </div>
       </div>
       
@@ -94,6 +111,16 @@ export default function AdminTenant() {
             <strong>{storeHost}</strong>
           </div>
           
+          <div className={styles.infoCard}>
+            <span>Business type</span>
+            <strong>
+              {tenant.businessType
+                ? tenant.businessType.charAt(0).toUpperCase() +
+                  tenant.businessType.slice(1)
+                : "Retail"}
+            </strong>
+          </div>
+
           <div className={styles.infoCard}>
             <span>Theme</span>
             <strong>{tenant.theme || "green"}</strong>

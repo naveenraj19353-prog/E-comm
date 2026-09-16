@@ -364,6 +364,8 @@ def create_product(
         "categoryId": category_id,
         "categoryName": category_name,
         "brand": product.brand,
+        "location": product.location,
+        "foodType": product.foodType,
         "price": product.price,
         "discountPercentage": (
             product.discountPercentage
@@ -470,6 +472,7 @@ def get_tenant_product_filters(
         match["isActive"] = True
     empty = {
         "brand": [],
+        "foodType": [],
         "color": [],
         "size": [],
         "category": [],
@@ -501,6 +504,15 @@ def get_tenant_product_filters(
                                     }
                                 },
                                 {MONGO_GROUP_STAGE: {"_id": "$brand"}},
+                                {"$sort": {"_id": 1}},
+                            ],
+                            "foodTypes": [
+                                {
+                                    MONGO_MATCH_STAGE: {
+                                        "foodType": {"$nin": [None, ""]},
+                                    }
+                                },
+                                {MONGO_GROUP_STAGE: {"_id": "$foodType"}},
                                 {"$sort": {"_id": 1}},
                             ],
                             "categories": [
@@ -572,6 +584,9 @@ def get_tenant_product_filters(
         "brand": _clean_filter_values(
             [item.get("_id") for item in facets.get("brands") or []]
         ),
+        "foodType": _clean_filter_values(
+            [item.get("_id") for item in facets.get("foodTypes") or []]
+        ),
         "color": _clean_filter_values(variant_row.get("colors")),
         "size": _clean_filter_values(variant_row.get("sizes")),
         "category": categories,
@@ -632,7 +647,7 @@ def _allow_inactive_products(
 
 def _case_insensitive_regex(value: str) -> dict:
     return {
-        "$regex": re.escape(value),
+        "$regex": f"^{re.escape(value)}$",
         MONGO_OPTIONS_OPERATOR: "i",
     }
 
@@ -718,6 +733,7 @@ def _build_all_products_query(
     allow_inactive: bool,
     category_ids: list[str],
     brands: list[str],
+    food_types: list[str],
     min_price: float | None,
     max_price: float | None,
     sizes: list[str],
@@ -734,6 +750,9 @@ def _build_all_products_query(
     brand_condition = _multiple_regex_condition("brand", brands)
     if brand_condition:
         query.update(brand_condition)
+    food_type_condition = _multiple_regex_condition("foodType", food_types)
+    if food_type_condition:
+        query.update(food_type_condition)
     _add_price_filter(query, min_price, max_price)
     _add_inventory_filter(query, sizes, colors)
     if rating is not None:
@@ -823,6 +842,9 @@ def _product_filter_parameters(
     sizes: Annotated[list[str] | None, Query()] = None,
     colors: Annotated[list[str] | None, Query()] = None,
     brands: Annotated[list[str] | None, Query()] = None,
+    food_types: Annotated[
+        list[str] | None, Query(alias="foodTypes")
+    ] = None,
     rating: float | None = None,
     search: str | None = None,
 ) -> dict:
@@ -833,6 +855,7 @@ def _product_filter_parameters(
         "sizes": sizes,
         "colors": colors,
         "brands": brands,
+        "foodTypes": food_types,
         "rating": rating,
         "search": search,
     }
@@ -873,6 +896,7 @@ def get_all_products(
     sizes = _normalize_product_filter_values(filters["sizes"])
     colors = _normalize_product_filter_values(filters["colors"])
     brands = _normalize_product_filter_values(filters["brands"])
+    food_types = _normalize_product_filter_values(filters["foodTypes"])
     search_value = filters["search"]
     search = search_value.strip() if search_value else None
     allow_inactive = _allow_inactive_products(
@@ -885,6 +909,7 @@ def get_all_products(
         allow_inactive,
         category_ids,
         brands,
+        food_types,
         filters["minPrice"],
         filters["maxPrice"],
         sizes,

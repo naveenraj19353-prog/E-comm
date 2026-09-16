@@ -1,3 +1,4 @@
+import type { BusinessType } from "../constants/businessTypes";
 import type { StorefrontLayout, ThemeColors } from "../theme/types";
 
 export interface ThemeColorsPartial {
@@ -64,6 +65,7 @@ export interface Tenant {
     tenantId: string;
     slug: string;
     name: string;
+    businessType?: BusinessType;
     logo: string;
     theme: string;
     themeColors?: ThemeColorsPartial | null;
@@ -73,4 +75,4 @@ export interface Tenant {
     isActive?: boolean;
 }
 
-export type { StorefrontLayout, ThemeColors };
+export type { BusinessType, StorefrontLayout, ThemeColors };

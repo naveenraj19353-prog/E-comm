@@ -1,13 +1,15 @@
 import { useEffect, useMemo, useState } from "react";
-import { Heart, ShoppingBag, Star, Minus, Plus, } from "lucide-react";
+import { Heart, ShoppingBag, Star, Minus, Plus } from "lucide-react";
 import { FaWhatsapp } from "react-icons/fa";
 import styles from "./ProductDetails.module.css";
-import type { Product, ProductInventory, } from "../../features/products/types";
+import type { Product, ProductInventory } from "../../features/products/types";
 import { getColorValue } from "../../utils/productColors";
 import {
     buildProductWhatsAppText,
     openWhatsAppShare,
 } from "../../utils/whatsappShare";
+import { addToListLabel } from "../../features/tenant/businessMode";
+
 interface ProductInfoProps {
     product: Product;
     selectedColor: string;
@@ -22,10 +24,33 @@ interface ProductInfoProps {
     onWishlist: (productId: string) => void | Promise<void>;
     shareUrl: string;
     storeName?: string;
+    isServiceMode?: boolean;
+    isMenuMode?: boolean;
 }
-const ProductInfo = ({ product, selectedColor, selectedSize, availableSizes, selectedVariant, onColorChange, onSizeChange, isWishlisted, isAddingToCart, onAddToCart, onWishlist, shareUrl, storeName, }: ProductInfoProps) => {
+
+const ProductInfo = ({
+    product,
+    selectedColor,
+    selectedSize,
+    availableSizes,
+    selectedVariant,
+    onColorChange,
+    onSizeChange,
+    isWishlisted,
+    isAddingToCart,
+    onAddToCart,
+    onWishlist,
+    shareUrl,
+    storeName,
+    isServiceMode = false,
+    isMenuMode = false,
+}: ProductInfoProps) => {
+    const usesSimpleVariant = isServiceMode;
     const [quantity, setQuantity] = useState(1);
     const availableColors = useMemo(() => {
+        if (usesSimpleVariant) {
+            return [];
+        }
         const colors = new Set<string>();
         product.inventory?.forEach((item) => {
             if (item.stock > 0) {
@@ -33,11 +58,15 @@ const ProductInfo = ({ product, selectedColor, selectedSize, availableSizes, sel
             }
         });
         return Array.from(colors);
-    }, [product.inventory]);
+    }, [product.inventory, usesSimpleVariant]);
+
     useEffect(() => {
         setQuantity(1);
     }, [selectedColor, selectedSize]);
+
     const currentStock = selectedVariant?.stock || 0;
+    const isAvailable = currentStock > 0;
+
     const increaseQuantity = () => {
         setQuantity((value) => Math.min(value + 1, currentStock));
     };
@@ -57,134 +86,208 @@ const ProductInfo = ({ product, selectedColor, selectedSize, availableSizes, sel
             }),
         );
     };
-    return (<div className={styles.info}>
-      
-      <div className={styles.category}>
-        {product.categoryName ||
-            product.categoryId}
-      </div>
-      
-      <h1 className={styles.title}>
-        {product.name}
-      </h1>
-      
-      <div className={styles.ratingRow}>
-        <div className={styles.stars}>
-          {Array.from({ length: 5 }, (_, index) => (<Star key={index} size={17} fill={index <
-                Math.round(product.averageRating)
-                ? "currentColor"
-                : "none"}/>))}
+
+    const showDiscount =
+        !isServiceMode && product.discountPercentage > 0;
+
+    return (
+        <div className={styles.info}>
+            <div className={styles.category}>
+                {product.categoryName || product.categoryId}
+            </div>
+
+            <h1 className={styles.title}>{product.name}</h1>
+
+            {!isServiceMode && (
+                <div className={styles.ratingRow}>
+                    <div className={styles.stars}>
+                        {Array.from({ length: 5 }, (_, index) => (
+                            <Star
+                                key={index}
+                                size={17}
+                                fill={
+                                    index < Math.round(product.averageRating)
+                                        ? "currentColor"
+                                        : "none"
+                                }
+                            />
+                        ))}
+                    </div>
+                    <strong className={styles.ratingValue}>
+                        {product.averageRating.toFixed(1)}
+                    </strong>
+                    <span className={styles.reviewCount}>
+                        ({product.reviewCount} reviews)
+                    </span>
+                </div>
+            )}
+
+            <div className={styles.priceSection}>
+                <span className={styles.currentPrice}>
+                    ₹{product.finalPrice.toLocaleString("en-IN")}
+                </span>
+                {showDiscount && (
+                    <>
+                        <span className={styles.originalPrice}>
+                            ₹{product.price.toLocaleString("en-IN")}
+                        </span>
+                        <span className={styles.discount}>
+                            {product.discountPercentage}% OFF
+                        </span>
+                    </>
+                )}
+            </div>
+
+            <p className={styles.description}>{product.description}</p>
+            <div className={styles.divider} />
+
+            {!usesSimpleVariant && availableColors.length > 0 && (
+                <div className={styles.optionGroup}>
+                    <div className={styles.optionHeading}>
+                        <span>Color</span>
+                        <strong>{selectedColor}</strong>
+                    </div>
+                    <div className={styles.colorOptions}>
+                        {availableColors.map((color) => (
+                            <button
+                                key={color}
+                                type="button"
+                                className={`${styles.colorOption} ${
+                                    selectedColor === color
+                                        ? styles.optionSelected
+                                        : ""
+                                }`}
+                                onClick={() => handleColorChange(color)}
+                            >
+                                <span
+                                    className={styles.colorDot}
+                                    style={{
+                                        backgroundColor: getColorValue(color),
+                                    }}
+                                />
+                                {color}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {!usesSimpleVariant && availableSizes.length > 0 && (
+                <div className={styles.optionGroup}>
+                    <div className={styles.optionHeading}>
+                        <span>Size</span>
+                        <button type="button" className={styles.sizeGuide}>
+                            Size Guide
+                        </button>
+                    </div>
+                    <div className={styles.sizeOptions}>
+                        {availableSizes.map((size) => (
+                            <button
+                                key={size}
+                                type="button"
+                                className={`${styles.sizeOption} ${
+                                    selectedSize === size
+                                        ? styles.optionSelected
+                                        : ""
+                                }`}
+                                onClick={() => onSizeChange(size)}
+                            >
+                                {size}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            <div
+                className={
+                    isAvailable ? styles.stockAvailable : styles.stockUnavailable
+                }
+            >
+                <span />
+                {usesSimpleVariant
+                    ? isAvailable
+                        ? "Available"
+                        : "Unavailable"
+                    : isAvailable
+                      ? `${currentStock} items available`
+                      : "Out of stock"}
+            </div>
+
+            <div
+                className={`${styles.actionRow} ${
+                    usesSimpleVariant ? styles.actionRowService : ""
+                }`}
+            >
+                {!usesSimpleVariant && (
+                    <div className={styles.quantityControl}>
+                        <button
+                            type="button"
+                            disabled={quantity <= 1}
+                            onClick={decreaseQuantity}
+                        >
+                            <Minus size={15} />
+                        </button>
+                        <span>{quantity}</span>
+                        <button
+                            type="button"
+                            disabled={quantity >= currentStock}
+                            onClick={increaseQuantity}
+                        >
+                            <Plus size={15} />
+                        </button>
+                    </div>
+                )}
+                <button
+                    type="button"
+                    className={styles.addToCart}
+                    disabled={isAddingToCart}
+                    onClick={() =>
+                        onAddToCart(
+                            product._id,
+                            usesSimpleVariant ? 1 : quantity,
+                            selectedVariant?.variantId,
+                        )
+                    }
+                >
+                    <ShoppingBag size={18} />
+                    {addToListLabel(isServiceMode, {
+                        adding: isAddingToCart,
+                        unavailable: Boolean(
+                            selectedVariant && !isAvailable,
+                        ),
+                        isMenu: isMenuMode,
+                    })}
+                </button>
+                <button
+                    type="button"
+                    className={`${styles.wishlistButton} ${
+                        isWishlisted ? styles.wishlistActive : ""
+                    }`}
+                    onClick={() => onWishlist(product._id)}
+                    aria-label={
+                        isWishlisted
+                            ? "Remove from wishlist"
+                            : "Add to wishlist"
+                    }
+                >
+                    <Heart
+                        size={20}
+                        fill={isWishlisted ? "currentColor" : "none"}
+                    />
+                </button>
+                <button
+                    type="button"
+                    className={styles.whatsappShareButton}
+                    onClick={handleWhatsAppShare}
+                    aria-label="Share on WhatsApp"
+                    title="Share on WhatsApp"
+                >
+                    <FaWhatsapp size={20} />
+                </button>
+            </div>
         </div>
-        <strong className={styles.ratingValue}>
-          {product.averageRating.toFixed(1)}
-        </strong>
-        <span className={styles.reviewCount}>
-          ({product.reviewCount} reviews)
-        </span>
-      </div>
-      
-      <div className={styles.priceSection}>
-        <span className={styles.currentPrice}>
-          ₹
-          {product.finalPrice.toLocaleString("en-IN")}
-        </span>
-        {product.discountPercentage > 0 && (<>
-            <span className={styles.originalPrice}>
-              ₹
-              {product.price.toLocaleString("en-IN")}
-            </span>
-            <span className={styles.discount}>
-              {product.discountPercentage}% OFF
-            </span>
-          </>)}
-      </div>
-      
-      <p className={styles.description}>
-        {product.description}
-      </p>
-      <div className={styles.divider}/>
-      
-      {availableColors.length > 0 && (<div className={styles.optionGroup}>
-          <div className={styles.optionHeading}>
-            <span>Color</span>
-            <strong>
-              {selectedColor}
-            </strong>
-          </div>
-          <div className={styles.colorOptions}>
-            {availableColors.map((color) => (<button key={color} type="button" className={`${styles.colorOption} ${selectedColor === color
-                    ? styles.optionSelected
-                    : ""}`} onClick={() => handleColorChange(color)}>
-                <span className={styles.colorDot} style={{
-                    backgroundColor: getColorValue(color),
-                }}/>
-                {color}
-              </button>))}
-          </div>
-        </div>)}
-      
-      {availableSizes.length > 0 && (<div className={styles.optionGroup}>
-          <div className={styles.optionHeading}>
-            <span>Size</span>
-            <button type="button" className={styles.sizeGuide}>
-              Size Guide
-            </button>
-          </div>
-          <div className={styles.sizeOptions}>
-            {availableSizes.map((size) => (<button key={size} type="button" className={`${styles.sizeOption} ${selectedSize === size
-                    ? styles.optionSelected
-                    : ""}`} onClick={() => onSizeChange(size)}>
-                {size}
-              </button>))}
-          </div>
-        </div>)}
-      
-      <div className={currentStock > 0
-            ? styles.stockAvailable
-            : styles.stockUnavailable}>
-        <span />
-        {currentStock > 0
-            ? `${currentStock} items available`
-            : "Out of stock"}
-      </div>
-      
-      <div className={styles.actionRow}>
-        <div className={styles.quantityControl}>
-          <button type="button" disabled={quantity <= 1} onClick={decreaseQuantity}>
-            <Minus size={15}/>
-          </button>
-          <span>{quantity}</span>
-          <button type="button" disabled={quantity >= currentStock} onClick={increaseQuantity}>
-            <Plus size={15}/>
-          </button>
-        </div>
-        <button type="button" className={styles.addToCart} disabled={currentStock <= 0 ||
-            !selectedVariant ||
-            isAddingToCart} onClick={() => onAddToCart(product._id, quantity, selectedVariant?.variantId)}>
-          <ShoppingBag size={18}/>
-          {isAddingToCart
-            ? "Adding..."
-            : "Add to Cart"}
-        </button>
-        <button type="button" className={`${styles.wishlistButton} ${isWishlisted
-            ? styles.wishlistActive
-            : ""}`} onClick={() => onWishlist(product._id)} aria-label={isWishlisted
-            ? "Remove from wishlist"
-            : "Add to wishlist"}>
-          <Heart size={20} fill={isWishlisted
-            ? "currentColor"
-            : "none"}/>
-        </button>
-        <button
-          type="button"
-          className={styles.whatsappShareButton}
-          onClick={handleWhatsAppShare}
-          aria-label="Share on WhatsApp"
-          title="Share on WhatsApp"
-        >
-          <FaWhatsapp size={20} />
-        </button>
-      </div>
-    </div>);
+    );
 };
+
 export default ProductInfo;

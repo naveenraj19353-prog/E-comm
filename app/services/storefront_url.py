@@ -1,6 +1,6 @@
 """Build public storefront URLs for emails, OG tags, and share links."""
 
-from app.config import FRONTEND_URL, ROOT_DOMAIN, TENANT_SUBDOMAIN_ROUTING
+from app.config import FRONTEND_URL, TENANT_BASE_DOMAIN, TENANT_SUBDOMAIN_ROUTING
 
 
 def use_tenant_subdomains() -> bool:
@@ -26,7 +26,7 @@ def build_storefront_product_url(tenant_slug: str, product_id: str) -> str:
         return f"{FRONTEND_URL.rstrip('/')}{path}"
 
     if use_tenant_subdomains():
-        return f"https://{slug}.{ROOT_DOMAIN}{path}"
+        return f"https://{slug}.{TENANT_BASE_DOMAIN}{path}"
 
     return f"{FRONTEND_URL.rstrip('/')}/{slug}{path}"
 

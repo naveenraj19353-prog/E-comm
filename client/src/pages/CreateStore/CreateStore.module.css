@@ -130,6 +130,63 @@
   color: #2f6b52;
 }
 
+.typeFieldset {
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+.typeLegend {
+  margin: 0 0 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #334155;
+}
+
+.typeOptions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.typeOption {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-rows: auto auto;
+  column-gap: 0.65rem;
+  row-gap: 0.15rem;
+  align-items: start;
+  padding: 0.75rem 0.85rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.4rem;
+  background: #fff;
+  cursor: pointer;
+}
+
+.typeOption input {
+  grid-row: 1 / span 2;
+  margin-top: 0.2rem;
+}
+
+.typeOptionSelected {
+  border-color: #2f6b52;
+  background: #f0f7f3;
+  box-shadow: 0 0 0 1px rgba(47, 107, 82, 0.25);
+}
+
+.typeLabel {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.typeHint {
+  grid-column: 2;
+  font-size: 0.8rem;
+  font-weight: 400;
+  color: #64748b;
+}
+
 .error {
   margin: 0;
   padding: 0.75rem 0.85rem;

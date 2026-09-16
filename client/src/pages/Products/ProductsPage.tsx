@@ -43,6 +43,12 @@ const Products = () => {
     const urlColors = searchParams.getAll("colors");
     const urlSizes = searchParams.getAll("sizes");
     const urlBrands = searchParams.getAll("brands");
+    const urlFoodTypes = searchParams
+        .getAll("foodTypes")
+        .filter(
+            (value): value is "veg" | "non_veg" =>
+                value === "veg" || value === "non_veg",
+        );
     const urlMinPrice = searchParams.get("minPrice");
     const urlMaxPrice = searchParams.get("maxPrice");
     const urlRating = searchParams.get("rating");
@@ -60,6 +66,7 @@ const Products = () => {
             colors: urlColors,
             sizes: urlSizes,
             brands: urlBrands,
+            foodTypes: urlFoodTypes,
             ...(hasUrlPrice ? { priceRange: [minPrice, maxPrice] } : {}),
             rating: ratingValue !== null && Number.isFinite(ratingValue)
                 ? ratingValue
@@ -145,6 +152,11 @@ const Products = () => {
             ? urlBrands
             : filters.brands.length > 0
                 ? filters.brands
+                : undefined,
+        foodTypes: urlFoodTypes.length > 0
+            ? urlFoodTypes
+            : filters.foodTypes.length > 0
+                ? filters.foodTypes
                 : undefined,
         ...apiPriceBounds,
         rating: filters.rating !== null ? filters.rating : undefined,
@@ -253,6 +265,10 @@ const Products = () => {
         params.delete("brands");
         filters.brands.forEach((brand) => {
             params.append("brands", brand);
+        });
+        params.delete("foodTypes");
+        filters.foodTypes.forEach((foodType) => {
+            params.append("foodTypes", foodType);
         });
         params.delete("minPrice");
         params.delete("maxPrice");

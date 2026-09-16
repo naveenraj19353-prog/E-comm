@@ -12,6 +12,8 @@ export interface Product {
     categoryId: string;
     categoryName: string;
     brand: string;
+    location?: string;
+    foodType?: "veg" | "non_veg";
     price: number;
     discountPercentage: number;
     finalPrice: number;
@@ -47,6 +49,7 @@ export interface ProductQueryParams {
     colors?: string[];
     sizes?: string[];
     brands?: string[];
+    foodTypes?: Array<"veg" | "non_veg">;
     minPrice?: number;
     maxPrice?: number;
     rating?: number;
@@ -60,6 +63,7 @@ export interface ProductFilterCategory {
 }
 export interface ProductFilter {
     brand: string[];
+    foodType: Array<"veg" | "non_veg">;
     color: string[];
     size: string[];
     category: ProductFilterCategory[];

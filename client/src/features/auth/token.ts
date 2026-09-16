@@ -8,6 +8,8 @@ type JwtPayload = {
     email: string;
     role: string;
     name: string;
+    phone?: string;
+    counterNumber?: string;
     exp: number;
 };
 
@@ -47,6 +49,8 @@ export const getUserFromAccessToken = (accessToken: string): User | null => {
         email: payload.email,
         role: payload.role,
         name: payload.name,
+        phone: payload.phone,
+        counterNumber: payload.counterNumber,
     };
 };
 

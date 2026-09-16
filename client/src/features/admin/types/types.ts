@@ -1,12 +1,14 @@
+import type { BusinessType } from "../../../constants/businessTypes";
 import type { StorefrontLayout } from "../../../theme/types";
 
-export type { StorefrontLayout };
+export type { StorefrontLayout, BusinessType };
 
 export interface Tenant {
     _id: string;
     tenantId: string;
     name: string;
     slug: string;
+    businessType?: BusinessType;
     logo: string;
     theme: string;
     themeColors?: ThemeColors | null;
@@ -74,6 +76,7 @@ export interface CreateTenantPayload {
     tenantId: string;
     name: string;
     slug: string;
+    businessType: BusinessType;
     logo?: string;
     theme?: string;
     email: string;
@@ -82,6 +85,7 @@ export interface CreateTenantPayload {
 export interface UpdateTenantPayload {
     name?: string;
     slug?: string;
+    businessType?: BusinessType;
     logo?: string;
     theme?: string;
     themeColors?: ThemeColors;

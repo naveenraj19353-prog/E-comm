@@ -27,14 +27,16 @@ import type { DeliveryOption } from "./CheckoutLayout/CheckoutMain/DeliveryMetho
 import type { PaymentMethodType } from "./CheckoutLayout/CheckoutMain/PaymentMethod/PaymentMethod";
 import { RAZORPAY_KEY_ID } from "../../constants/api";
 import { routes, storefrontNavigate } from "../../routes/routes";
+import { isRetailBusiness } from "../../features/tenant/businessMode";
 
 const Checkout = () => {
     const navigate = useNavigate();
     const queryClient = useQueryClient();
     const { Razorpay } = useRazorpay();
     const { user, isAuthenticated } = useAuth();
-    const { tenantSlug, tenantId: storeTenantId } = useStorefrontTenant();
+    const { tenantSlug, tenantId: storeTenantId, tenant } = useStorefrontTenant();
     const navigateToLogin = useNavigateToLogin();
+    const isRetail = isRetailBusiness(tenant?.businessType);
     const isCustomer =
         isAuthenticated && user?.role === "customer" && Boolean(user._id);
     const cartUserId = isCustomer ? user!._id : "";
@@ -65,8 +67,18 @@ const Checkout = () => {
         addressId: selectedAddress?._id || undefined,
         couponCode: appliedCoupon || undefined,
         deliveryMethod,
-        enabled: Boolean(user?._id && user?.tenantId && cart.length > 0),
+        enabled: Boolean(
+            isRetail && user?._id && user?.tenantId && cart.length > 0,
+        ),
     });
+
+    useEffect(() => {
+        if (!isRetail && tenantSlug) {
+            storefrontNavigate(navigate, routes.cart(tenantSlug), {
+                replace: true,
+            });
+        }
+    }, [isRetail, navigate, tenantSlug]);
 
     useEffect(() => {
         if (!appliedCoupon) {
@@ -153,6 +165,14 @@ const Checkout = () => {
 
     const handlePlaceOrder = async () => {
         try {
+            if (!isRetail) {
+                if (tenantSlug) {
+                    storefrontNavigate(navigate, routes.cart(tenantSlug), {
+                        replace: true,
+                    });
+                }
+                return;
+            }
             if (!user || !user._id || !user.tenantId) {
                 navigateToLogin();
                 return;
@@ -319,6 +339,10 @@ const Checkout = () => {
             setIsProcessing(false);
         }
     };
+
+    if (!isRetail) {
+        return null;
+    }
 
     if (isLoading) {
         return <PageLoader message="Loading checkout..." />;

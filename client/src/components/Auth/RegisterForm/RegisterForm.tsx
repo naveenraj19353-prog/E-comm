@@ -6,9 +6,10 @@ import axios from "axios";
 interface RegisterFormProps {
     tenantId: string;
     onSwitchToLogin: () => void;
+    onSuccess?: () => void;
 }
-const RegisterForm = ({ tenantId, onSwitchToLogin }: RegisterFormProps) => {
-    const { register } = useAuth();
+const RegisterForm = ({ tenantId, onSwitchToLogin, onSuccess }: RegisterFormProps) => {
+    const { register, login } = useAuth();
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
     const [phone, setPhone] = useState("");
@@ -56,6 +57,21 @@ const RegisterForm = ({ tenantId, onSwitchToLogin }: RegisterFormProps) => {
             if (!response.success) {
                 setError("Unable to create account.");
                 return;
+            }
+            // Prefer staying on the same page after signup when used in the modal.
+            try {
+                const loginResponse = await login({
+                    tenantId,
+                    email: email.trim(),
+                    password,
+                });
+                if (loginResponse.success && onSuccess) {
+                    onSuccess();
+                    return;
+                }
+            }
+            catch {
+                // Fall through to login form if auto-login fails.
             }
             onSwitchToLogin();
             setName("");

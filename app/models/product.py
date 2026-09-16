@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Literal, Optional
 from pydantic import BaseModel, Field, ConfigDict
 
 
@@ -85,6 +85,8 @@ class CreateProduct(BaseModel):
     )
     categoryName: Optional[str] = None
     brand: Optional[str] = None
+    location: Optional[str] = None
+    foodType: Optional[Literal["veg", "non_veg"]] = None
     price: float = Field(
         ge=0
     )
@@ -129,6 +131,8 @@ class UpdateProduct(BaseModel):
     categoryId: Optional[str] = None
     categoryName: Optional[str] = None
     brand: Optional[str] = None
+    location: Optional[str] = None
+    foodType: Optional[Literal["veg", "non_veg"]] = None
     price: Optional[float] = Field(
         default=None,
         ge=0

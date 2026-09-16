@@ -6,6 +6,7 @@ export interface ProductFilters {
   colors: string[];
   sizes: string[];
   brands: string[];
+  foodTypes: Array<"veg" | "non_veg">;
   priceRange: number[];
   rating: number | null;
   sort: string;
@@ -22,6 +23,7 @@ const getInitialFilters = (): ProductFilters => ({
   colors: [],
   sizes: [],
   brands: [],
+  foodTypes: [],
   priceRange: [0, 100000],
   rating: null,
   sort: "newest",

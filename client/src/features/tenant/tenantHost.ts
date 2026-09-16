@@ -7,10 +7,24 @@ const RESERVED_SUBDOMAINS = new Set([
     "staging",
     "mail",
     "cdn",
+    "store",
 ]);
 
+/** Apex marketing domain, e.g. retailcosmos.com */
 export function getRootDomain(): string {
     return (import.meta.env.VITE_ROOT_DOMAIN?.trim() || "retailcosmos.com").toLowerCase();
+}
+
+/**
+ * Tenant storefront base, e.g. store.retailcosmos.com
+ * → https://test.store.retailcosmos.com
+ */
+export function getTenantBaseDomain(): string {
+    const explicit = import.meta.env.VITE_TENANT_BASE_DOMAIN?.trim();
+    if (explicit) {
+        return explicit.toLowerCase();
+    }
+    return `store.${getRootDomain()}`;
 }
 
 function normalizeHost(hostname?: string): string {
@@ -18,20 +32,26 @@ function normalizeHost(hostname?: string): string {
 }
 
 /**
- * your-store.retailcosmos.com → "your-store"
- * www.retailcosmos.com / retailcosmos.com / netlify → null
- * your-store.localhost → "your-store" (local subdomain testing)
+ * test.store.retailcosmos.com → "test"
+ * store.retailcosmos.com / www.retailcosmos.com / retailcosmos.com → null
+ * test.localhost → "test" (local subdomain testing)
  */
 export function getTenantSlugFromHostname(hostname?: string): string | null {
     const host = normalizeHost(hostname);
     const root = getRootDomain();
+    const tenantBase = getTenantBaseDomain();
 
-    if (host === root || host === `www.${root}`) {
+    if (
+        host === root
+        || host === `www.${root}`
+        || host === tenantBase
+        || host === `www.${tenantBase}`
+    ) {
         return null;
     }
 
-    if (host.endsWith(`.${root}`)) {
-        const sub = host.slice(0, -(root.length + 1));
+    if (host.endsWith(`.${tenantBase}`)) {
+        const sub = host.slice(0, -(tenantBase.length + 1));
         if (!sub || sub.includes(".") || RESERVED_SUBDOMAINS.has(sub)) {
             return null;
         }
@@ -53,7 +73,7 @@ export function isOnTenantSubdomain(hostname?: string): boolean {
 }
 
 /**
- * Prefer tenant subdomains on the production root domain.
+ * Prefer tenant subdomains on the production root / store base.
  * Keep path mode on localhost / Netlify / Vercel betas.
  */
 export function shouldUseSubdomainStorefrontUrls(hostname?: string): boolean {
@@ -77,7 +97,15 @@ export function shouldUseSubdomainStorefrontUrls(hostname?: string): boolean {
     }
 
     const root = getRootDomain();
-    return host === root || host === `www.${root}` || host.endsWith(`.${root}`);
+    const tenantBase = getTenantBaseDomain();
+    return (
+        host === root
+        || host === `www.${root}`
+        || host === tenantBase
+        || host === `www.${tenantBase}`
+        || host.endsWith(`.${tenantBase}`)
+        || host.endsWith(`.${root}`)
+    );
 }
 
 export function getStorefrontOrigin(slug: string, hostname?: string): string {
@@ -91,13 +119,12 @@ export function getStorefrontOrigin(slug: string, hostname?: string): string {
     }
 
     const protocol = window.location.protocol === "http:" ? "http:" : "https:";
-    const root = getRootDomain();
-    // Local subdomain testing: your-store.localhost:5173
+    // Local subdomain testing: test.localhost:5173
     if (normalizeHost(hostname) === "localhost" || normalizeHost(hostname).endsWith(".localhost")) {
         const port = window.location.port ? `:${window.location.port}` : "";
         return `${protocol}//${cleanSlug}.localhost${port}`;
     }
-    return `${protocol}//${cleanSlug}.${root}`;
+    return `${protocol}//${cleanSlug}.${getTenantBaseDomain()}`;
 }
 
 /** Absolute or same-origin href for a storefront path. */
@@ -118,11 +145,11 @@ export function getStorefrontHref(slug: string, path = "/"): string {
     return `/${cleanSlug}${suffix}`;
 }
 
-/** Display label for admin UI, e.g. your-store.retailcosmos.com */
+/** Display label for admin UI, e.g. test.store.retailcosmos.com */
 export function formatStorefrontHost(slug: string): string {
     const cleanSlug = (slug || "your-store").trim().toLowerCase() || "your-store";
     if (shouldUseSubdomainStorefrontUrls()) {
-        return `${cleanSlug}.${getRootDomain()}`;
+        return `${cleanSlug}.${getTenantBaseDomain()}`;
     }
     return `/${cleanSlug}`;
 }

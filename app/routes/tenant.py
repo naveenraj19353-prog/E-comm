@@ -28,6 +28,8 @@ from app.utils.hash import hash_password
 from app.utils.jwt_handler import create_token
 from app.utils.product_serialize import _resolve_image_for_response
 
+VALID_BUSINESS_TYPES = frozenset({"retail", "service", "menu"})
+
 
 def _safe_resolve_image(value: str | None) -> str | None:
     if not isinstance(value, str) or not value.strip():
@@ -37,6 +39,23 @@ def _safe_resolve_image(value: str | None) -> str | None:
     except Exception:
         return value.strip()
     return resolved or None
+
+
+def _normalize_business_type(value: object) -> str:
+    normalized = str(value or "").strip().lower()
+    if normalized in VALID_BUSINESS_TYPES:
+        return normalized
+    return "retail"
+
+
+def _serialize_tenant(tenant: dict) -> dict:
+    """Public tenant payload: strip secrets and always expose businessType."""
+    payload = dict(tenant)
+    if "_id" in payload:
+        payload["_id"] = str(payload["_id"])
+    payload.pop("password", None)
+    payload["businessType"] = _normalize_business_type(payload.get("businessType"))
+    return payload
 
 
 def _public_tenant_preview(tenant: dict) -> dict:
@@ -67,6 +86,7 @@ def _public_tenant_preview(tenant: dict) -> dict:
         "tenantId": tenant_id,
         "slug": tenant.get("slug"),
         "name": tenant.get("name"),
+        "businessType": _normalize_business_type(tenant.get("businessType")),
         "logo": logo,
         "theme": tenant.get("theme") or "Custom",
         "accent": accent or "#7c3aed",
@@ -101,6 +121,7 @@ def create_tenant(
             slug=tenant.slug,
             email=str(tenant.email),
             password=tenant.password,
+            business_type=tenant.businessType,
             logo=tenant.logo or "",
             theme=tenant.theme or "green",
         )
@@ -109,7 +130,7 @@ def create_tenant(
             "message": "Tenant created successfully.",
             "tenantId": response_data["tenantId"],
             "id": response_data["_id"],
-            "data": response_data,
+            "data": _serialize_tenant(response_data),
         }
     except HTTPException:
         raise
@@ -139,6 +160,7 @@ def register_store(payload: RegisterStore):
             slug=slug,
             email=str(payload.email),
             password=payload.password,
+            business_type=payload.businessType,
             logo="",
             theme="green",
         )
@@ -159,7 +181,7 @@ def register_store(payload: RegisterStore):
             "token_type": "Bearer",
             "tenantId": response_data["tenantId"],
             "slug": response_data["slug"],
-            "data": response_data,
+            "data": _serialize_tenant(response_data),
             "user": {
                 "userId": response_data["_id"],
                 "name": response_data["name"],
@@ -208,17 +230,7 @@ def get_tenants(
     )
     data = []
     for tenant in cursor:
-        tenant["_id"] = str(
-            tenant["_id"]
-        )
-
-        tenant.pop(
-            "password",
-            None,
-        )
-        data.append(
-            tenant
-        )
+        data.append(_serialize_tenant(tenant))
     return {
         "success": True,
         "count": len(data),
@@ -257,16 +269,9 @@ def get_tenant_by_tenant_id(
             status_code=404,
             detail=TENANT_NOT_FOUND,
         )
-    tenant["_id"] = str(
-        tenant["_id"]
-    )
-    tenant.pop(
-        "password",
-        None,
-    )
     return {
         "success": True,
-        "data": tenant,
+        "data": _serialize_tenant(tenant),
     }
 
 
@@ -284,18 +289,12 @@ def get_tenant_by_slug(
             status_code=404,
             detail=TENANT_NOT_FOUND,
         )
-    tenant["_id"] = str(
-        tenant["_id"]
-    )
-    tenant.pop(
-        "password",
-        None,
-    )
+    serialized = _serialize_tenant(tenant)
     storefront_layout = build_storefront_layout(tenant)
     return {
         "success": True,
         "data": {
-            **tenant,
+            **serialized,
             "storefrontLayout": storefront_layout,
         },
     }
@@ -327,6 +326,7 @@ def get_storefront_layout_by_slug(
             "tenantId": tenant.get("tenantId"),
             "slug": tenant.get("slug"),
             "name": tenant.get("name"),
+            "businessType": _normalize_business_type(tenant.get("businessType")),
             "_id": tenant["_id"],
             **layout,
         },
@@ -357,6 +357,9 @@ def get_public_tenants():
                         "tenantId": str(tenant.get("tenantId") or ""),
                         "slug": tenant.get("slug"),
                         "name": tenant.get("name") or "Store",
+                        "businessType": _normalize_business_type(
+                            tenant.get("businessType")
+                        ),
                         "logo": None,
                         "theme": tenant.get("theme") or "Custom",
                         "accent": "#7c3aed",
@@ -417,16 +420,9 @@ def get_tenant_by_id(
             status_code=403,
             detail="You cannot access another tenant.",
         )
-    tenant["_id"] = str(
-        tenant["_id"]
-    )
-    tenant.pop(
-        "password",
-        None,
-    )
     return {
         "success": True,
-        "data": tenant,
+        "data": _serialize_tenant(tenant),
     }
 
 
@@ -476,6 +472,11 @@ def update_tenant(
             .lower()
         )
 
+
+    if "businessType" in update_data:
+        update_data["businessType"] = _normalize_business_type(
+            update_data.get("businessType")
+        )
 
     if "slug" in update_data:
         existing = tenants.find_one({
@@ -530,17 +531,10 @@ def update_tenant(
     updated = tenants.find_one({
         "_id": object_id
     })
-    updated["_id"] = str(
-        updated["_id"]
-    )
-    updated.pop(
-        "password",
-        None,
-    )
     return {
         "success": True,
         "message": "Tenant updated successfully.",
-        "data": updated,
+        "data": _serialize_tenant(updated),
     }
 
 
@@ -601,12 +595,10 @@ def update_tenant_theme(
         )
 
     updated = tenants.find_one({"_id": object_id})
-    updated["_id"] = str(updated["_id"])
-    updated.pop("password", None)
     return {
         "success": True,
         "message": "Theme updated successfully.",
-        "data": updated,
+        "data": _serialize_tenant(updated),
     }
 
 
