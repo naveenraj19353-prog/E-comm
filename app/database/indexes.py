@@ -1,8 +1,11 @@
-from pymongo import ASCENDING, IndexModel
+from pymongo import ASCENDING, DESCENDING, IndexModel
 from app.database.mongo import (
     carts,
+    messaging_integrations,
+    notification_logs,
     orders,
     payment_intents,
+    periskope_webhook_events,
     shipping_integrations,
     shipping_locations,
     shipments,
@@ -112,6 +115,41 @@ def ensure_indexes() -> None:
             IndexModel(
                 [("tenantId", ASCENDING), ("awb", ASCENDING)],
                 name="shipments_tenant_awb",
+            ),
+        ]
+    )
+    messaging_integrations.create_indexes(
+        [
+            IndexModel(
+                [("tenantId", ASCENDING), ("provider", ASCENDING)],
+                unique=True,
+                name="messaging_integrations_tenant_provider_unique",
+            ),
+        ]
+    )
+    notification_logs.create_indexes(
+        [
+            IndexModel(
+                [("idempotencyKey", ASCENDING)],
+                unique=True,
+                name="notification_logs_idempotency_key_unique",
+            ),
+            IndexModel(
+                [("tenantId", ASCENDING), ("createdAt", DESCENDING)],
+                name="notification_logs_tenant_created",
+            ),
+        ]
+    )
+    periskope_webhook_events.create_indexes(
+        [
+            IndexModel(
+                [("eventHash", ASCENDING)],
+                unique=True,
+                name="periskope_webhook_event_hash_unique",
+            ),
+            IndexModel(
+                [("receivedAt", DESCENDING)],
+                name="periskope_webhook_events_received",
             ),
         ]
     )

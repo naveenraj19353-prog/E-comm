@@ -120,6 +120,7 @@ export const applyThemeToDocument = (draft: ThemeDraft): void => {
 
     root.style.setProperty("--primary", themeColors.primary);
     root.style.setProperty("--secondary", themeColors.secondary);
+    root.style.setProperty("--header-background", themeColors.headerBackground);
     root.style.setProperty("--background", themeColors.background);
     root.style.setProperty("--surface", themeColors.surface);
     root.style.setProperty("--border", themeColors.border);

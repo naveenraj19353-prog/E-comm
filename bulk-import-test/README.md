@@ -1,37 +1,22 @@
-# Bulk Import Test Pack
+# Bulk Import Sample Pack
 
-Use this folder to test bulk product upload.
+Choose the files matching the tenant's business type:
 
-## Prerequisites
+- `retail-bulk-import-template.xlsx` + `retail-images.zip`
+- `service-bulk-import-template.xlsx` + `service-images.zip`
+- `menu-bulk-import-template.xlsx` + `menu-images.zip`
 
-- Backend running
-- Tenant **your-store** with the required categories already configured
-- Admin login
+The matching image folders are also included if you prefer folder upload.
 
-## Files
+Before importing, replace every `REPLACE_WITH_CATEGORY_ID` value in the
+workbook with a real category ID from that tenant.
 
-| File | Purpose |
-|------|---------|
-| test-products.xlsx | 2 test products, 4 variant rows |
-| test-images.zip | All local images for path matching |
-| images/ | Same images as folder upload option |
+## Steps
 
-## Test steps
+1. Open **Admin → Tenant → Products → Bulk Import**.
+2. Select the matching Excel template.
+3. Select the matching image ZIP or image folder.
+4. Confirm the preview has no errors.
+5. Click **Import products**.
 
-1. Open **Admin → Tenants → your-store → Products → Bulk Import**
-2. Upload **test-products.xlsx**
-3. Upload **test-images.zip** (or choose the **images** folder)
-4. Check preview: 2 products, images resolved for Black + Blue
-5. Click **Import products**
-
-## What the Excel tests
-
-- Local paths like `C:\bulk-import-test\images\shirt-black-front.jpg` → matched by filename, converted to base64
-- **imagePath1** second local image per row
-- **imagePath2** remote URL (picsum.photos) sent as-is
-- Same product name + categoryId grouped into one product with multiple variants
-
-## Products created
-
-1. **Bulk Test Cotton Shirt** (MENS_FASHION) — Black M, L
-2. **Bulk Test Running Sneakers** (FOOTWEAR) — Blue 9, 10
+Supported image types are JPEG, PNG, WEBP, and GIF.

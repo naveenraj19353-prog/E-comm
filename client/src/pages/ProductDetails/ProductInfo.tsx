@@ -4,10 +4,6 @@ import { FaWhatsapp } from "react-icons/fa";
 import styles from "./ProductDetails.module.css";
 import type { Product, ProductInventory } from "../../features/products/types";
 import { getColorValue } from "../../utils/productColors";
-import {
-    buildProductWhatsAppText,
-    openWhatsAppShare,
-} from "../../utils/whatsappShare";
 import { addToListLabel } from "../../features/tenant/businessMode";
 
 interface ProductInfoProps {
@@ -20,10 +16,10 @@ interface ProductInfoProps {
     onSizeChange: (size: string) => void;
     isWishlisted: boolean;
     isAddingToCart: boolean;
+    isSharingToWhatsApp: boolean;
     onAddToCart: (productId: string, quantity: number, variantId?: string) => void | Promise<void>;
     onWishlist: (productId: string) => void | Promise<void>;
-    shareUrl: string;
-    storeName?: string;
+    onWhatsAppShare: () => void | Promise<void>;
     isServiceMode?: boolean;
     isMenuMode?: boolean;
 }
@@ -38,10 +34,10 @@ const ProductInfo = ({
     onSizeChange,
     isWishlisted,
     isAddingToCart,
+    isSharingToWhatsApp,
     onAddToCart,
     onWishlist,
-    shareUrl,
-    storeName,
+    onWhatsAppShare,
     isServiceMode = false,
     isMenuMode = false,
 }: ProductInfoProps) => {
@@ -76,17 +72,6 @@ const ProductInfo = ({
     const handleColorChange = (color: string) => {
         onColorChange(color);
     };
-    const handleWhatsAppShare = () => {
-        openWhatsAppShare(
-            buildProductWhatsAppText({
-                name: product.name,
-                price: product.finalPrice ?? product.price,
-                url: shareUrl,
-                storeName,
-            }),
-        );
-    };
-
     const showDiscount =
         !isServiceMode && product.discountPercentage > 0;
 
@@ -279,9 +264,14 @@ const ProductInfo = ({
                 <button
                     type="button"
                     className={styles.whatsappShareButton}
-                    onClick={handleWhatsAppShare}
-                    aria-label="Share on WhatsApp"
-                    title="Share on WhatsApp"
+                    onClick={onWhatsAppShare}
+                    disabled={isSharingToWhatsApp}
+                    aria-label="Send product to my WhatsApp"
+                    title={
+                        isSharingToWhatsApp
+                            ? "Sending to WhatsApp..."
+                            : "Send to my WhatsApp"
+                    }
                 >
                     <FaWhatsapp size={20} />
                 </button>

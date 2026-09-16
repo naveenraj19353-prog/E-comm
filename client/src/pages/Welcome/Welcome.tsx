@@ -169,7 +169,8 @@ export default function Welcome() {
           url:
             typeof window !== "undefined"
               ? window.location.origin
-              : "https://retailcosmos.com",
+              : import.meta.env.VITE_PUBLIC_SITE_URL ||
+                "https://app.retailcosmos.com",
           description: c.seo.description,
         })}
       />

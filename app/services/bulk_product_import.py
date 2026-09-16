@@ -110,6 +110,7 @@ def _merge_inventory(
 def upsert_bulk_product(
     tenant_id: str,
     item: BulkImportProductItem,
+    business_type: str = "retail",
 ) -> str:
     (
         calculate_final_price,
@@ -118,7 +119,23 @@ def upsert_bulk_product(
         validate_color_images_against_inventory,
     ) = _get_validators()
 
+    if business_type == "service" and not str(item.location or "").strip():
+        raise HTTPException(
+            status_code=400,
+            detail="Location is required for service listings.",
+        )
+    if business_type == "menu" and item.foodType not in {"veg", "non_veg"}:
+        raise HTTPException(
+            status_code=400,
+            detail="Food type must be Veg or Non-Veg for menu items.",
+        )
+
     inventory = [entry.model_dump() for entry in item.inventory]
+    if not inventory:
+        raise HTTPException(
+            status_code=400,
+            detail="At least one inventory variant is required.",
+        )
     validate_inventory(inventory)
     for entry in inventory:
         entry["stock"] = int(entry.get("stock", 0))
@@ -127,7 +144,12 @@ def upsert_bulk_product(
     if images:
         validate_color_images_against_inventory(inventory, images)
 
-    final_price = calculate_final_price(item.price, item.discountPercentage)
+    discount_percentage = (
+        0
+        if business_type == "service"
+        else item.discountPercentage
+    )
+    final_price = calculate_final_price(item.price, discount_percentage)
     total_stock = sum(entry["stock"] for entry in inventory)
     now = datetime.now(timezone.utc)
     existing = _find_existing_product(tenant_id, item)
@@ -144,8 +166,10 @@ def upsert_bulk_product(
             "categoryId": item.categoryId,
             "categoryName": item.categoryName,
             "brand": item.brand,
+            "location": item.location,
+            "foodType": item.foodType,
             "price": item.price,
-            "discountPercentage": item.discountPercentage,
+            "discountPercentage": discount_percentage,
             "finalPrice": final_price,
             "inventory": merged_inventory,
             "totalStock": sum(int(entry.get("stock", 0)) for entry in merged_inventory),
@@ -172,8 +196,10 @@ def upsert_bulk_product(
         "categoryId": item.categoryId,
         "categoryName": item.categoryName,
         "brand": item.brand,
+        "location": item.location,
+        "foodType": item.foodType,
         "price": item.price,
-        "discountPercentage": item.discountPercentage,
+        "discountPercentage": discount_percentage,
         "finalPrice": final_price,
         "inventory": inventory,
         "totalStock": total_stock,

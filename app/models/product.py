@@ -217,6 +217,8 @@ class BulkImportProductItem(BaseModel):
     categoryId: str = Field(min_length=1)
     categoryName: Optional[str] = None
     brand: Optional[str] = None
+    location: Optional[str] = None
+    foodType: Optional[Literal["veg", "non_veg"]] = None
     price: float = Field(ge=0)
     discountPercentage: float = Field(default=0, ge=0, le=100)
     inventory: list[InventoryItem] = Field(default_factory=list)

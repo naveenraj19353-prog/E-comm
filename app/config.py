@@ -25,29 +25,47 @@ RAZORPAY_KEY_ID = os.getenv("RAZORPAY_KEY_ID")
 RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET")
 RAZORPAY_WEBHOOK_SECRET = os.getenv("RAZORPAY_WEBHOOK_SECRET")
 
+PERISKOPE_API_KEY = _env("PERISKOPE_API_KEY")
+PERISKOPE_PHONE = _env("PERISKOPE_PHONE")
+PERISKOPE_BASE_URL = (
+    _env("PERISKOPE_BASE_URL") or "https://api.periskope.app/v1"
+).rstrip("/")
+PERISKOPE_WEBHOOK_SIGNING_KEY = _env("PERISKOPE_WEBHOOK_SIGNING_KEY")
+try:
+    PERISKOPE_TIMEOUT_SECONDS = float(
+        _env("PERISKOPE_TIMEOUT_SECONDS") or "10"
+    )
+except ValueError:
+    PERISKOPE_TIMEOUT_SECONDS = 10.0
+_periskope_verify_ssl = (_env("PERISKOPE_VERIFY_SSL") or "true").lower()
+
 EMAIL = os.getenv("EMAIL")
 APP_PASSWORD = os.getenv("APP_PASSWORD")
 
 FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173").rstrip("/")
 
-# Apex marketing domain. Tenant storefronts live under TENANT_BASE_DOMAIN.
+# Apex domain. Tenant storefronts use https://{slug}.retailcosmos.com.
 ROOT_DOMAIN = (_env("ROOT_DOMAIN") or "retailcosmos.com").lower()
-# e.g. store.retailcosmos.com → https://test.store.retailcosmos.com
 TENANT_BASE_DOMAIN = (
-    _env("TENANT_BASE_DOMAIN") or f"store.{ROOT_DOMAIN}"
+    _env("TENANT_BASE_DOMAIN") or ROOT_DOMAIN
 ).lower()
 _tenant_subdomain = (_env("TENANT_SUBDOMAIN_ROUTING") or "auto").lower()
 TENANT_SUBDOMAIN_ROUTING = _tenant_subdomain not in {"0", "false", "no", "off", "path"}
 
 _default_cors = "http://localhost:5173,http://127.0.0.1:5173"
 CORS_ORIGINS = _split_csv(os.getenv("CORS_ORIGINS", _default_cors))
-# Allows https://test.store.retailcosmos.com and https://retailcosmos.com
+# Allows tenant hosts such as https://test21.retailcosmos.com.
 CORS_ORIGIN_REGEX = _env("CORS_ORIGIN_REGEX") or (
     r"https://([a-z0-9-]+\.)*retailcosmos\.com"
 )
 
 ENVIRONMENT = os.getenv("ENVIRONMENT", "development").lower()
 IS_PRODUCTION = ENVIRONMENT == "production"
+PERISKOPE_VERIFY_SSL = (
+    True
+    if IS_PRODUCTION
+    else _periskope_verify_ssl not in {"0", "false", "no", "off"}
+)
 
 S3_BUCKET = _env("S3_BUCKET") or "multi-tenant-ecomm-images-prod"
 S3_REGION = _env("S3_REGION") or "eu-north-1"

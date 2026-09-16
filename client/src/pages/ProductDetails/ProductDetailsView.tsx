@@ -14,14 +14,14 @@ interface ProductDetailsViewProps {
     reviews: Review[];
     isWishlisted: boolean;
     isAddingToCart: boolean;
+    isSharingToWhatsApp: boolean;
     onAddToCart: (
         productId: string,
         quantity: number,
         variantId?: string,
     ) => void | Promise<void>;
     onWishlist: (productId: string) => void | Promise<void>;
-    shareUrl: string;
-    storeName?: string;
+    onWhatsAppShare: () => void | Promise<void>;
     isServiceMode?: boolean;
     isMenuMode?: boolean;
     onWriteReview: () => void;
@@ -42,10 +42,10 @@ const ProductDetailsView = ({
     reviews,
     isWishlisted,
     isAddingToCart,
+    isSharingToWhatsApp,
     onAddToCart,
     onWishlist,
-    shareUrl,
-    storeName,
+    onWhatsAppShare,
     isServiceMode = false,
     isMenuMode = false,
     onWriteReview,
@@ -139,10 +139,10 @@ const ProductDetailsView = ({
                         onSizeChange={setSelectedSize}
                         isWishlisted={isWishlisted}
                         isAddingToCart={isAddingToCart}
+                        isSharingToWhatsApp={isSharingToWhatsApp}
                         onAddToCart={onAddToCart}
                         onWishlist={onWishlist}
-                        shareUrl={shareUrl}
-                        storeName={storeName}
+                        onWhatsAppShare={onWhatsAppShare}
                         isServiceMode={isServiceMode}
                         isMenuMode={isMenuMode}
                     />

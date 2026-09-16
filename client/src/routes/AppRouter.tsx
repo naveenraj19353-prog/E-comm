@@ -19,6 +19,7 @@ import {
     AdminTenantBanners,
     AdminTenants,
     DelhiverySettingsPage,
+    PeriskopeSettingsPage,
     BulkProductImport,
     Cart,
     Checkout,
@@ -234,6 +235,10 @@ const adminRoutes = [
                                 <DelhiverySettingsPage />
                             </RequireTenantBusinessType>
                         ),
+                    },
+                    {
+                        path: ":tenantId/integrations/periskope",
+                        element: <PeriskopeSettingsPage />,
                     },
                 ],
             },

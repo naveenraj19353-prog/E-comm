@@ -35,6 +35,9 @@ export const AdminTenantBanners = lazy(() => import("../features/admin/pages/Adm
 export const DelhiverySettingsPage = lazy(
     () => import("../features/admin/pages/DelhiverySettingsPage"),
 );
+export const PeriskopeSettingsPage = lazy(
+    () => import("../features/admin/pages/PeriskopeSettingsPage"),
+);
 export const ThemeCustomizer = lazy(() => import("../pages/ThemeCustomizer/ThemeCustomizer"));
 export const NotFound = lazy(() => import("../pages/NotFound"));
 export const Welcome = lazy(() => import("../pages/Welcome"));

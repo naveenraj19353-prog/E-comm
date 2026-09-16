@@ -40,6 +40,7 @@ export const API_ENDPOINTS = {
         BULK_IMPORT: "/product/bulk-import",
         SEARCH: "/product/search",
         byId: (id: string) => `/product/${id}`,
+        shareWhatsApp: (id: string) => `/product/${id}/share-whatsapp`,
         inventory: (id: string) => `/product/${id}/inventory`,
         checkStock: (id: string) => `/product/${id}/check-stock`,
     },
@@ -150,6 +151,14 @@ export const API_ENDPOINTS = {
         PICKUP: "/shipping/delhivery/pickup",
         track: (awb: string) => `/shipping/delhivery/track/${awb}`,
         label: (shipmentId: string) => `/shipping/delhivery/shipments/${shipmentId}/label`,
+    },
+
+    PERISKOPE: {
+        SETTINGS: "/integrations/periskope/settings",
+        TEST: "/integrations/periskope/test",
+        NOTIFICATIONS: "/integrations/periskope/notifications",
+        retry: (notificationId: string) =>
+            `/integrations/periskope/notifications/${notificationId}/retry`,
     },
 
     SUPER_ADMIN: {

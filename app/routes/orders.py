@@ -2,7 +2,7 @@ from datetime import datetime, timezone
 from typing import Annotated
 
 from bson import ObjectId
-from fastapi import APIRouter, Depends, HTTPException, Path, Query
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Path, Query
 from pymongo import DESCENDING
 
 from app.database.mongo import orders, users
@@ -20,6 +20,10 @@ from app.routes.response_metadata import (
 )
 from app.services.menu_service import fulfill_menu_order, normalize_counter_number
 from app.services.order_fulfillment import fulfill_cod_order, restore_variant_stock
+from app.services.whatsapp_notification_service import (
+    send_order_confirmation,
+    send_order_status_update,
+)
 from app.utils.auth_dependencies import (
     admin_tenant_id,
     customer_scope,
@@ -60,17 +64,20 @@ def create_order(current_user: Annotated[dict, Depends(require_customer)]):
 )
 def create_cod_order(
     request: CreateCodOrder,
+    background_tasks: BackgroundTasks,
     current_user: Annotated[dict, Depends(require_customer)],
 ):
     tenant_id, user_id = customer_scope(current_user)
     try:
-        return fulfill_cod_order(
+        result = fulfill_cod_order(
             tenant_id=tenant_id,
             user_id=user_id,
             address_id=request.addressId,
             coupon_code=request.couponCode,
             delivery_method=request.deliveryMethod,
         )
+        send_order_confirmation(background_tasks, result["orderId"])
+        return result
     except HTTPException:
         raise
     except Exception as error:
@@ -173,6 +180,7 @@ def list_tenant_orders(
 def update_order_status(
     order_id: str,
     payload: UpdateOrderStatus,
+    background_tasks: BackgroundTasks,
     current_user: Annotated[dict, Depends(require_admin)],
     tenant_id: Annotated[str | None, Query(alias="tenantId")] = None,
 ):
@@ -225,6 +233,7 @@ def update_order_status(
         },
     )
     updated = orders.find_one({"_id": object_id})
+    send_order_status_update(background_tasks, order_id, next_status)
     return {
         "success": True,
         "message": f"Order marked as {next_status}.",

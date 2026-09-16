@@ -52,7 +52,7 @@ export default async (request: Request, context: { next: () => Promise<Response>
   const productId = match[2];
   const tenantBaseDomain =
     edgeEnv("TENANT_BASE_DOMAIN") ||
-    `store.${edgeEnv("ROOT_DOMAIN") || "retailcosmos.com"}`;
+    (edgeEnv("ROOT_DOMAIN") || "retailcosmos.com");
   const hostTenant = tenantFromHost(url.hostname, tenantBaseDomain);
   const tenantSlug = hostTenant || pathTenant;
 

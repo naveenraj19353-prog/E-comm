@@ -30,6 +30,8 @@ from app.routes.super_admin import router as super_admin_router
 from app.routes.og import router as og_router
 from app.routes.delhivery import router as delhivery_router
 from app.routes.menu import router as menu_router
+from app.routes.periskope import router as periskope_router
+from app.routes.periskope_webhook import router as periskope_webhook_router
 
 logger = logging.getLogger(__name__)
 
@@ -76,6 +78,8 @@ app.include_router(super_admin_router)
 app.include_router(og_router)
 app.include_router(delhivery_router)
 app.include_router(menu_router)
+app.include_router(periskope_router)
+app.include_router(periskope_webhook_router)
 
 
 def _database_status() -> tuple[str, str | None]:

@@ -21,6 +21,7 @@ export interface Tenant {
 export interface ThemeColors {
     primary?: string;
     secondary?: string;
+    headerBackground?: string;
     background?: string;
     surface?: string;
     border?: string;

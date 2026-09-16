@@ -17,6 +17,6 @@ Disallow: /*/forgot-password
 Disallow: /*/reset-password
 Disallow: /*/customize
 
-# Tenant hosts use {slug}.store.retailcosmos.com (e.g. https://test.store.retailcosmos.com/)
+# Tenant hosts use {slug}.retailcosmos.com (e.g. https://test21.retailcosmos.com/)
 
 Sitemap: https://retailcosmos.com/sitemap.xml

@@ -139,6 +139,14 @@ export default function AdminLayout() {
                 <span>⬡</span>
                 Shipping
             </NavLink>)}
+
+          {isAdmin &&
+            user.tenantId && (<NavLink to={`/admin/tenants/${user.tenantId}/integrations/periskope`} className={({ isActive }) => `${styles.navItem} ${isActive
+                ? styles.active
+                : ""}`}>
+                <span>◌</span>
+                WhatsApp
+            </NavLink>)}
           
           {isAdmin &&
             user.tenantId && (<NavLink to={`/admin/tenants/${user.tenantId}`} className={({ isActive }) => `${styles.navItem} ${isActive

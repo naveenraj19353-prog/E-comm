@@ -5,7 +5,7 @@ from typing import Annotated
 from bson import ObjectId
 from fastapi import APIRouter, Depends, HTTPException, Query
 
-from app.database.mongo import products
+from app.database.mongo import products, tenants
 from app.models.product import (
     BulkImportRequest,
     CreateProduct,
@@ -22,8 +22,10 @@ from app.routes.response_metadata import (
 )
 from app.utils.auth_dependencies import (
     admin_tenant_id,
+    customer_scope,
     get_optional_user,
     require_admin,
+    require_customer,
 )
 from app.services.s3_service import (
     collect_image_keys,
@@ -33,6 +35,10 @@ from app.services.s3_service import (
 from app.utils.product_serialize import (
     calculate_total_stock,
     serialize_product,
+)
+from app.services.whatsapp_notification_service import (
+    ProductShareError,
+    share_product_with_customer,
 )
 
 router = APIRouter(
@@ -409,13 +415,24 @@ def bulk_import_products(
     from app.services.bulk_product_import import upsert_bulk_product
 
     tenant_id = admin_tenant_id(current_user, body.tenantId)
+    tenant = tenants.find_one(
+        {"$or": [{"tenantId": tenant_id}, {"_id": tenant_id}]},
+        {"businessType": 1},
+    )
+    if not tenant:
+        raise HTTPException(status_code=404, detail="Tenant not found.")
+    business_type = str(tenant.get("businessType") or "retail").lower()
     created = 0
     updated = 0
     errors: list[dict] = []
 
     for index, item in enumerate(body.products):
         try:
-            result = upsert_bulk_product(tenant_id, item)
+            result = upsert_bulk_product(
+                tenant_id,
+                item,
+                business_type,
+            )
             if result == "created":
                 created += 1
             else:
@@ -1087,6 +1104,40 @@ def get_new_arrivals(
         "count": len(data),
         "data": data,
     }
+
+
+@router.post(
+    "/{id}/share-whatsapp",
+    responses={
+        400: BAD_REQUEST_RESPONSE[400],
+        403: FORBIDDEN_RESPONSE[403],
+        404: NOT_FOUND_RESPONSE[404],
+    },
+)
+def share_product_on_whatsapp(
+    id: str,
+    current_user: Annotated[dict, Depends(require_customer)],
+):
+    tenant_id, user_id = customer_scope(current_user)
+    if not ObjectId.is_valid(id):
+        raise HTTPException(status_code=400, detail=INVALID_PRODUCT_ID)
+    product = products.find_one(
+        {
+            "_id": ObjectId(id),
+            "tenantId": tenant_id,
+            "isActive": True,
+        }
+    )
+    if not product:
+        raise HTTPException(status_code=404, detail=PRODUCT_NOT_FOUND)
+    try:
+        return share_product_with_customer(
+            tenant_id=tenant_id,
+            user_id=user_id,
+            product=product,
+        )
+    except ProductShareError as error:
+        raise HTTPException(status_code=400, detail=str(error)) from error
 
 
 @router.get(

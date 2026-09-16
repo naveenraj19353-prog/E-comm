@@ -9,6 +9,7 @@ import { useCart } from "../../features/cart/hooks/useCart";
 import { useWishlist } from "../../features/wishlist/hooks/useWishlist";
 import { useNavigateToLogin } from "../../features/auth/hooks/useNavigateToLogin";
 import { useProductDetails } from "../../features/products/hooks/useProductDetails";
+import { shareProductToWhatsApp } from "../../features/products/api/product.api";
 import { useReviews } from "../../features/reviews/hooks/useReviews";
 import {
     SeoHead,
@@ -41,6 +42,7 @@ const ProductDetails = () => {
     const [reviewRating, setReviewRating] = useState(0);
     const [reviewTitle, setReviewTitle] = useState("");
     const [reviewComment, setReviewComment] = useState("");
+    const [isSharingToWhatsApp, setIsSharingToWhatsApp] = useState(false);
     const cartUserId = isCustomer ? user!._id : "";
     const cartTenantId = isCustomer ? (user!.tenantId || tenantId || "") : "";
     const { addToCart, isAdding } = useCart(cartUserId, cartTenantId, {
@@ -155,6 +157,44 @@ const ProductDetails = () => {
                 : "Unable to submit review.");
         }
     };
+    const sendProductToCustomerWhatsApp = async () => {
+        if (!product || isSharingToWhatsApp) {
+            return;
+        }
+        setIsSharingToWhatsApp(true);
+        try {
+            const result = await shareProductToWhatsApp(product._id);
+            alert(result.message || "Product sent to your WhatsApp number.");
+        }
+        catch (error) {
+            const message =
+                typeof error === "object" &&
+                error !== null &&
+                "response" in error
+                    ? String(
+                          (
+                              error as {
+                                  response?: { data?: { detail?: string } };
+                              }
+                          ).response?.data?.detail ||
+                              "Unable to send the product on WhatsApp.",
+                      )
+                    : "Unable to send the product on WhatsApp.";
+            alert(message);
+        }
+        finally {
+            setIsSharingToWhatsApp(false);
+        }
+    };
+    const handleWhatsAppShare = () => {
+        if (!isCustomer) {
+            navigateToLogin(undefined, () => {
+                void sendProductToCustomerWhatsApp();
+            });
+            return;
+        }
+        void sendProductToCustomerWhatsApp();
+    };
     if (productLoading) {
         return (<><SeoHead title="Product" description="Loading product details." path={`/product-details/${productId || ""}`} tenantSlug={tenantSlug} noIndex /><PageLoader message="Loading product..." /></>);
     }
@@ -206,10 +246,10 @@ const ProductDetails = () => {
         reviews={isServiceMode ? [] : reviews}
         isWishlisted={isWishlisted}
         isAddingToCart={isAdding}
+        isSharingToWhatsApp={isSharingToWhatsApp}
         onAddToCart={handleAddToCart}
         onWishlist={handleWishlist}
-        shareUrl={productUrl}
-        storeName={storeName}
+        onWhatsAppShare={handleWhatsAppShare}
         isServiceMode={isServiceMode}
         isMenuMode={isMenuMode}
         onWriteReview={handleWriteReview}

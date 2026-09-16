@@ -3,7 +3,7 @@ import logging
 from datetime import datetime, timezone
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request
 from requests.exceptions import ConnectionError as RequestsConnectionError
 from requests.exceptions import SSLError
 
@@ -25,6 +25,10 @@ from app.routes.response_metadata import (
 from app.services.checkout_service import calculate_checkout
 from app.services.order_fulfillment import fulfill_captured_payment
 from app.services.payment_validation import validate_captured_payment
+from app.services.whatsapp_notification_service import (
+    send_order_confirmation,
+    send_payment_success,
+)
 from app.utils.auth_dependencies import (
     customer_scope,
     require_admin,
@@ -170,6 +174,7 @@ def create_order(
 )
 def verify_payment(
     request: VerifyPayment,
+    background_tasks: BackgroundTasks,
     current_user: Annotated[dict, Depends(require_customer)],
 ):
     tenant_id, user_id = customer_scope(current_user)
@@ -204,12 +209,15 @@ def verify_payment(
             tenant_id=tenant_id,
             user_id=user_id,
         )
-        return fulfill_captured_payment(
+        result = fulfill_captured_payment(
             request.razorpayOrderId,
             request.razorpayPaymentId,
             tenant_id=tenant_id,
             user_id=user_id,
         )
+        send_order_confirmation(background_tasks, result["orderId"])
+        send_payment_success(background_tasks, result["orderId"])
+        return result
     except HTTPException:
         raise
     except Exception:
@@ -353,6 +361,7 @@ def _is_transient_fulfillment_error(error: HTTPException, detail: str) -> bool:
 def _fulfill_webhook_payment(
     razorpay_order_id: str,
     razorpay_payment_id: str,
+    background_tasks: BackgroundTasks,
 ) -> dict:
     try:
         validate_captured_payment(razorpay_order_id, razorpay_payment_id)
@@ -360,6 +369,8 @@ def _fulfill_webhook_payment(
             razorpay_order_id,
             razorpay_payment_id,
         )
+        send_order_confirmation(background_tasks, result["orderId"])
+        send_payment_success(background_tasks, result["orderId"])
         return {
             "success": True,
             "status": "fulfilled",
@@ -400,7 +411,7 @@ def _fulfill_webhook_payment(
         503: SERVICE_UNAVAILABLE_RESPONSE[503],
     },
 )
-async def webhook(request: Request):
+async def webhook(request: Request, background_tasks: BackgroundTasks):
     if not RAZORPAY_WEBHOOK_SECRET:
         raise HTTPException(
             status_code=503,
@@ -431,4 +442,5 @@ async def webhook(request: Request):
     return _fulfill_webhook_payment(
         razorpay_order_id,
         razorpay_payment_id,
+        background_tasks,
     )

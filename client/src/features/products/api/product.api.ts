@@ -97,3 +97,15 @@ export const getProductDetails = async (productId: string, tenantId: string) => 
     });
     return response.data;
 };
+
+export const shareProductToWhatsApp = async (productId: string) => {
+    const response = await apiClient.post(
+        API_ENDPOINTS.PRODUCT.shareWhatsApp(productId),
+        {},
+    );
+    return response.data as {
+        success: boolean;
+        message: string;
+        messageId?: string;
+    };
+};
