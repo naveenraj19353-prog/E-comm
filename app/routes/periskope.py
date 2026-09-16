@@ -144,6 +144,7 @@ def list_notifications(
                 "id": str(item["_id"]),
                 "eventType": item.get("eventType"),
                 "orderId": item.get("orderId"),
+                "productId": item.get("productId"),
                 "phone": item.get("phone") or "",
                 "status": item.get("status"),
                 "attempts": item.get("attempts", 0),

@@ -6,12 +6,14 @@ import logging
 from datetime import datetime, timezone
 from typing import Any
 from urllib.parse import urlparse
+from uuid import uuid4
 
 from bson import ObjectId
 from fastapi import BackgroundTasks
 from pymongo.errors import DuplicateKeyError, PyMongoError
 
 from app.database.mongo import (
+    addresses,
     messaging_integrations,
     notification_logs,
     orders,
@@ -21,6 +23,7 @@ from app.database.mongo import (
 from app.services.periskope_service import PeriskopeError, PeriskopeService
 from app.services.s3_service import generate_presigned_url, is_s3_object_key
 from app.services.storefront_url import build_customer_storefront_url
+from app.utils.product_serialize import normalize_product_images
 from app.utils.phone_normalization import (
     PhoneNormalizationError,
     mask_phone,
@@ -47,6 +50,10 @@ EVENT_PREFERENCE = {
     "order.delivered": "deliveryUpdates",
     "order.cancelled": "cancellation",
 }
+
+
+class ProductShareError(RuntimeError):
+    pass
 
 
 def _now() -> datetime:
@@ -242,6 +249,153 @@ def _image_metadata(url: str) -> tuple[str, str]:
     if path.endswith(".gif"):
         return "order-update.gif", "image/gif"
     return "order-update.jpg", "image/jpeg"
+
+
+def _first_product_image(product: dict) -> str | None:
+    normalized = normalize_product_images(product.get("images"))
+    for image_list in normalized.values():
+        if image_list:
+            image = _safe_customer_url(image_list[0])
+            if image:
+                return image
+    return None
+
+
+def share_product_with_customer(
+    *,
+    tenant_id: str,
+    user_id: str,
+    product: dict,
+) -> dict:
+    integration = messaging_integrations.find_one(
+        {"tenantId": tenant_id, "provider": PROVIDER, "enabled": True}
+    )
+    if not integration:
+        raise ProductShareError("WhatsApp sharing is not enabled for this store.")
+
+    user = users.find_one(
+        {
+            "_id": ObjectId(user_id),
+            "tenantId": tenant_id,
+            "role": "customer",
+            "isActive": True,
+        }
+    )
+    if not user:
+        raise ProductShareError("Customer account is unavailable.")
+
+    address = addresses.find_one(
+        {"tenantId": tenant_id, "userId": ObjectId(user_id)},
+        sort=[("isDefault", -1), ("createdAt", -1)],
+    ) or {}
+    raw_phone = user.get("phone") or address.get("phone")
+    try:
+        phone = normalize_phone(raw_phone, country=address.get("country"))
+    except PhoneNormalizationError as error:
+        raise ProductShareError(
+            "Add a valid WhatsApp number with country information to your profile."
+        ) from error
+
+    tenant = tenants.find_one(
+        {"tenantId": tenant_id, "isActive": True}
+    ) or {}
+    store_name = _clean_text(tenant.get("name"), "Store")
+    tenant_slug = str(tenant.get("slug") or tenant_id).strip().lower()
+    product_id = str(product["_id"])
+    product_url = _safe_customer_url(
+        build_customer_storefront_url(
+            tenant_slug,
+            f"/product-details/{product_id}",
+        )
+    )
+    if not product_url:
+        raise ProductShareError("The public product link is unavailable.")
+
+    product_name = _clean_text(product.get("name"), "Product", 120)
+    try:
+        price = float(product.get("finalPrice") or product.get("price") or 0)
+    except (TypeError, ValueError):
+        price = 0
+    price_line = f"\nPrice: ₹{price:,.2f}" if price > 0 else ""
+    message = (
+        f"🛍️ *{product_name}*\n\n"
+        f"Hi {_clean_text(user.get('name'), 'Customer')} 👋\n\n"
+        f"Here is the product you selected from *{store_name}*."
+        f"{price_line}\n\n"
+        f"🔗 *View Product:* {product_url}\n\n"
+        f"*{store_name}*\nPowered by Retail Cosmos"
+    )
+    image_url = _first_product_image(product)
+    now = _now()
+    log_document = {
+        "idempotencyKey": f"product-share:{tenant_id}:{user_id}:{product_id}:{uuid4()}",
+        "provider": PROVIDER,
+        "tenantId": tenant_id,
+        "customerId": user_id,
+        "productId": product_id,
+        "eventType": "product.shared",
+        "phone": mask_phone(phone),
+        "status": "sending",
+        "attempts": 1,
+        "createdAt": now,
+        "updatedAt": now,
+    }
+    try:
+        inserted = notification_logs.insert_one(log_document)
+        log_id = inserted.inserted_id
+    except PyMongoError:
+        logger.exception(
+            "[WHATSAPP] tenant=%s event=product.shared status=log_failed",
+            tenant_id,
+        )
+        log_id = None
+
+    try:
+        service = PeriskopeService()
+        if image_url:
+            filename, mimetype = _image_metadata(image_url)
+            response = service.send_media_message(
+                f"{phone}@c.us",
+                message,
+                media_url=image_url,
+                filename=filename.replace("order-update", "product"),
+                mimetype=mimetype,
+            )
+        else:
+            response = service.send_text_message(f"{phone}@c.us", message)
+    except PeriskopeError as error:
+        if log_id:
+            notification_logs.update_one(
+                {"_id": log_id},
+                {
+                    "$set": {
+                        "status": "failed",
+                        "error": str(error)[:300],
+                        "updatedAt": _now(),
+                    }
+                },
+            )
+        raise ProductShareError("Unable to send the product on WhatsApp.") from error
+
+    message_id = _message_id(response)
+    if log_id:
+        notification_logs.update_one(
+            {"_id": log_id},
+            {
+                "$set": {
+                    "status": "sent",
+                    "messageId": message_id,
+                    "hasMedia": bool(image_url),
+                    "sentAt": _now(),
+                    "updatedAt": _now(),
+                }
+            },
+        )
+    return {
+        "success": True,
+        "message": "Product sent to your WhatsApp number.",
+        "messageId": message_id,
+    }
 
 
 def _message_id(payload: dict[str, Any]) -> str | None:

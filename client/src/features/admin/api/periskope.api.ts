@@ -24,7 +24,8 @@ export type PeriskopeSettings = {
 export type PeriskopeNotificationLog = {
   id: string;
   eventType: string;
-  orderId: string;
+  orderId?: string;
+  productId?: string;
   phone: string;
   status: "pending" | "sending" | "sent" | "failed" | "skipped";
   attempts: number;

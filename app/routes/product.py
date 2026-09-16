@@ -22,8 +22,10 @@ from app.routes.response_metadata import (
 )
 from app.utils.auth_dependencies import (
     admin_tenant_id,
+    customer_scope,
     get_optional_user,
     require_admin,
+    require_customer,
 )
 from app.services.s3_service import (
     collect_image_keys,
@@ -33,6 +35,10 @@ from app.services.s3_service import (
 from app.utils.product_serialize import (
     calculate_total_stock,
     serialize_product,
+)
+from app.services.whatsapp_notification_service import (
+    ProductShareError,
+    share_product_with_customer,
 )
 
 router = APIRouter(
@@ -1098,6 +1104,40 @@ def get_new_arrivals(
         "count": len(data),
         "data": data,
     }
+
+
+@router.post(
+    "/{id}/share-whatsapp",
+    responses={
+        400: BAD_REQUEST_RESPONSE[400],
+        403: FORBIDDEN_RESPONSE[403],
+        404: NOT_FOUND_RESPONSE[404],
+    },
+)
+def share_product_on_whatsapp(
+    id: str,
+    current_user: Annotated[dict, Depends(require_customer)],
+):
+    tenant_id, user_id = customer_scope(current_user)
+    if not ObjectId.is_valid(id):
+        raise HTTPException(status_code=400, detail=INVALID_PRODUCT_ID)
+    product = products.find_one(
+        {
+            "_id": ObjectId(id),
+            "tenantId": tenant_id,
+            "isActive": True,
+        }
+    )
+    if not product:
+        raise HTTPException(status_code=404, detail=PRODUCT_NOT_FOUND)
+    try:
+        return share_product_with_customer(
+            tenant_id=tenant_id,
+            user_id=user_id,
+            product=product,
+        )
+    except ProductShareError as error:
+        raise HTTPException(status_code=400, detail=str(error)) from error
 
 
 @router.get(

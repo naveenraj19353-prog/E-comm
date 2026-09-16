@@ -16,15 +16,26 @@ export function getRootDomain(): string {
 }
 
 /**
- * Tenant storefront base, e.g. store.retailcosmos.com
- * → https://test.store.retailcosmos.com
+ * Tenant storefront base, e.g. retailcosmos.com
+ * → https://test21.retailcosmos.com
  */
 export function getTenantBaseDomain(): string {
     const explicit = import.meta.env.VITE_TENANT_BASE_DOMAIN?.trim();
     if (explicit) {
         return explicit.toLowerCase();
     }
-    return `store.${getRootDomain()}`;
+    return getRootDomain();
+}
+
+export function getPublicSiteHost(): string {
+    const configured =
+        import.meta.env.VITE_PUBLIC_SITE_URL?.trim() ||
+        "https://app.retailcosmos.com";
+    try {
+        return new URL(configured).hostname.toLowerCase();
+    } catch {
+        return "app.retailcosmos.com";
+    }
 }
 
 function normalizeHost(hostname?: string): string {
@@ -32,8 +43,8 @@ function normalizeHost(hostname?: string): string {
 }
 
 /**
- * test.store.retailcosmos.com → "test"
- * store.retailcosmos.com / www.retailcosmos.com / retailcosmos.com → null
+ * test21.retailcosmos.com → "test21"
+ * app.retailcosmos.com / www.retailcosmos.com / retailcosmos.com → null
  * test.localhost → "test" (local subdomain testing)
  */
 export function getTenantSlugFromHostname(hostname?: string): string | null {
@@ -86,6 +97,9 @@ export function shouldUseSubdomainStorefrontUrls(hostname?: string): boolean {
     }
 
     const host = normalizeHost(hostname);
+    if (host === getPublicSiteHost()) {
+        return false;
+    }
     if (
         host === "localhost"
         || host === "127.0.0.1"
@@ -145,7 +159,7 @@ export function getStorefrontHref(slug: string, path = "/"): string {
     return `/${cleanSlug}${suffix}`;
 }
 
-/** Display label for admin UI, e.g. test.store.retailcosmos.com */
+/** Display label for admin UI, e.g. test21.retailcosmos.com */
 export function formatStorefrontHost(slug: string): string {
     const cleanSlug = (slug || "your-store").trim().toLowerCase() || "your-store";
     if (shouldUseSubdomainStorefrontUrls()) {

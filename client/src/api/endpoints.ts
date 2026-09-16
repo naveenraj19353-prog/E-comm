@@ -40,6 +40,7 @@ export const API_ENDPOINTS = {
         BULK_IMPORT: "/product/bulk-import",
         SEARCH: "/product/search",
         byId: (id: string) => `/product/${id}`,
+        shareWhatsApp: (id: string) => `/product/${id}/share-whatsapp`,
         inventory: (id: string) => `/product/${id}/inventory`,
         checkStock: (id: string) => `/product/${id}/check-stock`,
     },

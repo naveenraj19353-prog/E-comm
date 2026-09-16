@@ -12,6 +12,9 @@ if (!apiTarget) {
 }
 const distDir = path.join(__dirname, "dist");
 const rootDomain = (process.env.ROOT_DOMAIN || "retailcosmos.com").toLowerCase();
+const publicSiteHost = new URL(
+    process.env.PUBLIC_SITE_URL || "https://app.retailcosmos.com",
+).hostname.toLowerCase();
 
 const BOT_UA =
     /whatsapp|facebookexternalhit|facebot|twitterbot|linkedinbot|slackbot|discordbot|telegrambot|googlebot|bingbot|baiduspider|duckduckbot|embedly|quora link preview|pinterest|redditbot|applebot|semrushbot|preview/i;
@@ -23,6 +26,9 @@ function tenantFromHost(hostname) {
     const host = String(hostname || "")
         .split(":")[0]
         .toLowerCase();
+    if (host === publicSiteHost) {
+        return null;
+    }
     if (!host.endsWith(`.${rootDomain}`)) {
         return null;
     }

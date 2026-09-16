@@ -283,7 +283,12 @@ export default function PeriskopeSettingsPage() {
                 <div>
                   <strong>{notification.eventType}</strong>
                   <span>
-                    Order {notification.orderId.slice(-8).toUpperCase()} ·{" "}
+                    {notification.orderId
+                      ? `Order ${notification.orderId.slice(-8).toUpperCase()}`
+                      : notification.productId
+                        ? `Product ${notification.productId.slice(-8).toUpperCase()}`
+                        : "Notification"}{" "}
+                    ·{" "}
                     {notification.phone || "No phone"}
                   </span>
                   {notification.error ? <small>{notification.error}</small> : null}

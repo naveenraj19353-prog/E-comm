@@ -19,12 +19,24 @@ back an order, payment, or shipment.
 Configure these only in the EC2 process environment:
 
 ```env
+FRONTEND_URL=https://app.retailcosmos.com
+TENANT_BASE_DOMAIN=retailcosmos.com
+TENANT_SUBDOMAIN_ROUTING=auto
 PERISKOPE_API_KEY=
 PERISKOPE_PHONE=919876543210
 PERISKOPE_BASE_URL=https://api.periskope.app/v1
 PERISKOPE_WEBHOOK_SIGNING_KEY=
 PERISKOPE_TIMEOUT_SECONDS=10
 ```
+
+With this deployment, tenant customer links use:
+
+```text
+https://{tenant-slug}.retailcosmos.com/...
+```
+
+The platform fallback remains `https://app.retailcosmos.com/{tenant-slug}`.
+Customer messages never use localhost.
 
 Do not add these values to `client/.env`, Vite, Netlify, source control, API
 responses, or logs.
