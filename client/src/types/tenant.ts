@@ -4,6 +4,7 @@ import type { StorefrontLayout, ThemeColors } from "../theme/types";
 export interface ThemeColorsPartial {
     primary?: string;
     secondary?: string;
+    headerBackground?: string;
     background?: string;
     surface?: string;
     border?: string;

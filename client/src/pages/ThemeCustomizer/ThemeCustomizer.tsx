@@ -142,6 +142,13 @@ const ThemeCustomizer = () => {
 
                         {activeTab === "chrome" && (
                             <div className={styles.fieldGrid}>
+                                <label className={styles.colorField}>
+                                    <span>Header background</span>
+                                    <div className={styles.colorInputRow}>
+                                        <input type="color" value={draft.themeColors.headerBackground} onChange={(e) => updateColor("headerBackground", e.target.value)} />
+                                        <input type="text" value={draft.themeColors.headerBackground} onChange={(e) => updateColor("headerBackground", e.target.value)} />
+                                    </div>
+                                </label>
                                 <Toggle label="Sticky header on scroll" checked={draft.layoutSettings.stickyHeader} onChange={(v) => updateLayout("stickyHeader", v)} />
                                 <Toggle label="Show search bar in header" checked={draft.layoutSettings.showHeaderSearch} onChange={(v) => updateLayout("showHeaderSearch", v)} />
                                 <Select label="Logo position" value={draft.layoutSettings.headerLogoPosition} onChange={(v) => updateLayout("headerLogoPosition", v as typeof draft.layoutSettings.headerLogoPosition)} options={[["left", "Left"], ["center", "Center"]]} />

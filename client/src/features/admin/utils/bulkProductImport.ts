@@ -1,8 +1,13 @@
 import * as XLSX from "xlsx";
 import JSZip from "jszip";
 import { uploadImageToS3 } from "../api/upload.api";
+import type { BusinessType } from "../../../constants/businessTypes";
+import {
+    SERVICE_DEFAULT_COLOR,
+    SERVICE_DEFAULT_SIZE,
+} from "../../tenant/businessMode";
 
-const IMAGE_EXTENSION_PATTERN = /\.(png|jpe?g|webp|gif|bmp|svg)$/i;
+const IMAGE_EXTENSION_PATTERN = /\.(png|jpe?g|webp|gif)$/i;
 
 export interface BulkInventoryItem {
     variantId: string;
@@ -19,6 +24,8 @@ export interface BulkProductDraft {
     categoryId: string;
     categoryName?: string;
     brand?: string;
+    location?: string;
+    foodType?: "veg" | "non_veg";
     price: number;
     discountPercentage: number;
     inventory: BulkInventoryItem[];
@@ -44,6 +51,11 @@ const HEADER_ALIASES: Record<string, string> = {
     category: "categoryId",
     categoryname: "categoryName",
     brand: "brand",
+    location: "location",
+    foodtype: "foodType",
+    vegnonveg: "foodType",
+    availability: "availability",
+    available: "availability",
     price: "price",
     discount: "discountPercentage",
     discountpercentage: "discountPercentage",
@@ -115,9 +127,17 @@ export const isRemoteImageUrl = (value: string) => /^https?:\/\//i.test(value.tr
 
 export const isDataUrl = (value: string) => /^data:image\//i.test(value.trim());
 
+export const isStoredProductImageKey = (value: string) =>
+    /^tenants\/[a-zA-Z0-9_-]+\/products\/[^/\\]+$/.test(value.trim());
+
 export const looksLikeLocalPath = (value: string) => {
     const trimmed = value.trim();
-    if (!trimmed || isRemoteImageUrl(trimmed) || isDataUrl(trimmed)) {
+    if (
+        !trimmed ||
+        isRemoteImageUrl(trimmed) ||
+        isDataUrl(trimmed) ||
+        isStoredProductImageKey(trimmed)
+    ) {
         return false;
     }
     return (
@@ -125,7 +145,7 @@ export const looksLikeLocalPath = (value: string) => {
         || trimmed.startsWith("\\\\")
         || trimmed.includes("\\")
         || trimmed.includes("/")
-        || /\.(png|jpe?g|webp|gif|bmp|svg)$/i.test(trimmed)
+        || /\.(png|jpe?g|webp|gif)$/i.test(trimmed)
     );
 };
 
@@ -167,12 +187,6 @@ const guessImageMimeType = (fileName: string) => {
     }
     if (lower.endsWith(".gif")) {
         return "image/gif";
-    }
-    if (lower.endsWith(".bmp")) {
-        return "image/bmp";
-    }
-    if (lower.endsWith(".svg")) {
-        return "image/svg+xml";
     }
     return "image/jpeg";
 };
@@ -230,7 +244,7 @@ export const resolveImageValue = async (
             error: "Remote image URLs are not supported. Upload the image file instead.",
         };
     }
-    if (/^tenants\/[a-zA-Z0-9_-]+\/products\/[^/\\]+$/.test(trimmed)) {
+    if (isStoredProductImageKey(trimmed)) {
         return {
             value: trimmed,
         };
@@ -262,6 +276,33 @@ const toNumber = (value: unknown, fallback = 0) => {
     return Number.isFinite(parsed) ? parsed : fallback;
 };
 
+const normalizeFoodType = (
+    value: unknown,
+): "veg" | "non_veg" | undefined => {
+    const normalized = String(value ?? "")
+        .trim()
+        .toLowerCase()
+        .replace(/[\s-]+/g, "_");
+    if (normalized === "veg" || normalized === "vegetarian") {
+        return "veg";
+    }
+    if (
+        normalized === "non_veg" ||
+        normalized === "nonvegetarian" ||
+        normalized === "non_vegetarian"
+    ) {
+        return "non_veg";
+    }
+    return undefined;
+};
+
+const parseAvailability = (value: unknown): boolean => {
+    const normalized = String(value ?? "").trim().toLowerCase();
+    return !["false", "no", "0", "unavailable", "inactive"].includes(
+        normalized,
+    );
+};
+
 const productKey = (row: Record<string, unknown>) => {
     const productId = String(row.productId ?? "").trim();
     if (productId) {
@@ -288,7 +329,10 @@ const pickProductsSheetName = (sheetNames: string[]) => {
     return nonInstructions ?? sheetNames[0];
 };
 
-export const parseExcelToProducts = (buffer: ArrayBuffer): ParsedBulkImport => {
+export const parseExcelToProducts = (
+    buffer: ArrayBuffer,
+    businessType: BusinessType = "retail",
+): ParsedBulkImport => {
     const workbook = XLSX.read(buffer, {
         type: "array",
     });
@@ -317,10 +361,18 @@ export const parseExcelToProducts = (buffer: ArrayBuffer): ParsedBulkImport => {
         const row = mapRowHeaders(rawRow);
         const name = String(row.name ?? "").trim();
         const categoryId = String(row.categoryId ?? "").trim();
-        const color = String(row.color ?? "").trim();
-        const size = String(row.size ?? "").trim();
+        const isService = businessType === "service";
+        const color = isService
+            ? SERVICE_DEFAULT_COLOR
+            : String(row.color ?? "").trim();
+        const size = isService
+            ? SERVICE_DEFAULT_SIZE
+            : String(row.size ?? "").trim();
+        const location = String(row.location ?? "").trim();
+        const foodType = normalizeFoodType(row.foodType);
 
-        if (!name && !categoryId && !color && !size) {
+        if (!name && !categoryId && !String(row.color ?? "").trim()
+            && !String(row.size ?? "").trim() && !location && !row.foodType) {
             return;
         }
         if (!name) {
@@ -331,8 +383,18 @@ export const parseExcelToProducts = (buffer: ArrayBuffer): ParsedBulkImport => {
             parseErrors.push(`Row ${rowNumber}: categoryId is required.`);
             return;
         }
-        if (!color || !size) {
+        if (!isService && (!color || !size)) {
             parseErrors.push(`Row ${rowNumber}: color and size are required.`);
+            return;
+        }
+        if (isService && !location) {
+            parseErrors.push(`Row ${rowNumber}: location is required for services.`);
+            return;
+        }
+        if (businessType === "menu" && !foodType) {
+            parseErrors.push(
+                `Row ${rowNumber}: foodType must be Veg or Non-Veg.`,
+            );
             return;
         }
 
@@ -344,11 +406,24 @@ export const parseExcelToProducts = (buffer: ArrayBuffer): ParsedBulkImport => {
             variantId,
             color,
             size,
-            stock: Math.max(0, Math.trunc(toNumber(row.stock, 0))),
+            stock: isService
+                ? parseAvailability(row.availability)
+                    ? 1
+                    : 0
+                : Math.max(0, Math.trunc(toNumber(row.stock, 0))),
         };
 
         if (existing) {
             existing.rowNumbers.push(rowNumber);
+            if (
+                businessType === "menu" &&
+                existing.foodType !== foodType
+            ) {
+                parseErrors.push(
+                    `Row ${rowNumber}: all variants of ${name} must use the same foodType.`,
+                );
+                return;
+            }
             const duplicateVariant = existing.inventory.some((item) => item.variantId === variantId
                 || (item.color.toLowerCase() === color.toLowerCase()
                     && item.size.toLowerCase() === size.toLowerCase()));
@@ -382,6 +457,8 @@ export const parseExcelToProducts = (buffer: ArrayBuffer): ParsedBulkImport => {
             categoryId,
             categoryName: String(row.categoryName ?? "").trim() || undefined,
             brand: String(row.brand ?? "").trim() || undefined,
+            location: isService ? location : undefined,
+            foodType: businessType === "menu" ? foodType : undefined,
             price: Math.max(0, toNumber(row.price, 0)),
             discountPercentage: Math.min(100, Math.max(0, toNumber(row.discountPercentage, 0))),
             inventory: [inventoryItem],
@@ -485,6 +562,8 @@ export const buildBulkImportPayload = (
             categoryId: product.categoryId,
             categoryName: product.categoryName,
             brand: product.brand,
+            location: product.location,
+            foodType: product.foodType,
             price: product.price,
             discountPercentage: product.discountPercentage,
             inventory: product.inventory,
@@ -494,7 +573,9 @@ export const buildBulkImportPayload = (
     };
 };
 
-export const downloadBulkImportTemplate = () => {
+export const downloadBulkImportTemplate = (
+    businessType: BusinessType = "retail",
+) => {
     const instructions = [
         {
             Field: "productId",
@@ -512,10 +593,37 @@ export const downloadBulkImportTemplate = () => {
             Description: "Category ID from your store.",
         },
         {
-            Field: "color / size / stock",
+            Field:
+                businessType === "service"
+                    ? "location / availability"
+                    : "color / size / stock",
             Required: "Yes",
-            Description: "One Excel row per variant.",
+            Description:
+                businessType === "service"
+                    ? "Services use a location and Available/Unavailable status."
+                    : "One Excel row per color and size variant.",
         },
+        ...(businessType === "menu"
+            ? [{
+                Field: "foodType",
+                Required: "Yes",
+                Description: "Enter Veg or Non-Veg.",
+            }]
+            : []),
+        ...(businessType === "retail"
+            ? [{
+                Field: "brand",
+                Required: "No",
+                Description: "Product brand.",
+            }]
+            : []),
+        ...(businessType === "service"
+            ? [{
+                Field: "discountPercentage",
+                Required: "No",
+                Description: "Ignored for service listings.",
+            }]
+            : []),
         {
             Field: "imagePath",
             Required: "No",
@@ -532,7 +640,7 @@ export const downloadBulkImportTemplate = () => {
             Description: "Upload a folder or ZIP of image files. Local paths match by filename and upload to S3.",
         },
     ];
-    const rows = [
+    const retailRows = [
         {
             productId: "",
             name: "Classic Cotton Shirt",
@@ -585,10 +693,70 @@ export const downloadBulkImportTemplate = () => {
             imagePath2: "",
         },
     ];
+    const serviceRows = [
+        {
+            productId: "",
+            name: "Home Cleaning",
+            description: "Professional home cleaning service",
+            categoryId: "REPLACE_WITH_CATEGORY_ID",
+            categoryName: "Cleaning",
+            location: "Bengaluru",
+            price: 1499,
+            discountPercentage: 0,
+            availability: "Available",
+            imagePath: "C:\\images\\home-cleaning.jpg",
+            imagePath1: "",
+            imagePath2: "",
+        },
+    ];
+    const menuRows = [
+        {
+            productId: "",
+            name: "Paneer Pizza",
+            description: "Fresh paneer pizza",
+            categoryId: "REPLACE_WITH_CATEGORY_ID",
+            categoryName: "Pizza",
+            foodType: "Veg",
+            price: 299,
+            discountPercentage: 0,
+            color: "Regular",
+            size: "Small",
+            stock: 25,
+            variantId: "",
+            imagePath: "C:\\images\\paneer-pizza.jpg",
+            imagePath1: "",
+            imagePath2: "",
+        },
+        {
+            productId: "",
+            name: "Paneer Pizza",
+            description: "Fresh paneer pizza",
+            categoryId: "REPLACE_WITH_CATEGORY_ID",
+            categoryName: "Pizza",
+            foodType: "Veg",
+            price: 299,
+            discountPercentage: 0,
+            color: "Regular",
+            size: "Large",
+            stock: 15,
+            variantId: "",
+            imagePath: "C:\\images\\paneer-pizza.jpg",
+            imagePath1: "",
+            imagePath2: "",
+        },
+    ];
+    const rows = businessType === "service"
+        ? serviceRows
+        : businessType === "menu"
+            ? menuRows
+            : retailRows;
     const instructionsSheet = XLSX.utils.json_to_sheet(instructions);
     const productsSheet = XLSX.utils.json_to_sheet(rows);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, instructionsSheet, "Instructions");
     XLSX.utils.book_append_sheet(workbook, productsSheet, "Products");
-    XLSX.writeFile(workbook, "bulk-product-import-template.xlsx");
+    XLSX.writeFile(
+        workbook,
+        `${businessType}-bulk-product-import-template.xlsx`,
+    );
 };

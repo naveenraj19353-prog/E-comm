@@ -1,8 +1,13 @@
 .navbar {
   z-index: 100;
   width: 100%;
-  background: var(--surface);
-  border-bottom: 0.0625rem solid var(--border);
+  background: var(
+    --header-background,
+    color-mix(in srgb, var(--primary) 7%, var(--surface))
+  );
+  border-bottom: 0.0625rem solid
+    color-mix(in srgb, var(--primary) 18%, var(--border));
+  box-shadow: 0 0.25rem 1rem color-mix(in srgb, var(--primary) 7%, transparent);
   font-family:
     "Segoe UI",
     Roboto,

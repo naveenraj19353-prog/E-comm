@@ -29,7 +29,7 @@
   padding: 0.5rem 0.75rem;
   border: 0.0625rem solid var(--border);
   border-radius: 0.5rem;
-  background: var(--surface);
+  background: var(--header-background, var(--surface));
   font-size: 0.625rem;
   color: color-mix(in srgb, var(--text-black) 70%, transparent);
 }

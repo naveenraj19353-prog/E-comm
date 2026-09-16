@@ -6,6 +6,7 @@ export type { FooterContent, FooterSection, FooterLink } from "../components/Foo
 export interface ThemeColors {
     primary: string;
     secondary: string;
+    headerBackground: string;
     background: string;
     surface: string;
     border: string;
@@ -102,6 +103,7 @@ export const DEFAULT_LAYOUT_SETTINGS: LayoutSettings = {
 export const DEFAULT_THEME_COLORS: ThemeColors = {
     primary: "#2f6b52",
     secondary: "#4c8a6d",
+    headerBackground: "#F1F6F3",
     background: "#F9FAFB",
     surface: "#FFFFFF",
     border: "#E5E7EB",

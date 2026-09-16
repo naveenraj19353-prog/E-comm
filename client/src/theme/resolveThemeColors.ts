@@ -5,6 +5,7 @@ import { themePresets, type ThemePresetName } from "./themePresets";
 const THEME_COLOR_KEYS: Array<keyof ThemeColors> = [
     "primary",
     "secondary",
+    "headerBackground",
     "background",
     "surface",
     "border",

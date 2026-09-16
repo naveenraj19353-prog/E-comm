@@ -8,6 +8,7 @@ BusinessType = Literal["retail", "service", "menu"]
 class ThemeColors(BaseModel):
     primary: Optional[str] = None
     secondary: Optional[str] = None
+    headerBackground: Optional[str] = None
     background: Optional[str] = None
     surface: Optional[str] = None
     border: Optional[str] = None

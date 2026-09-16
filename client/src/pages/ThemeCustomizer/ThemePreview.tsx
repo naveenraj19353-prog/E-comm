@@ -23,6 +23,7 @@ const ThemePreview = ({ tab, draft }: ThemePreviewProps) => {
     const previewStyle = {
         "--primary": themeColors.primary,
         "--secondary": themeColors.secondary,
+        "--header-background": themeColors.headerBackground,
         "--background": themeColors.background,
         "--surface": themeColors.surface,
         "--border": themeColors.border,

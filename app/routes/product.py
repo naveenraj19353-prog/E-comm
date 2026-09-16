@@ -5,7 +5,7 @@ from typing import Annotated
 from bson import ObjectId
 from fastapi import APIRouter, Depends, HTTPException, Query
 
-from app.database.mongo import products
+from app.database.mongo import products, tenants
 from app.models.product import (
     BulkImportRequest,
     CreateProduct,
@@ -409,13 +409,24 @@ def bulk_import_products(
     from app.services.bulk_product_import import upsert_bulk_product
 
     tenant_id = admin_tenant_id(current_user, body.tenantId)
+    tenant = tenants.find_one(
+        {"$or": [{"tenantId": tenant_id}, {"_id": tenant_id}]},
+        {"businessType": 1},
+    )
+    if not tenant:
+        raise HTTPException(status_code=404, detail="Tenant not found.")
+    business_type = str(tenant.get("businessType") or "retail").lower()
     created = 0
     updated = 0
     errors: list[dict] = []
 
     for index, item in enumerate(body.products):
         try:
-            result = upsert_bulk_product(tenant_id, item)
+            result = upsert_bulk_product(
+                tenant_id,
+                item,
+                business_type,
+            )
             if result == "created":
                 created += 1
             else:

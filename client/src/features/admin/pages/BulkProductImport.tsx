@@ -1,5 +1,6 @@
 import { useMemo, useRef, useState, type ChangeEvent } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import axios from "axios";
 import { useBulkImportProducts } from "../hooks/useBulkImportProducts";
 import { useTenantByTenantId } from "../hooks/useTenants";
 import styles from "../styles/BulkProductImport.module.css";
@@ -22,6 +23,7 @@ export default function BulkProductImport() {
     const zipInputRef = useRef<HTMLInputElement>(null);
     const bulkImportMutation = useBulkImportProducts();
     const { data: tenant, isLoading: tenantLoading, isError: tenantError } = useTenantByTenantId(tenantId);
+    const businessType = tenant?.businessType || "retail";
 
     const [excelFileName, setExcelFileName] = useState("");
     const [imageFileCount, setImageFileCount] = useState(0);
@@ -78,28 +80,23 @@ export default function BulkProductImport() {
 
         try {
             const buffer = await file.arrayBuffer();
-            const parsed = parseExcelToProducts(buffer);
+            const parsed = parseExcelToProducts(buffer, businessType);
             setParseErrors(parsed.parseErrors);
-            if (uploadedImageFiles.length) {
-                setIsResolvingImages(true);
-                const resolved = await resolveAllProductImages(
-                    parsed.products,
-                    buildImageFileMap(uploadedImageFiles),
-                    tenantId,
-                );
-                setProducts(resolved.products);
-                setImageErrors(resolved.imageErrors);
-                setIsResolvingImages(false);
-            }
-            else {
-                setProducts(parsed.products);
-            }
+            setIsResolvingImages(true);
+            const resolved = await resolveAllProductImages(
+                parsed.products,
+                buildImageFileMap(uploadedImageFiles),
+                tenantId,
+            );
+            setProducts(resolved.products);
+            setImageErrors(resolved.imageErrors);
         }
         catch (error) {
             console.error("Failed to parse Excel file:", error);
             setParseErrors(["Unable to read the Excel file. Please use the provided template."]);
         }
         finally {
+            setIsResolvingImages(false);
             if (excelInputRef.current) {
                 excelInputRef.current.value = "";
             }
@@ -124,7 +121,7 @@ export default function BulkProductImport() {
         try {
             const extracted = await extractImagesFromZip(file);
             if (!extracted.length) {
-                setImageErrors(["ZIP file does not contain any supported image files (png, jpg, webp, gif, bmp, svg)."]);
+                setImageErrors(["ZIP file does not contain any supported image files (png, jpg, webp, gif)."]);
                 return;
             }
             await applyUploadedImages(mergeImageFiles(uploadedImageFiles, extracted));
@@ -161,7 +158,27 @@ export default function BulkProductImport() {
         }
         catch (error) {
             console.error("Bulk import failed:", error);
-            setStatusMessage("Bulk import failed. Check the Excel data and try again.");
+            if (axios.isAxiosError(error)) {
+                const detail = error.response?.data?.detail;
+                const message = Array.isArray(detail)
+                    ? detail
+                        .map((item) => item?.msg)
+                        .filter(Boolean)
+                        .join("; ")
+                    : detail;
+                setStatusMessage(
+                    typeof message === "string" && message
+                        ? `Bulk import failed: ${message}`
+                        : `Bulk import failed (${error.response?.status || "network error"}).`,
+                );
+            }
+            else {
+                setStatusMessage(
+                    error instanceof Error
+                        ? `Bulk import failed: ${error.message}`
+                        : "Bulk import failed.",
+                );
+            }
         }
     };
 
@@ -186,12 +203,16 @@ export default function BulkProductImport() {
                     <span className={styles.eyebrow}>{tenant.tenantId}</span>
                     <h1>Bulk Product Import</h1>
                     <p>
-                        Upload an Excel file for <strong>{tenant.name}</strong>. Use `imagePath`, `imagePath1`, `imagePath2`, etc. Local paths are uploaded to S3 when you provide matching image files or a ZIP.
+                        Upload a {businessType} Excel file for <strong>{tenant.name}</strong>. Use `imagePath`, `imagePath1`, `imagePath2`, etc. Local paths are uploaded to S3 when you provide matching image files or a ZIP.
                     </p>
                 </div>
                 <div className={styles.headerActions}>
-                    <button type="button" className={styles.secondaryButton} onClick={downloadBulkImportTemplate}>
-                        Download template
+                    <button
+                        type="button"
+                        className={styles.secondaryButton}
+                        onClick={() => downloadBulkImportTemplate(businessType)}
+                    >
+                        Download {businessType} template
                     </button>
                     <button
                         type="button"
@@ -206,7 +227,14 @@ export default function BulkProductImport() {
 
             <div className={styles.card}>
                 <h2>1. Excel file</h2>
-                <p>One row per variant. Use `imagePath`, `imagePath1`, `imagePath2` for multiple images (URLs or local paths).</p>
+                <p>
+                    {businessType === "service"
+                        ? "One row per service. Include location and availability."
+                        : businessType === "menu"
+                            ? "One row per variant. Include foodType, color, size, and stock."
+                            : "One row per variant. Include color, size, and stock."}
+                    {" "}Use `imagePath`, `imagePath1`, `imagePath2` for local images.
+                </p>
                 <div className={styles.uploadRow}>
                     <input
                         ref={excelInputRef}
@@ -231,7 +259,7 @@ export default function BulkProductImport() {
                         ref={imageInputRef}
                         className={styles.fileInput}
                         type="file"
-                        accept="image/*"
+                        accept="image/png,image/jpeg,image/webp,image/gif"
                         multiple
                         {...({
                             webkitdirectory: "",
@@ -296,6 +324,18 @@ export default function BulkProductImport() {
                                             <strong>{product.name}</strong>
                                             <br />
                                             {product.categoryId}
+                                            {product.location ? (
+                                                <>
+                                                    <br />
+                                                    Location: {product.location}
+                                                </>
+                                            ) : null}
+                                            {product.foodType ? (
+                                                <>
+                                                    <br />
+                                                    Food type: {product.foodType === "veg" ? "Veg" : "Non-Veg"}
+                                                </>
+                                            ) : null}
                                             {product.productId ? (
                                                 <>
                                                     <br />
