@@ -270,6 +270,92 @@ class WhatsAppNotificationTests(unittest.TestCase):
             message,
         )
         self.assertNotIn("localhost", message)
+        integrations.find_one.assert_not_called()
+
+    @patch("app.services.whatsapp_notification_service.PeriskopeService")
+    @patch("app.services.whatsapp_notification_service.notification_logs")
+    @patch("app.services.whatsapp_notification_service.tenants")
+    @patch("app.services.whatsapp_notification_service.addresses")
+    @patch("app.services.whatsapp_notification_service.users")
+    def test_product_share_does_not_require_store_notification_toggle(
+        self,
+        users: MagicMock,
+        addresses: MagicMock,
+        tenants: MagicMock,
+        logs: MagicMock,
+        service: MagicMock,
+    ):
+        users.find_one.return_value = {
+            "name": "Naveen",
+            "phone": "9845459636",
+        }
+        addresses.find_one.return_value = {"country": "India"}
+        tenants.find_one.return_value = {"name": "Demo Store", "slug": "demo"}
+        logs.insert_one.return_value.inserted_id = ObjectId()
+        service.return_value.configured = True
+        service.return_value.send_text_message.return_value = {
+            "queue_id": "queue-1"
+        }
+
+        result = share_product_with_customer(
+            tenant_id="demo",
+            user_id=str(self.user_id),
+            product={
+                "_id": ObjectId("6aa8de0de74ab7afd90745e6"),
+                "name": "Paneer Pizza",
+                "price": 299,
+                "images": {},
+            },
+        )
+
+        self.assertTrue(result["success"])
+        chat_id, _message = service.return_value.send_text_message.call_args.args
+        self.assertEqual(chat_id, "919845459636@c.us")
+
+    @patch("app.services.whatsapp_notification_service.PeriskopeService")
+    @patch("app.services.whatsapp_notification_service.notification_logs")
+    @patch("app.services.whatsapp_notification_service.tenants")
+    @patch("app.services.whatsapp_notification_service.addresses")
+    @patch("app.services.whatsapp_notification_service.users")
+    def test_product_share_works_for_any_tenant_store(
+        self,
+        users: MagicMock,
+        addresses: MagicMock,
+        tenants: MagicMock,
+        logs: MagicMock,
+        service: MagicMock,
+    ):
+        users.find_one.return_value = {
+            "name": "Naveen",
+            "phone": "9845459636",
+            "tenantId": "your-store",
+        }
+        addresses.find_one.return_value = {"country": "India"}
+        tenants.find_one.return_value = {
+            "name": "Vedic Paan",
+            "slug": "vedic-paan",
+        }
+        logs.insert_one.return_value.inserted_id = ObjectId()
+        service.return_value.configured = True
+        service.return_value.send_text_message.return_value = {
+            "queue_id": "queue-1"
+        }
+
+        result = share_product_with_customer(
+            tenant_id="vedic-paan",
+            user_id=str(self.user_id),
+            product={
+                "_id": ObjectId("6aa8de0de74ab7afd90745e6"),
+                "name": "Meetha Paan",
+                "price": 40,
+                "images": {},
+            },
+        )
+
+        self.assertTrue(result["success"])
+        _chat_id, message = service.return_value.send_text_message.call_args.args
+        self.assertIn("Vedic Paan", message)
+        self.assertIn("vedic-paan", message)
 
     @patch("app.services.whatsapp_notification_service.PeriskopeService")
     @patch("app.services.whatsapp_notification_service.shipping_locations")

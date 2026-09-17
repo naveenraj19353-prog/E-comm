@@ -1124,7 +1124,6 @@ def share_product_on_whatsapp(
     product = products.find_one(
         {
             "_id": ObjectId(id),
-            "tenantId": tenant_id,
             "isActive": True,
         }
     )
@@ -1132,7 +1131,7 @@ def share_product_on_whatsapp(
         raise HTTPException(status_code=404, detail=PRODUCT_NOT_FOUND)
     try:
         return share_product_with_customer(
-            tenant_id=tenant_id,
+            tenant_id=str(product.get("tenantId") or tenant_id),
             user_id=user_id,
             product=product,
         )
