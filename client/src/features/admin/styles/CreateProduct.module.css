@@ -284,6 +284,8 @@
   color: #202a26;
   font-family: inherit;
   font-size: 0.875rem;
+  appearance: none;
+  -webkit-appearance: none;
 }
 .variantInputRow input::placeholder {
   color: #a2aca7;
@@ -823,11 +825,19 @@
   }
   .variantInputRow {
     flex-direction: column;
+    align-items: stretch;
     gap: 0.5rem;
   }
   .variantInputRow input {
-    border-right: 1px solid #d8e0db;
+    flex: none;
+    width: 100%;
+    border: 1px solid #d8e0db;
     border-radius: 0.625rem;
+    box-shadow: none;
+  }
+  .variantInputRow input:focus {
+    border-color: #4c8a6d;
+    box-shadow: 0 0 0 3px rgba(76, 138, 109, 0.11);
   }
   .addVariantButton {
     width: 100%;

@@ -271,6 +271,48 @@ class WhatsAppNotificationTests(unittest.TestCase):
         )
         self.assertNotIn("localhost", message)
 
+    @patch("app.services.whatsapp_notification_service.PeriskopeService")
+    @patch("app.services.whatsapp_notification_service.shipping_locations")
+    @patch("app.services.whatsapp_notification_service.tenants")
+    @patch("app.services.whatsapp_notification_service.users")
+    @patch("app.services.whatsapp_notification_service.messaging_integrations")
+    @patch("app.services.whatsapp_notification_service.orders")
+    @patch("app.services.whatsapp_notification_service.notification_logs")
+    def test_tenant_receives_new_order_alert(
+        self,
+        logs: MagicMock,
+        orders: MagicMock,
+        integrations: MagicMock,
+        users: MagicMock,
+        tenants: MagicMock,
+        shipping: MagicMock,
+        service: MagicMock,
+    ):
+        logs.find_one.return_value = {**self.notification, "audience": "tenant"}
+        orders.find_one.return_value = self.order
+        integrations.find_one.return_value = {
+            "enabled": True,
+            "notifyPhone": "9876543210",
+            "notifications": {"orderConfirmation": True},
+        }
+        users.find.return_value = []
+        users.find_one.return_value = {"name": "Naveen"}
+        tenants.find_one.return_value = {"name": "Demo Store", "slug": "demo"}
+        shipping.find_one.return_value = None
+        service.return_value.send_text_message.return_value = {
+            "data": {"id": "store-1"}
+        }
+
+        process_notification(str(self.notification_id))
+
+        chat_id, message = service.return_value.send_text_message.call_args.args
+        self.assertEqual(chat_id, "919876543210@c.us")
+        self.assertIn("NEW ORDER", message)
+        self.assertIn("Naveen", message)
+        self.assertIn("Demo Store", message)
+        sent_update = logs.update_one.call_args_list[-1].args[1]["$set"]
+        self.assertEqual(sent_update["status"], "sent")
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -1,4 +1,5 @@
 import { useNavigate, useParams } from "react-router-dom";
+import { useAuth } from "../../auth/hooks/useAuth";
 import { useTenantByTenantId } from "../hooks/useTenants";
 import styles from "../styles/AdminTenant.module.css";
 import { formatStorefrontHost } from "../../tenant/tenantHost";
@@ -7,6 +8,8 @@ import { routes, storefrontNavigate } from "../../../routes/routes";
 export default function AdminTenant() {
     const { tenantId } = useParams();
     const navigate = useNavigate();
+    const { user } = useAuth();
+    const showBackToTenants = user?.role === "super_admin";
     const { data: tenant, isLoading, isError, } = useTenantByTenantId(tenantId || "");
     if (isLoading) {
         return (<div className={styles.state}>
@@ -32,50 +35,14 @@ export default function AdminTenant() {
       
       <div className={styles.header}>
         <div>
+          {showBackToTenants && (
           <button type="button" className={styles.backButton} onClick={() => navigate("/admin/tenants")}>
             ← Back to Tenants
           </button>
+          )}
           <div className={styles.eyebrow}>{tenant.tenantId}</div>
           <h1>{tenant.name}</h1>
           <p>{storeHost}</p>
-        </div>
-        <div className={styles.headerActions}>
-          <button type="button" className={styles.layoutButton} onClick={() => openStore(routes.customize(tenant.slug))}>
-            Layout Studio
-          </button>
-          <button type="button" className={styles.editButton} onClick={() => navigate(`/admin/tenants/${tenant.tenantId}/edit`)}>
-            Edit Tenant
-          </button>
-          <button type="button" className={styles.productsButton} onClick={() => navigate(`/admin/tenants/${tenant.tenantId}/products`)}>
-            Manage Products
-          </button>
-          <button type="button" className={styles.productsButton} onClick={() => navigate(`/admin/tenants/${tenant.tenantId}/customers`)}>
-            Customers
-          </button>
-          <button type="button" className={styles.productsButton} onClick={() => navigate(`/admin/tenants/${tenant.tenantId}/integrations/periskope`)}>
-            WhatsApp
-          </button>
-          {tenant.businessType === "menu" ? (
-            <button type="button" className={styles.ordersButton} onClick={() => navigate(`/admin/tenants/${tenant.tenantId}/menu`)}>
-              Menu Desk
-            </button>
-          ) : (
-            <>
-              {isRetail ? (
-                <button type="button" className={styles.ordersButton} onClick={() => navigate(`/admin/tenants/${tenant.tenantId}/orders`)}>
-                  Manage Orders
-                </button>
-              ) : null}
-              <button type="button" className={styles.productsButton} onClick={() => navigate(`/admin/tenants/${tenant.tenantId}/banners`)}>
-                Manage Banners
-              </button>
-              {isRetail ? (
-                <button type="button" className={styles.ordersButton} onClick={() => navigate(`/admin/tenants/${tenant.tenantId}/shipping/delhivery`)}>
-                  Delhivery Shipping
-                </button>
-              ) : null}
-            </>
-          )}
         </div>
       </div>
       
@@ -181,21 +148,20 @@ export default function AdminTenant() {
           </div>
         </div>
         <div className={styles.actionsGrid}>
-          
+          <button type="button" className={styles.actionCard} onClick={() => openStore(routes.customize(tenant.slug))}>
+            <div className={styles.actionIcon}>▣</div>
+            <div>
+              <strong>Layout Studio</strong>
+              <span>Customize storefront layout, theme, and content.</span>
+            </div>
+            <b>→</b>
+          </button>
+
           <button type="button" className={styles.actionCard} onClick={() => navigate(`/admin/tenants/${tenant.tenantId}/edit`)}>
             <div className={styles.actionIcon}>✎</div>
             <div>
               <strong>Edit Tenant</strong>
               <span>Update store information, theme and status.</span>
-            </div>
-            <b>→</b>
-          </button>
-          
-          <button type="button" className={styles.actionCard} onClick={() => navigate(`/admin/tenants/${tenant.tenantId}/orders`)}>
-            <div className={styles.actionIcon}>⧉</div>
-            <div>
-              <strong>Manage Orders</strong>
-              <span>View, fulfill, and cancel customer orders.</span>
             </div>
             <b>→</b>
           </button>
@@ -209,6 +175,15 @@ export default function AdminTenant() {
             <b>→</b>
           </button>
 
+          <button type="button" className={styles.actionCard} onClick={() => navigate(`/admin/tenants/${tenant.tenantId}/customers`)}>
+            <div className={styles.actionIcon}>☺</div>
+            <div>
+              <strong>Customers</strong>
+              <span>View customers for this store.</span>
+            </div>
+            <b>→</b>
+          </button>
+
           <button type="button" className={styles.actionCard} onClick={() => navigate(`/admin/tenants/${tenant.tenantId}/integrations/periskope`)}>
             <div className={styles.actionIcon}>◌</div>
             <div>
@@ -218,23 +193,49 @@ export default function AdminTenant() {
             <b>→</b>
           </button>
 
-          <button type="button" className={styles.actionCard} onClick={() => navigate(`/admin/tenants/${tenant.tenantId}/banners`)}>
-            <div className={styles.actionIcon}>▣</div>
-            <div>
-              <strong>Manage Banners</strong>
-              <span>Upload home hero images, titles, and CTAs.</span>
-            </div>
-            <b>→</b>
-          </button>
+          {tenant.businessType === "menu" ? (
+            <button type="button" className={styles.actionCard} onClick={() => navigate(`/admin/tenants/${tenant.tenantId}/menu`)}>
+              <div className={styles.actionIcon}>☰</div>
+              <div>
+                <strong>Menu Desk</strong>
+                <span>Manage live menu orders from the kitchen desk.</span>
+              </div>
+              <b>→</b>
+            </button>
+          ) : (
+            <>
+              {isRetail ? (
+                <button type="button" className={styles.actionCard} onClick={() => navigate(`/admin/tenants/${tenant.tenantId}/orders`)}>
+                  <div className={styles.actionIcon}>⧉</div>
+                  <div>
+                    <strong>Manage Orders</strong>
+                    <span>View, fulfill, and cancel customer orders.</span>
+                  </div>
+                  <b>→</b>
+                </button>
+              ) : null}
 
-          <button type="button" className={styles.actionCard} onClick={() => navigate(`/admin/tenants/${tenant.tenantId}/shipping/delhivery`)}>
-            <div className={styles.actionIcon}>⬡</div>
-            <div>
-              <strong>Delhivery Shipping</strong>
-              <span>Connect API token and register pickup location.</span>
-            </div>
-            <b>→</b>
-          </button>
+              <button type="button" className={styles.actionCard} onClick={() => navigate(`/admin/tenants/${tenant.tenantId}/banners`)}>
+                <div className={styles.actionIcon}>▣</div>
+                <div>
+                  <strong>Manage Banners</strong>
+                  <span>Upload home hero images, titles, and CTAs.</span>
+                </div>
+                <b>→</b>
+              </button>
+
+              {isRetail ? (
+                <button type="button" className={styles.actionCard} onClick={() => navigate(`/admin/tenants/${tenant.tenantId}/shipping/delhivery`)}>
+                  <div className={styles.actionIcon}>⬡</div>
+                  <div>
+                    <strong>Delhivery Shipping</strong>
+                    <span>Connect API token and register pickup location.</span>
+                  </div>
+                  <b>→</b>
+                </button>
+              ) : null}
+            </>
+          )}
         </div>
       </section>
     </div>);

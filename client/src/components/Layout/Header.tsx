@@ -149,7 +149,7 @@ export default function Navbar() {
         
         <button type="button" className={styles.logo} onClick={handleHome} aria-label="Home">
           <span className={styles.logoIcon}>{getInitials(tenantSlug)}</span>
-          <span className={styles.logoText}>{tenantSlug}</span>
+          <span className={styles.logoText}>{tenantSlug.toUpperCase()}</span>
         </button>
         
         {searchPosition === "after-logo" && renderDesktopSearch(styles.searchSlotInline)}

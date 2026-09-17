@@ -22,7 +22,11 @@ from app.services.whatsapp_notification_service import (
     retry_notification,
 )
 from app.utils.auth_dependencies import admin_tenant_id, require_admin
-from app.utils.phone_normalization import mask_phone
+from app.utils.phone_normalization import (
+    PhoneNormalizationError,
+    mask_phone,
+    normalize_phone,
+)
 
 router = APIRouter(prefix="/integrations/periskope", tags=["Periskope"])
 PROVIDER = "periskope"
@@ -32,13 +36,28 @@ def _now() -> datetime:
     return datetime.now(timezone.utc)
 
 
+def _normalized_notify_phone(value: str | None) -> str:
+    raw = str(value or "").strip()
+    if not raw:
+        return ""
+    try:
+        return normalize_phone(raw, country="India")
+    except PhoneNormalizationError as error:
+        raise HTTPException(
+            status_code=400,
+            detail="Enter a valid store WhatsApp number with country code, for example 9198XXXXXXXX.",
+        ) from error
+
+
 def _public_settings(doc: dict | None) -> dict:
     configured = bool(PERISKOPE_API_KEY and PERISKOPE_PHONE)
+    notify_phone = str((doc or {}).get("notifyPhone") or "").strip()
     return {
         "provider": PROVIDER,
         "enabled": bool((doc or {}).get("enabled")),
         "connected": configured,
         "senderPhone": mask_phone(PERISKOPE_PHONE),
+        "notifyPhone": notify_phone,
         "webhookEnabled": bool((doc or {}).get("webhookEnabled", True)),
         "webhookConfigured": bool(PERISKOPE_WEBHOOK_SIGNING_KEY),
         "notifications": {
@@ -84,6 +103,7 @@ def save_settings(
         "provider": PROVIDER,
         "enabled": body.enabled,
         "webhookEnabled": body.webhookEnabled,
+        "notifyPhone": _normalized_notify_phone(body.notifyPhone),
         "notifications": body.notifications.model_dump(),
         "updatedAt": now,
     }

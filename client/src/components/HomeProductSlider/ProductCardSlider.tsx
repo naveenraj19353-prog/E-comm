@@ -22,20 +22,19 @@ export default function ProductCardSlider({ title, products = [], onToggleWishli
     }
     const defaultBreakpoints = {
         0: {
-            slidesPerView: 1.08,
-            spaceBetween: 12,
+            slidesPerView: 1,
+            spaceBetween: 0,
+            freeMode: false,
         },
-        640: {
+        768: {
             slidesPerView: 2,
-            spaceBetween: 14,
-        },
-        900: {
-            slidesPerView: 2.5,
             spaceBetween: 16,
+            freeMode: false,
         },
-        1024: {
+        992: {
             slidesPerView: 3,
             spaceBetween: 16,
+            freeMode: true,
         },
         1280: {
             slidesPerView: 4,
@@ -45,6 +44,7 @@ export default function ProductCardSlider({ title, products = [], onToggleWishli
     return (<section className={styles.section}>
       <div className={styles.header}>
         {title && <h2 className={styles.title}>{title}</h2>}
+        {products.length > 1 && (
         <div className={styles.arrows}>
           <button ref={prevRef} type="button" className={styles.arrowButton} aria-label="Scroll left">
             <ArrowIcon direction="left"/>
@@ -53,6 +53,7 @@ export default function ProductCardSlider({ title, products = [], onToggleWishli
             <ArrowIcon direction="right"/>
           </button>
         </div>
+        )}
       </div>
       <Swiper modules={[Navigation, FreeMode, Autoplay]} onBeforeInit={(swiper) => {
             const navigation = swiper.params.navigation;
@@ -63,7 +64,7 @@ export default function ProductCardSlider({ title, products = [], onToggleWishli
         }} freeMode={{
             enabled: true,
             momentum: true,
-        }} slidesPerView={slidesPerView || "auto"} spaceBetween={16} breakpoints={slidesPerView ? undefined : defaultBreakpoints} className={styles.swiper} autoplay={{
+        }} slidesPerView={slidesPerView || 1} spaceBetween={16} centeredSlides={products.length === 1} breakpoints={slidesPerView ? undefined : defaultBreakpoints} className={`${styles.swiper} ${products.length === 1 ? styles.single : ""}`} autoplay={{
             delay: 2600,
             disableOnInteraction: false,
             pauseOnMouseEnter: true,

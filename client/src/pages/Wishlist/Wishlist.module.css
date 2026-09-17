@@ -38,6 +38,12 @@
   gap: var(--layout-grid-gap, 1.25rem);
 }
 
+@media (max-width: 90rem) {
+  .grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
 .listView {
   grid-template-columns: 1fr;
 }
@@ -277,6 +283,9 @@
   color: var(--primary);
 }
 @media (max-width: 68.75rem) {
+  .container {
+    max-width: none;
+  }
   .grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }

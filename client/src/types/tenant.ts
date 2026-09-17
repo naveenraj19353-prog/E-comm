@@ -73,6 +73,7 @@ export interface Tenant {
     layoutSettings?: LayoutSettingsPartial | null;
     footerContent?: FooterContentPartial | null;
     storefrontLayout?: StorefrontLayout | null;
+    phone?: string;
     isActive?: boolean;
 }
 

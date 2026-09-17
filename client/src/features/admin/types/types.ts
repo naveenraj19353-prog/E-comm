@@ -13,6 +13,7 @@ export interface Tenant {
     theme: string;
     themeColors?: ThemeColors | null;
     layoutSettings?: LayoutSettings | null;
+    phone?: string;
     isActive: boolean;
     createdAt: string;
     updatedAt: string;
@@ -91,6 +92,7 @@ export interface UpdateTenantPayload {
     theme?: string;
     themeColors?: ThemeColors;
     layoutSettings?: LayoutSettings;
+    phone?: string;
     isActive?: boolean;
 }
 

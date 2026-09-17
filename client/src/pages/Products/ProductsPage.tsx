@@ -373,6 +373,7 @@ const Products = () => {
         tenantSlug={tenantSlug}
         noIndex={hasSearch}
       />
+      <div className={styles.stickyBar}>
       <Breadcrumb items={[
             {
                 label: "Home",
@@ -401,6 +402,7 @@ const Products = () => {
           </button>
           <SortDropdown value={sort} onChange={handleSortChange}/>
         </div>
+      </div>
       </div>
       {hasSearch && (<div className={styles.searchInfo}>
           <Search size={16}/>

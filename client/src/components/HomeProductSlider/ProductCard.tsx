@@ -278,11 +278,13 @@ export default function ProductCard({
                         </div>
                     </div>
                 )}
-                {!isServiceMode && availableSizes.length > 0 && (
+                {!isServiceMode && availableSizes.filter((size) => size && size !== "Not Specified").length > 0 && (
                     <div className={styles.sizeSection}>
                         <span className={styles.optionLabel}>Size:</span>
                         <div className={styles.sizeOptions}>
-                            {availableSizes.map((size) => (
+                            {availableSizes
+                                .filter((size) => size && size !== "Not Specified")
+                                .map((size) => (
                                 <button
                                     key={size}
                                     type="button"

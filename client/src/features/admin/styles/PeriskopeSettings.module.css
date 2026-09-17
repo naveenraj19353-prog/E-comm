@@ -1,6 +1,9 @@
 .page {
   width: 100%;
   max-width: 52rem;
+  min-width: 0;
+  overflow-x: hidden;
+  box-sizing: border-box;
 }
 
 .backButton,
@@ -87,9 +90,11 @@
   gap: 1rem;
   margin-bottom: 1rem;
   padding: 1.15rem;
+  overflow: hidden;
   border: 1px solid #e3ebe6;
   border-radius: 0.85rem;
   background: #fbfcfa;
+  box-sizing: border-box;
 }
 
 .card h2 {
@@ -126,6 +131,43 @@
   color: #234837;
   font-size: 0.9rem;
   font-weight: 650;
+}
+
+.toggle input,
+.option input {
+  width: 1rem;
+  height: 1rem;
+  margin: 0.15rem 0 0;
+  flex-shrink: 0;
+  accent-color: #2f6b52;
+}
+
+.phoneField {
+  display: grid;
+  gap: 0.35rem;
+  color: #234837;
+  font-size: 0.9rem;
+  font-weight: 650;
+}
+
+.phoneField input {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid #d5ded8;
+  border-radius: 0.55rem;
+  background: #fff;
+  color: #17211d;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.phoneField small {
+  color: #6a7670;
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1.4;
 }
 
 .options {
@@ -224,14 +266,28 @@
 }
 
 .log {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 0.65rem 0.85rem;
   padding: 0.75rem;
   border: 1px solid #e3ebe6;
   border-radius: 0.6rem;
   background: #fff;
+}
+
+.log > div:first-child {
+  min-width: 0;
+}
+
+.log strong {
+  display: block;
+  overflow-wrap: anywhere;
+}
+
+.logAction {
+  justify-content: flex-end;
+  flex-wrap: wrap;
 }
 
 .log small {
@@ -262,15 +318,46 @@
   color: #6a7670;
 }
 
-@media (max-width: 700px) {
+@media (max-width: 64rem) {
+  .page {
+    padding: 0.75rem 1rem 1.5rem;
+  }
+
   .header,
-  .log {
+  .logHeader {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .header p,
+  .logHeader p {
+    max-width: none;
+  }
+
+  .card {
+    padding: 1rem;
   }
 
   .connectionGrid,
   .options {
     grid-template-columns: 1fr;
+  }
+
+  .actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .actions button {
+    width: 100%;
+  }
+
+  .log {
+    grid-template-columns: minmax(0, 1fr) auto;
+    padding: 0.7rem 0.75rem;
+  }
+
+  .logAction button {
+    width: auto;
   }
 }

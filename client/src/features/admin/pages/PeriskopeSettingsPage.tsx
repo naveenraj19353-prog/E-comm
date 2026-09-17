@@ -22,7 +22,8 @@ const notificationOptions: Array<{
   {
     key: "orderConfirmation",
     label: "Order confirmation",
-    description: "Sent after a retail order is successfully created.",
+    description:
+      "Sent to the customer and the store WhatsApp number after an order is placed.",
   },
   {
     key: "paymentSuccess",
@@ -118,6 +119,7 @@ export default function PeriskopeSettingsPage() {
       const result = await savePeriskopeSettings(tenantId, {
         enabled: settings.enabled,
         webhookEnabled: settings.webhookEnabled,
+        notifyPhone: settings.notifyPhone,
         notifications: settings.notifications,
       });
       setSettings(result.data);
@@ -208,6 +210,23 @@ export default function PeriskopeSettingsPage() {
             <strong>{settings.webhookConfigured ? "Configured" : "Missing"}</strong>
           </div>
         </div>
+
+        <label className={styles.phoneField}>
+          Store WhatsApp number
+          <input
+            type="tel"
+            value={settings.notifyPhone || ""}
+            onChange={(event) =>
+              setSettings({ ...settings, notifyPhone: event.target.value })
+            }
+            placeholder="9198XXXXXXXX"
+          />
+          <small>
+            New orders also go to the tenant WhatsApp number on Edit Tenant.
+            You can override it here. Use country code plus number, for example
+            9198XXXXXXXX.
+          </small>
+        </label>
 
         <label className={styles.toggle}>
           <input

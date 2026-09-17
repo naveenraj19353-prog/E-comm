@@ -37,6 +37,7 @@ function EditTenantForm({ tenant }: EditTenantFormProps) {
     const [name, setName] = useState(tenant.name || "");
     const [slug, setSlug] = useState(tenant.slug || "");
     const [logo, setLogo] = useState(tenant.logo || "");
+    const [phone, setPhone] = useState(tenant.phone || "");
     const [theme, setTheme] = useState(tenant.theme || "green");
     const [businessType, setBusinessType] = useState<BusinessType>(
         tenant.businessType || "retail",
@@ -62,6 +63,7 @@ function EditTenantForm({ tenant }: EditTenantFormProps) {
                     slug: slug.trim(),
                     businessType,
                     logo: logo.trim(),
+                    phone: phone.trim(),
                     theme,
                     isActive,
                 },
@@ -122,6 +124,18 @@ function EditTenantForm({ tenant }: EditTenantFormProps) {
             </label>
             <input id="tenant-slug" type="text" value={slug} onChange={(event) => setSlug(event.target.value.toLowerCase().replace(/\s+/g, "-"))} placeholder="tenant-slug"/>
             <small>Store URL: /{slug || "tenant-slug"}</small>
+          </div>
+          
+          <div className={styles.field}>
+            <label htmlFor="tenant-phone">WhatsApp number</label>
+            <input
+              id="tenant-phone"
+              type="tel"
+              value={phone}
+              onChange={(event) => setPhone(event.target.value)}
+              placeholder="9198XXXXXXXX"
+            />
+            <small>New customer orders are sent to this WhatsApp number.</small>
           </div>
           
           <div className={styles.field}>

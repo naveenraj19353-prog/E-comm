@@ -443,6 +443,11 @@
   background: var(--background);
   color: var(--primary);
 }
+@media (max-width: 68.75rem) {
+  .container {
+    max-width: none;
+  }
+}
 @media (max-width: 59.375rem) {
   .layout {
     grid-template-columns: 1fr;

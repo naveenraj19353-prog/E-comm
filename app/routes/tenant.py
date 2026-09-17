@@ -24,7 +24,10 @@ from app.utils.auth_dependencies import (
     require_super_admin,
 )
 from app.utils.category_catalog import _first_product_image
-from app.utils.hash import hash_password
+from app.utils.phone_normalization import (
+    PhoneNormalizationError,
+    normalize_phone,
+)
 from app.utils.jwt_handler import create_token
 from app.utils.product_serialize import _resolve_image_for_response
 
@@ -48,6 +51,19 @@ def _normalize_business_type(value: object) -> str:
     return "retail"
 
 
+def _normalize_tenant_phone(value: object) -> str:
+    raw = str(value or "").strip()
+    if not raw:
+        return ""
+    try:
+        return normalize_phone(raw, country="India")
+    except PhoneNormalizationError as error:
+        raise HTTPException(
+            status_code=400,
+            detail="Enter a valid WhatsApp number with country code, for example 9198XXXXXXXX.",
+        ) from error
+
+
 def _serialize_tenant(tenant: dict) -> dict:
     """Public tenant payload: strip secrets and always expose businessType."""
     payload = dict(tenant)
@@ -55,6 +71,7 @@ def _serialize_tenant(tenant: dict) -> dict:
         payload["_id"] = str(payload["_id"])
     payload.pop("password", None)
     payload["businessType"] = _normalize_business_type(payload.get("businessType"))
+    payload["phone"] = str(payload.get("phone") or "").strip()
     return payload
 
 
@@ -124,6 +141,7 @@ def create_tenant(
             business_type=tenant.businessType,
             logo=tenant.logo or "",
             theme=tenant.theme or "green",
+            phone=tenant.phone or "",
         )
         return {
             "success": True,
@@ -163,6 +181,7 @@ def register_store(payload: RegisterStore):
             business_type=payload.businessType,
             logo="",
             theme="green",
+            phone=payload.phone or "",
         )
         token = create_token(
             {
@@ -436,7 +455,7 @@ def get_tenant_by_id(
 def update_tenant(
     id: str,
     tenant: UpdateTenant,
-    current_user: Annotated[dict, Depends(require_super_admin)],
+    current_user: Annotated[dict, Depends(require_admin)],
 ):
     try:
         object_id = ObjectId(id)
@@ -444,6 +463,20 @@ def update_tenant(
         raise HTTPException(
             status_code=400,
             detail=INVALID_TENANT_ID,
+        )
+    existing_tenant = tenants.find_one({"_id": object_id})
+    if not existing_tenant:
+        raise HTTPException(
+            status_code=404,
+            detail=TENANT_NOT_FOUND,
+        )
+    if (
+        current_user.get("role") != "super_admin"
+        and current_user.get("tenantId") != existing_tenant.get("tenantId")
+    ):
+        raise HTTPException(
+            status_code=403,
+            detail="You cannot update another tenant.",
         )
     update_data = tenant.model_dump(
         exclude_unset=True
@@ -471,6 +504,8 @@ def update_tenant(
             .strip()
             .lower()
         )
+    if "phone" in update_data:
+        update_data["phone"] = _normalize_tenant_phone(update_data.get("phone"))
 
 
     if "businessType" in update_data:

@@ -236,7 +236,10 @@ export default function WelcomeHome() {
             <AppLink to={c.nav.signIn.href} className={styles.navGhost}>
               {c.nav.signIn.label}
             </AppLink>
-            <AppLink to={c.nav.primaryCta.href} className={styles.btnWhite}>
+            <AppLink
+              to={c.nav.primaryCta.href}
+              className={`${styles.btnWhite} ${styles.navCta}`}
+            >
               {c.nav.primaryCta.label}
             </AppLink>
             <button

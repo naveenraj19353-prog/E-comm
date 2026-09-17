@@ -12,6 +12,7 @@ class PeriskopeNotificationPreferences(BaseModel):
 class PeriskopeSettingsUpdate(BaseModel):
     enabled: bool = False
     webhookEnabled: bool = True
+    notifyPhone: str = ""
     notifications: PeriskopeNotificationPreferences = Field(
         default_factory=PeriskopeNotificationPreferences
     )

@@ -806,13 +806,18 @@
   align-items: center;
   justify-content: center;
   padding: 1.5rem;
+  overflow: hidden;
   background: rgba(20, 31, 26, 0.48);
   backdrop-filter: blur(0.1875rem);
 }
 .modal {
   width: min(45rem, 100%);
+  min-width: 0;
+  max-width: 100%;
   max-height: calc(100vh - 3rem);
-  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   border: 0.0625rem solid #e1e7e3;
   border-radius: 1rem;
   background: #ffffff;
@@ -825,6 +830,7 @@
   gap: 1.25rem;
   padding: 1.375rem 1.5rem;
   border-bottom: 0.0625rem solid #edf0ee;
+  flex-shrink: 0;
 }
 .modalEyebrow {
   display: block;
@@ -863,11 +869,19 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 1rem;
   padding: 1.5rem;
+  min-width: 0;
+  flex: 1 1 0;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 .formGroup {
   display: flex;
   flex-direction: column;
   gap: 0.4375rem;
+  min-width: 0;
+  max-width: 100%;
 }
 .formGroup label {
   color: #46544d;
@@ -875,8 +889,11 @@
   font-weight: 700;
 }
 .formGroup input,
-.formGroup textarea {
+.formGroup textarea,
+.formGroup select {
   width: 100%;
+  max-width: 100%;
+  min-width: 0;
   box-sizing: border-box;
   border: 0.0625rem solid #dfe5e2;
   border-radius: 0.5625rem;
@@ -889,7 +906,8 @@
     border-color 0.2s ease,
     box-shadow 0.2s ease;
 }
-.formGroup input {
+.formGroup input,
+.formGroup select {
   height: 2.625rem;
   padding: 0 0.75rem;
 }
@@ -897,9 +915,12 @@
   min-height: 5.625rem;
   padding: 0.6875rem 0.75rem;
   resize: vertical;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 .formGroup input:focus,
-.formGroup textarea:focus {
+.formGroup textarea:focus,
+.formGroup select:focus {
   border-color: #2f6b52;
   box-shadow: 0 0 0 0.1875rem rgba(47, 107, 82, 0.08);
 }
@@ -927,6 +948,7 @@
   padding: 1.125rem 1.5rem;
   border-top: 0.0625rem solid #edf0ee;
   background: #fafbfa;
+  flex-shrink: 0;
 }
 .cancelButton,
 .saveButton {
@@ -1019,25 +1041,38 @@
 .confirmDeleteButton:hover:not(:disabled) {
   background: #a83f3f;
 }
-@media (max-width: 37.5rem) {
+@media (max-width: 48rem) {
   .modalOverlay {
-    padding: 0.75rem;
+    padding: 0;
+    align-items: stretch;
+    justify-content: stretch;
+    flex-direction: column;
   }
   .modal {
-    max-height: calc(100vh - 1.5rem);
+    width: 100%;
+    max-width: none;
+    height: 100%;
+    max-height: none;
+    border-radius: 0;
+    border: 0;
   }
   .formGrid {
     grid-template-columns: 1fr;
-    padding: 1.125rem;
+    padding: 1rem;
+    flex: 1;
   }
   .fullWidth {
     grid-column: auto;
   }
   .modalHeader {
-    padding: 1.125rem;
+    padding: 1rem;
+  }
+  .modalHeader h2 {
+    overflow-wrap: anywhere;
   }
   .modalFooter {
-    padding: 0.9375rem 1.125rem;
+    padding: 0.875rem 1rem;
+    padding-bottom: max(0.875rem, env(safe-area-inset-bottom));
   }
   .modalFooter button {
     flex: 1;

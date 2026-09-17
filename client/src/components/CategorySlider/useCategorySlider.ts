@@ -5,6 +5,7 @@ import { useMediaQuery } from "../../hooks/useMediaQuery";
 import {
     AUTO_SLIDE_INTERVAL,
     CATEGORY_SLIDER_MOBILE_QUERY,
+    CATEGORY_SLIDER_TABLET_QUERY,
     clampIndex,
     DESKTOP_SLIDE_COUNT,
     DESKTOP_VISIBLE_COUNT,
@@ -20,8 +21,9 @@ export function useCategorySlider(tenantId: string) {
     const [isHovered, setIsHovered] = useState(false);
     const sliderRef = useRef<HTMLDivElement>(null);
     const isMobile = useMediaQuery(CATEGORY_SLIDER_MOBILE_QUERY);
-    const visibleCount = isMobile ? 1 : DESKTOP_VISIBLE_COUNT;
-    const slideCount = isMobile ? 1 : DESKTOP_SLIDE_COUNT;
+    const isTablet = useMediaQuery(CATEGORY_SLIDER_TABLET_QUERY);
+    const visibleCount = isMobile ? 1 : isTablet ? 2 : DESKTOP_VISIBLE_COUNT;
+    const slideCount = isMobile ? 1 : isTablet ? 2 : DESKTOP_SLIDE_COUNT;
     const maxIndex = Math.max(0, categories.length - visibleCount);
 
     useEffect(() => {

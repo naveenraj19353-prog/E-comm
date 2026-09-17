@@ -5,12 +5,15 @@
     -apple-system,
     BlinkMacSystemFont,
     sans-serif;
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
 }
 .header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 1rem;
+  margin-bottom: 0.55rem;
 }
 .title {
   font-size: 1.1875rem;
@@ -54,7 +57,30 @@
 }
 .swiper {
   padding-bottom: 0.25rem;
+  overflow: hidden;
+}
+.swiper :global(.swiper-wrapper) {
+  align-items: stretch;
 }
 .slide {
   height: auto;
+  box-sizing: border-box;
+  display: flex;
+}
+.slide > * {
+  width: 100%;
+  height: 100%;
+}
+@media (min-width: 48rem) {
+  .single :global(.swiper-wrapper) {
+    justify-content: center;
+  }
+  .single .slide {
+    max-width: calc(50% - 0.5rem);
+  }
+}
+@media (min-width: 64rem) {
+  .single .slide {
+    max-width: calc(33.333% - 0.7rem);
+  }
 }

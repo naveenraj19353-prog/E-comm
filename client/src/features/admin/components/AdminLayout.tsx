@@ -1,18 +1,36 @@
-import { NavLink, Outlet, Navigate, useLocation, } from "react-router-dom";
+import { NavLink, Outlet, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../auth/hooks/useAuth";
 import { usePageSeo } from "../../seo";
 import { useTenantByTenantId } from "../hooks/useTenants";
 import { isMenuBusiness, isRetailBusiness } from "../../tenant/businessMode";
+import { routes, storefrontNavigate } from "../../../routes/routes";
 import styles from "../styles/AdminLayout.module.css";
+
+function tenantIdFromAdminPath(pathname: string) {
+    const match = pathname.match(/^\/admin\/tenants\/([^/]+)/);
+    const id = match?.[1] || "";
+    if (!id || id === "create") {
+        return "";
+    }
+    return id;
+}
+
 export default function AdminLayout() {
     const location = useLocation();
+    const navigate = useNavigate();
     const { user, isAuthenticated, logout } = useAuth();
-    const { data: adminTenant } = useTenantByTenantId(
-        user?.role === "admin" ? user.tenantId || "" : "",
-    );
-    const showMenuDesk = isMenuBusiness(adminTenant?.businessType);
-    const showRetailExtras = isRetailBusiness(adminTenant?.businessType);
+    const pathname = location.pathname;
+    const storeTenantId =
+        user?.role === "admin"
+            ? user.tenantId || ""
+            : tenantIdFromAdminPath(pathname);
+    const { data: storeTenant } = useTenantByTenantId(storeTenantId);
+    const showMenuDesk = isMenuBusiness(storeTenant?.businessType);
+    const showRetailExtras = isRetailBusiness(storeTenant?.businessType);
     const showBanners = !showMenuDesk;
+    const showStoreNav = Boolean(storeTenantId);
+    const navClass = ({ isActive }: { isActive: boolean }) =>
+        `${styles.navItem} ${isActive ? styles.active : ""}`;
     usePageSeo({
         title: "Admin",
         description: "Retail Cosmos admin portal.",
@@ -40,7 +58,6 @@ export default function AdminLayout() {
         logout();
         return (<Navigate to="/admin/login" replace/>);
     }
-    const pathname = location.pathname;
     if (isAdmin &&
         pathname === "/admin") {
         return (<Navigate to={`/admin/tenants/${user.tenantId}`} replace/>);
@@ -82,79 +99,95 @@ export default function AdminLayout() {
         </div>
         <nav className={styles.navigation}>
           
-          {isSuperAdmin && (<NavLink to="/admin" end className={({ isActive }) => `${styles.navItem} ${isActive
-                ? styles.active
-                : ""}`}>
+          {isSuperAdmin && (
+            <NavLink to="/admin" end className={navClass}>
               <span>▦</span>
               Dashboard
-            </NavLink>)}
-          
-          {isSuperAdmin && (<NavLink to="/admin/tenants" className={({ isActive }) => `${styles.navItem} ${isActive
-                ? styles.active
-                : ""}`}>
+            </NavLink>
+          )}
+
+          {isSuperAdmin && (
+            <NavLink to="/admin/tenants" end className={navClass}>
               <span>◉</span>
               Tenants
-            </NavLink>)}
-          
-          {isAdmin &&
-            user.tenantId &&
-            showRetailExtras && (<NavLink to={`/admin/tenants/${user.tenantId}/orders`} className={({ isActive }) => `${styles.navItem} ${isActive
-                ? styles.active
-                : ""}`}>
-                <span>⧉</span>
-                Orders
-            </NavLink>)}
+            </NavLink>
+          )}
 
-          {isAdmin &&
-            user.tenantId &&
-            showMenuDesk && (<NavLink to={`/admin/tenants/${user.tenantId}/menu`} className={({ isActive }) => `${styles.navItem} ${isActive
-                ? styles.active
-                : ""}`}>
-                <span>▤</span>
-                Menu Desk
-            </NavLink>)}
+          {showStoreNav && (
+            <NavLink to={`/admin/tenants/${storeTenantId}`} end className={navClass}>
+              <span>◉</span>
+              My Store
+            </NavLink>
+          )}
 
-          {isAdmin &&
-            user.tenantId && (<NavLink to={`/admin/tenants/${user.tenantId}/customers`} className={({ isActive }) => `${styles.navItem} ${isActive
-                ? styles.active
-                : ""}`}>
-                <span>◎</span>
-                Customers
-            </NavLink>)}
+          {showStoreNav && (
+            <NavLink to={`/admin/tenants/${storeTenantId}/products`} className={navClass}>
+              <span>◫</span>
+              Products
+            </NavLink>
+          )}
 
-          {isAdmin &&
-            user.tenantId &&
-            showBanners && (<NavLink to={`/admin/tenants/${user.tenantId}/banners`} className={({ isActive }) => `${styles.navItem} ${isActive
-                ? styles.active
-                : ""}`}>
-                <span>▣</span>
-                Banners
-            </NavLink>)}
+          {showStoreNav && showRetailExtras && (
+            <NavLink to={`/admin/tenants/${storeTenantId}/orders`} className={navClass}>
+              <span>⧉</span>
+              Orders
+            </NavLink>
+          )}
 
-          {isAdmin &&
-            user.tenantId &&
-            showRetailExtras && (<NavLink to={`/admin/tenants/${user.tenantId}/shipping/delhivery`} className={({ isActive }) => `${styles.navItem} ${isActive
-                ? styles.active
-                : ""}`}>
-                <span>⬡</span>
-                Shipping
-            </NavLink>)}
+          {showStoreNav && showMenuDesk && (
+            <NavLink to={`/admin/tenants/${storeTenantId}/menu`} className={navClass}>
+              <span>▤</span>
+              Menu Desk
+            </NavLink>
+          )}
 
-          {isAdmin &&
-            user.tenantId && (<NavLink to={`/admin/tenants/${user.tenantId}/integrations/periskope`} className={({ isActive }) => `${styles.navItem} ${isActive
-                ? styles.active
-                : ""}`}>
-                <span>◌</span>
-                WhatsApp
-            </NavLink>)}
-          
-          {isAdmin &&
-            user.tenantId && (<NavLink to={`/admin/tenants/${user.tenantId}`} className={({ isActive }) => `${styles.navItem} ${isActive
-                ? styles.active
-                : ""}`}>
-                <span>◉</span>
-                My Store
-              </NavLink>)}
+          {showStoreNav && (
+            <NavLink to={`/admin/tenants/${storeTenantId}/customers`} className={navClass}>
+              <span>◎</span>
+              Customers
+            </NavLink>
+          )}
+
+          {showStoreNav && showBanners && (
+            <NavLink to={`/admin/tenants/${storeTenantId}/banners`} className={navClass}>
+              <span>▣</span>
+              Banners
+            </NavLink>
+          )}
+
+          {showStoreNav && showRetailExtras && (
+            <NavLink to={`/admin/tenants/${storeTenantId}/shipping/delhivery`} className={navClass}>
+              <span>⬡</span>
+              Shipping
+            </NavLink>
+          )}
+
+          {showStoreNav && (
+            <NavLink to={`/admin/tenants/${storeTenantId}/integrations/periskope`} className={navClass}>
+              <span>◌</span>
+              WhatsApp
+            </NavLink>
+          )}
+
+          {showStoreNav && storeTenant?.slug && (
+            <button
+              type="button"
+              className={styles.navItem}
+              onClick={() =>
+                storefrontNavigate(navigate, routes.customize(storeTenant.slug))
+              }
+            >
+              <span>▧</span>
+              Layout Studio
+            </button>
+          )}
+
+          {showStoreNav && (
+            <NavLink to={`/admin/tenants/${storeTenantId}/edit`} className={navClass}>
+              <span>✎</span>
+              Edit Tenant
+            </NavLink>
+          )}
           <div className={styles.sectionTitle}>
             PLATFORM
           </div>

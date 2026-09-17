@@ -1,6 +1,9 @@
 .page {
   width: 100%;
   max-width: 46rem;
+  min-width: 0;
+  overflow-x: hidden;
+  box-sizing: border-box;
 }
 
 .backButton {
@@ -77,9 +80,11 @@
   gap: 0.85rem;
   margin-bottom: 1rem;
   padding: 1.15rem;
+  overflow: hidden;
   border: 1px solid #e3ebe6;
   border-radius: 0.85rem;
   background: #fbfcfa;
+  box-sizing: border-box;
 }
 
 .card h2 {
@@ -98,6 +103,14 @@
   font-weight: 650;
 }
 
+.toggle input {
+  width: 1rem;
+  height: 1rem;
+  margin: 0;
+  flex-shrink: 0;
+  accent-color: #2f6b52;
+}
+
 .field {
   display: flex;
   flex-direction: column;
@@ -109,6 +122,9 @@
 
 .field input,
 .field textarea {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
   padding: 0.65rem 0.75rem;
   border: 1px solid #d5ded8;
   border-radius: 0.55rem;
@@ -191,12 +207,35 @@
   color: #1f6b4a;
 }
 
-@media (max-width: 640px) {
-  .grid {
-    grid-template-columns: 1fr;
+@media (max-width: 64rem) {
+  .page {
+    padding: 0.75rem 1rem 1.5rem;
   }
 
   .header {
     flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .header p {
+    max-width: none;
+  }
+
+  .card {
+    padding: 1rem;
+  }
+
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .actions {
+    flex-direction: column;
+  }
+
+  .actions button,
+  .primaryButton,
+  .secondaryButton {
+    width: 100%;
   }
 }

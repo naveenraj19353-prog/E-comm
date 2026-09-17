@@ -17,6 +17,7 @@ from app.database.mongo import (
     messaging_integrations,
     notification_logs,
     orders,
+    shipping_locations,
     tenants,
     users,
 )
@@ -153,6 +154,63 @@ def _refund_line(order: dict) -> str:
     if str(order.get("paymentStatus") or "").lower() == "paid":
         return "\nPayment was received. Refund information will be shared separately."
     return ""
+
+
+def _merchant_message(order: dict, customer: dict, store: dict) -> str:
+    number = _order_number(order)
+    amount = float(order.get("totalAmount") or 0)
+    item_details = _item_details(order)
+    table = _clean_text(order.get("counterNumber"), "", 40)
+    table_line = f"\nTable / room: {table}" if table else ""
+    customer_phone = str(customer.get("phone") or "").strip()
+    phone_line = f"\nCustomer phone: {customer_phone}" if customer_phone else ""
+    return (
+        "🛒 *NEW ORDER*\n\n"
+        f"A customer placed an order at *{store['name']}*.\n\n"
+        f"Order *#{number}*\n"
+        f"Customer: {customer['name']}"
+        f"{phone_line}{table_line}\n\n"
+        f"{item_details}\nAmount: ₹{amount:,.2f}\n\n"
+        "Open Admin → Orders to fulfill."
+        f"{_branding(store)}"
+    )
+
+
+def _tenant_notify_phones(
+    tenant_id: str,
+    integration: dict | None,
+    *,
+    exclude_phone: str = "",
+) -> list[str]:
+    candidates: list[Any] = [
+        (tenants.find_one({"tenantId": tenant_id}) or {}).get("phone"),
+        (integration or {}).get("notifyPhone"),
+    ]
+    for admin in users.find(
+        {
+            "tenantId": tenant_id,
+            "role": "admin",
+            "isActive": {"$ne": False},
+        }
+    ):
+        candidates.append(admin.get("phone"))
+    location = shipping_locations.find_one(
+        {"tenantId": tenant_id, "provider": "delhivery", "active": True}
+    ) or {}
+    candidates.append(location.get("phone"))
+
+    phones: list[str] = []
+    seen: set[str] = set()
+    for raw in candidates:
+        try:
+            phone = normalize_phone(raw, country="India")
+        except PhoneNormalizationError:
+            continue
+        if phone == exclude_phone or phone in seen:
+            continue
+        seen.add(phone)
+        phones.append(phone)
+    return phones
 
 
 def _message_for(event_type: str, order: dict, customer: dict, store: dict) -> str:
@@ -433,6 +491,7 @@ def schedule_order_notification(
                 "tenantId": str(order["tenantId"]).strip().lower(),
                 "eventType": event_type,
                 "orderId": str(order_id),
+                "audience": "customer",
                 "status": "pending",
                 "attempts": 0,
                 "createdAt": now,
@@ -449,7 +508,46 @@ def schedule_order_notification(
         )
         return False
     background_tasks.add_task(process_notification, str(result.inserted_id))
+    if event_type == "order.confirmed":
+        _schedule_tenant_order_alert(
+            background_tasks,
+            order_id=str(order_id),
+            tenant_id=str(order["tenantId"]).strip().lower(),
+        )
     return True
+
+
+def _schedule_tenant_order_alert(
+    background_tasks: BackgroundTasks,
+    *,
+    order_id: str,
+    tenant_id: str,
+) -> None:
+    now = _now()
+    try:
+        inserted = notification_logs.insert_one(
+            {
+                "idempotencyKey": f"order:{order_id}:order.confirmed:tenant",
+                "provider": PROVIDER,
+                "tenantId": tenant_id,
+                "eventType": "order.confirmed",
+                "orderId": str(order_id),
+                "audience": "tenant",
+                "status": "pending",
+                "attempts": 0,
+                "createdAt": now,
+                "updatedAt": now,
+            }
+        )
+    except DuplicateKeyError:
+        return
+    except PyMongoError:
+        logger.exception(
+            "[WHATSAPP] event=order.confirmed order=%s audience=tenant status=log_failed",
+            order_id,
+        )
+        return
+    background_tasks.add_task(process_notification, str(inserted.inserted_id))
 
 
 def send_order_confirmation(
@@ -497,6 +595,106 @@ def send_shipment_created(
     )
 
 
+def _deliver_tenant_order_alert(
+    log_id: ObjectId,
+    *,
+    order: dict,
+    tenant_id: str,
+    integration: dict | None,
+) -> None:
+    customer = _customer(order)
+    try:
+        customer_phone = normalize_phone(
+            customer["phone"],
+            country=customer.get("country") or "India",
+        )
+    except PhoneNormalizationError:
+        customer_phone = ""
+    phones = _tenant_notify_phones(
+        tenant_id,
+        integration,
+        exclude_phone=customer_phone,
+    )
+    if not phones:
+        notification_logs.update_one(
+            {"_id": log_id},
+            {
+                "$set": {
+                    "tenantId": tenant_id,
+                    "status": "skipped",
+                    "error": "Store WhatsApp number is missing.",
+                    "updatedAt": _now(),
+                }
+            },
+        )
+        return
+
+    store = _store(order)
+    message = _merchant_message(order, customer, store)
+    media_url = _public_image_url(order, store)
+    notification_logs.update_one(
+        {"_id": log_id},
+        {
+            "$set": {
+                "tenantId": tenant_id,
+                "phone": mask_phone(phones[0]),
+                "status": "sending",
+                "updatedAt": _now(),
+            },
+            "$inc": {"attempts": 1},
+            "$unset": {"error": ""},
+        },
+    )
+    try:
+        service = PeriskopeService()
+        last_id = None
+        for phone in phones:
+            if media_url:
+                filename, mimetype = _image_metadata(media_url)
+                response = service.send_media_message(
+                    f"{phone}@c.us",
+                    message,
+                    media_url=media_url,
+                    filename=filename,
+                    mimetype=mimetype,
+                )
+            else:
+                response = service.send_text_message(f"{phone}@c.us", message)
+            last_id = _message_id(response)
+        notification_logs.update_one(
+            {"_id": log_id},
+            {
+                "$set": {
+                    "status": "sent",
+                    "messageId": last_id,
+                    "hasMedia": bool(media_url),
+                    "sentAt": _now(),
+                    "updatedAt": _now(),
+                }
+            },
+        )
+        logger.info(
+            "[WHATSAPP] tenant=%s event=order.confirmed audience=tenant status=sent",
+            tenant_id,
+        )
+    except PeriskopeError as error:
+        notification_logs.update_one(
+            {"_id": log_id},
+            {
+                "$set": {
+                    "tenantId": tenant_id,
+                    "status": "failed",
+                    "error": str(error)[:300],
+                    "updatedAt": _now(),
+                }
+            },
+        )
+        logger.warning(
+            "[WHATSAPP] tenant=%s event=order.confirmed audience=tenant status=failed",
+            tenant_id,
+        )
+
+
 def process_notification(notification_id: str) -> None:
     if not ObjectId.is_valid(notification_id):
         return
@@ -533,6 +731,15 @@ def process_notification(notification_id: str) -> None:
                     "updatedAt": _now(),
                 }
             },
+        )
+        return
+
+    if notification.get("audience") == "tenant":
+        _deliver_tenant_order_alert(
+            log_id,
+            order=order,
+            tenant_id=tenant_id,
+            integration=integration,
         )
         return
 

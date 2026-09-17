@@ -716,12 +716,24 @@ export default function CreateProduct() {
               <label htmlFor="new-color">Add Color</label>
 
               <div className={styles.variantInputRow}>
-                <input id="new-color" type="text" value={newColor} onChange={(event) => setNewColor(event.target.value)} onKeyDown={(event) => {
+                <input
+                  id="new-color"
+                  name="product-variant-color"
+                  type="text"
+                  inputMode="text"
+                  autoComplete="off"
+                  autoCorrect="off"
+                  spellCheck={false}
+                  value={newColor}
+                  onChange={(event) => setNewColor(event.target.value)}
+                  onKeyDown={(event) => {
             if (event.key === "Enter") {
                 event.preventDefault();
                 handleAddColor();
             }
-        }} placeholder="Example: Red"/>
+        }}
+                  placeholder="e.g. Red"
+                />
 
                 <button type="button" className={styles.addVariantButton} onClick={handleAddColor}>
                   + Add
@@ -735,12 +747,26 @@ export default function CreateProduct() {
               <label htmlFor="new-size">Add Size</label>
 
               <div className={styles.variantInputRow}>
-                <input id="new-size" type="text" value={newSize} onChange={(event) => setNewSize(event.target.value)} onKeyDown={(event) => {
+                <input
+                  id="new-size"
+                  name="product-variant-size"
+                  type="text"
+                  inputMode="text"
+                  autoComplete="off"
+                  autoCorrect="off"
+                  spellCheck={false}
+                  value={newSize}
+                  onChange={(event) =>
+                    setNewSize(event.target.value.replace(/[/\\]/g, ""))
+                  }
+                  onKeyDown={(event) => {
             if (event.key === "Enter") {
                 event.preventDefault();
                 handleAddSize();
             }
-        }} placeholder="Example: M"/>
+        }}
+                  placeholder="e.g. M"
+                />
 
                 <button type="button" className={styles.addVariantButton} onClick={handleAddSize}>
                   + Add
