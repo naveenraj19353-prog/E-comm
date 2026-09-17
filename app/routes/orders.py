@@ -117,12 +117,14 @@ def create_menu_order(
             detail="Mobile number missing from session. Please sign in again.",
         )
     try:
-        return fulfill_menu_order(
+        result = fulfill_menu_order(
             tenant_id=tenant_id,
             user_id=user_id,
             counter_number=normalize_counter_number(str(counter_number)),
             phone=str(phone),
         )
+        send_order_confirmation(background_tasks, result["orderId"])
+        return result
     except HTTPException:
         raise
     except Exception as error:

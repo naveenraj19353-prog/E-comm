@@ -166,12 +166,12 @@
 
   .introLoopHead {
     margin-bottom: 1.35rem;
-    text-align: left;
+    text-align: center;
   }
 
   .introLoopLead {
-    margin-left: 0;
-    margin-right: 0;
+    margin-left: auto;
+    margin-right: auto;
   }
 
   .introLoopFrame {
@@ -291,6 +291,10 @@
 .btnWhite:hover {
   transform: translateY(-1px);
   opacity: 0.92;
+}
+
+.navCta {
+  flex-shrink: 0;
 }
 
 .btnGhost {
@@ -477,8 +481,7 @@
 /* —— Platform cosmos (after banner) —— */
 .platform {
   position: relative;
-  overflow-x: clip;
-  overflow-y: visible;
+  overflow: visible;
   padding: 4.5rem 0 3.5rem;
   background:
     radial-gradient(ellipse 50% 60% at 78% 40%, rgba(37, 99, 235, 0.32), transparent 60%),
@@ -819,7 +822,7 @@
 
 @media (max-width: 1023px) {
   .platform {
-    padding: 3rem 0 3.25rem;
+    padding: 3rem 0 4.5rem;
   }
 
   .platformGrid {
@@ -845,24 +848,38 @@
   .platformCtas {
     margin-top: 1.15rem;
     width: 100%;
-    max-width: 22rem;
-    flex-direction: column;
+    max-width: 36rem;
+    align-self: stretch;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    justify-content: center;
     align-items: stretch;
-    gap: 0.65rem;
+    gap: 0.55rem;
   }
 
   .btnPlatform,
   .btnPlatformGhost {
-    width: 100%;
+    width: auto;
+    flex: 1 1 0;
+    min-width: 0;
     justify-content: center;
+    white-space: nowrap;
     box-sizing: border-box;
+    font-size: 0.82rem;
+    padding: 0.7rem 0.65rem;
   }
 
   .platformTrust {
     margin: 1.15rem auto 0;
     max-width: 22rem;
+    width: 100%;
     gap: 0.65rem;
-    text-align: left;
+    justify-items: center;
+  }
+
+  .platformTrust li {
+    width: 100%;
+    justify-content: center;
   }
 
   .orbitWrap {
@@ -933,9 +950,28 @@
     max-width: 4.6rem;
   }
 
-  .platformCtas,
+  .platformCtas {
+    max-width: 38rem;
+    gap: 0.7rem;
+  }
+
+  .btnPlatform,
+  .btnPlatformGhost {
+    font-size: 0.9rem;
+    padding: 0.75rem 1rem;
+  }
+
   .platformTrust {
-    max-width: 26rem;
+    max-width: 46rem;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    text-align: center;
+  }
+
+  .platformTrust li {
+    grid-template-columns: 1fr;
+    justify-items: center;
+    row-gap: 0.4rem;
+    text-align: center;
   }
 }
 
@@ -947,6 +983,13 @@
 
   .orbitNodeLabel {
     display: none;
+  }
+
+  .btnPlatform,
+  .btnPlatformGhost {
+    font-size: 0.74rem;
+    padding: 0.62rem 0.45rem;
+    gap: 0.3rem;
   }
 }
 
@@ -1188,12 +1231,12 @@
 
   .videoHead {
     margin-bottom: 1.5rem;
-    text-align: left;
+    text-align: center;
   }
 
   .videoLead {
-    margin-left: 0;
-    margin-right: 0;
+    margin-left: auto;
+    margin-right: auto;
   }
 
   .videoFrame {
@@ -1935,6 +1978,15 @@
   .studioFrame {
     border-radius: 0.85rem;
   }
+
+  .studioHead {
+    text-align: center;
+  }
+
+  .studioHead p {
+    margin-left: auto;
+    margin-right: auto;
+  }
 }
 
 /* —— Channels —— */
@@ -2211,7 +2263,11 @@
 
 .footerGrid {
   display: grid;
-  gap: 1.75rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.75rem 2.5rem;
+  width: 100%;
+  text-align: center;
+  justify-items: center;
 }
 
 .footer h4 {
@@ -2237,6 +2293,7 @@
   border-top: 1px solid rgba(255, 255, 255, 0.08);
   color: rgba(255, 255, 255, 0.4);
   font-size: 0.85rem;
+  text-align: center;
 }
 
 @media (min-width: 800px) {
@@ -2293,41 +2350,95 @@
   }
 
   .footerGrid {
-    grid-template-columns: 1fr 1fr;
-    max-width: 36rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    max-width: none;
+    text-align: left;
+    justify-items: start;
+    gap: 2rem 4rem;
+  }
+
+  .footerLegal {
+    text-align: left;
   }
 }
 
-/* Mobile: keep banner full-screen; copy overlays lower area */
-@media (max-width: 767px) {
+/* Mobile: full-viewport banner; copy sits in the lower third, not at 35% */
+@media (max-width: 799px) {
+  .navCta {
+    display: none;
+  }
+
+  .brand span {
+    max-width: 11.5rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .navInner {
+    padding: 0.75rem 1rem;
+    gap: 0.5rem;
+  }
+}
+
+@media (max-width: 1023px) {
+  .heroBanner {
+    display: flex;
+    flex-direction: column;
+    height: auto;
+    min-height: 0;
+    overflow: visible;
+    line-height: normal;
+  }
+
+  .heroSwiper {
+    position: relative;
+    flex: none;
+    aspect-ratio: 16 / 9;
+    width: 100%;
+    height: auto;
+    min-height: 0;
+    max-height: none;
+  }
+
+  .heroSlideImg {
+    object-fit: contain;
+    object-position: center top;
+  }
+
   .heroScrim {
-    background: linear-gradient(
-      180deg,
-      rgba(0, 0, 0, 0.35) 0%,
-      transparent 28%,
-      transparent 48%,
-      rgba(0, 0, 0, 0.72) 100%
-    );
-    display: block;
+    display: none;
   }
 
   .heroCopy {
-    position: absolute;
+    position: relative;
+    left: auto;
+    right: auto;
     top: auto;
-    bottom: 2.75rem;
+    bottom: auto;
     transform: none;
-    padding: 1.1rem 1.1rem 0;
-    background: transparent;
-    text-align: left;
+    z-index: 2;
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    padding: 1.25rem 1.1rem 1.5rem;
+    background: #000;
+    text-align: center;
+    line-height: normal;
   }
 
   .heroTitle {
-    font-size: clamp(1.7rem, 7.5vw, 2.2rem);
-    max-width: 14ch;
+    font-size: clamp(1.65rem, 7.2vw, 2.1rem);
+    max-width: none;
+    margin-left: auto;
+    margin-right: auto;
+    text-shadow: none;
   }
 
   .heroLead {
     margin-top: 0.55rem;
+    margin-left: auto;
+    margin-right: auto;
     font-size: 0.9rem;
     max-width: 22rem;
     display: -webkit-box;
@@ -2337,26 +2448,59 @@
   }
 
   .heroCtas {
-    margin-top: 0.9rem;
+    margin-top: 0.95rem;
+    margin-left: auto;
+    margin-right: auto;
     flex-direction: row;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
+    justify-content: center;
     align-items: center;
+    max-width: none;
+    gap: 0.55rem;
   }
 
   .heroCtas .btnWhite,
   .heroCtas .btnGhost {
     width: auto;
+    flex: 0 1 auto;
     justify-content: center;
-    font-size: 0.88rem;
-    padding: 0.6rem 1rem;
+    white-space: nowrap;
+    font-size: 0.82rem;
+    padding: 0.62rem 0.85rem;
   }
 
   .heroSwiper :global(.swiper-pagination) {
-    bottom: 0.65rem !important;
+    bottom: 0.45rem !important;
   }
 }
 
-@media (min-width: 768px) and (max-width: 1099px) {
+@media (max-width: 399px) {
+  .heroTitle {
+    font-size: 1.5rem;
+  }
+
+  .heroCopy {
+    padding: 1.1rem 1rem 1.35rem;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .heroTitle {
+    font-size: clamp(1.9rem, 3.6vw, 2.75rem);
+  }
+
+  .heroCopy {
+    padding: 1.5rem 1.5rem 1.75rem;
+  }
+
+  .heroCtas .btnWhite,
+  .heroCtas .btnGhost {
+    font-size: 0.92rem;
+    padding: 0.7rem 1.15rem;
+  }
+}
+
+@media (min-width: 1024px) and (max-width: 1099px) {
   .heroTitle {
     font-size: clamp(1.9rem, 3.6vw, 2.75rem);
   }

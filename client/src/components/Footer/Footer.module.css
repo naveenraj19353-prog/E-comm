@@ -2,6 +2,7 @@
   background: var(--text);
   color: var(--text-white);
   margin-top: 5rem;
+  text-align: center;
 }
 
 .footerCompact {
@@ -44,6 +45,7 @@
 .socials {
   display: flex;
   gap: 1rem;
+  justify-content: center;
 }
 .socials svg {
   color: var(--text-white);
@@ -90,6 +92,28 @@ a:hover {
 @media (max-width: 62rem) {
   .container {
     grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (max-width: 64rem) {
+  .footer {
+    margin-top: 1rem;
+    padding-bottom: 4.75rem;
+  }
+  .container {
+    width: 100%;
+    max-width: 100%;
+    grid-template-columns: 1fr 1fr;
+    padding: 1.75rem 1.25rem 1.25rem;
+    gap: 1.25rem;
+  }
+  .brand h2 {
+    font-size: 1.5rem;
+    overflow-wrap: anywhere;
+  }
+  .brand p {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    margin-bottom: 1rem;
   }
 }
 @media (max-width: 37.5rem) {

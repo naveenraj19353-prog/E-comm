@@ -85,6 +85,7 @@ class CreateTenant(BaseModel):
     logo: Optional[str] = ""
     theme: Optional[str] = "green"
     email: EmailStr
+    phone: Optional[str] = Field(default=None, max_length=20)
     password: str = Field(
         ...,
         min_length=6,
@@ -99,6 +100,7 @@ class RegisterStore(BaseModel):
     slug: str = Field(..., min_length=2, max_length=48)
     businessType: BusinessType
     email: EmailStr
+    phone: Optional[str] = Field(default=None, max_length=20)
     password: str = Field(..., min_length=6, max_length=128)
 
 
@@ -119,6 +121,7 @@ class UpdateTenant(BaseModel):
     themeColors: Optional[ThemeColors] = None
     layoutSettings: Optional[LayoutSettings] = None
     email: Optional[EmailStr] = None
+    phone: Optional[str] = Field(default=None, max_length=20)
     password: Optional[str] = Field(
         default=None,
         min_length=6,

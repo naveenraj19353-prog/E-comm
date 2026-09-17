@@ -3,7 +3,7 @@
   min-height: 100vh;
   background: var(--background);
   color: var(--text);
-  padding-bottom: 3.75rem;
+  padding-bottom: 1.5rem;
 }
 .bannerSection,
 .categorySection,
@@ -12,7 +12,7 @@
   width: 100%;
   max-width: var(--layout-page-max-width, 90%);
   margin: 0 auto;
-  padding: var(--layout-section-gap, 2rem) clamp(1rem, 3vw, 2.5rem);
+  padding: 1.15rem clamp(1rem, 3vw, 2.5rem);
   box-sizing: border-box;
 }
 .bannerContained {
@@ -42,7 +42,8 @@
   opacity: 0.65;
 }
 .bannerSection {
-  padding-top: 1.5rem;
+  padding-top: 1rem;
+  padding-bottom: 0.75rem;
 }
 .categorySection {
   border-top: 0.0625rem solid var(--border);
@@ -51,7 +52,7 @@
   border-top: 0.0625rem solid var(--border);
 }
 .productSection + .productSection {
-  padding-top: 2.25rem;
+  padding-top: 1.15rem;
 }
 .brandSection {
   border-top: 0.0625rem solid var(--border);
@@ -101,7 +102,7 @@
 }
 @media (max-width: 75rem) {
   .home {
-    padding-bottom: 3.125rem;
+    padding-bottom: 1.25rem;
   }
   .bannerSection,
   .categorySection,
@@ -111,35 +112,51 @@
     padding-right: 1.75rem;
   }
 }
-@media (max-width: 48rem) {
+@media (max-width: 64rem) {
   .home {
-    padding-bottom: 2.5rem;
+    padding-bottom: 1.25rem;
   }
   .bannerSection,
   .categorySection,
   .productSection,
   .brandSection {
-    padding: 1.75rem 1.25rem;
+    width: 100%;
+    max-width: 100%;
+    padding: 0.6rem 1rem;
+  }
+  .bannerSection,
+  .bannerContained {
+    width: 100%;
+    max-width: 100%;
+    margin-inline: 0;
+    border-radius: 0;
+    padding: 0;
+  }
+  .productSection {
+    overflow: hidden;
+  }
+  .productSection + .productSection {
+    padding-top: 0.6rem;
   }
   .bannerSection h2,
   .categorySection h2,
   .productSection h2,
   .brandSection h2 {
-    font-size: 1.25rem;
-  }
-  .error h2 {
-    font-size: 1.25rem;
+    font-size: 1.2rem;
   }
 }
 @media (max-width: 30rem) {
   .home {
-    padding-bottom: 1.875rem;
+    padding-bottom: 1.25rem;
   }
   .bannerSection,
   .categorySection,
   .productSection,
   .brandSection {
-    padding: 1.5rem 1rem;
+    padding: 0.5rem 0.85rem;
+  }
+  .productSection + .productSection {
+    padding-top: 0.5rem;
   }
   .bannerSection h2,
   .categorySection h2,

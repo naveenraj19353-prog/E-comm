@@ -36,7 +36,6 @@ const ProductGallery = ({ product, selectedColor, }: ProductGalleryProps) => {
         });
     };
     return (<div className={styles.gallery}>
-      
       <div className={styles.mainImageWrapper} onMouseEnter={() => setZoomVisible(true)} onMouseLeave={() => setZoomVisible(false)} onMouseMove={handleMouseMove}>
         <ProductImage
             src={currentImage}
@@ -53,7 +52,7 @@ const ProductGallery = ({ product, selectedColor, }: ProductGalleryProps) => {
                 backgroundSize: `${ZOOM_SCALE}% ${ZOOM_SCALE}%`,
             }}/>)}
       </div>
-      
+      {images.length > 1 && (
       <div className={styles.thumbnails}>
         {images.map((image, index) => (<button key={`${image}-${index}`} type="button" className={`${styles.thumbnail} ${selectedImage === index
                 ? styles.thumbnailActive
@@ -64,6 +63,7 @@ const ProductGallery = ({ product, selectedColor, }: ProductGalleryProps) => {
             />
           </button>))}
       </div>
+      )}
     </div>);
 };
 export default ProductGallery;

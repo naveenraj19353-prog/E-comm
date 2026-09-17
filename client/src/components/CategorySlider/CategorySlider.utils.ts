@@ -1,4 +1,6 @@
-export const CATEGORY_SLIDER_MOBILE_QUERY = "(max-width: 37.5rem)";
+export const CATEGORY_SLIDER_MOBILE_QUERY = "(max-width: 47.9375rem)";
+export const CATEGORY_SLIDER_TABLET_QUERY =
+  "(min-width: 48rem) and (max-width: 63.9375rem)";
 export const DESKTOP_VISIBLE_COUNT = 5;
 export const DESKTOP_SLIDE_COUNT = 3;
 export const AUTO_SLIDE_INTERVAL = 3000;

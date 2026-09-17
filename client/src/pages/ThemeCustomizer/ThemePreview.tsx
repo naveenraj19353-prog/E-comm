@@ -40,12 +40,12 @@ const ThemePreview = ({ tab, draft }: ThemePreviewProps) => {
             ? "28rem"
             : layoutSettings.pageWidth === "wide"
                 ? "100%"
-                : "36rem",
+                : "100%",
     } as React.CSSProperties;
 
     const gridColumns = layoutSettings.productViewMode === "list"
         ? "1fr"
-        : `repeat(${Math.min(layoutSettings.productGridColumns, 3)}, 1fr)`;
+        : `repeat(${Math.min(layoutSettings.productGridColumns, 3)}, minmax(0, 1fr))`;
 
     const listingClass = layoutSettings.productListingLayout === "sidebar-right"
         ? styles.listingSidebarRight
@@ -80,6 +80,7 @@ const ThemePreview = ({ tab, draft }: ThemePreviewProps) => {
     ].join(" ");
 
     return (
+        <div className={styles.previewWell}>
         <div className={styles.previewFrame} style={previewStyle}>
             <div className={headerPreviewClass}>
                 <span className={styles.previewLogo}>Logo</span>
@@ -217,6 +218,7 @@ const ThemePreview = ({ tab, draft }: ThemePreviewProps) => {
                     ))}
                 </div>
             )}
+        </div>
         </div>
     );
 };

@@ -17,15 +17,7 @@ export const testimonials: Testimonial[] = [
         review: "Beautiful collection with premium fabric and excellent customer service.",
     },
     {
-        id: "3",
-        name: "Olivia",
-        role: "Entrepreneur",
-        image: "",
-        rating: 5,
-        review: "Exactly what I was looking for. Great experience!",
-    },
-    {
-        id: "3",
+        id: "4",
         name: "Olivia",
         role: "Entrepreneur",
         image: "",

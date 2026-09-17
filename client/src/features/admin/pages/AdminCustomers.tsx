@@ -88,16 +88,18 @@ export default function AdminCustomers() {
                         </thead>
                         <tbody>
                             {customers.map((customer) => (
-                                <tr key={customer._id}>
-                                    <td>
+                                <tr key={customer._id} className={styles.row}>
+                                    <td className={styles.cellCustomer}>
                                         <strong>{customer.name || "Customer"}</strong>
-                                        <span>{customer._id}</span>
+                                        <span className={styles.customerId}>
+                                            {customer._id}
+                                        </span>
                                     </td>
-                                    <td>
+                                    <td className={styles.cellContact}>
                                         <strong>{customer.phone || "—"}</strong>
                                         <span>{customer.email || "—"}</span>
                                     </td>
-                                    <td>
+                                    <td className={styles.cellCategory}>
                                         {showTableNumber ? (
                                             customer.counterNumber || "—"
                                         ) : (
@@ -126,9 +128,9 @@ export default function AdminCustomers() {
                                             </div>
                                         )}
                                     </td>
-                                    <td>
+                                    <td className={styles.cellActivity}>
                                         <div className={styles.activity}>
-                                            <div>
+                                            <div className={styles.activityBlock}>
                                                 <strong>
                                                     Cart ({customer.activity.cartCount})
                                                 </strong>
@@ -138,21 +140,25 @@ export default function AdminCustomers() {
                                                             (item) => (
                                                                 <li
                                                                     key={`${customer._id}-cart-${item.productId}`}
+                                                                    className={styles.activityItem}
                                                                 >
-                                                                    {item.name} ×{" "}
-                                                                    {item.quantity}
+                                                                    <span className={styles.itemName}>
+                                                                        {item.name}
+                                                                    </span>
+                                                                    <span className={styles.itemQty}>
+                                                                        ×{item.quantity}
+                                                                    </span>
                                                                 </li>
                                                             ),
                                                         )}
                                                     </ul>
                                                 ) : (
-                                                    <span>Empty</span>
+                                                    <span className={styles.emptyHint}>Empty</span>
                                                 )}
                                             </div>
-                                            <div>
+                                            <div className={styles.activityBlock}>
                                                 <strong>
-                                                    Wishlist (
-                                                    {customer.activity.wishlistCount})
+                                                    Wishlist ({customer.activity.wishlistCount})
                                                 </strong>
                                                 {customer.activity.wishlist.length ? (
                                                     <ul>
@@ -160,19 +166,22 @@ export default function AdminCustomers() {
                                                             (item) => (
                                                                 <li
                                                                     key={`${customer._id}-wish-${item.productId}`}
+                                                                    className={styles.activityItem}
                                                                 >
-                                                                    {item.name}
+                                                                    <span className={styles.itemName}>
+                                                                        {item.name}
+                                                                    </span>
                                                                 </li>
                                                             ),
                                                         )}
                                                     </ul>
                                                 ) : (
-                                                    <span>Empty</span>
+                                                    <span className={styles.emptyHint}>Empty</span>
                                                 )}
                                             </div>
                                         </div>
                                     </td>
-                                    <td>
+                                    <td className={styles.cellStatus}>
                                         <span
                                             className={
                                                 customer.isActive === false

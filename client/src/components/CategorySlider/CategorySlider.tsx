@@ -87,21 +87,26 @@ export default function CategorySlider({ tenantId, onCategoryClick }: CategorySl
                         </div>
                     </div>
                 </div>
-                <div className={styles.navigation}>
-                    <button type="button" className={styles.arrow} onClick={handlePrevious} aria-label="Previous categories">
-                        <CategoryArrow direction="left" />
-                    </button>
-                    <button type="button" className={styles.arrow} onClick={handleNext} aria-label="Next categories">
-                        <CategoryArrow direction="right" />
-                    </button>
-                </div>
+                {categories.length > 1 && (
+                    <div className={styles.navigation}>
+                        <button type="button" className={styles.arrow} onClick={handlePrevious} aria-label="Previous categories">
+                            <CategoryArrow direction="left" />
+                        </button>
+                        <button type="button" className={styles.arrow} onClick={handleNext} aria-label="Next categories">
+                            <CategoryArrow direction="right" />
+                        </button>
+                    </div>
+                )}
             </div>
             <div
                 className={styles.sliderWrapper}
                 onMouseEnter={() => setIsHovered(true)}
                 onMouseLeave={() => setIsHovered(false)}
             >
-                <div ref={sliderRef} className={styles.slider}>
+                <div
+                    ref={sliderRef}
+                    className={`${styles.slider} ${categories.length === 1 ? styles.sliderSingle : ""}`}
+                >
                     {categories.map((category, index) => (
                         <button
                             key={category._id}

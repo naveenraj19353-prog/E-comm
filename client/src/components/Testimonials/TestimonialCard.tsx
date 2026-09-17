@@ -5,8 +5,13 @@ interface Props {
     testimonial: Testimonial;
 }
 const TestimonialCard = ({ testimonial }: Props) => {
+    const initial = testimonial.name?.charAt(0)?.toUpperCase() || "?";
     return (<div className={styles.card}>
-      <img src={testimonial.image} alt={testimonial.name} className={styles.avatar}/>
+      {testimonial.image ? (
+        <img src={testimonial.image} alt="" className={styles.avatar}/>
+      ) : (
+        <div className={styles.avatarFallback} aria-hidden>{initial}</div>
+      )}
       <h3>{testimonial.name}</h3>
       <p className={styles.role}>{testimonial.role}</p>
       <div className={styles.rating}>

@@ -1,8 +1,9 @@
 .page {
   min-height: 100%;
-  padding: 2rem 2.25rem 3.75rem;
+  padding: 1.25rem 1.25rem 2rem;
   background: #f6f8f7;
   color: #1f2a26;
+  container-type: inline-size;
 }
 
 .state {
@@ -40,13 +41,15 @@
 
 .header {
   display: flex;
-  align-items: flex-end;
+  flex-wrap: wrap;
+  align-items: flex-start;
   justify-content: space-between;
-  gap: 1.875rem;
-  margin-bottom: 1.75rem;
+  gap: 1rem 1.25rem;
+  margin-bottom: 1rem;
 }
 .header > div:first-child {
-  min-width: 0;
+  flex: 1 1 14rem;
+  min-width: 11rem;
 }
 .backButton {
   display: inline-flex;
@@ -60,6 +63,7 @@
   font-size: 0.875rem;
   font-weight: 600;
   cursor: pointer;
+  white-space: nowrap;
   transition: color 0.2s ease;
 }
 .backButton:hover {
@@ -81,6 +85,7 @@
   line-height: 1.15;
   font-weight: 750;
   letter-spacing: -0.025em;
+  overflow-wrap: anywhere;
 }
 .header p {
   margin: 0.5rem 0 0;
@@ -89,9 +94,12 @@
 }
 .headerActions {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 0.625rem;
-  flex-shrink: 0;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  flex: 1 1 20rem;
+  max-width: 100%;
 }
 .editButton,
 .productsButton,
@@ -103,6 +111,8 @@
   font-size: 0.875rem;
   font-weight: 650;
   cursor: pointer;
+  white-space: nowrap;
+  flex: 0 0 auto;
   transition:
     background 0.2s ease,
     border-color 0.2s ease,
@@ -154,9 +164,9 @@
 .statusCard {
   display: flex;
   align-items: center;
-  min-height: 4.625rem;
-  margin-bottom: 1.5rem;
-  padding: 0 1.375rem;
+  min-height: 3.5rem;
+  margin-bottom: 0.875rem;
+  padding: 0 1rem;
   border: 0.0625rem solid #e1e7e4;
   border-radius: 0.75rem;
   background: #ffffff;
@@ -198,15 +208,15 @@
 }
 
 .section {
-  margin-bottom: 1.5rem;
-  padding: 1.5rem;
+  margin-bottom: 0.875rem;
+  padding: 1rem;
   border: 0.0625rem solid #e1e7e4;
   border-radius: 0.875rem;
   background: #ffffff;
   box-shadow: 0 0.125rem 0.625rem rgba(31, 42, 38, 0.03);
 }
 .sectionHeader {
-  margin-bottom: 1.375rem;
+  margin-bottom: 0.75rem;
 }
 .sectionEyebrow {
   display: block;
@@ -234,8 +244,8 @@
   gap: 0.875rem;
 }
 .infoCard {
-  min-height: 5.375rem;
-  padding: 1.0625rem 1.125rem;
+  min-height: 0;
+  padding: 0.75rem 0.875rem;
   border: 0.0625rem solid #e5ebe8;
   border-radius: 0.625rem;
   background: #fafcfb;
@@ -260,9 +270,9 @@
 .storeCard {
   display: flex;
   align-items: center;
-  gap: 1.125rem;
-  min-height: 6rem;
-  padding: 1.125rem;
+  gap: 1rem;
+  min-height: 0;
+  padding: 0.875rem;
   border: 0.0625rem solid #e2e9e5;
   border-radius: 0.75rem;
   background: #fafcfb;
@@ -331,9 +341,9 @@
 .actionCard {
   display: flex;
   align-items: center;
-  gap: 0.9375rem;
-  min-height: 5.75rem;
-  padding: 1.0625rem;
+  gap: 0.75rem;
+  min-height: 0;
+  padding: 0.75rem 0.875rem;
   border: 0.0625rem solid #e1e8e4;
   border-radius: 0.6875rem;
   background: #ffffff;
@@ -390,36 +400,75 @@
   .page {
     padding: 1.625rem 1.5rem 3.125rem;
   }
+  .header {
+    margin-bottom: 0.75rem;
+  }
+  .statusCard,
+  .section {
+    margin-bottom: 0.75rem;
+    padding: 0.875rem;
+  }
+  .statusCard {
+    padding: 0 0.875rem;
+  }
+  .actionCard {
+    min-height: 0;
+    padding: 0.75rem;
+  }
+}
+
+@container (max-width: 64rem) {
   .infoGrid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+
 @media (max-width: 47.5rem) {
   .page {
-    padding: 1.25rem 1rem 2.5rem;
+    padding: 0;
   }
   .header {
-    align-items: flex-start;
-    flex-direction: column;
+    margin-bottom: 0;
+    padding: 0.875rem 1rem 1rem;
+  }
+  .backButton {
+    margin-bottom: 0.5rem;
+  }
+  .statusCard,
+  .section {
+    margin-bottom: 0;
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+    box-shadow: none;
+  }
+  .section + .section {
+    border-top: none;
+  }
+}
+
+@container (max-width: 47.5rem) {
+  .header h1 {
+    font-size: 1.5rem;
   }
   .headerActions {
-    width: 100%;
-  }
-  .editButton,
-  .productsButton {
-    flex: 1;
-  }
-  .header h1 {
-    font-size: 1.75rem;
+    justify-content: flex-start;
   }
   .statusCard {
-    padding: 1rem 1.125rem;
+    padding: 0.875rem 1rem;
+  }
+  .sectionHeader {
+    margin-bottom: 0.875rem;
   }
   .infoGrid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.625rem;
   }
-  .actionsGrid {
-    grid-template-columns: 1fr;
+  .infoCard {
+    min-height: 0;
+  }
+  .infoCard strong {
+    white-space: normal;
   }
   .storeCard {
     align-items: flex-start;
@@ -429,16 +478,32 @@
     width: 100%;
   }
 }
+
+@container (max-width: 30rem) {
+  .headerActions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .editButton,
+  .productsButton,
+  .ordersButton,
+  .layoutButton {
+    width: 100%;
+    height: auto;
+    min-height: 2.5rem;
+    padding: 0.5rem 0.625rem;
+    font-size: 0.75rem;
+    white-space: normal;
+    line-height: 1.25;
+  }
+}
+
 @media (max-width: 30rem) {
   .section {
     padding: 1.125rem;
   }
-  .headerActions {
-    flex-direction: column;
-  }
-  .editButton,
-  .productsButton {
-    width: 100%;
+  .actionsGrid {
+    grid-template-columns: 1fr;
   }
   .statusInfo {
     align-items: flex-start;

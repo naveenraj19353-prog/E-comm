@@ -2,7 +2,7 @@
   width: 100%;
   max-width: var(--layout-page-max-width, 90%);
   margin: 0 auto;
-  padding: 3.625rem clamp(1rem, 3vw, 1.5rem) 1.875rem;
+  padding: 1.15rem clamp(1rem, 3vw, 1.5rem) 0.75rem;
   box-sizing: border-box;
   overflow: hidden;
 }
@@ -11,7 +11,7 @@
   align-items: flex-end;
   justify-content: space-between;
   gap: 1.875rem;
-  margin-bottom: 1.75rem;
+  margin-bottom: 0.85rem;
 }
 .headingArea {
   min-width: 0;
@@ -392,21 +392,25 @@
     align-items: flex-start;
   }
 }
-@media (max-width: 37.5rem) {
+@media (max-width: 64rem) {
   .section {
-    padding: 2.5rem clamp(1rem, 3vw, 1.5rem) 1.25rem;
+    width: 100%;
+    max-width: 100%;
+    padding: 0.6rem 1rem 0.45rem;
   }
   .header {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 0.875rem;
-    margin-bottom: 1.25rem;
+    flex-direction: row;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 0.55rem;
   }
   .headingArea {
-    width: 100%;
+    flex: 1;
+    min-width: 0;
   }
   .navigation {
-    order: -1;
+    order: 0;
     align-self: flex-end;
     gap: 0.375rem;
   }
@@ -427,16 +431,26 @@
     height: 2.3125rem;
   }
   .slider {
-    grid-auto-columns: 100%;
+    grid-auto-columns: calc((100% - 2rem) / 3);
     gap: 1rem;
     scroll-snap-type: x mandatory;
+  }
+  .sliderSingle {
+    display: flex;
+    justify-content: center;
+    grid-auto-flow: unset;
+  }
+  .sliderSingle .categoryCard {
+    width: calc((100% - 2rem) / 3);
+    max-width: 22rem;
+    flex: 0 0 calc((100% - 2rem) / 3);
   }
   .categoryCard {
     border-radius: 1rem;
     scroll-snap-align: start;
   }
   .imageWrapper {
-    aspect-ratio: 0.88;
+    aspect-ratio: 1;
   }
   .cardContent {
     min-height: 4.25rem;
@@ -453,6 +467,24 @@
   }
   .bottomBar {
     margin-top: 0.5rem;
+  }
+}
+@media (max-width: 63.9375rem) {
+  .slider {
+    grid-auto-columns: calc((100% - 1rem) / 2);
+  }
+  .sliderSingle .categoryCard {
+    width: calc((100% - 1rem) / 2);
+    max-width: 24rem;
+    flex: 0 0 calc((100% - 1rem) / 2);
+  }
+}
+@media (max-width: 47.9375rem) {
+  .slider {
+    grid-auto-columns: 100%;
+  }
+  .imageWrapper {
+    aspect-ratio: 0.88;
   }
 }
 @media (max-width: 26.25rem) {

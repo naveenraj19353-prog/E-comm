@@ -25,6 +25,20 @@
   display: block;
   border: 0.125rem solid var(--border);
 }
+.avatarFallback {
+  width: 5.625rem;
+  height: 5.625rem;
+  border-radius: 50%;
+  margin: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 0.125rem solid var(--border);
+  background: color-mix(in srgb, var(--primary) 12%, var(--surface));
+  color: var(--primary);
+  font-size: 1.5rem;
+  font-weight: 750;
+}
 .card h3 {
   margin: 1.25rem 0 0.375rem;
   color: var(--text);
@@ -56,7 +70,8 @@
     padding: 1.5rem 1.25rem;
     border-radius: 1rem;
   }
-  .avatar {
+  .avatar,
+  .avatarFallback {
     width: 4.875rem;
     height: 4.875rem;
   }

@@ -1,5 +1,9 @@
 .page {
   width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: hidden;
+  box-sizing: border-box;
 }
 
 .header {
@@ -241,20 +245,33 @@
   display: flex;
   align-items: center;
   gap: 0.6875rem;
+  min-width: 0;
 }
 
-.avatar {
+.customerCell div {
+  min-width: 0;
+}
+
+.customerCell div span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.customerCell .avatar {
   width: 2.125rem;
   height: 2.125rem;
   flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
+  margin-top: 0;
   border-radius: 50%;
   background: #e6f0ea;
   color: #2f6b52;
   font-size: 0.75rem;
   font-weight: 700;
+  line-height: 1;
 }
 
 .itemPreview {
@@ -448,21 +465,126 @@
 }
 
 @media (max-width: 56rem) {
+  .page {
+    padding: 0.75rem;
+  }
+
   .toolbar {
     flex-direction: column;
     align-items: stretch;
   }
 
   .resultCount {
-    text-align: right;
+    text-align: left;
   }
 
   .tableCard {
-    overflow-x: auto;
+    overflow: visible;
+    border: none;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
   }
 
-  .table {
-    min-width: 58rem;
+  .table,
+  .table tbody {
+    display: block;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .table thead {
+    display: none;
+  }
+
+  .row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "order total"
+      "customer customer"
+      "items items"
+      "status status"
+      "actions actions";
+    gap: 0.625rem 0.75rem;
+    margin-bottom: 0.75rem;
+    padding: 0.875rem 1rem;
+    border: 0.0625rem solid #e5ebe7;
+    border-radius: 0.875rem;
+    background: #fff;
+    box-shadow: 0 0.125rem 0.5rem rgba(31, 42, 38, 0.04);
+  }
+
+  .table th,
+  .table td {
+    display: block;
+    padding: 0;
+    border: none;
+  }
+
+  .cellOrder {
+    grid-area: order;
+  }
+
+  .cellTotal {
+    grid-area: total;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.25rem;
+    text-align: right;
+  }
+
+  .cellTotal .paidBadge {
+    margin-top: 0 !important;
+  }
+
+  .cellCustomer {
+    grid-area: customer;
+  }
+
+  .cellItems {
+    grid-area: items;
+  }
+
+  .cellItems .itemPreview div:last-child {
+    min-width: 0;
+  }
+
+  .cellItems .itemPreview span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .cellStatus {
+    grid-area: status;
+  }
+
+  .cellStatus .status {
+    width: fit-content;
+  }
+
+  .cellActions {
+    grid-area: actions;
+  }
+
+  .actions {
+    min-width: 0;
+    width: 100%;
+    flex-wrap: nowrap;
+  }
+
+  .actions button {
+    flex: 1 1 0;
+    min-width: 0;
+    padding: 0 0.5rem;
+  }
+
+  .customerCell span:not(.avatar) {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 }
 

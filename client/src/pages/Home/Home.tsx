@@ -114,25 +114,27 @@ const Home = () => {
             )}
 
             {layoutSettings.showCategorySlider && (
-                <section>
-                    <CategorySlider
-                        tenantId={tenantId}
-                        onCategoryClick={(category) => {
-                            go(withQuery(routes.products(tenantSlug), {
-                                categoryIds: category._id || category.name,
-                            }));
-                        }}
-                    />
+                <CategorySlider
+                    tenantId={tenantId}
+                    onCategoryClick={(category) => {
+                        go(withQuery(routes.products(tenantSlug), {
+                            categoryIds: category._id || category.name,
+                        }));
+                    }}
+                />
+            )}
+
+            {trendingProducts.length > 0 && (
+                <section className={styles.productSection}>
+                    <ProductCardSlider title="Trending Products" products={trendingProducts} onToggleWishlist={handleWishlist} onQuickAdd={handleAddToCart} />
                 </section>
             )}
 
-            <section className={styles.productSection}>
-                <ProductCardSlider title="Trending Products" products={trendingProducts} onToggleWishlist={handleWishlist} onQuickAdd={handleAddToCart} />
-            </section>
-
-            <section className={styles.productSection}>
-                <ProductCardSlider title="Best Discounts" products={bestDiscountProducts} onToggleWishlist={handleWishlist} onQuickAdd={handleAddToCart} />
-            </section>
+            {bestDiscountProducts.length > 0 && (
+                <section className={styles.productSection}>
+                    <ProductCardSlider title="Best Discounts" products={bestDiscountProducts} onToggleWishlist={handleWishlist} onQuickAdd={handleAddToCart} />
+                </section>
+            )}
 
             {mostSellingProducts.length > 0 && (
                 <section className={styles.productSection}>
@@ -140,13 +142,17 @@ const Home = () => {
                 </section>
             )}
 
-            <section className={styles.productSection}>
-                <ProductCardSlider title="New Arrivals" products={newArrivals} onToggleWishlist={handleWishlist} onQuickAdd={handleAddToCart} />
-            </section>
+            {newArrivals.length > 0 && (
+                <section className={styles.productSection}>
+                    <ProductCardSlider title="New Arrivals" products={newArrivals} onToggleWishlist={handleWishlist} onQuickAdd={handleAddToCart} />
+                </section>
+            )}
 
-            <section className={styles.productSection}>
-                <ProductCardSlider title="Top Rated Products" products={topRatedProducts} onToggleWishlist={handleWishlist} onQuickAdd={handleAddToCart} />
-            </section>
+            {topRatedProducts.length > 0 && (
+                <section className={styles.productSection}>
+                    <ProductCardSlider title="Top Rated Products" products={topRatedProducts} onToggleWishlist={handleWishlist} onQuickAdd={handleAddToCart} />
+                </section>
+            )}
 
             {layoutSettings.showDealOfTheDay && dealOfTheDay.length > 0 && (
                 <section className={styles.productSection}>

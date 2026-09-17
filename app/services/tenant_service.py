@@ -9,6 +9,7 @@ from fastapi import HTTPException
 
 from app.database.mongo import tenants
 from app.utils.hash import hash_password
+from app.utils.phone_normalization import PhoneNormalizationError, normalize_phone
 
 RESERVED_SLUGS = frozenset(
     {
@@ -67,6 +68,7 @@ def create_tenant_document(
     business_type: str,
     logo: str = "",
     theme: str = "green",
+    phone: str = "",
 ) -> dict:
     tenant_id = normalize_slug(tenant_id)
     slug = validate_slug(slug)
@@ -82,6 +84,16 @@ def create_tenant_document(
 
     if len(name) < 2:
         raise HTTPException(status_code=400, detail="Store name is required.")
+
+    phone = str(phone or "").strip()
+    if phone:
+        try:
+            phone = normalize_phone(phone, country="India")
+        except PhoneNormalizationError as error:
+            raise HTTPException(
+                status_code=400,
+                detail="Enter a valid WhatsApp number with country code, for example 9198XXXXXXXX.",
+            ) from error
 
     if tenants.find_one({"tenantId": tenant_id}):
         raise HTTPException(status_code=400, detail="Tenant ID already exists.")
@@ -105,6 +117,7 @@ def create_tenant_document(
         "logo": logo or "",
         "theme": theme or "green",
         "email": email,
+        "phone": str(phone or "").strip(),
         "password": hash_password(password),
         "isActive": True,
         "createdAt": now,

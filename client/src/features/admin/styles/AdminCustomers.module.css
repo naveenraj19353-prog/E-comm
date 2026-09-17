@@ -1,5 +1,9 @@
 .page {
   width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: hidden;
+  box-sizing: border-box;
 }
 
 .header {
@@ -59,6 +63,10 @@
   border-collapse: collapse;
 }
 
+.customerId {
+  display: none;
+}
+
 .table th,
 .table td {
   padding: 0.9rem 1rem;
@@ -93,8 +101,12 @@
 
 .activity {
   display: grid;
-  grid-template-columns: repeat(2, minmax(10rem, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 1rem;
+}
+
+.activityBlock {
+  min-width: 0;
 }
 
 .categories {
@@ -119,14 +131,39 @@
 
 .activity ul {
   margin: 0;
-  padding-left: 1rem;
+  padding: 0;
+  list-style: none;
 }
 
-.activity li,
-.activity span {
+.activityItem {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
   color: #64736c;
   font-size: 0.78rem;
-  line-height: 1.5;
+  line-height: 1.45;
+}
+
+.activityItem + .activityItem {
+  margin-top: 0.25rem;
+}
+
+.itemName {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.itemQty {
+  flex: 0 0 auto;
+  color: #2f6b52;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.emptyHint {
+  color: #84918b;
+  font-size: 0.78rem;
 }
 
 .active,
@@ -157,7 +194,11 @@
   text-align: center;
 }
 
-@media (max-width: 48rem) {
+@media (max-width: 64rem) {
+  .page {
+    padding: 0.75rem 1rem 1.25rem;
+  }
+
   .header {
     align-items: stretch;
     flex-direction: column;
@@ -165,5 +206,100 @@
 
   .search {
     width: 100%;
+  }
+
+  .tableWrap {
+    overflow: visible;
+    border: none;
+    border-radius: 0;
+    background: transparent;
+  }
+
+  .table,
+  .table tbody {
+    display: block;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .table thead {
+    display: none;
+  }
+
+  .row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "customer status"
+      "contact contact"
+      "category category"
+      "activity activity";
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+    padding: 1rem;
+    overflow: hidden;
+    border: 0.0625rem solid #e5ebe7;
+    border-radius: 0.875rem;
+    background: #fff;
+    box-shadow: 0 0.125rem 0.5rem rgba(31, 42, 38, 0.04);
+  }
+
+  .table th,
+  .table td {
+    display: block;
+    padding: 0;
+    border: none;
+  }
+
+  .cellCustomer {
+    grid-area: customer;
+    min-width: 0;
+  }
+
+  .cellContact {
+    grid-area: contact;
+    min-width: 0;
+  }
+
+  .cellContact span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .cellCategory {
+    grid-area: category;
+  }
+
+  .cellActivity {
+    grid-area: activity;
+    min-width: 0;
+    padding-top: 0.25rem;
+    border-top: 0.0625rem solid #edf1ee;
+  }
+
+  .cellStatus {
+    grid-area: status;
+  }
+
+  .activity {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+
+  .activityBlock {
+    padding: 0.625rem 0.75rem;
+    border-radius: 0.625rem;
+    background: #f7faf8;
+  }
+
+  .activity strong {
+    margin-bottom: 0.375rem;
+    color: #1f2a26;
+    font-size: 0.75rem;
+  }
+
+  .itemName {
+    overflow-wrap: anywhere;
   }
 }

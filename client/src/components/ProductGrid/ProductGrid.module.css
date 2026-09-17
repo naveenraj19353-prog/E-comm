@@ -4,6 +4,12 @@
   gap: var(--layout-grid-gap, 1.5rem);
 }
 
+@media (max-width: 90rem) {
+  .grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
 .listView {
   grid-template-columns: 1fr;
 }
@@ -75,6 +81,12 @@
 @media (max-width: 75rem) {
   .grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1rem;
+  }
+}
+@media (max-width: 64rem) {
+  .grid {
+    gap: 0.75rem;
   }
 }
 @media (max-width: 56.25rem) {

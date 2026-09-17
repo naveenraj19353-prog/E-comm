@@ -14,6 +14,7 @@ export type PeriskopeSettings = {
   enabled: boolean;
   connected: boolean;
   senderPhone: string;
+  notifyPhone: string;
   webhookEnabled: boolean;
   webhookConfigured: boolean;
   notifications: PeriskopeNotificationPreferences;
@@ -48,7 +49,7 @@ export async function savePeriskopeSettings(
   tenantId: string,
   payload: Pick<
     PeriskopeSettings,
-    "enabled" | "webhookEnabled" | "notifications"
+    "enabled" | "webhookEnabled" | "notifyPhone" | "notifications"
   >,
 ) {
   const response = await apiClient.put(API_ENDPOINTS.PERISKOPE.SETTINGS, payload, {

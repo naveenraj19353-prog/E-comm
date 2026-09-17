@@ -5,6 +5,7 @@ import { getFirstProductImage } from "../../products/inventory";
 import { uploadImageToS3 } from "../api/upload.api";
 import { useDeleteProduct, useProducts, useUpdateProduct, } from "../hooks/useTenantProducts";
 import { useTenantByTenantId } from "../hooks/useTenants";
+import { useCategory } from "../../products/hooks/useCategory";
 import type { ProductImageRef } from "../utils/s3Image";
 import { hasUnresolvedImageRefs, imageRefsToKeys, toProductImageRef } from "../utils/s3Image";
 import styles from "../styles/AdminTenantProducts.module.css";
@@ -106,6 +107,26 @@ export default function AdminTenantProducts() {
     const navigate = useNavigate();
     const imageInputRef = useRef<HTMLInputElement | null>(null);
     const { data: tenant, isLoading: tenantLoading, isError: tenantError, } = useTenantByTenantId(tenantId || "");
+    const { data: categoryResponse } = useCategory(tenantId || "");
+    const categories = useMemo(() => {
+        const list = categoryResponse?.data;
+        if (!Array.isArray(list)) {
+            return [];
+        }
+        return list.filter((item: { name?: string; _id?: string; categoryId?: string }) =>
+            Boolean(item?.name && (item._id || item.categoryId)),
+        );
+    }, [categoryResponse]);
+    const categoryLabelById = useMemo(() => {
+        const labels = new Map<string, string>();
+        for (const item of categories) {
+            const id = item._id || item.categoryId;
+            if (id && item.name) {
+                labels.set(id, item.name);
+            }
+        }
+        return labels;
+    }, [categories]);
     const [searchInput, setSearchInput] = useState("");
     const [search, setSearch] = useState("");
     const [category, setCategory] = useState("");
@@ -781,16 +802,14 @@ export default function AdminTenantProducts() {
         <div className={styles.selectWrapper}>
           <select className={styles.select} value={category} onChange={(event) => setCategory(event.target.value)}>
             <option value="">All Categories</option>
-            <option value="electronics">Electronics</option>
-            <option value="mobiles">Mobiles</option>
-            <option value="laptops">Laptops</option>
-            <option value="women-fashion">Women's Fashion</option>
-            <option value="men-fashion">Men's Fashion</option>
-            <option value="footwear">Footwear</option>
-            <option value="beauty">Beauty</option>
-            <option value="home-kitchen">Home & Kitchen</option>
-            <option value="sports">Sports</option>
-            <option value="books">Books</option>
+            {categories.map((item: { _id?: string; categoryId?: string; name: string }) => {
+                const id = item._id || item.categoryId || "";
+                return (
+                    <option key={id} value={id}>
+                      {item.name}
+                    </option>
+                );
+            })}
           </select>
         </div>
         {hasFilters && (<button type="button" className={styles.clearButton} onClick={clearFilters}>
@@ -800,7 +819,7 @@ export default function AdminTenantProducts() {
       {hasFilters && (<div className={styles.activeFilters}>
           <span>Filters:</span>
           {search && <span className={styles.filterTag}>Search: {search}</span>}
-          {category && (<span className={styles.filterTag}>Category: {category}</span>)}
+          {category && (<span className={styles.filterTag}>Category: {categoryLabelById.get(category) || category}</span>)}
         </div>)}
       <div className={styles.tableCard}>
         <div className={styles.tableHeader}>
@@ -858,7 +877,9 @@ export default function AdminTenantProducts() {
                       </td>
                       <td>
                         <span className={styles.category}>
-                          {product.categoryId || "Uncategorized"}
+                          {categoryLabelById.get(product.categoryId || "") ||
+                            product.categoryId ||
+                            "Uncategorized"}
                         </span>
                       </td>
                       <td>
@@ -932,10 +953,33 @@ export default function AdminTenantProducts() {
               </div>
               <div className={styles.formGroup}>
                 <label>Category</label>
-                <input value={editForm.categoryId} onChange={(event) => setEditForm({
-                ...editForm,
-                categoryId: event.target.value,
-            })}/>
+                <select
+                  value={editForm.categoryId}
+                  onChange={(event) => setEditForm({
+                    ...editForm,
+                    categoryId: event.target.value,
+                  })}
+                >
+                  <option value="">Select category</option>
+                  {categories.map((item: { _id?: string; categoryId?: string; name: string }) => {
+                    const id = item._id || item.categoryId || "";
+                    return (
+                      <option key={id} value={id}>
+                        {item.name}
+                      </option>
+                    );
+                  })}
+                  {editForm.categoryId &&
+                    !categories.some(
+                      (item: { _id?: string; categoryId?: string }) =>
+                        (item._id || item.categoryId) === editForm.categoryId,
+                    ) && (
+                      <option value={editForm.categoryId}>
+                        {categoryLabelById.get(editForm.categoryId) ||
+                          editForm.categoryId}
+                      </option>
+                    )}
+                </select>
               </div>
               <div className={styles.formGroup}>
                 <label>Brand</label>

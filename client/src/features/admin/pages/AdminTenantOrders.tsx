@@ -227,13 +227,13 @@ export default function AdminTenantOrders() {
                                         className={styles.row}
                                         onClick={() => openOrder(order.orderId)}
                                     >
-                                        <td>
+                                        <td className={styles.cellOrder}>
                                             <strong className={styles.orderId}>
                                                 #{order.orderId.slice(-8).toUpperCase()}
                                             </strong>
                                             <span>{formatOrderDate(order.createdAt)}</span>
                                         </td>
-                                        <td>
+                                        <td className={styles.cellCustomer}>
                                             <div className={styles.customerCell}>
                                                 <span className={styles.avatar}>
                                                     {(order.customer?.name || "C").charAt(0).toUpperCase()}
@@ -244,7 +244,7 @@ export default function AdminTenantOrders() {
                                                 </div>
                                             </div>
                                         </td>
-                                        <td>
+                                        <td className={styles.cellItems}>
                                             <div className={styles.itemPreview}>
                                                 <div className={styles.itemThumb}>
                                                     <ProductImage
@@ -254,12 +254,17 @@ export default function AdminTenantOrders() {
                                                     />
                                                 </div>
                                                 <div>
-                                                    <strong>{order.items?.length ?? 0} items</strong>
+                                                    <strong>
+                                                      {order.items?.length ?? 0}{" "}
+                                                      {(order.items?.length ?? 0) === 1
+                                                        ? "item"
+                                                        : "items"}
+                                                    </strong>
                                                     <span>{leadItem?.name || "-"}</span>
                                                 </div>
                                             </div>
                                         </td>
-                                        <td>
+                                        <td className={styles.cellTotal}>
                                             <strong className={styles.amount}>
                                                 {formatOrderAmount(order.totalAmount)}
                                             </strong>
@@ -267,12 +272,12 @@ export default function AdminTenantOrders() {
                                                 {order.paymentStatus || "paid"}
                                             </span>
                                         </td>
-                                        <td>
+                                        <td className={styles.cellStatus}>
                                             <span className={`${styles.status} ${styles[`status_${status}`]}`}>
                                                 {orderStatusLabel[status]}
                                             </span>
                                         </td>
-                                        <td onClick={(event) => event.stopPropagation()}>
+                                        <td className={styles.cellActions} onClick={(event) => event.stopPropagation()}>
                                             <div className={styles.actions}>
                                                 {actions.map((action) => (
                                                     <button

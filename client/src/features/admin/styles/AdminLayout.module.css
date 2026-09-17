@@ -258,7 +258,7 @@
 
 .content {
   flex: 1;
-  padding: 1.875rem;
+  padding: 1.25rem;
   min-width: 0;
 }
 
@@ -271,7 +271,15 @@
     padding: 0 1.375rem;
   }
   .content {
-    padding: 1.375rem;
+    padding: 0;
+  }
+  .navItem {
+    min-height: 2.25rem;
+    margin-bottom: 0.125rem;
+    font-size: 0.75rem;
+  }
+  .sectionTitle {
+    margin: 0.875rem 0.625rem 0.5rem;
   }
 }
 @media (max-width: 43.75rem) {
@@ -290,7 +298,7 @@
     padding: 0 1rem;
   }
   .content {
-    padding: 1.125rem 0.875rem;
+    padding: 0;
   }
 }
 @media (max-width: 35rem) {
@@ -301,7 +309,7 @@
     padding: 0 0.9375rem;
   }
   .content {
-    padding: 1rem 0.75rem;
+    padding: 0;
   }
   .header h1 {
     font-size: 1.0625rem;
