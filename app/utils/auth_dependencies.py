@@ -119,9 +119,9 @@ def get_current_user(
             "userId": str(
                 tenant["_id"]
             ),
-            "tenantId": tenant[
-                "tenantId"
-            ],
+            "tenantId": str(
+                tenant["tenantId"]
+            ).strip().lower(),
             "name": tenant[
                 "name"
             ],
@@ -176,7 +176,7 @@ def admin_tenant_id(
                 detail="tenantId is required.",
             )
         return str(requested_tenant_id).strip().lower()
-    token_tenant = current_user.get("tenantId")
+    token_tenant = str(current_user.get("tenantId") or "").strip().lower()
     if not token_tenant:
         raise HTTPException(
             status_code=403,

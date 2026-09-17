@@ -21,6 +21,7 @@ from app.database.mongo import (
     tenants,
     users,
 )
+from app.services.checkout_service import as_object_id, tenant_id_query
 from app.services.periskope_service import PeriskopeError, PeriskopeService
 from app.services.s3_service import generate_presigned_url, is_s3_object_key
 from app.services.storefront_url import build_customer_storefront_url
@@ -319,43 +320,58 @@ def _first_product_image(product: dict) -> str | None:
     return None
 
 
+def _integration_for_tenant(tenant_id: str) -> dict | None:
+    return messaging_integrations.find_one(
+        {"tenantId": tenant_id_query(tenant_id), "provider": PROVIDER}
+    )
+
+
 def share_product_with_customer(
     *,
     tenant_id: str,
     user_id: str,
     product: dict,
 ) -> dict:
-    integration = messaging_integrations.find_one(
-        {"tenantId": tenant_id, "provider": PROVIDER, "enabled": True}
-    )
-    if not integration:
+    service = PeriskopeService()
+    if not service.configured:
         raise ProductShareError("WhatsApp sharing is not enabled for this store.")
 
+    tenant_filter = tenant_id_query(tenant_id)
+    user_object_id = as_object_id(user_id)
+    if not user_object_id:
+        raise ProductShareError("Customer account is unavailable.")
     user = users.find_one(
         {
-            "_id": ObjectId(user_id),
-            "tenantId": tenant_id,
+            "_id": user_object_id,
             "role": "customer",
-            "isActive": True,
         }
     )
     if not user:
         raise ProductShareError("Customer account is unavailable.")
 
     address = addresses.find_one(
-        {"tenantId": tenant_id, "userId": ObjectId(user_id)},
+        {"userId": {"$in": [user_object_id, str(user_object_id)]}},
         sort=[("isDefault", -1), ("createdAt", -1)],
     ) or {}
     raw_phone = user.get("phone") or address.get("phone")
     try:
-        phone = normalize_phone(raw_phone, country=address.get("country"))
+        phone = normalize_phone(
+            raw_phone,
+            country=address.get("country") or user.get("country") or "India",
+        )
     except PhoneNormalizationError as error:
         raise ProductShareError(
             "Add a valid WhatsApp number with country information to your profile."
         ) from error
 
     tenant = tenants.find_one(
-        {"tenantId": tenant_id, "isActive": True}
+        {
+            "$or": [
+                {"tenantId": tenant_filter},
+                {"slug": tenant_filter},
+            ],
+            "isActive": True,
+        }
     ) or {}
     store_name = _clean_text(tenant.get("name"), "Store")
     tenant_slug = str(tenant.get("slug") or tenant_id).strip().lower()
@@ -409,7 +425,6 @@ def share_product_with_customer(
         log_id = None
 
     try:
-        service = PeriskopeService()
         if image_url:
             filename, mimetype = _image_metadata(image_url)
             response = service.send_media_message(
@@ -712,9 +727,7 @@ def process_notification(notification_id: str) -> None:
         return
 
     tenant_id = str(order.get("tenantId") or "").strip().lower()
-    integration = messaging_integrations.find_one(
-        {"tenantId": tenant_id, "provider": PROVIDER}
-    )
+    integration = _integration_for_tenant(tenant_id)
     preferences = {
         **DEFAULT_NOTIFICATIONS,
         **((integration or {}).get("notifications") or {}),
