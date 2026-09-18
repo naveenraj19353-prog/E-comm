@@ -25,19 +25,20 @@
     "lead": "",
     "primaryCta": { "label": "Create your store", "href": "/create-store" },
     "secondaryCta": { "label": "Open live demo", "href": "/your-store" },
-    "image": "/images/welcome/banner/slide-01.png?v=6",
+    "image": "/images/welcome/banner/slide-01.jpg",
     "images": [
-      "/images/welcome/banner/slide-01.png?v=6",
-      "/images/welcome/banner/slide-02.png?v=6",
-      "/images/welcome/banner/slide-03.png?v=6",
-      "/images/welcome/banner/slide-04.png?v=6",
-      "/images/welcome/banner/slide-05.png?v=6",
-      "/images/welcome/banner/slide-06.png?v=6",
-      "/images/welcome/banner/slide-07.png?v=6",
-      "/images/welcome/banner/slide-08.png?v=6",
-      "/images/welcome/banner/slide-09.png?v=6",
-      "/images/welcome/banner/slide-10.png?v=6",
-      "/images/welcome/banner/slide-11.png?v=6"
+      "/images/welcome/banner/slide-01.jpg",
+      "/images/welcome/banner/slide-12.jpg",
+      "/images/welcome/banner/slide-02.jpg",
+      "/images/welcome/banner/slide-03.jpg",
+      "/images/welcome/banner/slide-04.jpg",
+      "/images/welcome/banner/slide-05.jpg",
+      "/images/welcome/banner/slide-06.jpg",
+      "/images/welcome/banner/slide-07.jpg",
+      "/images/welcome/banner/slide-08.jpg",
+      "/images/welcome/banner/slide-09.jpg",
+      "/images/welcome/banner/slide-10.jpg",
+      "/images/welcome/banner/slide-11.jpg"
     ]
   },
   "introLoop": {

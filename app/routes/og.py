@@ -13,12 +13,14 @@ from fastapi.responses import HTMLResponse, RedirectResponse, Response
 
 from app.database.mongo import products, tenants
 from app.routes.detail_messages import INVALID_PRODUCT_ID, PRODUCT_NOT_FOUND
+from app.services.checkout_service import tenant_id_query
+from app.services.og_image import first_image_ref, tenant_share_image_ref
 from app.services.s3_service import get_object_bytes, is_s3_object_key
 from app.services.storefront_url import (
     build_default_og_image_url,
     build_storefront_product_url,
+    build_storefront_url,
 )
-from app.utils.product_serialize import sanitize_image_url
 
 logger = logging.getLogger(__name__)
 
@@ -28,26 +30,54 @@ TENANT_NOT_FOUND = "Tenant not found."
 
 
 def _first_image_ref(images: object) -> str:
-    """Return first stored image as S3 key or absolute http(s) URL."""
-    if isinstance(images, list):
-        values = images
-    elif isinstance(images, dict):
-        values = []
-        for image_list in images.values():
-            if isinstance(image_list, list):
-                values.extend(image_list)
-            elif isinstance(image_list, str):
-                values.append(image_list)
-    else:
-        return ""
+    return first_image_ref(images)
 
-    for value in values:
-        if not isinstance(value, str):
-            continue
-        cleaned = sanitize_image_url(value)
-        if cleaned:
-            return cleaned
-    return ""
+
+def _load_tenant(tenant_slug: str) -> dict[str, Any]:
+    slug = (tenant_slug or "").strip().lower()
+    if not slug:
+        raise HTTPException(status_code=404, detail=TENANT_NOT_FOUND)
+    tenant = tenants.find_one(
+        {
+            "$or": [{"slug": slug}, {"tenantId": tenant_id_query(slug)}],
+            "isActive": True,
+        }
+    )
+    if not tenant:
+        raise HTTPException(status_code=404, detail=TENANT_NOT_FOUND)
+    return tenant
+
+
+def _tenant_og_image_url(request: Request, slug: str) -> str:
+    return f"{str(request.base_url).rstrip('/')}/og/store/{slug}/image"
+
+
+def _respond_image(image_ref: str) -> Response:
+    if not image_ref:
+        return RedirectResponse(
+            url=build_default_og_image_url(),
+            status_code=302,
+        )
+    if image_ref.startswith(("http://", "https://", "data:")):
+        return RedirectResponse(url=image_ref, status_code=302)
+    if not is_s3_object_key(image_ref):
+        return RedirectResponse(
+            url=build_default_og_image_url(),
+            status_code=302,
+        )
+    try:
+        body, content_type = get_object_bytes(image_ref)
+    except RuntimeError:
+        logger.exception("Failed to load OG image")
+        return RedirectResponse(
+            url=build_default_og_image_url(),
+            status_code=302,
+        )
+    return Response(
+        content=body,
+        media_type=content_type or "image/jpeg",
+        headers={"Cache-Control": "public, max-age=86400"},
+    )
 
 
 def _format_inr(amount: float | int | None) -> str:
@@ -62,21 +92,15 @@ def _load_tenant_and_product(
     tenant_slug: str,
     product_id: str,
 ) -> tuple[dict[str, Any], dict[str, Any]]:
-    slug = (tenant_slug or "").strip().lower()
-    if not slug:
-        raise HTTPException(status_code=404, detail=TENANT_NOT_FOUND)
+    tenant = _load_tenant(tenant_slug)
     if not ObjectId.is_valid(product_id):
         raise HTTPException(status_code=400, detail=INVALID_PRODUCT_ID)
-
-    tenant = tenants.find_one({"slug": slug, "isActive": True})
-    if not tenant:
-        raise HTTPException(status_code=404, detail=TENANT_NOT_FOUND)
 
     tenant_id = str(tenant.get("tenantId") or tenant.get("slug") or "").strip()
     product = products.find_one(
         {
             "_id": ObjectId(product_id),
-            "tenantId": tenant_id,
+            "tenantId": tenant_id_query(tenant_id),
             "isActive": True,
         }
     )
@@ -112,7 +136,7 @@ def _product_og_payload(
     if image_ref:
         image_url = f"{api_base}/og/product/{slug}/{product_id}/image"
     else:
-        image_url = build_default_og_image_url()
+        image_url = _tenant_og_image_url(request, slug)
 
     return {
         "title": title,
@@ -206,33 +230,84 @@ def product_open_graph_image(
     _tenant, product = _load_tenant_and_product(tenant_slug, product_id)
     image_ref = _first_image_ref(product.get("images"))
     if not image_ref:
-        return RedirectResponse(
-            url=build_default_og_image_url(),
-            status_code=302,
-        )
+        image_ref = tenant_share_image_ref(_tenant)
+    return _respond_image(image_ref)
 
-    if image_ref.startswith(("http://", "https://", "data:")):
-        return RedirectResponse(url=image_ref, status_code=302)
 
-    if not is_s3_object_key(image_ref):
-        return RedirectResponse(
-            url=build_default_og_image_url(),
-            status_code=302,
-        )
+def _store_og_payload(request: Request, tenant: dict[str, Any]) -> dict[str, str]:
+    slug = str(tenant.get("slug") or "").strip().lower()
+    store_name = str(tenant.get("name") or slug or "Store").strip()
+    footer = tenant.get("footerContent")
+    footer = footer if isinstance(footer, dict) else {}
+    description = (
+        str(footer.get("description") or "").strip()
+        or f"Shop {store_name} on Retail Cosmos."
+    )
+    description = re.sub(r"\s+", " ", description)[:220]
+    return {
+        "title": store_name,
+        "description": description,
+        "image_url": _tenant_og_image_url(request, slug),
+        "store_url": build_storefront_url(slug),
+        "site_name": store_name,
+    }
 
-    try:
-        body, content_type = get_object_bytes(image_ref)
-    except RuntimeError:
-        logger.exception("Failed to load OG image for product %s", product_id)
-        return RedirectResponse(
-            url=build_default_og_image_url(),
-            status_code=302,
-        )
 
-    return Response(
-        content=body,
-        media_type=content_type or "image/jpeg",
+def _render_store_og_html(payload: dict[str, str]) -> str:
+    title = html.escape(payload["title"])
+    description = html.escape(payload["description"])
+    image_url = html.escape(payload["image_url"])
+    store_url = html.escape(payload["store_url"])
+    site_name = html.escape(payload["site_name"])
+    return f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>{title}</title>
+  <meta name="description" content="{description}" />
+  <link rel="canonical" href="{store_url}" />
+  <meta property="og:site_name" content="{site_name}" />
+  <meta property="og:title" content="{title}" />
+  <meta property="og:description" content="{description}" />
+  <meta property="og:image" content="{image_url}" />
+  <meta property="og:image:secure_url" content="{image_url}" />
+  <meta property="og:url" content="{store_url}" />
+  <meta property="og:type" content="website" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="{title}" />
+  <meta name="twitter:description" content="{description}" />
+  <meta name="twitter:image" content="{image_url}" />
+  <meta http-equiv="refresh" content="0;url={store_url}" />
+</head>
+<body>
+  <p>
+    <a href="{store_url}">{site_name}</a>
+  </p>
+</body>
+</html>
+"""
+
+
+@router.get(
+    "/store/{tenant_slug}",
+    response_class=HTMLResponse,
+)
+def store_open_graph(tenant_slug: str, request: Request):
+    """Bot-crawlable HTML for a tenant storefront link."""
+    tenant = _load_tenant(tenant_slug)
+    payload = _store_og_payload(request, tenant)
+    return HTMLResponse(
+        content=_render_store_og_html(payload),
+        media_type="text/html; charset=utf-8",
         headers={
-            "Cache-Control": "public, max-age=86400",
+            "Cache-Control": "public, max-age=300",
+            "X-Robots-Tag": "noindex",
         },
     )
+
+
+@router.get("/store/{tenant_slug}/image")
+def store_open_graph_image(tenant_slug: str):
+    """Stable store share image: home banner, then logo."""
+    tenant = _load_tenant(tenant_slug)
+    return _respond_image(tenant_share_image_ref(tenant))

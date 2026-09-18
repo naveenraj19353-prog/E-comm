@@ -17,11 +17,11 @@ import { useDebounce } from "../../hooks/useDebounce";
 import { DEFAULT_MAX_PRICE, DEFAULT_MIN_PRICE, getApiPriceBounds, isActivePriceFilter, } from "../../features/products/filterUtils";
 import { useLayoutSettings } from "../../theme/useThemeSettings";
 import { routes } from "../../routes/routes";
-import { SeoHead } from "../../features/seo";
+import { SeoHead, storeShareImage } from "../../features/seo";
 const Products = () => {
     const [searchParams, setSearchParams] = useSearchParams();
     const dispatch = useAppDispatch();
-    const { tenantSlug, tenantId } = useStorefrontTenant();
+    const { tenantSlug, tenantId, tenant } = useStorefrontTenant();
     const layoutSettings = useLayoutSettings();
     const filters = useAppSelector((state) => state.products.filters);
     const storedCatalogFilter = useAppSelector(
@@ -371,6 +371,8 @@ const Products = () => {
         description={seoDescription}
         path="/products"
         tenantSlug={tenantSlug}
+        image={storeShareImage(tenant) || undefined}
+        siteName={tenant?.name || tenantSlug}
         noIndex={hasSearch}
       />
       <div className={styles.stickyBar}>

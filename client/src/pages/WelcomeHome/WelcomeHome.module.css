@@ -361,7 +361,7 @@
 .heroBanner {
   position: relative;
   width: 100%;
-  background: #0a0a0a;
+  background: #0a0a0a url("/images/welcome/banner/slide-01.jpg") center / contain no-repeat;
   line-height: 0;
   overflow: hidden;
 }
@@ -418,28 +418,30 @@
   inset: 0;
   pointer-events: none;
   background: linear-gradient(
-    90deg,
-    rgba(0, 0, 0, 0.78) 0%,
-    rgba(0, 0, 0, 0.45) 32%,
-    rgba(0, 0, 0, 0.12) 55%,
-    transparent 72%
+    180deg,
+    transparent 42%,
+    rgba(0, 0, 0, 0.28) 68%,
+    rgba(0, 0, 0, 0.55) 100%
   );
 }
 
 .heroCopy {
   position: absolute;
-  left: 35%;
-  top: 80%;
-  bottom: auto;
+  left: 50%;
+  top: auto;
+  bottom: 3.25rem;
   z-index: 2;
-  width: auto;
-  max-width: 80%;
-  margin: 0 auto;
+  width: min(42rem, 90%);
+  max-width: 90%;
+  margin: 0;
   padding: 0 clamp(1.25rem, 3.5vw, 3rem);
-  transform: translateY(-50%);
+  transform: translateX(-50%);
   pointer-events: none;
   text-align: center;
   box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .heroCopy a,
@@ -448,12 +450,13 @@
 }
 
 .heroTitle {
-  margin: 0;
-  max-width: 14ch;
+  margin: 0 auto;
+  max-width: none;
   font-size: clamp(2rem, 4.2vw, 3.75rem);
   font-weight: 800;
   letter-spacing: -0.045em;
   line-height: 1.05;
+  text-align: center;
   text-shadow: 0 2px 24px rgba(0, 0, 0, 0.45);
 }
 
@@ -463,18 +466,20 @@
 }
 
 .heroLead {
-  margin: 0.85rem 0 0;
+  margin: 0.85rem auto 0;
   max-width: 26rem;
   font-size: clamp(0.95rem, 1.35vw, 1.125rem);
   line-height: 1.5;
   font-weight: 500;
   color: rgba(255, 255, 255, 0.92);
+  text-align: center;
 }
 
 .heroCtas {
   margin-top: 1.25rem;
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
   gap: 0.75rem;
 }
 
@@ -2509,24 +2514,15 @@
     max-width: 22rem;
     font-size: 0.98rem;
   }
-
-  .heroScrim {
-    background: linear-gradient(
-      90deg,
-      rgba(0, 0, 0, 0.82) 0%,
-      rgba(0, 0, 0, 0.5) 40%,
-      rgba(0, 0, 0, 0.15) 62%,
-      transparent 78%
-    );
-  }
 }
 
 @media (min-width: 1100px) and (max-width: 1600px) {
-  /* ~1440: keep copy a bit below center */
   .heroCopy {
-    top: 80%;
-    transform: translateY(-50%);
-    padding-left: clamp(1.25rem, 4vw, 3rem);
+    left: 50%;
+    top: auto;
+    bottom: 3.25rem;
+    transform: translateX(-50%);
+    padding-left: clamp(1.25rem, 3.5vw, 3rem);
   }
 
   .heroTitle {

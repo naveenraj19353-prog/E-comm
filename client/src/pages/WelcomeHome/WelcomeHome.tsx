@@ -31,7 +31,7 @@ import content from "./welcomeHome.content.json";
 import styles from "./WelcomeHome.module.css";
 
 const ROTATE_MS = 2800;
-const BANNER_MS = 3000;
+const BANNER_MS = 4500;
 
 const ORBIT_ICONS: Record<string, ReactNode> = {
   store: <ShoppingBag size={18} strokeWidth={1.75} />,
@@ -309,9 +309,9 @@ export default function WelcomeHome() {
                   className={styles.heroSlideImg}
                   src={src}
                   alt={`Retail Cosmos storefront banner ${i + 1}`}
-                  loading={i === 0 ? "eager" : "lazy"}
-                  fetchPriority={i === 0 ? "high" : "auto"}
-                  decoding="async"
+                  loading={i < 2 ? "eager" : "lazy"}
+                  fetchPriority={i === 0 ? "high" : i === 1 ? "low" : "auto"}
+                  decoding={i === 0 ? "sync" : "async"}
                   draggable={false}
                 />
               </SwiperSlide>

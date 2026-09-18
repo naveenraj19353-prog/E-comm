@@ -28,22 +28,24 @@ const notificationOptions: Array<{
   {
     key: "paymentSuccess",
     label: "Payment success",
-    description: "Sent after Razorpay payment fulfillment succeeds.",
+    description:
+      "Sent to the customer and the store after Razorpay payment succeeds.",
   },
   {
     key: "shipmentUpdates",
     label: "Shipment updates",
-    description: "Processing, shipped, and Delhivery shipment-created messages.",
+    description:
+      "Processing, shipped, and Delhivery AWB — customer and store.",
   },
   {
     key: "deliveryUpdates",
     label: "Delivery updates",
-    description: "Sent when an order is marked delivered.",
+    description: "Sent to the customer and the store when an order is delivered.",
   },
   {
     key: "cancellation",
     label: "Cancellation",
-    description: "Sent when an order is cancelled.",
+    description: "Sent to the customer and the store when an order is cancelled.",
   },
 ];
 

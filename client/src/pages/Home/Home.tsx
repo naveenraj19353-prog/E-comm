@@ -17,6 +17,7 @@ import {
     buildCanonicalUrl,
     buildOrganizationJsonLd,
     buildWebSiteJsonLd,
+    storeShareImage,
 } from "../../features/seo";
 
 const Home = () => {
@@ -32,9 +33,7 @@ const Home = () => {
     const storeDescription =
         tenant?.footerContent?.description?.trim() ||
         `Shop ${storeName} on Retail Cosmos — products, deals, and more.`;
-    const storeImage =
-        tenant?.logo?.trim() ||
-        "/images/welcome/fashion-hero.png";
+    const storeImage = storeShareImage(tenant);
 
     if (isLoading) {
         return (
@@ -89,10 +88,7 @@ const Home = () => {
                 description={storeDescription}
                 path="/"
                 tenantSlug={tenantSlug}
-                image={
-                    banners[0]?.image ||
-                    storeImage
-                }
+                image={storeShareImage(tenant, banners[0]?.image) || undefined}
                 jsonLdId="store-home"
                 jsonLd={[
                     buildOrganizationJsonLd({
