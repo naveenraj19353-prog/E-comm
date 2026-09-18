@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import styles from "../../styles/Auth.module.css";
 import { useAuth } from "../../features/auth/hooks/useAuth";
 import { SeoHead } from "../../features/seo";
+import BrandMark from "../../components/BrandMark/BrandMark";
 
 export default function Login() {
     const navigate = useNavigate();
@@ -80,7 +81,7 @@ export default function Login() {
         
         <div className={styles.brand}>
           <div className={styles.brandIcon}>
-            SA
+            <BrandMark className={styles.brandIconImg} />
           </div>
           <div>
             <strong>Retail Cosmos</strong>

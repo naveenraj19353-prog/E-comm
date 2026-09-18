@@ -27,6 +27,7 @@ import "swiper/css";
 import "swiper/css/pagination";
 import { SeoHead, buildOrganizationJsonLd } from "../../features/seo";
 import AppLink from "../../components/AppLink";
+import BrandMark from "../../components/BrandMark/BrandMark";
 import content from "./welcomeHome.content.json";
 import styles from "./WelcomeHome.module.css";
 
@@ -50,26 +51,6 @@ const TRUST_ICONS: Record<string, ReactNode> = {
   zap: <Zap size={18} strokeWidth={1.75} />,
   heart: <Heart size={18} strokeWidth={1.75} />,
 };
-
-function BrandMark() {
-  return (
-    <svg
-      className={styles.brandMark}
-      viewBox="0 0 32 32"
-      aria-hidden
-      focusable="false"
-    >
-      <path
-        fill="#95BF47"
-        d="M8.2 7.4c.3-1.2 1.2-1.5 2.2-1.2l14.1 4.1c1 .3 1.4 1.3 1 2.2L19.8 26c-.4 1-1.5 1.4-2.4.9L5.8 19.6c-1-.5-1.2-1.7-.7-2.6L8.2 7.4Z"
-      />
-      <path
-        fill="#5E8E3E"
-        d="M11.2 8.8c.15-.55.7-.8 1.2-.55l10.4 4.7c.5.22.7.8.45 1.25l-4.8 9.1c-.25.5-.85.7-1.3.4L7.9 17.3c-.5-.28-.6-.9-.3-1.35l3.6-7.15Z"
-      />
-    </svg>
-  );
-}
 
 export default function WelcomeHome() {
   const c = content;
@@ -222,7 +203,7 @@ export default function WelcomeHome() {
       <header className={`${styles.nav} ${menuOpen ? styles.navOpen : ""}`}>
         <div className={styles.navInner}>
           <Link to="/" className={styles.brand} onClick={closeMenu}>
-            <BrandMark />
+            <BrandMark className={styles.brandMark} />
             <span>Retail Cosmos</span>
           </Link>
           <nav className={styles.navLinks} aria-label="Primary">

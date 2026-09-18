@@ -18,12 +18,23 @@
 }
 
 .brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
   font-family: "Georgia", "Times New Roman", serif;
   font-size: 1.25rem;
   font-weight: 600;
   letter-spacing: -0.02em;
   color: #0f172a;
   text-decoration: none;
+}
+
+.brandMark {
+  width: 1.85rem;
+  height: 1.85rem;
+  display: block;
+  object-fit: contain;
+  border-radius: 0.35rem;
 }
 
 .topLink {

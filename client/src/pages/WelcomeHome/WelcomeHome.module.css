@@ -236,6 +236,9 @@
 .brandMark {
   width: 1.7rem;
   height: 1.7rem;
+  display: block;
+  object-fit: contain;
+  border-radius: 0.35rem;
 }
 
 .navLinks {
@@ -361,7 +364,7 @@
 .heroBanner {
   position: relative;
   width: 100%;
-  background: #0a0a0a url("/images/welcome/banner/slide-01.jpg") center / contain no-repeat;
+  background: #0a0a0a;
   line-height: 0;
   overflow: hidden;
 }
