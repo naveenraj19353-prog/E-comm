@@ -15,6 +15,7 @@ import {
     SeoHead,
     buildCanonicalUrl,
     buildProductJsonLd,
+    storeShareImage,
 } from "../../features/seo";
 import {
     getFirstProductImage,
@@ -224,7 +225,7 @@ const ProductDetails = () => {
         description={`${ogDescription}${ogDescription.includes(priceLabel) ? "" : ` · ${priceLabel}`}`}
         path={productPath}
         tenantSlug={tenantSlug}
-        image={image || null}
+        image={image || storeShareImage(tenant) || null}
         type="product"
         siteName={storeName}
         jsonLdId={`product-${product._id}`}

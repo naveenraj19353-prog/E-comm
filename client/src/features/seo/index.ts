@@ -6,6 +6,7 @@ export {
   DEFAULT_OG_IMAGE,
 } from "./usePageSeo";
 export type { PageSeoInput } from "./usePageSeo";
+export { storeShareImage } from "./storeShareImage";
 export {
   useJsonLd,
   buildProductJsonLd,

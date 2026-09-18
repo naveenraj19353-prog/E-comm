@@ -399,6 +399,48 @@ class WhatsAppNotificationTests(unittest.TestCase):
         sent_update = logs.update_one.call_args_list[-1].args[1]["$set"]
         self.assertEqual(sent_update["status"], "sent")
 
+    @patch("app.services.whatsapp_notification_service.PeriskopeService")
+    @patch("app.services.whatsapp_notification_service.shipping_locations")
+    @patch("app.services.whatsapp_notification_service.tenants")
+    @patch("app.services.whatsapp_notification_service.users")
+    @patch("app.services.whatsapp_notification_service.messaging_integrations")
+    @patch("app.services.whatsapp_notification_service.orders")
+    @patch("app.services.whatsapp_notification_service.notification_logs")
+    def test_tenant_receives_shipped_alert(
+        self,
+        logs: MagicMock,
+        orders: MagicMock,
+        integrations: MagicMock,
+        users: MagicMock,
+        tenants: MagicMock,
+        shipping: MagicMock,
+        service: MagicMock,
+    ):
+        logs.find_one.return_value = {
+            **self.notification,
+            "eventType": "order.shipped",
+            "audience": "tenant",
+        }
+        orders.find_one.return_value = self.order
+        integrations.find_one.return_value = {
+            "enabled": True,
+            "notifyPhone": "9876543210",
+            "notifications": {"shipmentUpdates": True},
+        }
+        users.find.return_value = []
+        users.find_one.return_value = {"name": "Naveen"}
+        tenants.find_one.return_value = {"name": "Demo Store", "slug": "demo"}
+        shipping.find_one.return_value = None
+        service.return_value.send_text_message.return_value = {
+            "data": {"id": "store-2"}
+        }
+
+        process_notification(str(self.notification_id))
+
+        _chat_id, message = service.return_value.send_text_message.call_args.args
+        self.assertIn("ORDER SHIPPED", message)
+        self.assertIn("Naveen", message)
+
 
 if __name__ == "__main__":
     unittest.main()

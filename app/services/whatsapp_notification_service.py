@@ -157,7 +157,26 @@ def _refund_line(order: dict) -> str:
     return ""
 
 
-def _merchant_message(order: dict, customer: dict, store: dict) -> str:
+def _merchant_header(event_type: str) -> tuple[str, str]:
+    if event_type == "payment.succeeded":
+        return "✅ *PAYMENT RECEIVED*", "Payment was received for this order."
+    if event_type == "order.processing":
+        return "🟢 *ORDER PROCESSING*", "This order is being prepared."
+    if event_type in {"order.shipped", "shipment.created"}:
+        return "🚚 *ORDER SHIPPED*", "This order has been shipped."
+    if event_type == "order.delivered":
+        return "🎉 *ORDER DELIVERED*", "This order has been delivered."
+    if event_type == "order.cancelled":
+        return "❌ *ORDER CANCELLED*", "This order has been cancelled."
+    return "🛒 *NEW ORDER*", "A customer placed an order at"
+
+
+def _merchant_message(
+    event_type: str,
+    order: dict,
+    customer: dict,
+    store: dict,
+) -> str:
     number = _order_number(order)
     amount = float(order.get("totalAmount") or 0)
     item_details = _item_details(order)
@@ -165,14 +184,21 @@ def _merchant_message(order: dict, customer: dict, store: dict) -> str:
     table_line = f"\nTable / room: {table}" if table else ""
     customer_phone = str(customer.get("phone") or "").strip()
     phone_line = f"\nCustomer phone: {customer_phone}" if customer_phone else ""
+    headline, lead = _merchant_header(event_type)
+    if event_type == "order.confirmed":
+        lead_line = f"{lead} *{store['name']}*."
+    else:
+        lead_line = lead
+    extra = _refund_line(order) if event_type == "order.cancelled" else ""
     return (
-        "🛒 *NEW ORDER*\n\n"
-        f"A customer placed an order at *{store['name']}*.\n\n"
+        f"{headline}\n\n"
+        f"{lead_line}\n\n"
         f"Order *#{number}*\n"
         f"Customer: {customer['name']}"
         f"{phone_line}{table_line}\n\n"
-        f"{item_details}\nAmount: ₹{amount:,.2f}\n\n"
-        "Open Admin → Orders to fulfill."
+        f"{item_details}\nAmount: ₹{amount:,.2f}"
+        f"{extra}\n\n"
+        "Open Admin → Orders to continue."
         f"{_branding(store)}"
     )
 
@@ -523,12 +549,12 @@ def schedule_order_notification(
         )
         return False
     background_tasks.add_task(process_notification, str(result.inserted_id))
-    if event_type == "order.confirmed":
-        _schedule_tenant_order_alert(
-            background_tasks,
-            order_id=str(order_id),
-            tenant_id=str(order["tenantId"]).strip().lower(),
-        )
+    _schedule_tenant_order_alert(
+        background_tasks,
+        order_id=str(order_id),
+        tenant_id=str(order["tenantId"]).strip().lower(),
+        event_type=event_type,
+    )
     return True
 
 
@@ -537,15 +563,16 @@ def _schedule_tenant_order_alert(
     *,
     order_id: str,
     tenant_id: str,
+    event_type: str,
 ) -> None:
     now = _now()
     try:
         inserted = notification_logs.insert_one(
             {
-                "idempotencyKey": f"order:{order_id}:order.confirmed:tenant",
+                "idempotencyKey": f"order:{order_id}:{event_type}:tenant",
                 "provider": PROVIDER,
                 "tenantId": tenant_id,
-                "eventType": "order.confirmed",
+                "eventType": event_type,
                 "orderId": str(order_id),
                 "audience": "tenant",
                 "status": "pending",
@@ -558,7 +585,8 @@ def _schedule_tenant_order_alert(
         return
     except PyMongoError:
         logger.exception(
-            "[WHATSAPP] event=order.confirmed order=%s audience=tenant status=log_failed",
+            "[WHATSAPP] event=%s order=%s audience=tenant status=log_failed",
+            event_type,
             order_id,
         )
         return
@@ -616,6 +644,7 @@ def _deliver_tenant_order_alert(
     order: dict,
     tenant_id: str,
     integration: dict | None,
+    event_type: str,
 ) -> None:
     customer = _customer(order)
     try:
@@ -645,7 +674,7 @@ def _deliver_tenant_order_alert(
         return
 
     store = _store(order)
-    message = _merchant_message(order, customer, store)
+    message = _merchant_message(event_type, order, customer, store)
     media_url = _public_image_url(order, store)
     notification_logs.update_one(
         {"_id": log_id},
@@ -689,8 +718,9 @@ def _deliver_tenant_order_alert(
             },
         )
         logger.info(
-            "[WHATSAPP] tenant=%s event=order.confirmed audience=tenant status=sent",
+            "[WHATSAPP] tenant=%s event=%s audience=tenant status=sent",
             tenant_id,
+            event_type,
         )
     except PeriskopeError as error:
         notification_logs.update_one(
@@ -705,8 +735,9 @@ def _deliver_tenant_order_alert(
             },
         )
         logger.warning(
-            "[WHATSAPP] tenant=%s event=order.confirmed audience=tenant status=failed",
+            "[WHATSAPP] tenant=%s event=%s audience=tenant status=failed",
             tenant_id,
+            event_type,
         )
 
 
@@ -753,6 +784,7 @@ def process_notification(notification_id: str) -> None:
             order=order,
             tenant_id=tenant_id,
             integration=integration,
+            event_type=str(notification.get("eventType") or "order.confirmed"),
         )
         return
 

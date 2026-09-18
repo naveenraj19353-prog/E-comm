@@ -6,6 +6,71 @@ const BOT_UA =
 const PRODUCT_PATH =
   /^(?:\/([^/]+))?\/product-details\/([a-f\d]{24})\/?$/i;
 
+const RESERVED_SLUGS = new Set([
+  "www",
+  "admin",
+  "api",
+  "app",
+  "beta",
+  "staging",
+  "mail",
+  "cdn",
+  "create-store",
+  "login",
+  "register",
+  "logout",
+  "shops",
+  "store",
+  "stores",
+  "images",
+  "assets",
+  "src",
+]);
+
+function hostTenant(hostHeader: string): string | null {
+  const host = hostHeader.split(":")[0].toLowerCase();
+  if (host.endsWith(".localhost")) {
+    const sub = host.slice(0, -".localhost".length);
+    return sub && !RESERVED_SLUGS.has(sub) ? sub : null;
+  }
+  return null;
+}
+
+function storefrontSlug(pathname: string, hostHeader: string): string | null {
+  const fromHost = hostTenant(hostHeader);
+  if (fromHost) {
+    return fromHost;
+  }
+  const match = pathname.match(/^\/([a-z0-9-]+)(?:\/.*)?$/i);
+  if (!match) {
+    return null;
+  }
+  const slug = match[1].toLowerCase();
+  if (RESERVED_SLUGS.has(slug) || pathname.includes(".")) {
+    return null;
+  }
+  return slug;
+}
+
+async function writeOg(res: import("http").ServerResponse, ogUrl: string, ua: string) {
+  const upstream = await fetch(ogUrl, {
+    headers: {
+      "user-agent": ua,
+      accept: "text/html",
+    },
+  });
+  if (!upstream.ok) {
+    return false;
+  }
+  const html = await upstream.text();
+  res.statusCode = 200;
+  res.setHeader("Content-Type", "text/html; charset=utf-8");
+  res.setHeader("Cache-Control", "public, max-age=60");
+  res.setHeader("X-Robots-Tag", "noindex");
+  res.end(html);
+  return true;
+}
+
 /**
  * Local stand-in for Netlify Edge: WhatsApp-style bots get API OG HTML.
  */
@@ -17,53 +82,47 @@ export function productOgDevPlugin(apiTarget: string): Plugin {
     configureServer(server) {
       server.middlewares.use(async (req, res, next) => {
         try {
-          const ua = req.headers["user-agent"] || "";
-          if (!BOT_UA.test(String(ua))) {
+          const ua = String(req.headers["user-agent"] || "");
+          if (!BOT_UA.test(ua)) {
             next();
             return;
           }
 
           const pathOnly = (req.url || "").split("?")[0];
-          const match = pathOnly.match(PRODUCT_PATH);
-          if (!match) {
+          const host = String(req.headers.host || "");
+          const productMatch = pathOnly.match(PRODUCT_PATH);
+          if (productMatch) {
+            const pathTenant = productMatch[1] ? productMatch[1].toLowerCase() : null;
+            const productId = productMatch[2];
+            const tenantSlug = hostTenant(host) || pathTenant;
+            if (tenantSlug && productId) {
+              const served = await writeOg(
+                res,
+                `${apiBase}/og/product/${encodeURIComponent(tenantSlug)}/${encodeURIComponent(productId)}`,
+                ua,
+              );
+              if (served) {
+                return;
+              }
+            }
             next();
             return;
           }
 
-          const pathTenant = match[1] ? match[1].toLowerCase() : null;
-          const productId = match[2];
-          const host = String(req.headers.host || "")
-            .split(":")[0]
-            .toLowerCase();
-          const hostTenant = host.endsWith(".localhost")
-            ? host.slice(0, -".localhost".length) || null
-            : null;
-          const tenantSlug = hostTenant || pathTenant;
-
-          if (!tenantSlug || !productId) {
+          const tenantSlug = storefrontSlug(pathOnly, host);
+          if (!tenantSlug) {
             next();
             return;
           }
 
-          const ogUrl = `${apiBase}/og/product/${encodeURIComponent(tenantSlug)}/${encodeURIComponent(productId)}`;
-          const upstream = await fetch(ogUrl, {
-            headers: {
-              "user-agent": String(ua),
-              accept: "text/html",
-            },
-          });
-
-          if (!upstream.ok) {
+          const served = await writeOg(
+            res,
+            `${apiBase}/og/store/${encodeURIComponent(tenantSlug)}`,
+            ua,
+          );
+          if (!served) {
             next();
-            return;
           }
-
-          const html = await upstream.text();
-          res.statusCode = 200;
-          res.setHeader("Content-Type", "text/html; charset=utf-8");
-          res.setHeader("Cache-Control", "public, max-age=60");
-          res.setHeader("X-Robots-Tag", "noindex");
-          res.end(html);
         } catch {
           next();
         }
