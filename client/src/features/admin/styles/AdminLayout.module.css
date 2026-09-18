@@ -33,11 +33,16 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  overflow: hidden;
   border-radius: 0.625rem;
-  background: #2f6b52;
-  color: #ffffff;
-  font-size: 1rem;
-  font-weight: 700;
+  background: #0b1020;
+}
+
+.logoMarkImg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
 }
 .logo h2 {
   margin: 0;

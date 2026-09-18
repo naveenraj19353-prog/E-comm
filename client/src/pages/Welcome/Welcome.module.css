@@ -29,6 +29,9 @@
   width: 1.65rem;
   height: 1.65rem;
   flex-shrink: 0;
+  display: block;
+  object-fit: contain;
+  border-radius: 0.35rem;
 }
 
 .nav {

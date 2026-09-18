@@ -17,6 +17,7 @@ import {
   slugifyTenantValue,
 } from "../../features/admin/utils/tenantForm.utils";
 import styles from "./CreateStore.module.css";
+import BrandMark from "../../components/BrandMark/BrandMark";
 
 export default function CreateStore() {
   const navigate = useNavigate();
@@ -101,6 +102,7 @@ export default function CreateStore() {
       />
       <header className={styles.top}>
         <Link to="/" className={styles.brand}>
+          <BrandMark className={styles.brandMark} />
           Retail Cosmos
         </Link>
         <Link to="/admin/login" className={styles.topLink}>

@@ -15,6 +15,7 @@ import {
   getCustomizationStats,
 } from "../../theme/customizationCatalog";
 import AppLink from "../../components/AppLink";
+import BrandMark from "../../components/BrandMark/BrandMark";
 import { TECH_ICONS } from "./techIcons";
 
 const ease = [0.22, 1, 0.36, 1] as const;
@@ -41,32 +42,6 @@ type DemoTenant = {
   screen: string;
   products: string[];
 };
-
-function BrandMark() {
-  return (
-    <svg
-      className={styles.brandMark}
-      viewBox="0 0 32 32"
-      aria-hidden
-      focusable="false"
-    >
-      <defs>
-        <linearGradient id="rcMark" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="#7c3aed" />
-          <stop offset="100%" stopColor="#2563eb" />
-        </linearGradient>
-      </defs>
-      <path
-        fill="url(#rcMark)"
-        d="M16 2.5 28 9.4v13.2L16 29.5 4 22.6V9.4L16 2.5Z"
-      />
-      <path
-        fill="#fff"
-        d="M16 8.2 22.8 12v8L16 23.8 9.2 20v-8L16 8.2Zm0 3.1L12.4 13.3v5.4L16 20.7l3.6-2v-5.4L16 11.3Z"
-      />
-    </svg>
-  );
-}
 
 export default function Welcome() {
   const c = welcomeContent;
@@ -178,7 +153,7 @@ export default function Welcome() {
       <header className={styles.nav}>
         <div className={styles.navInner}>
           <Link to="/" className={styles.navBrand} onClick={closeMenu}>
-            <BrandMark />
+            <BrandMark className={styles.brandMark} />
             <span>RETAIL COSMOS</span>
           </Link>
           <nav className={styles.navLinks} aria-label="Primary">
@@ -682,7 +657,7 @@ export default function Welcome() {
 
         <div className={styles.footerBottom}>
           <div className={styles.footerBrand}>
-            <BrandMark />
+            <BrandMark className={styles.brandMark} />
             <div>
               <strong>{c.footer.brand}</strong>
               <span>{c.footer.copyright}</span>

@@ -5,6 +5,7 @@ import { useTenantByTenantId } from "../hooks/useTenants";
 import { isMenuBusiness, isRetailBusiness } from "../../tenant/businessMode";
 import { routes, storefrontNavigate } from "../../../routes/routes";
 import styles from "../styles/AdminLayout.module.css";
+import BrandMark from "../../../components/BrandMark/BrandMark";
 
 function tenantIdFromAdminPath(pathname: string) {
     const match = pathname.match(/^\/admin\/tenants\/([^/]+)/);
@@ -88,7 +89,7 @@ export default function AdminLayout() {
       <aside className={styles.sidebar}>
         <div className={styles.logo}>
           <div className={styles.logoMark}>
-            O
+            <BrandMark className={styles.logoMarkImg} />
           </div>
           <div>
             <h2>Retail Cosmos</h2>
