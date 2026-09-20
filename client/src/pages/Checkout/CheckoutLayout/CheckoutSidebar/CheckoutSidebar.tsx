@@ -95,21 +95,19 @@ const CheckoutSidebar = ({
                             {isPreviewLoading ? "..." : formatPrice(subtotal)}
                         </strong>
                     </div>
+                    {(isPreviewLoading || shippingQuoted) && (
                     <div className={styles.priceRow}>
                         <span className={styles.deliveryLabel}>
                             <Truck size={15} />
-                            Delivery
+                            {isCod ? "Cash on delivery" : "Delivery"}
                         </span>
                         {isPreviewLoading ? (
                             <strong>...</strong>
-                        ) : !shippingQuoted ? (
-                            <strong>—</strong>
-                        ) : deliveryCharge === 0 ? (
-                            <strong className={styles.free}>FREE</strong>
                         ) : (
                             <strong>{formatPrice(deliveryCharge)}</strong>
                         )}
                     </div>
+                    )}
                     {discount > 0 && (
                         <div className={styles.priceRow}>
                             <span className={styles.discountLabel}>
@@ -157,13 +155,19 @@ const CheckoutSidebar = ({
             </div>
 
             <div className={styles.trustCard}>
+                {shippingQuoted ? (
                 <div className={styles.trustItem}>
                     <Truck size={18} />
                     <div>
-                        <strong>Free Delivery</strong>
-                        <span>On orders ₹1,000 and above</span>
+                        <strong>{isCod ? "Cash on delivery" : "Delivery"}</strong>
+                        <span>
+                            {deliveryCharge > 0
+                                ? `${formatPrice(deliveryCharge)} as quoted by the partner`
+                                : "Partner quote applied to this order"}
+                        </span>
                     </div>
                 </div>
+                ) : null}
                 <div className={styles.trustItem}>
                     <Check size={18} />
                     <div>

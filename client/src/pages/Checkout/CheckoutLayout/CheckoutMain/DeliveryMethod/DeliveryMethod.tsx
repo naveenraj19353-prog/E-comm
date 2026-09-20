@@ -96,9 +96,7 @@ const DeliveryMethod = ({
                                     <div className={styles.titleRow}>
                                         <strong>{option.name}</strong>
                                         <span className={styles.price}>
-                                            {option.price === 0
-                                                ? "FREE"
-                                                : `₹${option.price.toLocaleString("en-IN")}`}
+                                            {`₹${option.price.toLocaleString("en-IN")}`}
                                         </span>
                                     </div>
                                     <p>{option.description}</p>
@@ -113,7 +111,7 @@ const DeliveryMethod = ({
             ) : (
                 <p className={styles.empty}>
                     {shippingMessage ||
-                        "Select a delivery address to load partner charges."}
+                        "Delivery charges will appear once a partner quote is available."}
                 </p>
             )}
         </section>

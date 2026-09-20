@@ -17,6 +17,10 @@ class PhoneNormalizationTests(unittest.TestCase):
             normalize_phone("9845459636", country="India"),
             "919845459636",
         )
+        self.assertEqual(
+            normalize_phone("08088662317", country="India"),
+            "918088662317",
+        )
 
     def test_does_not_guess_country(self):
         with self.assertRaises(PhoneNormalizationError):
