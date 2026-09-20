@@ -65,10 +65,10 @@ class WhatsAppNotificationTests(unittest.TestCase):
 
         chat_id, message = service.return_value.send_text_message.call_args.args
         self.assertEqual(chat_id, "919845459636@c.us")
-        self.assertIn("ORDER CONFIRMED", message)
-        self.assertIn("Hi Naveen", message)
+        self.assertIn("Naveen, your order is confirmed", message)
         self.assertNotIn("62/1, Demo Street", message)
-        self.assertIn("Demo Store", message)
+        self.assertIn("HEAD BACK TO DEMO STORE", message)
+        self.assertIn("VIEW ORDER", message)
         self.assertIn(f"https://demo.{TENANT_BASE_DOMAIN}/orders", message)
         self.assertNotIn("localhost", message)
         self.assertNotIn("Shop now", message)
@@ -128,10 +128,10 @@ class WhatsAppNotificationTests(unittest.TestCase):
             "courier": {"trackingUrl": "https://track.example/awb"},
         }
         expected = {
-            "payment.succeeded": "PAYMENT SUCCESSFUL",
-            "shipment.created": "ORDER SHIPPED",
-            "order.delivered": "ORDER DELIVERED",
-            "order.cancelled": "ORDER CANCELLED",
+            "payment.succeeded": "payment received",
+            "shipment.created": "on the way",
+            "order.delivered": "it's here",
+            "order.cancelled": "has been cancelled",
         }
         for event_type, title in expected.items():
             with self.subTest(event_type=event_type):
@@ -140,7 +140,7 @@ class WhatsAppNotificationTests(unittest.TestCase):
                     _message_for(event_type, order, customer, store),
                 )
         shipped = _message_for("order.shipped", order, customer, store)
-        self.assertIn("Track Order", shipped)
+        self.assertIn("TRACK ORDER", shipped)
         self.assertIn("https://track.example/awb", shipped)
 
     @patch("app.services.whatsapp_notification_service.PeriskopeService")
@@ -264,6 +264,9 @@ class WhatsAppNotificationTests(unittest.TestCase):
         chat_id, message = service.return_value.send_media_message.call_args.args
         self.assertEqual(chat_id, "919845459636@c.us")
         self.assertIn("Graphic Check Overshirt", message)
+        self.assertIn("Naveen, why wait", message)
+        self.assertIn("CHECKOUT NOW!", message)
+        self.assertIn("HEAD BACK TO DEMO STORE", message)
         self.assertIn(
             f"https://demo.{TENANT_BASE_DOMAIN}/product-details/"
             "6aaa564765a9517ecb24ac1d",

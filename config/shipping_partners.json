@@ -1,0 +1,151 @@
+{
+  "_comment": "Add a partner under partners.<id>. Checkout and pincode-check use the tenant's connected provider if it exists here. Tokens stay encrypted in Mongo, not in this file. Env placeholders: ${NAME} or ${NAME:-default}.",
+  "defaultProvider": "${SHIPPING_PROVIDER:-delhivery}",
+  "partners": {
+    "delhivery": {
+      "displayName": "Delhivery",
+      "enabled": true,
+      "logTag": "DELHIVERY",
+      "env": "${DELHIVERY_ENV:-staging}",
+      "hosts": {
+        "staging": "${DELHIVERY_STAGING_URL:-https://staging-express.delhivery.com}",
+        "live": "${DELHIVERY_LIVE_URL:-https://track.delhivery.com}",
+        "production": "${DELHIVERY_LIVE_URL:-https://track.delhivery.com}"
+      },
+      "baseUrl": "${DELHIVERY_BASE_URL:-}",
+      "auth": {
+        "header": "Authorization",
+        "value": "Token {apiToken}"
+      },
+      "defaults": {
+        "weightGrams": 500,
+        "paymentType": "Pre-paid"
+      },
+      "rateModes": [
+        {
+          "id": "standard",
+          "mode": "Surface",
+          "params": { "md": "S" }
+        },
+        {
+          "id": "express",
+          "mode": "Express",
+          "params": { "md": "E" }
+        }
+      ],
+      "operations": {
+        "pincode": {
+          "method": "GET",
+          "path": "/c/api/pin-codes/json/",
+          "query": { "filter_codes": "{pincode}" },
+          "map": {
+            "serviceable": { "path": "delivery_codes", "nonempty": true },
+            "cod": { "path": "delivery_codes.0.postal_code.cod", "truthy": true },
+            "prepaid": { "path": "delivery_codes.0.postal_code.pre_paid", "truthy": true },
+            "reversePickup": { "path": "delivery_codes.0.postal_code.pickup", "truthy": true },
+            "city": { "path": "delivery_codes.0.postal_code.city" },
+            "state": { "path": "delivery_codes.0.postal_code.state_code" },
+            "estimatedDays": { "path": "delivery_codes.0.postal_code.tat", "days": true }
+          }
+        },
+        "rate": {
+          "method": "GET",
+          "path": "/api/kinko/v1/invoice/charges/.json",
+          "query": {
+            "md": "{md}",
+            "ss": "Delivered",
+            "d_pin": "{destinationPin}",
+            "o_pin": "{originPin}",
+            "cgm": "{weightGrams}",
+            "pt": "{paymentType}"
+          },
+          "map": {
+            "shippingCost": { "path": "0.total_amount", "number": true },
+            "estimatedDays": { "path": "0.tat", "days": true }
+          }
+        },
+        "serviceabilityHeavy": {
+          "method": "GET",
+          "path": "/api/dc/fetch/serviceability/pincode",
+          "query": { "pincode": "{pincode}", "product_type": "Heavy" }
+        },
+        "warehouse": {
+          "method": "POST",
+          "path": "/api/backend/clientwarehouse/create/"
+        },
+        "createShipment": {
+          "method": "POST",
+          "path": "/api/cmu/create.json"
+        },
+        "track": {
+          "method": "GET",
+          "path": "/api/v1/packages/json/"
+        },
+        "label": {
+          "method": "GET",
+          "path": "/api/p/packing_slip",
+          "query": { "wbns": "{awb}" }
+        },
+        "waybills": {
+          "method": "GET",
+          "path": "/waybill/api/bulk/json/",
+          "query": { "count": "{count}" }
+        },
+        "pickup": {
+          "method": "POST",
+          "path": "/fm/request/new/"
+        }
+      }
+    },
+    "example": {
+      "_comment": "Copy this block, rename the key (e.g. shiprocket), set enabled true, fill hosts/auth/operations/map. Save token in admin for that provider id.",
+      "displayName": "Example Partner",
+      "enabled": false,
+      "env": "live",
+      "hosts": {
+        "live": "https://api.example-courier.com"
+      },
+      "auth": {
+        "header": "Authorization",
+        "value": "Bearer {apiToken}"
+      },
+      "defaults": {
+        "weightGrams": 500,
+        "paymentType": "Prepaid"
+      },
+      "rateModes": [
+        {
+          "id": "standard",
+          "mode": "Standard",
+          "params": {}
+        }
+      ],
+      "operations": {
+        "pincode": {
+          "method": "GET",
+          "path": "/serviceability",
+          "query": { "pincode": "{pincode}" },
+          "map": {
+            "serviceable": { "path": "data.serviceable", "truthy": true },
+            "cod": { "path": "data.cod", "truthy": true },
+            "city": { "path": "data.city" },
+            "estimatedDays": { "path": "data.edd", "days": true }
+          }
+        },
+        "rate": {
+          "method": "GET",
+          "path": "/rate",
+          "query": {
+            "origin": "{originPin}",
+            "destination": "{destinationPin}",
+            "weight": "{weightGrams}"
+          },
+          "map": {
+            "shippingCost": { "path": "data.total", "number": true },
+            "estimatedDays": { "path": "data.days", "days": true }
+          }
+        }
+      }
+    }
+  }
+}

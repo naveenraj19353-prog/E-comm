@@ -1,7 +1,24 @@
 import os
+import re
 from dotenv import load_dotenv
 
 load_dotenv()
+
+
+def tenant_subdomain_cors_regex(domain: str) -> str:
+    """One HTTPS label under the storefront domain, e.g. https://vedic-paan.retailcosmos.com."""
+    escaped = re.escape((domain or "retailcosmos.com").strip().lower())
+    return rf"^https://[a-zA-Z0-9-]+\.{escaped}$"
+
+
+def resolve_cors_origin_regex(
+    domain: str, env_regex: str | None = None
+) -> str:
+    """Use a custom regex only when it is fully anchored; otherwise use the tenant pattern."""
+    custom = (env_regex or "").strip()
+    if custom.startswith("^") and custom.endswith("$"):
+        return custom
+    return tenant_subdomain_cors_regex(domain)
 
 
 def _split_csv(value: str | None) -> list[str]:
@@ -52,11 +69,16 @@ TENANT_BASE_DOMAIN = (
 _tenant_subdomain = (_env("TENANT_SUBDOMAIN_ROUTING") or "auto").lower()
 TENANT_SUBDOMAIN_ROUTING = _tenant_subdomain not in {"0", "false", "no", "off", "path"}
 
-_default_cors = "http://localhost:5173,http://127.0.0.1:5173"
-CORS_ORIGINS = _split_csv(os.getenv("CORS_ORIGINS", _default_cors))
-# Allows tenant hosts such as https://test21.retailcosmos.com.
-CORS_ORIGIN_REGEX = _env("CORS_ORIGIN_REGEX") or (
-    r"https://([a-z0-9-]+\.)*retailcosmos\.com"
+_required_cors_origins = [
+    f"https://{ROOT_DOMAIN}",
+    f"https://www.{ROOT_DOMAIN}",
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+]
+_env_cors_origins = _split_csv(os.getenv("CORS_ORIGINS"))
+CORS_ORIGINS = list(dict.fromkeys([*_required_cors_origins, *_env_cors_origins]))
+CORS_ORIGIN_REGEX = resolve_cors_origin_regex(
+    TENANT_BASE_DOMAIN, _env("CORS_ORIGIN_REGEX")
 )
 
 ENVIRONMENT = os.getenv("ENVIRONMENT", "development").lower()

@@ -35,9 +35,10 @@ export interface CheckoutPreviewData {
     shippingOptions?: Array<{
         id: DeliveryMethodType;
         mode: string;
-        estimatedDays: number;
+        estimatedDays?: number | null;
         shippingCost: number;
     }>;
+    shippingQuoted?: boolean;
     shippingMeta?: {
         provider?: string | null;
         serviceable?: boolean | null;
@@ -66,21 +67,6 @@ export interface PlaceCodOrderResponse {
     paymentStatus: string;
     orderStatus: string;
 }
-
-export const FREE_SHIPPING_THRESHOLD = 1000;
-export const STANDARD_SHIPPING_FEE = 100;
-export const EXPRESS_DELIVERY_FEE = 99;
-
-export const getDeliveryCharge = (
-    subtotal: number,
-    deliveryMethod: DeliveryMethodType,
-): number => {
-    const baseShipping =
-        subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : STANDARD_SHIPPING_FEE;
-    return deliveryMethod === "express"
-        ? baseShipping + EXPRESS_DELIVERY_FEE
-        : baseShipping;
-};
 
 export const previewCheckout = async (
     payload: CheckoutPreviewRequest,

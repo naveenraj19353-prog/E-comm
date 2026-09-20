@@ -134,18 +134,35 @@ def _item_details(order: dict) -> str:
     return f"📦 *{name}*\nQty: {quantity}{more}"
 
 
+def _first_name(name: str) -> str:
+    first = str(name or "").strip().split(" ")[0]
+    if not first or first.lower() in {"customer", "user", "guest"}:
+        return "Hey"
+    return first
+
+
+def _cta_block(label: str, url: str) -> str:
+    if not url:
+        return ""
+    return f"\n\n🛒 *{label}*\n{url}"
+
+
 def _cta_line(event_type: str, order: dict, store: dict) -> str:
     courier = order.get("courier") if isinstance(order.get("courier"), dict) else {}
     tracking_url = _safe_customer_url(courier.get("trackingUrl"))
     orders_url = _safe_customer_url(store.get("ordersUrl"))
     if event_type in {"order.shipped", "shipment.created"}:
         url = tracking_url or orders_url
-        return f"\n\n🔗 *Track Order:* {url}" if url else ""
-    return f"\n\n🔗 *View Order:* {orders_url}" if orders_url else ""
+        return _cta_block("TRACK ORDER", url)
+    return _cta_block("VIEW ORDER", orders_url)
 
 
-def _branding(store: dict) -> str:
-    return f"\n\n*{store['name']}*\nPowered by Retail Cosmos"
+def _store_footer(store: dict | str) -> str:
+    if isinstance(store, dict):
+        brand = _clean_text(store.get("name"), "STORE")
+    else:
+        brand = _clean_text(store, "STORE")
+    return f"\n\nHEAD BACK TO {brand.upper()}"
 
 
 def _refund_line(order: dict) -> str:
@@ -199,7 +216,7 @@ def _merchant_message(
         f"{item_details}\nAmount: ₹{amount:,.2f}"
         f"{extra}\n\n"
         "Open Admin → Orders to continue."
-        f"{_branding(store)}"
+        f"{_store_footer(store)}"
     )
 
 
@@ -241,60 +258,54 @@ def _tenant_notify_phones(
 
 
 def _message_for(event_type: str, order: dict, customer: dict, store: dict) -> str:
-    name = customer["name"]
+    name = _first_name(customer["name"])
     number = _order_number(order)
     amount = float(order.get("totalAmount") or 0)
     item_details = _item_details(order)
+    footer = _cta_line(event_type, order, store) + _store_footer(store)
 
     if event_type == "order.confirmed":
         return (
-            "🟢 *ORDER CONFIRMED*\n\n"
-            f"Hi {name} 👋\n\nYour order *#{number}* is being processed.\n\n"
+            f"{name}, your order is confirmed - packing starts now ☀️\n\n"
+            f"Just sit back. Order *#{number}* is being processed.\n\n"
             f"{item_details}\nAmount: ₹{amount:,.2f}\n\n"
-            "We'll notify you when your order is shipped."
-            f"{_cta_line(event_type, order, store)}"
-            f"{_branding(store)}"
+            "We'll ping you when it ships."
+            f"{footer}"
         )
     if event_type == "payment.succeeded":
         return (
-            "✅ *PAYMENT SUCCESSFUL*\n\n"
-            f"Hi {name} 👋\n\nPayment for order *#{number}* was successful.\n\n"
+            f"{name}, payment received - you're all set ☀️\n\n"
+            f"Order *#{number}* is confirmed.\n\n"
             f"{item_details}\nAmount paid: ₹{amount:,.2f}"
-            f"{_cta_line(event_type, order, store)}"
-            f"{_branding(store)}"
+            f"{footer}"
         )
     if event_type in {"order.shipped", "shipment.created"}:
         return (
-            "🚚 *ORDER SHIPPED*\n\n"
-            f"Hi {name} 👋\n\nGood news! Your order *#{number}* has been shipped.\n\n"
-            f"{item_details}\n\nYour package is on its way."
-            f"{_cta_line(event_type, order, store)}"
-            f"{_branding(store)}"
+            f"{name}, good news - your order is on the way ☀️\n\n"
+            f"Order *#{number}* has been shipped.\n\n"
+            f"{item_details}\n\nYour package is moving."
+            f"{footer}"
         )
     if event_type == "order.processing":
         return (
-            "🟢 *ORDER PROCESSING*\n\n"
-            f"Hi {name} 👋\n\nYour order *#{number}* is being prepared.\n\n"
+            f"{name}, we're preparing your order now ☀️\n\n"
+            f"Order *#{number}* is in the works.\n\n"
             f"{item_details}"
-            f"{_cta_line(event_type, order, store)}"
-            f"{_branding(store)}"
+            f"{footer}"
         )
     if event_type == "order.delivered":
         return (
-            "🎉 *ORDER DELIVERED*\n\n"
-            f"Hi {name} 👋\n\nYour order *#{number}* has been delivered.\n\n"
-            f"{item_details}\n\nWe hope you love your purchase!"
-            f"{_cta_line(event_type, order, store)}"
-            f"{_branding(store)}"
+            f"{name}, it's here - hope you love it ☀️\n\n"
+            f"Order *#{number}* has been delivered.\n\n"
+            f"{item_details}"
+            f"{footer}"
         )
     if event_type == "order.cancelled":
         return (
-            "❌ *ORDER CANCELLED*\n\n"
-            f"Hi {name},\n\nYour order *#{number}* has been cancelled.\n\n"
+            f"{name}, order *#{number}* has been cancelled.\n\n"
             f"{item_details}\nAmount: ₹{amount:,.2f}"
             f"{_refund_line(order)}"
-            f"{_cta_line(event_type, order, store)}"
-            f"{_branding(store)}"
+            f"{footer}"
         )
     raise ValueError(f"Unsupported notification event: {event_type}")
 
@@ -334,6 +345,27 @@ def _image_metadata(url: str) -> tuple[str, str]:
     if path.endswith(".gif"):
         return "order-update.gif", "image/gif"
     return "order-update.jpg", "image/jpeg"
+
+
+def _deliver_whatsapp(
+    service: PeriskopeService,
+    phone: str,
+    message: str,
+    *,
+    image_url: str | None = None,
+    filename: str | None = None,
+) -> dict[str, Any]:
+    chat_id = f"{phone}@c.us"
+    if image_url:
+        media_name, mimetype = _image_metadata(image_url)
+        return service.send_media_message(
+            chat_id,
+            message,
+            media_url=image_url,
+            filename=filename or media_name,
+            mimetype=mimetype,
+        )
+    return service.send_text_message(chat_id, message)
 
 
 def _first_product_image(product: dict) -> str | None:
@@ -416,14 +448,15 @@ def share_product_with_customer(
         price = float(product.get("finalPrice") or product.get("price") or 0)
     except (TypeError, ValueError):
         price = 0
-    price_line = f"\nPrice: ₹{price:,.2f}" if price > 0 else ""
+    price_line = f" at ₹{price:,.2f}" if price > 0 else ""
+    first_name = _first_name(_clean_text(user.get("name"), "Customer"))
     message = (
-        f"🛍️ *{product_name}*\n\n"
-        f"Hi {_clean_text(user.get('name'), 'Customer')} 👋\n\n"
-        f"Here is the product you selected from *{store_name}*."
-        f"{price_line}\n\n"
-        f"🔗 *View Product:* {product_url}\n\n"
-        f"*{store_name}*\nPowered by Retail Cosmos"
+        f"{first_name}, why wait? *{product_name}* is ready for you ☀️\n\n"
+        f"Just grab *{product_name}* from *{store_name}* "
+        "and check out when you're ready ❤️\n\n"
+        f"Bag it now{price_line} 🎁"
+        f"{_cta_block('CHECKOUT NOW!', product_url)}"
+        f"{_store_footer(store_name)}"
     )
     image_url = _first_product_image(product)
     now = _now()
@@ -451,17 +484,12 @@ def share_product_with_customer(
         log_id = None
 
     try:
-        if image_url:
-            filename, mimetype = _image_metadata(image_url)
-            response = service.send_media_message(
-                f"{phone}@c.us",
-                message,
-                media_url=image_url,
-                filename=filename.replace("order-update", "product"),
-                mimetype=mimetype,
-            )
-        else:
-            response = service.send_text_message(f"{phone}@c.us", message)
+        response = _deliver_whatsapp(
+            service,
+            phone,
+            message,
+            image_url=image_url,
+        )
     except PeriskopeError as error:
         if log_id:
             notification_logs.update_one(
@@ -693,17 +721,12 @@ def _deliver_tenant_order_alert(
         service = PeriskopeService()
         last_id = None
         for phone in phones:
-            if media_url:
-                filename, mimetype = _image_metadata(media_url)
-                response = service.send_media_message(
-                    f"{phone}@c.us",
-                    message,
-                    media_url=media_url,
-                    filename=filename,
-                    mimetype=mimetype,
-                )
-            else:
-                response = service.send_text_message(f"{phone}@c.us", message)
+            response = _deliver_whatsapp(
+                service,
+                phone,
+                message,
+                image_url=media_url,
+            )
             last_id = _message_id(response)
         notification_logs.update_one(
             {"_id": log_id},
@@ -809,17 +832,12 @@ def process_notification(notification_id: str) -> None:
             },
         )
         service = PeriskopeService()
-        if media_url:
-            filename, mimetype = _image_metadata(media_url)
-            response = service.send_media_message(
-                f"{phone}@c.us",
-                message,
-                media_url=media_url,
-                filename=filename,
-                mimetype=mimetype,
-            )
-        else:
-            response = service.send_text_message(f"{phone}@c.us", message)
+        response = _deliver_whatsapp(
+            service,
+            phone,
+            message,
+            image_url=media_url,
+        )
         notification_logs.update_one(
             {"_id": log_id},
             {

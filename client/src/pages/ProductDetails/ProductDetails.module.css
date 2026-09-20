@@ -584,6 +584,39 @@
 .pincodeError {
   color: var(--danger);
 }
+.shippingRates {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+  margin: 0.75rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+.shippingRates li {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.625rem 0.75rem;
+  border: 0.0625rem solid var(--border);
+  border-radius: 0.5rem;
+  background: var(--surface);
+}
+.shippingRates span {
+  color: var(--text);
+  font-size: 0.75rem;
+  font-weight: 650;
+}
+.shippingRates strong {
+  margin-left: auto;
+  color: var(--text);
+  font-size: 0.8125rem;
+}
+.shippingRates em {
+  color: color-mix(in srgb, var(--text) 55%, var(--surface));
+  font-size: 0.625rem;
+  font-style: normal;
+}
 .deliveryInfo {
   display: grid;
   grid-template-columns:
@@ -1014,6 +1047,9 @@
   .deliveryInfo {
     grid-template-columns: 1fr;
     gap: 1rem;
+  }
+  .shippingRates {
+    grid-template-columns: 1fr;
   }
   .pincodeInputWrapper {
     max-width: 100%;
