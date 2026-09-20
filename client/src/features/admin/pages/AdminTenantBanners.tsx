@@ -169,7 +169,7 @@ export default function AdminTenantBanners() {
         description: form.description.trim() || undefined,
         image: form.imageKey.trim(),
         mobileImage: form.mobileImageKey.trim() || undefined,
-        mediaType: isBannerVideoSrc(form.imageKey) ? "video" : "image",
+        mediaType: isBannerVideoSrc(form.imageKey) ? ("video" as const) : ("image" as const),
         buttonText: form.buttonText.trim() || "Shop Now",
         link: form.link.trim() || undefined,
         priority: Number(form.priority) || 0,

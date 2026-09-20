@@ -89,7 +89,6 @@ export default function ProductImage({
                 src={currentSrc}
                 className={className}
                 muted
-                defaultMuted
                 loop
                 playsInline
                 autoPlay={autoPlay}
