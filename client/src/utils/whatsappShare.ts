@@ -8,18 +8,23 @@ export const buildProductWhatsAppText = (input: {
   url: string;
   storeName?: string;
 }): string => {
-  const lines = [`Check out ${input.name}`];
-  if (input.storeName?.trim()) {
-    lines[0] += ` on ${input.storeName.trim()}`;
-  }
-  lines[0] += "!";
-
-  if (typeof input.price === "number" && Number.isFinite(input.price)) {
-    lines.push(`₹${input.price.toLocaleString("en-IN")}`);
-  }
-
-  lines.push(input.url);
-  return lines.join("\n");
+  const store = input.storeName?.trim() || "the store";
+  const price =
+    typeof input.price === "number" && Number.isFinite(input.price)
+      ? ` at ₹${input.price.toLocaleString("en-IN")}`
+      : "";
+  return [
+    `Why wait? *${input.name}* is ready for you ☀️`,
+    "",
+    `Just grab *${input.name}* from *${store}* and check out when you're ready ❤️`,
+    "",
+    `Bag it now${price} 🎁`,
+    "",
+    `HEAD BACK TO ${store.toUpperCase()}`,
+    "",
+    "CHECKOUT NOW!",
+    input.url,
+  ].join("\n");
 };
 
 export const openWhatsAppShare = (text: string) => {

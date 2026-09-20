@@ -361,10 +361,10 @@ const Checkout = () => {
                                 onAddressSelect={setSelectedAddress}
                             />
                             <DeliveryMethod
-                                subtotal={summary.subtotal}
                                 selectedMethod={deliveryMethod}
                                 shippingOptions={checkoutPreview?.shippingOptions}
                                 shippingProvider={checkoutPreview?.shippingProvider}
+                                shippingMessage={checkoutPreview?.shippingMeta?.message}
                                 onDeliveryChange={handleDeliveryChange}
                             />
                             <CouponSection
@@ -395,6 +395,7 @@ const Checkout = () => {
                             }))}
                             subtotal={summary.subtotal}
                             deliveryCharge={summary.deliveryCharge}
+                            shippingQuoted={Boolean(checkoutPreview?.shippingQuoted)}
                             discount={summary.discount}
                             appliedCoupon={checkoutPreview?.couponCode || appliedCoupon}
                             total={summary.total}

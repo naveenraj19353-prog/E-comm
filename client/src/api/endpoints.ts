@@ -143,6 +143,7 @@ export const API_ENDPOINTS = {
         SETTINGS: "/shipping/delhivery/settings",
         TEST: "/shipping/delhivery/test",
         SERVICEABILITY: "/shipping/delhivery/serviceability",
+        PINCODE_CHECK: "/shipping/delhivery/pincode-check",
         SERVICEABILITY_HEAVY: "/shipping/delhivery/serviceability/heavy",
         WAREHOUSE: "/shipping/delhivery/warehouse",
         WAYBILLS: "/shipping/delhivery/waybills",

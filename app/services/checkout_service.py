@@ -175,20 +175,6 @@ def resolve_shipping_address(
     return serialize_address(address)
 
 
-FREE_SHIPPING_THRESHOLD = 1000.0
-STANDARD_SHIPPING_FEE = 100.0
-EXPRESS_DELIVERY_FEE = 99.0
-
-
-def calculate_shipping(subtotal: float, delivery_method: str = "standard") -> float:
-    base_shipping = (
-        0.0 if subtotal >= FREE_SHIPPING_THRESHOLD else STANDARD_SHIPPING_FEE
-    )
-    if delivery_method == "express":
-        return round(base_shipping + EXPRESS_DELIVERY_FEE, 2)
-    return round(base_shipping, 2)
-
-
 def _load_cart_items(tenant_id: str, user_id: str) -> list:
     cart_items = list(carts.find(cart_owner_query(tenant_id, user_id)))
     if not cart_items:
@@ -349,7 +335,7 @@ def _checkout_totals(
     if shipping_override is not None:
         shipping = round(float(shipping_override), 2)
     else:
-        shipping = calculate_shipping(subtotal, normalized_delivery)
+        shipping = 0.0
     net_subtotal = max(subtotal - discount, 0)
     grand_total = round(net_subtotal + shipping, 2)
     if grand_total <= 0:
@@ -360,33 +346,43 @@ def _checkout_totals(
     return normalized_delivery, shipping, grand_total
 
 
-def _delhivery_shipping(
+def _partner_shipping(
     tenant_id: str,
     address: dict | None,
     delivery_method: str,
+    *,
+    require_quote: bool = False,
 ) -> tuple[float | None, list[dict], dict]:
-    """Return (selected_fee, options, meta). fee None => use legacy calc."""
-    from app.services.delhivery_service import DelhiveryError, DelhiveryService
-    from app.services.shipping_context import get_active_delhivery_context
+    """Return (selected_fee, options, meta). fee None => no partner quote yet."""
+    from app.services.delhivery_service import DelhiveryError
+    from app.services.shipping_adapter import ConfigPartnerService
+    from app.services.shipping_context import get_active_shipping_context
+    from app.services.shipping_partner_config import partner_display_name
 
-    ctx = get_active_delhivery_context(tenant_id)
+    ctx = get_active_shipping_context(tenant_id)
     if not ctx:
-        return None, [], {"provider": None, "serviceable": None}
+        return None, [], {
+            "provider": None,
+            "serviceable": None,
+            "message": "Delivery partner is not connected. Shipping is not quoted.",
+        }
+
+    provider = ctx["provider"]
+    display = partner_display_name(provider)
 
     dest_pin = "".join(
         ch for ch in str((address or {}).get("postalCode") or "") if ch.isdigit()
     )
     if len(dest_pin) != 6:
-        # Address not ready yet — keep legacy fee until pin is known.
         return None, [], {
-            "provider": "delhivery",
+            "provider": provider,
             "serviceable": None,
-            "message": "Select a delivery address to calculate Delhivery rates.",
+            "message": "Select a delivery address to calculate partner rates.",
         }
 
-    service = DelhiveryService()
+    service = ConfigPartnerService(provider)
     try:
-        serviceability = service.check_small_parcel_serviceability(tenant_id, dest_pin)
+        serviceability = service.check_serviceability(tenant_id, dest_pin)
     except DelhiveryError as error:
         raise HTTPException(
             status_code=400,
@@ -396,7 +392,7 @@ def _delhivery_shipping(
     if not serviceability.get("serviceable"):
         raise HTTPException(
             status_code=400,
-            detail="Delhivery does not deliver to this pincode.",
+            detail=f"{display} does not deliver to this pincode.",
         )
 
     try:
@@ -409,11 +405,15 @@ def _delhivery_shipping(
         options = []
 
     if not options:
-        # Connected but rates unavailable — fall back to legacy fees.
+        if require_quote:
+            raise HTTPException(
+                status_code=400,
+                detail="Unable to calculate delivery charges from the partner. Try again.",
+            )
         return None, [], {
-            "provider": "delhivery",
+            "provider": provider,
             "serviceable": True,
-            "message": "Using standard shipping fees (rate quote unavailable).",
+            "message": "Partner rates are unavailable right now.",
         }
 
     normalized = (
@@ -424,7 +424,7 @@ def _delhivery_shipping(
         float(selected["shippingCost"]),
         options,
         {
-            "provider": "delhivery",
+            "provider": provider,
             "serviceable": True,
             "originPin": ctx["originPin"],
             "destinationPin": dest_pin,
@@ -454,10 +454,11 @@ def calculate_checkout(
         address_id=address_id,
         required=require_address,
     )
-    shipping_override, shipping_options, shipping_meta = _delhivery_shipping(
+    shipping_override, shipping_options, shipping_meta = _partner_shipping(
         tenant_id,
         address,
         delivery_method,
+        require_quote=require_address,
     )
     normalized_delivery, shipping, grand_total = _checkout_totals(
         subtotal,
@@ -476,5 +477,6 @@ def calculate_checkout(
         "address": address,
         "shippingProvider": shipping_meta.get("provider"),
         "shippingOptions": shipping_options,
+        "shippingQuoted": shipping_override is not None,
         "shippingMeta": shipping_meta,
     }

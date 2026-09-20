@@ -14,6 +14,12 @@ import certifi
 
 from app.config import DELHIVERY_BASE_URL, ENVIRONMENT
 from app.database.mongo import shipping_integrations
+from app.services.shipping_partner_config import (
+    ShippingConfigError,
+    get_operation,
+    get_partner_spec,
+    partner_base_url,
+)
 from app.utils.secret_crypto import decrypt_secret
 
 logger = logging.getLogger(__name__)
@@ -66,24 +72,32 @@ def _ssl_contexts() -> list[ssl.SSLContext]:
     return ordered or [ssl._create_unverified_context()]
 
 
-def get_delhivery_headers(tenant_id: str) -> dict[str, str]:
-    token = get_tenant_api_token(tenant_id)
+def get_delhivery_headers(tenant_id: str, provider: str = PROVIDER) -> dict[str, str]:
+    token = get_tenant_api_token(tenant_id, provider)
+    try:
+        spec = get_partner_spec(provider)
+        auth = spec.get("auth") if isinstance(spec.get("auth"), dict) else {}
+        header = str(auth.get("header") or "Authorization")
+        value = str(auth.get("value") or "Token {apiToken}").replace("{apiToken}", token)
+    except ShippingConfigError:
+        header = "Authorization"
+        value = f"Token {token}"
     return {
         "Content-Type": "application/json",
         "Accept": "application/json",
-        "Authorization": f"Token {token}",
+        header: value,
     }
 
 
-def get_tenant_api_token(tenant_id: str) -> str:
+def get_tenant_api_token(tenant_id: str, provider: str = PROVIDER) -> str:
     scoped = str(tenant_id or "").strip().lower()
     doc = shipping_integrations.find_one(
-        {"tenantId": scoped, "provider": PROVIDER},
+        {"tenantId": scoped, "provider": str(provider or PROVIDER).strip().lower()},
         {"apiTokenEncrypted": 1, "enabled": 1},
     )
     if not doc or not doc.get("apiTokenEncrypted"):
         raise DelhiveryError(
-            "Delhivery is not connected for this store.",
+            "Delivery partner is not connected for this store.",
             code="NOT_CONNECTED",
             status_code=400,
         )
@@ -91,9 +105,24 @@ def get_tenant_api_token(tenant_id: str) -> str:
 
 
 class DelhiveryService:
-    def __init__(self, base_url: str | None = None, timeout: int = 45):
-        self.base_url = (base_url or DELHIVERY_BASE_URL).rstrip("/")
+    def __init__(
+        self,
+        base_url: str | None = None,
+        timeout: int = 45,
+        provider: str = PROVIDER,
+    ):
+        self.provider = str(provider or PROVIDER).strip().lower()
         self.timeout = timeout
+        try:
+            self.base_url = (base_url or partner_base_url(self.provider)).rstrip("/")
+        except ShippingConfigError:
+            self.base_url = (base_url or DELHIVERY_BASE_URL).rstrip("/")
+
+    def _operation_path(self, name: str, fallback: str) -> str:
+        try:
+            return str(get_operation(self.provider, name)["path"])
+        except ShippingConfigError:
+            return fallback
 
     def _url(self, path: str, params: dict | None = None) -> str:
         base = f"{self.base_url}/{path.lstrip('/')}"
@@ -112,7 +141,7 @@ class DelhiveryService:
         form_body: dict | None = None,
         retries: int = 2,
     ) -> Any:
-        headers = get_delhivery_headers(tenant_id)
+        headers = get_delhivery_headers(tenant_id, self.provider)
         url = self._url(path, params)
         data = None
         if form_body is not None:
@@ -235,45 +264,6 @@ class DelhiveryService:
             status_code=502,
         ) from last_error
 
-    def calculate_shipping_cost(
-        self,
-        tenant_id: str,
-        *,
-        origin_pin: str,
-        destination_pin: str,
-        weight_grams: int,
-        payment_mode: str = "Prepaid",
-        mode: str = "S",
-    ) -> dict:
-        o_pin = _validate_pincode(origin_pin)
-        d_pin = _validate_pincode(destination_pin)
-        weight = max(int(weight_grams or DEFAULT_WEIGHT_GRAMS), 50)
-        md = "E" if str(mode).upper() in {"E", "EXPRESS"} else "S"
-        pt = "COD" if str(payment_mode).upper() == "COD" else "Pre-paid"
-        raw = self._request(
-            "GET",
-            "/api/kinko/v1/invoice/charges/.json",
-            tenant_id=tenant_id,
-            params={
-                "md": md,
-                "ss": "Delivered",
-                "d_pin": d_pin,
-                "o_pin": o_pin,
-                "cgm": weight,
-                "pt": pt,
-            },
-        )
-        charge = _extract_charge_amount(raw)
-        return {
-            "mode": "Express" if md == "E" else "Surface",
-            "modeCode": md,
-            "shippingCost": charge,
-            "originPin": o_pin,
-            "destinationPin": d_pin,
-            "weightGrams": weight,
-            "paymentMode": "COD" if pt == "COD" else "Prepaid",
-        }
-
     def get_checkout_rate_options(
         self,
         tenant_id: str,
@@ -283,35 +273,15 @@ class DelhiveryService:
         weight_grams: int = DEFAULT_WEIGHT_GRAMS,
         payment_mode: str = "Prepaid",
     ) -> list[dict]:
-        options: list[dict] = []
-        for mode_code, delivery_id, label, days in (
-            ("S", "standard", "Surface", 4),
-            ("E", "express", "Express", 2),
-        ):
-            try:
-                quote = self.calculate_shipping_cost(
-                    tenant_id,
-                    origin_pin=origin_pin,
-                    destination_pin=destination_pin,
-                    weight_grams=weight_grams,
-                    payment_mode=payment_mode,
-                    mode=mode_code,
-                )
-                options.append(
-                    {
-                        "id": delivery_id,
-                        "mode": label,
-                        "estimatedDays": days,
-                        "shippingCost": quote["shippingCost"],
-                    }
-                )
-            except DelhiveryError:
-                logger.warning(
-                    "[DELHIVERY] tenant=%s operation=rate status=failed mode=%s",
-                    tenant_id,
-                    mode_code,
-                )
-        return options
+        from app.services.shipping_adapter import ConfigPartnerService
+
+        return ConfigPartnerService(self.provider).get_checkout_rate_options(
+            tenant_id,
+            origin_pin=origin_pin,
+            destination_pin=destination_pin,
+            weight_grams=weight_grams,
+            payment_mode=payment_mode,
+        )
 
     def create_forward_shipment(
         self,
@@ -369,7 +339,7 @@ class DelhiveryService:
         }
         raw = self._request(
             "POST",
-            "/api/cmu/create.json",
+            self._operation_path("createShipment", "/api/cmu/create.json"),
             tenant_id=tenant_id,
             form_body={
                 "format": "json",
@@ -412,7 +382,7 @@ class DelhiveryService:
             )
         raw = self._request(
             "GET",
-            "/api/v1/packages/json/",
+            self._operation_path("track", "/api/v1/packages/json/"),
             tenant_id=tenant_id,
             params={"waybill": wbn},
         )
@@ -448,7 +418,7 @@ class DelhiveryService:
 
     def packing_slip_url(self, waybill: str) -> str:
         wbn = str(waybill or "").strip()
-        return f"{self.base_url}/api/p/packing_slip?wbns={parse.quote(wbn)}"
+        return f"{self.base_url}{self._operation_path('label', '/api/p/packing_slip')}?wbns={parse.quote(wbn)}"
 
     def create_pickup_request(
         self,
@@ -475,7 +445,7 @@ class DelhiveryService:
         }
         raw = self._request(
             "POST",
-            "/fm/request/new/",
+            self._operation_path("pickup", "/fm/request/new/"),
             tenant_id=tenant_id,
             json_body=body,
         )
@@ -514,61 +484,19 @@ class DelhiveryService:
         return result
 
     def check_small_parcel_serviceability(self, tenant_id: str, pincode: str) -> dict:
-        pin = _validate_pincode(pincode)
-        raw = self._request(
-            "GET",
-            "/c/api/pin-codes/json/",
-            tenant_id=tenant_id,
-            params={"filter_codes": pin},
-        )
-        delivery_codes = raw.get("delivery_codes") if isinstance(raw, dict) else None
-        if not isinstance(delivery_codes, list) or not delivery_codes:
-            return {
-                "success": True,
-                "pincode": pin,
-                "serviceable": False,
-                "cod": False,
-                "prepaid": False,
-                "reversePickup": False,
-            }
+        from app.services.shipping_adapter import ConfigPartnerService
 
-        first = delivery_codes[0] if isinstance(delivery_codes[0], dict) else {}
-        postal = first.get("postal_code") if isinstance(first.get("postal_code"), dict) else first
-        if not isinstance(postal, dict):
-            postal = {}
-
-        cod = _truthy(
-            postal.get("cod")
-            or postal.get("is_cod")
-            or postal.get("is_cod_available")
+        return ConfigPartnerService(self.provider).check_serviceability(
+            tenant_id, pincode
         )
-        prepaid = _truthy(
-            postal.get("pre_paid")
-            or postal.get("prepaid")
-            or postal.get("is_prepaid_available")
-            or True
-        )
-        reverse_pickup = _truthy(
-            postal.get("pickup")
-            or postal.get("reverse_pickup")
-            or postal.get("is_reverse_pickup_available")
-        )
-        return {
-            "success": True,
-            "pincode": pin,
-            "serviceable": True,
-            "cod": cod,
-            "prepaid": prepaid,
-            "reversePickup": reverse_pickup,
-            "city": postal.get("city") or postal.get("district"),
-            "state": postal.get("state_code") or postal.get("state"),
-        }
 
     def check_heavy_serviceability(self, tenant_id: str, pincode: str) -> dict:
         pin = _validate_pincode(pincode)
         raw = self._request(
             "GET",
-            "/api/dc/fetch/serviceability/pincode",
+            self._operation_path(
+                "serviceabilityHeavy", "/api/dc/fetch/serviceability/pincode"
+            ),
             tenant_id=tenant_id,
             params={"pincode": pin, "product_type": "Heavy"},
         )
@@ -605,7 +533,7 @@ class DelhiveryService:
         }
         raw = self._request(
             "POST",
-            "/api/backend/clientwarehouse/create/",
+            self._operation_path("warehouse", "/api/backend/clientwarehouse/create/"),
             tenant_id=tenant_id,
             json_body=body,
         )
@@ -637,7 +565,7 @@ class DelhiveryService:
         safe_count = max(1, min(int(count or 1), 50))
         raw = self._request(
             "GET",
-            "/waybill/api/bulk/json/",
+            self._operation_path("waybills", "/waybill/api/bulk/json/"),
             tenant_id=tenant_id,
             params={"count": f"{safe_count:04d}"},
         )
@@ -667,28 +595,6 @@ def _validate_pincode(pincode: str) -> str:
     return pin
 
 
-def _extract_charge_amount(raw: Any) -> float:
-    if isinstance(raw, list) and raw:
-        raw = raw[0]
-    if not isinstance(raw, dict):
-        raise DelhiveryError(
-            "Unable to read shipping charges from Delhivery.",
-            code="RATE_PARSE_FAILED",
-            status_code=502,
-        )
-    for key in ("total_amount", "total_amt", "gross_amount", "amount", "charge_DL"):
-        if raw.get(key) is not None:
-            try:
-                return round(float(raw[key]), 2)
-            except (TypeError, ValueError):
-                continue
-    raise DelhiveryError(
-        "Unable to read shipping charges from Delhivery.",
-        code="RATE_PARSE_FAILED",
-        status_code=502,
-    )
-
-
 def _first_package(raw: Any) -> dict:
     packages = []
     if isinstance(raw, dict):
@@ -697,15 +603,6 @@ def _first_package(raw: Any) -> dict:
             packages = raw["data"].get("packages") or []
     package = packages[0] if isinstance(packages, list) and packages else {}
     return package if isinstance(package, dict) else {}
-
-
-def _truthy(value: Any) -> bool:
-    if isinstance(value, bool):
-        return value
-    if value is None:
-        return False
-    text = str(value).strip().lower()
-    return text in {"1", "true", "yes", "y", "ok"}
 
 
 def _safe_error_detail_text(body: str, status_code: int) -> str:

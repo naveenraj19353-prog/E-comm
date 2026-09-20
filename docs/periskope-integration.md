@@ -107,11 +107,10 @@ Supported Retail Cosmos events:
 
 When an order or tenant has a publicly reachable image, notifications use
 Periskope's documented image-media payload with a formatted WhatsApp caption and
-production tenant link. Existing-order messages use `View Order` or `Track Order`,
-never `Shop Now`. Localhost and unsafe URLs are omitted. If no public product image
-is available, the tenant logo is used when possible; otherwise sending falls back
-to formatted text. Periskope's public send API does not document template CTA
-buttons, so the action URL is included as a clickable caption link instead.
+production tenant link. Captions use a personalized hook, `HEAD BACK TO {STORE}`,
+and a bold CTA plus the public URL (`VIEW ORDER`, `TRACK ORDER`, or `CHECKOUT NOW!`).
+Periskope’s public send API does not document native template CTA buttons, and the
+storefront cannot attach those buttons from the browser.
 
 Payment failure is not sent because the current backend does not persist a
 verified Razorpay failure event. Out-for-delivery is not sent because it is not

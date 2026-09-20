@@ -1,4 +1,4 @@
-"""Tenant-scoped Delhivery shipping routes (Phase 1: connect, test, warehouse)."""
+"""Tenant-scoped Delhivery shipping routes."""
 
 from __future__ import annotations
 
@@ -9,7 +9,13 @@ from typing import Annotated
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
 from pymongo.errors import PyMongoError
 
-from app.database.mongo import orders, shipping_integrations, shipping_locations, shipments
+from app.database.mongo import (
+    orders,
+    shipping_integrations,
+    shipping_locations,
+    shipments,
+    tenants,
+)
 from app.models.delhivery import (
     CreateDelhiveryShipmentRequest,
     DelhiveryConnectRequest,
@@ -18,12 +24,18 @@ from app.models.delhivery import (
     DelhiveryTestRequest,
     DelhiveryWarehouseRequest,
 )
+from app.services.checkout_service import tenant_id_query
 from app.services.delhivery_service import (
     PROVIDER,
     DelhiveryError,
     DelhiveryService,
 )
-from app.services.shipping_context import get_active_delhivery_context
+from app.services.shipping_adapter import ConfigPartnerService
+from app.services.shipping_context import (
+    get_active_delhivery_context,
+    get_active_shipping_context,
+)
+from app.services.shipping_partner_config import partner_display_name
 from app.services.whatsapp_notification_service import send_shipment_created
 from app.utils.auth_dependencies import admin_tenant_id, require_admin
 from app.utils.secret_crypto import encrypt_secret, mask_secret, decrypt_secret
@@ -203,6 +215,128 @@ def test_delhivery_connection(
         "message": "Connection successful.",
         "data": result,
     }
+
+
+@router.get("/pincode-check")
+def public_pincode_check(
+    pincode: Annotated[str, Query(min_length=6, max_length=6, pattern=r"^\d{6}$")],
+    tenant_id: Annotated[str, Query(alias="tenantId")],
+):
+    scoped = str(tenant_id or "").strip().lower()
+    tenant = tenants.find_one(
+        {
+            "isActive": True,
+            "$or": [
+                {"tenantId": tenant_id_query(scoped)},
+                {"slug": tenant_id_query(scoped)},
+            ],
+        }
+    )
+    if not tenant:
+        raise HTTPException(status_code=404, detail="Store not found.")
+    store_id = str(tenant.get("tenantId") or scoped).strip().lower()
+    ctx = get_active_shipping_context(store_id)
+    if not ctx:
+        return {
+            "success": True,
+            "connected": False,
+            "serviceable": False,
+            "cod": False,
+            "pincode": pincode,
+            "shippingOptions": [],
+            "message": "Delivery partner is not connected for this store.",
+        }
+    provider = ctx["provider"]
+    display = partner_display_name(provider)
+    service = ConfigPartnerService(provider)
+    try:
+        data = service.check_serviceability(store_id, pincode)
+    except DelhiveryError as error:
+        return {
+            "success": True,
+            "connected": True,
+            "serviceable": False,
+            "cod": False,
+            "pincode": pincode,
+            "code": error.code,
+            "shippingOptions": [],
+            "message": str(error)
+            or "Unable to confirm delivery for this pincode right now.",
+        }
+    if not data.get("serviceable"):
+        return {
+            "success": True,
+            "connected": True,
+            "serviceable": False,
+            "cod": False,
+            "pincode": pincode,
+            "shippingOptions": [],
+            "message": f"{display} does not deliver to this pincode.",
+        }
+    options = []
+    try:
+        options = service.get_checkout_rate_options(
+            store_id,
+            origin_pin=ctx["originPin"],
+            destination_pin=pincode,
+        )
+    except DelhiveryError:
+        options = []
+    if data.get("estimatedDays"):
+        for option in options:
+            if not option.get("estimatedDays"):
+                option["estimatedDays"] = data["estimatedDays"]
+    city = str(data.get("city") or "").strip()
+    location = f" to {city}" if city else ""
+    cod = bool(data.get("cod"))
+    if options:
+        quotes = "; ".join(
+            f"{opt['mode']} ₹{opt['shippingCost']:.0f}"
+            + (
+                f" ({opt['estimatedDays']} days)"
+                if opt.get("estimatedDays")
+                else ""
+            )
+            for opt in options
+        )
+        eta = next(
+            (opt.get("estimatedDays") for opt in options if opt.get("estimatedDays")),
+            data.get("estimatedDays"),
+        )
+        eta_line = f" Estimated delivery in {eta} business days." if eta else ""
+        cod_line = (
+            " Cash on delivery is available."
+            if cod
+            else " Cash on delivery is not available for this pincode."
+        )
+        message = (
+            f"Delivery available{location} via {display}. {quotes}.{eta_line}{cod_line}"
+        )
+    else:
+        eta = data.get("estimatedDays")
+        eta_line = (
+            f" Estimated delivery in {eta} business days."
+            if eta
+            else " Delivery time will be confirmed at checkout."
+        )
+        message = (
+            f"Delivery available{location} via {display}.{eta_line} "
+            "Shipping charges will be calculated at checkout."
+        )
+    payload = {
+        "success": True,
+        "connected": True,
+        "serviceable": True,
+        "cod": cod,
+        "prepaid": bool(data.get("prepaid")),
+        "pincode": pincode,
+        "city": city or None,
+        "estimatedDays": data.get("estimatedDays")
+        or (options[0].get("estimatedDays") if options else None),
+        "shippingOptions": options,
+        "message": message,
+    }
+    return payload
 
 
 @router.get("/serviceability")

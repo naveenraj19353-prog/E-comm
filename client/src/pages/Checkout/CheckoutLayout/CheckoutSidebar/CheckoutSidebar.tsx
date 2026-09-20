@@ -14,6 +14,7 @@ interface CheckoutSidebarProps {
     items?: CheckoutItem[];
     subtotal?: number;
     deliveryCharge?: number;
+    shippingQuoted?: boolean;
     discount?: number;
     appliedCoupon?: string | null;
     total?: number;
@@ -27,6 +28,7 @@ const CheckoutSidebar = ({
     items = [],
     subtotal = 0,
     deliveryCharge = 0,
+    shippingQuoted = false,
     discount = 0,
     appliedCoupon = null,
     total = 0,
@@ -100,6 +102,8 @@ const CheckoutSidebar = ({
                         </span>
                         {isPreviewLoading ? (
                             <strong>...</strong>
+                        ) : !shippingQuoted ? (
+                            <strong>—</strong>
                         ) : deliveryCharge === 0 ? (
                             <strong className={styles.free}>FREE</strong>
                         ) : (
@@ -164,7 +168,7 @@ const CheckoutSidebar = ({
                     <Check size={18} />
                     <div>
                         <strong>Easy Returns</strong>
-                        <span>7 days return available</span>
+                        <span>2 days return available</span>
                     </div>
                 </div>
                 <div className={styles.trustItem}>
