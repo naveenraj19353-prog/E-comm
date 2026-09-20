@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
@@ -15,6 +15,7 @@ import {
 import type { OrderStatus } from "../../orders/types/order.types";
 import {
     createDelhiveryShipment,
+    downloadDelhiveryPackingSlip,
     requestDelhiveryPickup,
     trackDelhiveryAwb,
 } from "../api/delhivery.api";
@@ -47,13 +48,19 @@ const nextActions: Partial<
 };
 
 function errMsg(err: unknown, fallback: string) {
+    if (err instanceof Error && err.message && !axios.isAxiosError(err)) {
+        return err.message;
+    }
     if (!axios.isAxiosError(err)) return fallback;
+    if (err.response?.data instanceof Blob) {
+        return fallback;
+    }
     const detail = err.response?.data?.detail;
     if (typeof detail === "string") return detail;
     if (detail && typeof detail === "object" && "message" in detail) {
         return String((detail as { message?: string }).message || fallback);
     }
-    return fallback;
+    return err.message || fallback;
 }
 
 export default function AdminOrderDetail() {
@@ -65,6 +72,11 @@ export default function AdminOrderDetail() {
     const [isPickup, setIsPickup] = useState(false);
     const [shipMessage, setShipMessage] = useState("");
     const [trackInfo, setTrackInfo] = useState("");
+    const [trackHistory, setTrackHistory] = useState<
+        Array<{ status?: string; location?: string; at?: string }>
+    >([]);
+    const [isTracking, setIsTracking] = useState(false);
+    const [isLabel, setIsLabel] = useState(false);
     const { data: order, isLoading, isError } = useAdminOrderDetail(orderId, tenantId);
     const { updateOrderStatus } = useAdminOrders(tenantId);
 
@@ -115,15 +127,44 @@ export default function AdminOrderDetail() {
     const handleTrack = async () => {
         const awb = order?.courier?.waybill;
         if (!awb) return;
+        setIsTracking(true);
         try {
             const data = await trackDelhiveryAwb(tenantId, awb);
             setTrackInfo(
-                [data.status || "Status unknown", data.location].filter(Boolean).join(" · "),
+                [data.status || "In transit", data.location].filter(Boolean).join(" · "),
             );
+            setTrackHistory(data.history || []);
         } catch (err) {
             setTrackInfo(errMsg(err, "Tracking failed."));
+        } finally {
+            setIsTracking(false);
         }
     };
+
+    const handlePackingSlip = async () => {
+        const awb = order?.courier?.waybill;
+        if (!awb) return;
+        setIsLabel(true);
+        setShipMessage("");
+        try {
+            const blob = await downloadDelhiveryPackingSlip(tenantId, awb);
+            const url = URL.createObjectURL(blob);
+            window.open(url, "_blank", "noopener,noreferrer");
+        } catch (err) {
+            setShipMessage(errMsg(err, "Could not open packing slip."));
+        } finally {
+            setIsLabel(false);
+        }
+    };
+
+    useEffect(() => {
+        if (!order?.courier?.waybill) {
+            setTrackHistory([]);
+            return;
+        }
+        void handleTrack();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [order?.courier?.waybill, tenantId]);
 
     const handlePickup = async () => {
         setIsPickup(true);
@@ -259,8 +300,9 @@ export default function AdminOrderDetail() {
                                 type="button"
                                 className={styles.actionButton}
                                 onClick={handleTrack}
+                                disabled={isTracking}
                             >
-                                Refresh tracking
+                                {isTracking ? "Refreshing..." : "Refresh tracking"}
                             </button>
                         ) : null}
                         {order.courier?.waybill ? (
@@ -283,30 +325,45 @@ export default function AdminOrderDetail() {
                                 Open tracking
                             </a>
                         ) : null}
-                        {order.courier?.labelUrl ? (
-                            <a
+                        {order.courier?.waybill ? (
+                            <button
+                                type="button"
                                 className={styles.trackLink}
-                                href={order.courier.labelUrl}
-                                target="_blank"
-                                rel="noreferrer"
+                                disabled={isLabel}
+                                onClick={() => void handlePackingSlip()}
                             >
-                                Packing slip
-                            </a>
+                                {isLabel ? "Opening slip..." : "Packing slip"}
+                            </button>
                         ) : null}
                     </div>
                 </div>
                 {order.courier?.waybill ? (
                     <p className={styles.courierMeta}>
                         AWB <strong>{order.courier.waybill}</strong>
+                        {order.courier.trackingStatus
+                            ? ` · ${order.courier.trackingStatus}`
+                            : ""}
                     </p>
                 ) : (
                     <p className={styles.courierMeta}>
-                        No AWB yet. Creates a Delhivery shipment using the shop pickup
-                        location and this order&apos;s address.
+                        No tracking yet. Use Ship with Delhivery to create an AWB.
+                        Marking an order as shipped from the list does not add tracking.
                     </p>
                 )}
-                {shipMessage ? <p className={styles.courierMessage}>{shipMessage}</p> : null}
                 {trackInfo ? <p className={styles.courierMessage}>{trackInfo}</p> : null}
+                {trackHistory.length > 0 ? (
+                    <ol className={styles.trackHistory}>
+                        {trackHistory.map((event, index) => (
+                            <li key={`${event.at || ""}-${index}`}>
+                                <strong>{event.status || "Update"}</strong>
+                                <span>
+                                    {[event.location, event.at].filter(Boolean).join(" · ")}
+                                </span>
+                            </li>
+                        ))}
+                    </ol>
+                ) : null}
+                {shipMessage ? <p className={styles.courierMessage}>{shipMessage}</p> : null}
             </section>
 
             <OrderDetailContent

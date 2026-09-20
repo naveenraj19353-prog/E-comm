@@ -2,10 +2,10 @@ import { Heart, ShoppingCart, Star } from "lucide-react";
 import styles from "./ProductCard.module.css";
 import type { Product } from "../../../features/products/types";
 import {
-    getFirstProductImage,
+    getProductImagesForColor,
     isProductOutOfStock,
 } from "../../../features/products/inventory";
-import ProductImage from "../../ProductImage";
+import ProductCardMedia from "../../ProductImage/ProductCardMedia";
 import { useProductNavigation } from "../../../features/products/hooks/useProductNavigation";
 import { useStorefrontTenant } from "../../../features/tenant/useTenant";
 import {
@@ -37,14 +37,14 @@ const ProductCard = ({
     const { tenant } = useStorefrontTenant();
     const isServiceMode = isServiceBusiness(tenant?.businessType);
     const outOfStock = isProductOutOfStock(product);
-    const image = getFirstProductImage(product.images);
+    const images = getProductImagesForColor(product.images);
     const handleWishlist = (event: React.MouseEvent<HTMLButtonElement>) => {
         event.stopPropagation();
         onWishlist?.(product._id);
     };
     const handleAddToCart = (event: React.MouseEvent<HTMLButtonElement>) => {
         event.stopPropagation();
-        if (isAdding) {
+        if (isAdding || outOfStock) {
             return;
         }
         const variant = (product.inventory || []).find(
@@ -63,7 +63,7 @@ const ProductCard = ({
     };
     return (
         <div
-            className={styles.card}
+            className={`${styles.card} ${outOfStock ? styles.soldOut : ""}`}
             onClick={handleCardClick}
             role="link"
             tabIndex={0}
@@ -90,11 +90,17 @@ const ProductCard = ({
                 <Heart size={18} fill={isWishlisted ? "currentColor" : "none"} />
             </button>
             <div className={styles.imageWrapper}>
-                <ProductImage
-                    src={image}
+                <ProductCardMedia
+                    sources={images}
                     alt={product.name}
-                    className={styles.image}
+                    mediaClassName={styles.image}
+                    variant="swiper"
                 />
+                {outOfStock && (
+                    <div className={styles.outOfStock}>
+                        {isServiceMode ? "Unavailable" : "Out of Stock"}
+                    </div>
+                )}
             </div>
             <div className={styles.content}>
                 <h3>{product.name}</h3>
@@ -124,7 +130,7 @@ const ProductCard = ({
                     type="button"
                     className={styles.cartBtn}
                     onClick={handleAddToCart}
-                    disabled={isAdding}
+                    disabled={isAdding || outOfStock}
                 >
                     <ShoppingCart size={18} />
                     {outOfStock

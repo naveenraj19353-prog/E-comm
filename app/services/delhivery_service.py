@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import base64
+import html
 import json
 import logging
 import ssl
@@ -396,7 +398,7 @@ class DelhiveryService:
         status_type = None
         status_date = None
         location = None
-        history: list = []
+        history: list[dict] = []
         if isinstance(shipment, dict):
             status = shipment.get("Status") if isinstance(shipment.get("Status"), dict) else {}
             status_label = status.get("Status") or shipment.get("Status")
@@ -405,7 +407,35 @@ class DelhiveryService:
             location = status.get("StatusLocation") or status.get("Instructions")
             scans = shipment.get("Scans") or shipment.get("ScanDetail") or []
             if isinstance(scans, list):
-                history = scans[:20]
+                for item in scans[:30]:
+                    detail = (
+                        item.get("ScanDetail")
+                        if isinstance(item, dict) and isinstance(item.get("ScanDetail"), dict)
+                        else item
+                    )
+                    if not isinstance(detail, dict):
+                        continue
+                    history.append(
+                        {
+                            "status": str(
+                                detail.get("Scan")
+                                or detail.get("Status")
+                                or detail.get("Instructions")
+                                or ""
+                            ).strip(),
+                            "location": str(
+                                detail.get("ScannedLocation")
+                                or detail.get("StatusLocation")
+                                or detail.get("City")
+                                or ""
+                            ).strip(),
+                            "at": str(
+                                detail.get("ScanDateTime")
+                                or detail.get("StatusDateTime")
+                                or ""
+                            ).strip(),
+                        }
+                    )
         return {
             "awb": wbn,
             "status": status_label,
@@ -413,12 +443,191 @@ class DelhiveryService:
             "location": location,
             "estimatedDelivery": status_date,
             "trackingUrl": TRACKING_URL_TEMPLATE.format(waybill=wbn),
-            "history": history,
+            "history": [event for event in history if event.get("status") or event.get("location")],
         }
 
     def packing_slip_url(self, waybill: str) -> str:
         wbn = str(waybill or "").strip()
         return f"{self.base_url}{self._operation_path('label', '/api/p/packing_slip')}?wbns={parse.quote(wbn)}"
+
+    def fetch_packing_slip(
+        self,
+        tenant_id: str,
+        waybill: str,
+        fallback: dict | None = None,
+    ) -> tuple[bytes, str]:
+        wbn = str(waybill or "").strip()
+        if not wbn:
+            raise DelhiveryError(
+                "Waybill is required.",
+                code="INVALID_AWB",
+                status_code=400,
+            )
+        path = self._operation_path("label", "/api/p/packing_slip")
+        headers = get_delhivery_headers(tenant_id, self.provider)
+        headers.pop("Content-Type", None)
+        headers["Accept"] = "application/pdf, application/json, text/html;q=0.8, */*;q=0.5"
+        last_error: Exception | None = None
+        last_body: bytes | None = None
+        for params in ({"wbns": wbn}, {"wbns": wbn, "pdf": "true"}):
+            url = self._url(path, params)
+            try:
+                body, content_type = self._http_get(url, headers)
+            except DelhiveryError as error:
+                last_error = error
+                if error.code == "AUTH_FAILED":
+                    raise
+                continue
+            last_body = body
+            parsed = self._parse_packing_slip(
+                body,
+                content_type,
+                waybill=wbn,
+                fallback=fallback,
+                headers=headers,
+            )
+            if parsed:
+                return parsed
+        if last_body is not None:
+            html_body = render_packing_slip_html(wbn, fallback or {"wbn": wbn})
+            return html_body.encode("utf-8"), "text/html; charset=utf-8"
+        if last_error:
+            raise last_error
+        raise DelhiveryError(
+            "Unable to download packing slip.",
+            code="LABEL_FAILED",
+            status_code=400,
+        )
+
+    def _http_get(self, url: str, headers: dict[str, str]) -> tuple[bytes, str]:
+        last_error: Exception | None = None
+        for ctx in _ssl_contexts():
+            req = request.Request(url, headers=headers, method="GET")
+            try:
+                with request.urlopen(req, timeout=self.timeout, context=ctx) as response:
+                    return response.read(), str(response.headers.get("Content-Type") or "")
+            except urllib_error.HTTPError as exc:
+                payload = exc.read()
+                if exc.code in {401, 403}:
+                    raise DelhiveryError(
+                        "Delhivery rejected the API token for packing slip.",
+                        code="AUTH_FAILED",
+                        status_code=400,
+                    ) from exc
+                detail = _safe_error_detail_text(
+                    payload.decode("utf-8", errors="replace"),
+                    exc.code,
+                )
+                raise DelhiveryError(
+                    detail or "Unable to download packing slip.",
+                    code="LABEL_FAILED",
+                    status_code=400,
+                ) from exc
+            except urllib_error.URLError as exc:
+                last_error = exc
+                reason = str(getattr(exc, "reason", exc))
+                if "CERTIFICATE" in reason.upper() or "SSL" in reason.upper():
+                    continue
+                raise DelhiveryError(
+                    "Could not reach Delhivery.",
+                    code="NETWORK",
+                    status_code=502,
+                ) from exc
+        raise DelhiveryError(
+            "Could not reach Delhivery (SSL certificate error on this machine).",
+            code="SSL_ERROR",
+            status_code=502,
+        ) from last_error
+
+    def _parse_packing_slip(
+        self,
+        body: bytes,
+        content_type: str,
+        *,
+        waybill: str,
+        fallback: dict | None = None,
+        headers: dict[str, str] | None = None,
+    ) -> tuple[bytes, str] | None:
+        lowered = content_type.lower()
+        if body[:4] == b"%PDF" or ("pdf" in lowered and "json" not in lowered and body[:1] != b"{"):
+            return body, "application/pdf"
+        if "html" in lowered and body.lstrip()[:1] in {b"<", b"\xef"}:
+            return body, "text/html; charset=utf-8"
+        text = body.decode("utf-8", errors="replace").strip()
+        if not text:
+            return None
+        if text.lstrip().startswith("<"):
+            return body, "text/html; charset=utf-8"
+        try:
+            payload = json.loads(text)
+        except json.JSONDecodeError:
+            return body, content_type or "application/octet-stream"
+        if isinstance(payload, dict) and payload.get("success") is False:
+            raise DelhiveryError(
+                str(payload.get("error") or payload.get("message") or payload),
+                code="LABEL_FAILED",
+                status_code=400,
+            )
+        first: dict[str, Any] = {}
+        if isinstance(payload, dict):
+            packages = payload.get("packages")
+            if isinstance(packages, list) and packages and isinstance(packages[0], dict):
+                first = packages[0]
+            elif not packages:
+                first = {k: v for k, v in payload.items() if k not in {"packages", "packages_found"}}
+        elif isinstance(payload, list) and payload and isinstance(payload[0], dict):
+            first = payload[0]
+        merged = {**(fallback or {}), **{k: v for k, v in first.items() if v not in (None, "")}}
+        merged.setdefault("wbn", waybill)
+
+        pdf_b64 = (
+            first.get("pdf")
+            or first.get("pdf_data")
+            or first.get("label")
+            or first.get("packing_slip")
+        )
+        if isinstance(pdf_b64, str) and pdf_b64.strip() and not pdf_b64.strip().lower().startswith("http"):
+            try:
+                decoded = base64.b64decode(pdf_b64)
+            except Exception as error:
+                raise DelhiveryError(
+                    "Packing slip could not be decoded.",
+                    code="LABEL_FAILED",
+                    status_code=502,
+                ) from error
+            if decoded[:4] == b"%PDF":
+                return decoded, "application/pdf"
+            if decoded.lstrip()[:1] == b"<":
+                return decoded, "text/html; charset=utf-8"
+
+        link = (
+            first.get("pdf_download_link")
+            or first.get("pdf_url")
+            or first.get("label_url")
+            or pdf_b64
+        )
+        if isinstance(link, str) and link.strip().lower().startswith("http") and headers:
+            try:
+                linked, linked_ct = self._http_get(link.strip(), headers)
+            except DelhiveryError:
+                linked, linked_ct = b"", ""
+            if linked[:4] == b"%PDF":
+                return linked, "application/pdf"
+            if linked and "html" in linked_ct.lower():
+                return linked, "text/html; charset=utf-8"
+
+        if isinstance(payload, dict):
+            packages = payload.get("packages")
+            if isinstance(packages, list) and not packages:
+                has_pkg = any(
+                    str(first.get(key) or "").strip()
+                    for key in ("pdf", "pdf_download_link", "wbn", "oid", "cn", "add")
+                )
+                if not has_pkg:
+                    return None
+
+        html_body = render_packing_slip_html(waybill, merged)
+        return html_body.encode("utf-8"), "text/html; charset=utf-8"
 
     def create_pickup_request(
         self,
@@ -507,13 +716,17 @@ class DelhiveryService:
             "data": raw if isinstance(raw, dict) else {"raw": raw},
         }
 
-    def create_warehouse(self, tenant_id: str, payload: dict) -> dict:
+    def create_warehouse(self, tenant_id: str, payload: dict, *, update: bool = False) -> dict:
+        state = str(
+            payload.get("state") or payload.get("return_state") or ""
+        ).strip()[:80]
         body = {
             "name": str(payload.get("name") or "").strip()[:80],
             "email": str(payload.get("email") or "").strip()[:120],
             "phone": str(payload.get("phone") or "").strip()[:20],
             "address": str(payload.get("address") or "").strip()[:350],
             "city": str(payload.get("city") or "").strip()[:80],
+            "state": state,
             "country": str(payload.get("country") or "India").strip()[:80] or "India",
             "pin": _validate_pincode(str(payload.get("pin") or "")),
             "return_address": str(
@@ -525,21 +738,58 @@ class DelhiveryService:
             "return_city": str(
                 payload.get("return_city") or payload.get("city") or ""
             ).strip()[:80],
-            "return_state": str(payload.get("return_state") or "").strip()[:80],
+            "return_state": str(
+                payload.get("return_state") or state
+            ).strip()[:80],
             "return_country": str(
                 payload.get("return_country") or payload.get("country") or "India"
             ).strip()[:80]
             or "India",
         }
-        raw = self._request(
-            "POST",
-            self._operation_path("warehouse", "/api/backend/clientwarehouse/create/"),
-            tenant_id=tenant_id,
-            json_body=body,
-        )
+        if not body["state"] or not body["return_state"]:
+            raise DelhiveryError(
+                "Pickup location must include state.",
+                code="INVALID_ADDRESS",
+                status_code=400,
+            )
+        create_path = self._operation_path("warehouse", "/api/backend/clientwarehouse/create/")
+        edit_path = self._operation_path("warehouseEdit", "/api/backend/clientwarehouse/edit/")
+        path = edit_path if update else create_path
+        try:
+            raw = self._request(
+                "POST",
+                path,
+                tenant_id=tenant_id,
+                json_body=body,
+            )
+        except DelhiveryError as error:
+            if update or "exist" not in str(error).lower():
+                raise
+            raw = self._request(
+                "POST",
+                edit_path,
+                tenant_id=tenant_id,
+                json_body=body,
+            )
+        if isinstance(raw, dict) and raw.get("success") is False:
+            message = str(raw.get("error") or raw.get("message") or raw)
+            if not update and "exist" in message.lower():
+                raw = self._request(
+                    "POST",
+                    edit_path,
+                    tenant_id=tenant_id,
+                    json_body=body,
+                )
+            else:
+                raise DelhiveryError(
+                    message,
+                    code="WAREHOUSE_FAILED",
+                    status_code=400,
+                )
         logger.info(
-            "[DELHIVERY] tenant=%s operation=create_warehouse status=success name=%s",
+            "[DELHIVERY] tenant=%s operation=%s status=success name=%s",
             tenant_id,
+            "edit_warehouse" if update else "create_warehouse",
             body["name"],
         )
         data = raw.get("data") if isinstance(raw, dict) and isinstance(raw.get("data"), dict) else {}
@@ -625,3 +875,136 @@ def _safe_error_detail_text(body: str, status_code: int) -> str:
         if len(compact) <= 300:
             return compact
     return text[:300]
+
+
+_CODE128_PATTERNS = (
+    "11011001100", "11001101100", "11001100110", "10010011000", "10010001100",
+    "10001001100", "10011001000", "10011000100", "10001100100", "11001001000",
+    "11001000100", "11000100100", "10110011100", "10011011100", "10011001110",
+    "10111001100", "10011101100", "10011100110", "11001110010", "11001011100",
+    "11001001110", "11011100100", "11001110100", "11101101110", "11101001100",
+    "11100101100", "11100100110", "11101100100", "11100110100", "11100110010",
+    "11011011000", "11011000110", "11000110110", "10100011000", "10001011000",
+    "10001000110", "10110001000", "10001101000", "10001100010", "11010001000",
+    "11000101000", "11000100010", "10110111000", "10110001110", "10001101110",
+    "10111011000", "10111000110", "10001110110", "11101110110", "11010001110",
+    "11000101110", "11011101000", "11011100010", "11011101110", "11101011000",
+    "11101000110", "11100010110", "11101101000", "11101100010", "11100011010",
+    "11101111010", "11001000010", "11110001010", "10100110000", "10100001100",
+    "10010110000", "10010000110", "10000101100", "10000100110", "10110010000",
+    "10110000100", "10011010000", "10011000010", "10000110100", "10000110010",
+    "11000010010", "11001010000", "11110111010", "11000010100", "10001111010",
+    "10100111100", "10010111100", "10010011110", "10111100100", "10011110100",
+    "10011110010", "11110100100", "11110010100", "11110010010", "11011011110",
+    "11011110110", "11110110110", "10101111000", "10100011110", "10001011110",
+    "10111101000", "10111100010", "11110101000", "11110100010", "10111011110",
+    "10111101110", "11101011110", "11110101110", "11010000100", "11010010000",
+    "11010011100", "1100011101011",
+)
+
+
+def _code128_svg(text: str) -> str:
+    payload = "".join(ch for ch in str(text or "") if 32 <= ord(ch) <= 126)[:32]
+    if not payload:
+        return ""
+    checksum = 104
+    codes = [104]
+    for index, char in enumerate(payload):
+        value = ord(char) - 32
+        codes.append(value)
+        checksum += value * (index + 1)
+    codes.append(checksum % 103)
+    codes.append(106)
+    bits = "".join(_CODE128_PATTERNS[code] for code in codes)
+    width = max(len(bits), 1)
+    bars = []
+    x = 0
+    while x < width:
+        if bits[x] != "1":
+            x += 1
+            continue
+        run = 1
+        while x + run < width and bits[x + run] == "1":
+            run += 1
+        bars.append(f'<rect x="{x}" y="0" width="{run}" height="40"/>')
+        x += run
+    return (
+        f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width} 40" '
+        f'preserveAspectRatio="none" role="img" aria-label="{html.escape(payload)}">'
+        f'<g fill="#111">{"".join(bars)}</g></svg>'
+    )
+
+
+def _slip_text(pkg: dict, *keys: str) -> str:
+    for key in keys:
+        value = pkg.get(key)
+        if value is None:
+            continue
+        text = str(value).strip()
+        if text:
+            return text
+    return ""
+
+
+def render_packing_slip_html(waybill: str, pkg: dict | None = None) -> str:
+    data = pkg if isinstance(pkg, dict) else {}
+    awb = _slip_text(data, "wbn", "waybill", "wbns") or str(waybill or "").strip()
+    order_id = _slip_text(data, "oid", "order", "order_id", "cl_ref")
+    consignee = _slip_text(data, "cn", "name", "consignee")
+    address = _slip_text(data, "add", "address", "ad")
+    pin = _slip_text(data, "pin", "pincode", "postalCode")
+    city = _slip_text(data, "cty", "city")
+    state = _slip_text(data, "st", "state")
+    phone = _slip_text(data, "ph", "phone")
+    pay = _slip_text(data, "pt", "payment", "payment_mode") or "Prepaid"
+    products = _slip_text(data, "prd", "products_desc", "product")
+    client = _slip_text(data, "cl", "client")
+    sort_code = _slip_text(data, "si", "sort_code", "sort")
+    try:
+        cod = float(data.get("cod") or 0)
+    except (TypeError, ValueError):
+        cod = 0.0
+    try:
+        amount = float(data.get("rs") or data.get("total") or 0)
+    except (TypeError, ValueError):
+        amount = 0.0
+    locality = ", ".join(part for part in [city, state] if part)
+    if pin:
+        locality = f"{locality} - {pin}" if locality else pin
+    barcode = _code128_svg(awb)
+    return f"""<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<title>Packing slip {html.escape(awb)}</title>
+<style>
+  body {{ font-family: Arial, Helvetica, sans-serif; color: #111; margin: 16px; }}
+  .slip {{ width: 380px; border: 2px solid #111; padding: 12px; }}
+  h1 {{ font-size: 14px; margin: 0 0 8px; letter-spacing: 0.08em; }}
+  .awb {{ font-size: 22px; font-weight: 700; letter-spacing: 0.04em; margin: 8px 0 4px; }}
+  .barcode {{ width: 100%; height: 52px; margin: 4px 0 10px; }}
+  .barcode svg {{ width: 100%; height: 52px; display: block; }}
+  table {{ width: 100%; border-collapse: collapse; font-size: 12px; }}
+  td {{ vertical-align: top; padding: 3px 0; }}
+  .k {{ width: 92px; color: #555; }}
+  .pay {{ display: inline-block; border: 1px solid #111; padding: 2px 8px; font-weight: 700; }}
+  @media print {{ body {{ margin: 0; }} .slip {{ border-width: 1px; }} }}
+</style>
+</head><body>
+<div class="slip">
+  <h1>DELHIVERY PACKING SLIP</h1>
+  {f'<div>{html.escape(client)}</div>' if client else ''}
+  <div class="barcode">{barcode}</div>
+  <div class="awb">{html.escape(awb)}</div>
+  <table>
+    <tr><td class="k">Order</td><td>{html.escape(order_id or "—")}</td></tr>
+    <tr><td class="k">Consignee</td><td>{html.escape(consignee or "—")}<br/>{html.escape(address)}<br/>{html.escape(locality)}<br/>{html.escape(phone)}</td></tr>
+    <tr><td class="k">Contents</td><td>{html.escape(products or "Shipment")}</td></tr>
+    <tr><td class="k">Payment</td><td><span class="pay">{html.escape(pay)}</span>
+      {" COD ₹" + html.escape(f"{cod:.2f}") if pay.upper() == "COD" and cod else ""}
+      {" · ₹" + html.escape(f"{amount:.2f}") if amount else ""}</td></tr>
+    {f'<tr><td class="k">Sort</td><td>{html.escape(sort_code)}</td></tr>' if sort_code else ''}
+  </table>
+</div>
+<script>window.addEventListener("load", function () {{ window.focus(); }});</script>
+</body></html>"""
+

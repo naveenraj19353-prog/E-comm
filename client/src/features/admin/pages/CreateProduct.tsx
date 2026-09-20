@@ -7,6 +7,7 @@ import { useCreateProduct } from "../hooks/useTenantProducts";
 import { useTenantByTenantId } from "../hooks/useTenants";
 import type { ProductImageRef } from "../utils/s3Image";
 import { hasUnresolvedImageRefs, imageRefsToKeys } from "../utils/s3Image";
+import { PRODUCT_MEDIA_ACCEPT, isAllowedProductMediaFile, isVideoSrc } from "../../../utils/mediaSrc";
 import {
     SERVICE_DEFAULT_COLOR,
     SERVICE_DEFAULT_SIZE,
@@ -183,17 +184,9 @@ export default function CreateProduct() {
             return;
         }
         setError("");
-        const validFiles = files.filter((file) => {
-            if (!file.type.startsWith("image/")) {
-                return false;
-            }
-            if (file.size > 5 * 1024 * 1024) {
-                return false;
-            }
-            return true;
-        });
+        const validFiles = files.filter((file) => isAllowedProductMediaFile(file));
         if (validFiles.length !== files.length) {
-            setError("Only image files up to 5 MB are allowed.");
+            setError("Use images up to 10 MB or videos up to 50 MB (MP4/WebM).");
         }
         if (!validFiles.length) {
             if (fileInputRef.current) {
@@ -860,14 +853,21 @@ export default function CreateProduct() {
 
                 <p>
                   {isServiceMode
-                    ? "Upload images for this service listing."
-                    : "Upload images separately for each color."}
+                    ? "Photo 1 is the card. Photo 2 shows on hover. Video is optional on the listing page."
+                    : "Photo 1 is the card. Photo 2 shows on hover. Video is optional on the product page."}
                 </p>
               </div>
             </div>
 
-            <input ref={fileInputRef} type="file" accept="image/png,image/jpeg,image/webp,image/gif" multiple onChange={handleImageSelect} className={styles.imageFileInput}/>
+            <input ref={fileInputRef} type="file" accept={PRODUCT_MEDIA_ACCEPT} multiple onChange={handleImageSelect} className={styles.imageFileInput}/>
 
+            <div className={styles.mediaUploadWrap}>
+            {isUploadingImages && (
+              <div className={styles.uploadOverlay} role="status" aria-live="polite">
+                <span className={styles.uploadSpinner} />
+                Uploading…
+              </div>
+            )}
             <div className={styles.colorImageSections}>
               {colors.map((color) => {
                 const images = colorImages[color] || [];
@@ -886,14 +886,18 @@ export default function CreateProduct() {
                       </div>
 
                       <button type="button" className={styles.chooseImageButton} onClick={() => handleChooseImages(color)} disabled={isUploadingImages}>
-                        {isUploadingImages && imageUploadColor === color ? "Uploading..." : "+ Add Images"}
+                        {isUploadingImages && imageUploadColor === color ? "Uploading..." : "+ Add media"}
                       </button>
                     </div>
 
                     {images.length > 0 && (<div className={styles.imageGrid}>
                         {images.map((image, index) => (<div className={`${styles.imageCard} ${index === 0 ? styles.primaryImageCard : ""}`} key={`${image.key}-${index}`}>
                             <div className={styles.imageWrapper}>
-                              <img src={image.previewUrl} alt={image.name || `${color} image ${index + 1}`}/>
+                              {isVideoSrc(image.previewUrl || image.key) ? (
+                                <video src={image.previewUrl} muted playsInline />
+                              ) : (
+                                <img src={image.previewUrl} alt={image.name || `${color} image ${index + 1}`}/>
+                              )}
 
                               {index === 0 && (<span className={styles.primaryBadge}>
                                   Primary
@@ -917,11 +921,11 @@ export default function CreateProduct() {
                       </div>)}
 
                     <small className={styles.imageHelp}>
-                      The first image will be used as the primary image for{" "}
-                      {color}.
+                      Photo 1 is the card. Photo 2 shows on hover.
                     </small>
                   </div>);
             })}
+            </div>
             </div>
           </section>)}
 

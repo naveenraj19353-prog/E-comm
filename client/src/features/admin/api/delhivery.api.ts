@@ -1,3 +1,4 @@
+import axios from "axios";
 import apiClient from "../../../api/client";
 import { API_ENDPOINTS } from "../../../api/endpoints";
 
@@ -36,6 +37,7 @@ export type DelhiveryWarehousePayload = {
   phone: string;
   address: string;
   city: string;
+  state: string;
   country?: string;
   pin: string;
   return_address?: string;
@@ -65,6 +67,46 @@ export async function createDelhiveryShipment(tenantId: string, orderId: string)
   };
 }
 
+export async function downloadDelhiveryPackingSlip(tenantId: string, awb: string) {
+  try {
+    const response = await apiClient.get(API_ENDPOINTS.DELHIVERY.packingSlip(awb), {
+      params: tenantParams(tenantId),
+      responseType: "blob",
+    });
+    const type = String(response.headers["content-type"] || "");
+    if (type.includes("application/json")) {
+      throw new Error(await blobDetail(response.data, "Unable to load packing slip."));
+    }
+    const blobType = type.includes("html")
+      ? "text/html"
+      : type.includes("pdf")
+        ? "application/pdf"
+        : type || "application/pdf";
+    return new Blob([response.data], { type: blobType });
+  } catch (error) {
+    if (axios.isAxiosError(error) && error.response?.data instanceof Blob) {
+      throw new Error(await blobDetail(error.response.data, "Unable to load packing slip."));
+    }
+    throw error;
+  }
+}
+
+async function blobDetail(data: Blob, fallback: string) {
+  const text = await data.text();
+  try {
+    const parsed = JSON.parse(text) as { detail?: string | { message?: string } };
+    if (typeof parsed.detail === "string") {
+      return parsed.detail;
+    }
+    if (parsed.detail && typeof parsed.detail === "object") {
+      return parsed.detail.message || fallback;
+    }
+  } catch {
+    /* keep fallback */
+  }
+  return fallback;
+}
+
 export async function trackDelhiveryAwb(tenantId: string, awb: string) {
   const response = await apiClient.get(API_ENDPOINTS.DELHIVERY.track(awb), {
     params: tenantParams(tenantId),
@@ -75,6 +117,8 @@ export async function trackDelhiveryAwb(tenantId: string, awb: string) {
     statusCode?: string;
     location?: string;
     trackingUrl?: string;
+    estimatedDelivery?: string;
+    history?: Array<{ status?: string; location?: string; at?: string }>;
   };
 }
 

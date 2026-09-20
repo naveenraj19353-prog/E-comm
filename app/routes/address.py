@@ -8,6 +8,7 @@ from fastapi import APIRouter, Depends, HTTPException, Path, Query
 from app.database.mongo import addresses
 from app.models.address import CreateAddress, UpdateAddress
 from app.routes.response_metadata import FORBIDDEN_RESPONSE
+from app.services.checkout_service import tenant_id_query
 from app.utils.auth_dependencies import customer_scope, require_customer
 
 router = APIRouter(
@@ -38,6 +39,14 @@ def validate_object_id(value: str, field_name: str = "ID") -> ObjectId:
             status_code=400,
             detail=f"Invalid {field_name}.",
         )
+
+
+def _owner_filter(tenant_id: str, user_id: str) -> dict:
+    user_object_id = validate_object_id(user_id, USER_ID_FIELD)
+    return {
+        "tenantId": tenant_id_query(tenant_id),
+        "userId": {"$in": [user_object_id, user_id, str(user_object_id)]},
+    }
 
 
 @router.post(
@@ -108,13 +117,7 @@ def get_addresses(
             status_code=403,
             detail="You cannot access another user's addresses.",
         )
-    user_object_id = validate_object_id(token_user_id, USER_ID_FIELD)
-    cursor = addresses.find(
-        {
-            "tenantId": scoped_tenant_id,
-            "userId": user_object_id,
-        }
-    ).sort(
+    cursor = addresses.find(_owner_filter(scoped_tenant_id, token_user_id)).sort(
         [
             ("isDefault", -1),
             ("createdAt", -1),
@@ -150,8 +153,7 @@ def update_address(
     existing_address = addresses.find_one(
         {
             "_id": address_id,
-            "tenantId": tenant_id,
-            "userId": validate_object_id(user_id, USER_ID_FIELD),
+            **_owner_filter(tenant_id, user_id),
         }
     )
     if not existing_address:
@@ -191,7 +193,7 @@ def update_address(
     result = addresses.update_one(
         {
             "_id": address_id,
-            "tenantId": tenant_id,
+            **_owner_filter(tenant_id, user_id),
         },
         {
             "$set": update_data,
@@ -226,8 +228,7 @@ def delete_address(
     address = addresses.find_one(
         {
             "_id": address_id,
-            "tenantId": scoped_tenant_id,
-            "userId": validate_object_id(user_id, USER_ID_FIELD),
+            **_owner_filter(scoped_tenant_id, user_id),
         }
     )
     if not address:

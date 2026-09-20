@@ -8,6 +8,7 @@ import { useTenantByTenantId } from "../hooks/useTenants";
 import { useCategory } from "../../products/hooks/useCategory";
 import type { ProductImageRef } from "../utils/s3Image";
 import { hasUnresolvedImageRefs, imageRefsToKeys, toProductImageRef } from "../utils/s3Image";
+import { PRODUCT_MEDIA_ACCEPT, isAllowedProductMediaFile, isVideoSrc } from "../../../utils/mediaSrc";
 import styles from "../styles/AdminTenantProducts.module.css";
 
 interface ProductInventory {
@@ -137,6 +138,7 @@ export default function AdminTenantProducts() {
     const [newSizeInput, setNewSizeInput] = useState("");
     const [editingColorName, setEditingColorName] = useState<string | null>(null);
     const [colorRenameValue, setColorRenameValue] = useState("");
+    const [isUploadingMedia, setIsUploadingMedia] = useState(false);
     const [editForm, setEditForm] = useState<EditForm>({
         name: "",
         description: "",
@@ -344,13 +346,14 @@ export default function AdminTenantProducts() {
             return;
         }
         const selectedFiles = Array.from(files);
-        const invalidFiles = selectedFiles.filter((file) => !file.type.startsWith("image/"));
+        const invalidFiles = selectedFiles.filter((file) => !isAllowedProductMediaFile(file));
         if (invalidFiles.length > 0) {
-            alert("Please select only image files.");
+            alert("Use images up to 10 MB or videos up to 50 MB (MP4/WebM).");
             event.target.value = "";
             return;
         }
         const color = imageUploadColor.trim() || "Default";
+        setIsUploadingMedia(true);
         try {
             const uploadedImages = await Promise.all(
                 selectedFiles.map(async (file) => {
@@ -374,6 +377,7 @@ export default function AdminTenantProducts() {
             console.error("Failed to upload image:", error);
             alert("Failed to upload image to S3.");
         }
+        setIsUploadingMedia(false);
         event.target.value = "";
     };
     const handleRemoveImage = (color: string, index: number) => {
@@ -866,6 +870,7 @@ export default function AdminTenantProducts() {
                             <ProductImage
                               src={getFirstProductImage(product.images)}
                               alt={productName}
+                              autoPlay={false}
                               placeholder={productName.charAt(0).toUpperCase()}
                             />
                           </div>
@@ -943,6 +948,7 @@ export default function AdminTenantProducts() {
                 ×
               </button>
             </div>
+            <div className={styles.modalBody}>
             <div className={styles.formGrid}>
               <div className={styles.formGroup}>
                 <label>Product Name</label>
@@ -1174,16 +1180,25 @@ export default function AdminTenantProducts() {
               </div>
               
               <div className={`${styles.formGroup} ${styles.fullWidth}`}>
-                <label>Product Images</label>
+                <label>Product media</label>
                 <p className={styles.imageUploadHint}>
-                  Upload images per color. Colors must match the product inventory colors.
+                  Add photos per color. Photo 1 is the card; photo 2 shows on hover.
+                  Videos are optional and play on the product page.
                 </p>
+                <div className={styles.mediaUploadWrap}>
+                {isUploadingMedia && (
+                  <div className={styles.uploadOverlay} role="status" aria-live="polite">
+                    <span className={styles.uploadSpinner} />
+                    Uploading…
+                  </div>
+                )}
                 <div className={styles.imageColorRow}>
                   <label htmlFor="edit-image-color">Color</label>
                   <select
                     id="edit-image-color"
                     value={imageUploadColor}
                     onChange={(event) => setImageUploadColor(event.target.value)}
+                    disabled={isUploadingMedia}
                   >
                     {editColors.map((color) => (
                       <option key={color} value={color}>
@@ -1192,14 +1207,14 @@ export default function AdminTenantProducts() {
                     ))}
                   </select>
                 </div>
-                <input ref={imageInputRef} type="file" accept="image/png,image/jpeg,image/jpg,image/webp" multiple onChange={handleImageSelect} className={styles.hiddenFileInput}/>
+                <input ref={imageInputRef} type="file" accept={PRODUCT_MEDIA_ACCEPT} multiple onChange={handleImageSelect} className={styles.hiddenFileInput}/>
                 <div className={styles.imageUploadBox}>
-                  <button type="button" className={styles.chooseImageButton} onClick={() => imageInputRef.current?.click()}>
+                  <button type="button" className={styles.chooseImageButton} onClick={() => imageInputRef.current?.click()} disabled={isUploadingMedia}>
                     <span className={styles.uploadIcon}>＋</span>
-                    Choose Images for {imageUploadColor}
+                    Choose photos or videos for {imageUploadColor}
                   </button>
                   <span className={styles.imageUploadText}>
-                    PNG, JPG, JPEG or WEBP
+                    Photo 1 = card. Photo 2 = hover. Video is optional.
                   </span>
                 </div>
                 {Object.entries(editForm.images).map(([color, refs]) => (
@@ -1208,7 +1223,11 @@ export default function AdminTenantProducts() {
                     <div className={styles.imagePreviewGrid}>
                       {refs.map((image, index) => (
                         <div key={`${color}-${image.key || image.previewUrl.slice(0, 30)}-${index}`} className={styles.imagePreview}>
-                          <img src={image.previewUrl} alt={`${color} ${index + 1}`}/>
+                          {isVideoSrc(image.previewUrl || image.key) ? (
+                            <video src={image.previewUrl} muted playsInline />
+                          ) : (
+                            <img src={image.previewUrl} alt={`${color} ${index + 1}`}/>
+                          )}
                           <button type="button" className={styles.removeImageButton} onClick={() => handleRemoveImage(color, index)}>
                             ×
                           </button>
@@ -1218,6 +1237,7 @@ export default function AdminTenantProducts() {
                     </div>
                   </div>
                 ))}
+                </div>
               </div>
               <label className={styles.activeToggle}>
                 <input type="checkbox" checked={editForm.isActive} onChange={(event) => setEditForm({
@@ -1227,11 +1247,12 @@ export default function AdminTenantProducts() {
                 <span>Product Active</span>
               </label>
             </div>
+            </div>
             <div className={styles.modalFooter}>
               <button type="button" className={styles.cancelButton} onClick={() => setEditingProduct(null)}>
                 Cancel
               </button>
-              <button type="button" className={styles.saveButton} onClick={handleUpdate} disabled={updateProductMutation.isPending}>
+              <button type="button" className={styles.saveButton} onClick={handleUpdate} disabled={updateProductMutation.isPending || isUploadingMedia}>
                 {updateProductMutation.isPending ? "Saving..." : "Save Changes"}
               </button>
             </div>

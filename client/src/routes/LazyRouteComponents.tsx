@@ -32,6 +32,7 @@ export const AdminTenantOrders = lazy(() => import("../features/admin/pages/Admi
 export const AdminMenuDesk = lazy(() => import("../features/admin/pages/AdminMenuDesk"));
 export const AdminOrderDetail = lazy(() => import("../features/admin/pages/AdminOrderDetail"));
 export const AdminTenantBanners = lazy(() => import("../features/admin/pages/AdminTenantBanners"));
+export const AdminTenantCoupons = lazy(() => import("../features/admin/pages/AdminTenantCoupons"));
 export const DelhiverySettingsPage = lazy(
     () => import("../features/admin/pages/DelhiverySettingsPage"),
 );

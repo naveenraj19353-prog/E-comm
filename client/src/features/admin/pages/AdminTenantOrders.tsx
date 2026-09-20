@@ -210,6 +210,7 @@ export default function AdminTenantOrders() {
                                 <th>Items</th>
                                 <th>Total</th>
                                 <th>Status</th>
+                                <th>Tracking</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -276,6 +277,27 @@ export default function AdminTenantOrders() {
                                             <span className={`${styles.status} ${styles[`status_${status}`]}`}>
                                                 {orderStatusLabel[status]}
                                             </span>
+                                        </td>
+                                        <td className={styles.cellTracking}>
+                                            {order.courier?.waybill ? (
+                                                <div className={styles.trackingCell}>
+                                                    <strong>{order.courier.waybill}</strong>
+                                                    {order.courier.trackingUrl ? (
+                                                        <a
+                                                            href={order.courier.trackingUrl}
+                                                            target="_blank"
+                                                            rel="noreferrer"
+                                                            onClick={(event) => event.stopPropagation()}
+                                                        >
+                                                            Track
+                                                        </a>
+                                                    ) : (
+                                                        <span>Delhivery</span>
+                                                    )}
+                                                </div>
+                                            ) : (
+                                                <span className={styles.noTracking}>No AWB</span>
+                                            )}
                                         </td>
                                         <td className={styles.cellActions} onClick={(event) => event.stopPropagation()}>
                                             <div className={styles.actions}>

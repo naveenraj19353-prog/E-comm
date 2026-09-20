@@ -6,7 +6,6 @@ from app.database.mongo import (
     carts,
     products,
     addresses,
-    coupons,
 )
 
 
@@ -126,11 +125,18 @@ def variant_stock(variant: dict | None) -> int:
 def serialize_address(address: dict | None) -> dict | None:
     if not address:
         return None
-    data = dict(address)
-    data["_id"] = str(data["_id"])
-    if data.get("userId") is not None:
-        data["userId"] = str(data["userId"])
-    return data
+    return {
+        "_id": str(address.get("_id") or ""),
+        "fullName": str(address.get("fullName") or "").strip(),
+        "phone": str(address.get("phone") or "").strip(),
+        "addressLine1": str(address.get("addressLine1") or "").strip(),
+        "addressLine2": str(address.get("addressLine2") or "").strip(),
+        "city": str(address.get("city") or "").strip(),
+        "state": str(address.get("state") or "").strip(),
+        "country": str(address.get("country") or "India").strip() or "India",
+        "postalCode": str(address.get("postalCode") or "").strip(),
+        "addressType": address.get("addressType") or "Home",
+    }
 
 
 def resolve_shipping_address(
@@ -253,71 +259,23 @@ def _price_cart_items(cart_items: list, tenant_id: str) -> tuple[list, float]:
     return items, round(subtotal, 2)
 
 
-def _load_valid_coupon(tenant_id: str, coupon_code: str, subtotal: float) -> dict:
-    coupon = coupons.find_one(
-        {
-            "tenantId": tenant_id_query(tenant_id),
-            "code": coupon_code,
-            "isActive": True,
-        }
-    )
-    if not coupon:
-        raise HTTPException(
-            status_code=404,
-            detail="Invalid coupon.",
-        )
-
-    now = datetime.now(timezone.utc)
-    if coupon.get("startDate") and coupon["startDate"] > now:
-        raise HTTPException(
-            status_code=400,
-            detail="Coupon is not active yet.",
-        )
-    if coupon.get("endDate") and coupon["endDate"] < now:
-        raise HTTPException(
-            status_code=400,
-            detail="Coupon has expired.",
-        )
-
-    minimum_order_amount = float(coupon.get("minimumOrderAmount", 0) or 0)
-    if subtotal < minimum_order_amount:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Minimum order amount is ₹{minimum_order_amount}",
-        )
-
-    usage_limit = coupon.get("usageLimit", 0) or 0
-    used_count = coupon.get("usedCount", 0) or 0
-    if usage_limit > 0 and used_count >= usage_limit:
-        raise HTTPException(
-            status_code=400,
-            detail="Coupon usage limit exceeded.",
-        )
-    return coupon
-
-
-def _calculate_coupon_discount(coupon: dict, subtotal: float) -> float:
-    discount_value = float(coupon.get("discountValue", 0) or 0)
-    if coupon.get("discountType") == "percentage":
-        discount = subtotal * discount_value / 100
-        maximum_discount = coupon.get("maximumDiscount")
-        if maximum_discount:
-            discount = min(discount, float(maximum_discount))
-    else:
-        discount = min(discount_value, subtotal)
-    return round(discount, 2)
-
-
 def _apply_coupon(
     tenant_id: str,
     coupon_code: str | None,
     subtotal: float,
+    *,
+    user_id: str | None = None,
+    items: list[dict] | None = None,
 ) -> tuple[float, str | None]:
-    if not coupon_code or not coupon_code.strip():
-        return 0.0, None
-    normalized_coupon = coupon_code.strip().upper()
-    coupon = _load_valid_coupon(tenant_id, normalized_coupon, subtotal)
-    return _calculate_coupon_discount(coupon, subtotal), coupon.get("code")
+    from app.services.coupon_service import apply_coupon_discount
+
+    return apply_coupon_discount(
+        tenant_id,
+        coupon_code,
+        subtotal,
+        user_id=user_id,
+        items=items,
+    )
 
 
 def _checkout_totals(
@@ -454,6 +412,8 @@ def calculate_checkout(
         tenant_id,
         coupon_code,
         subtotal,
+        user_id=user_id,
+        items=items,
     )
     address = resolve_shipping_address(
         tenant_id,

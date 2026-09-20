@@ -25,9 +25,27 @@ ALLOWED_IMAGE_TYPES = {
     "image/webp",
     "image/gif",
 }
+ALLOWED_VIDEO_TYPES = {
+    "video/mp4",
+    "video/webm",
+    "video/quicktime",
+    "video/ogg",
+}
+CONTENT_TYPE_BY_EXTENSION = {
+    ".jpg": "image/jpeg",
+    ".jpeg": "image/jpeg",
+    ".png": "image/png",
+    ".webp": "image/webp",
+    ".gif": "image/gif",
+    ".mp4": "video/mp4",
+    ".webm": "video/webm",
+    ".mov": "video/quicktime",
+    ".ogg": "video/ogg",
+}
 
 ALLOWED_FOLDERS = {"products", "banners"}
-MAX_FILE_SIZE = 10 * 1024 * 1024  # 10 MB
+MAX_IMAGE_SIZE = 10 * 1024 * 1024  # 10 MB
+MAX_VIDEO_SIZE = 50 * 1024 * 1024  # 50 MB
 
 _S3_KEY_PATTERN = re.compile(
     r"^tenants/(?P<tenant>[a-zA-Z0-9_-]+)/(?P<folder>products|banners)/(?P<filename>[^/\\]+)$"
@@ -134,20 +152,35 @@ def upload_image(
             "Folder must be either 'products' or 'banners'."
         )
 
-    if file.content_type not in ALLOWED_IMAGE_TYPES:
+    extension = Path(file.filename or "").suffix.lower()
+    content_type = str(file.content_type or "").split(";")[0].strip().lower()
+    if not content_type or content_type == "application/octet-stream":
+        content_type = CONTENT_TYPE_BY_EXTENSION.get(extension, content_type)
+
+    allowed_types = set(ALLOWED_IMAGE_TYPES) | ALLOWED_VIDEO_TYPES
+    if content_type not in allowed_types:
+        if folder in {"banners", "products"}:
+            raise ValueError(
+                "Unsupported file. "
+                "Allowed images: JPEG, PNG, WEBP, GIF. "
+                "Allowed videos: MP4, WebM, MOV."
+            )
         raise ValueError(
             "Unsupported image type. "
             "Allowed: JPEG, PNG, WEBP, GIF."
         )
 
-    extension = Path(file.filename or "").suffix.lower()
     if not extension:
         extension = {
             "image/jpeg": ".jpg",
             "image/png": ".png",
             "image/webp": ".webp",
             "image/gif": ".gif",
-        }.get(file.content_type, "")
+            "video/mp4": ".mp4",
+            "video/webm": ".webm",
+            "video/quicktime": ".mov",
+            "video/ogg": ".ogg",
+        }.get(content_type, "")
 
     key = (
         f"tenants/"
@@ -157,15 +190,20 @@ def upload_image(
     )
 
     file_data = file.file.read()
-    if len(file_data) > MAX_FILE_SIZE:
-        raise ValueError("Image size must be 10 MB or less.")
+    is_video = content_type in ALLOWED_VIDEO_TYPES
+    max_size = MAX_VIDEO_SIZE if is_video else MAX_IMAGE_SIZE
+    if len(file_data) > max_size:
+        limit_mb = 50 if is_video else 10
+        raise ValueError(
+            f"{'Video' if is_video else 'Image'} size must be {limit_mb} MB or less."
+        )
 
     try:
         _s3_client().put_object(
             Bucket=S3_BUCKET,
             Key=key,
             Body=file_data,
-            ContentType=file.content_type,
+            ContentType=content_type or file.content_type,
         )
     except NoCredentialsError as error:
         raise _credentials_error(error) from error

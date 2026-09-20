@@ -7,9 +7,11 @@ from datetime import datetime, timezone
 from typing import Annotated
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
+from fastapi.responses import Response
 from pymongo.errors import PyMongoError
 
 from app.database.mongo import (
+    addresses,
     orders,
     shipping_integrations,
     shipping_locations,
@@ -374,9 +376,19 @@ def create_warehouse(
     tenant_id: Annotated[str | None, Query(alias="tenantId")] = None,
 ):
     scoped = admin_tenant_id(current_user, tenant_id)
+    payload = body.model_dump()
+    payload["state"] = body.state
+    payload["return_state"] = body.return_state or body.state
+    existing_named = shipping_locations.find_one(
+        {"tenantId": scoped, "provider": PROVIDER, "name": body.name.strip()}
+    )
     service = DelhiveryService()
     try:
-        result = service.create_warehouse(scoped, body.model_dump())
+        result = service.create_warehouse(
+            scoped,
+            payload,
+            update=bool(existing_named),
+        )
     except DelhiveryError as error:
         raise _provider_error(error) from error
 
@@ -386,7 +398,7 @@ def create_warehouse(
         "provider": PROVIDER,
         "name": result["name"],
         "city": body.city,
-        "state": body.return_state,
+        "state": body.state or body.return_state,
         "pincode": body.pin,
         "phone": body.phone,
         "email": body.email,
@@ -484,6 +496,27 @@ def calculate_rate(
     return {"success": True, "options": options}
 
 
+def _consignee_address_text(address: dict) -> str:
+    street = " ".join(
+        part
+        for part in [
+            str(address.get("addressLine1") or "").strip(),
+            str(address.get("addressLine2") or "").strip(),
+        ]
+        if part
+    )
+    city = str(address.get("city") or "").strip()
+    state = str(address.get("state") or "").strip()
+    pin = "".join(ch for ch in str(address.get("postalCode") or "") if ch.isdigit())
+    country = str(address.get("country") or "India").strip() or "India"
+    locality = ", ".join(part for part in [city, state] if part)
+    if locality and pin:
+        locality = f"{locality} - {pin}"
+    elif pin:
+        locality = pin
+    return ", ".join(part for part in [street, locality, country] if part)[:350]
+
+
 @router.post("/shipments")
 def create_shipment(
     body: CreateDelhiveryShipmentRequest,
@@ -532,13 +565,37 @@ def create_shipment(
         raise HTTPException(status_code=400, detail=f"Cannot ship an order that is {status}.")
 
     address = order.get("address") if isinstance(order.get("address"), dict) else {}
+    address_id = address.get("_id") or order.get("addressId")
+    if address_id and ObjectId.is_valid(str(address_id)):
+        live = addresses.find_one({"_id": ObjectId(str(address_id))})
+        if live:
+            address = {
+                **address,
+                **{
+                    key: live.get(key)
+                    for key in (
+                        "fullName",
+                        "phone",
+                        "addressLine1",
+                        "addressLine2",
+                        "city",
+                        "state",
+                        "country",
+                        "postalCode",
+                    )
+                    if live.get(key)
+                },
+            }
     phone = str(address.get("phone") or "").strip()
     pin = str(address.get("postalCode") or "").strip()
     line1 = str(address.get("addressLine1") or "").strip()
-    if not phone or not pin or not line1:
+    city = str(address.get("city") or "").strip()
+    state = str(address.get("state") or "").strip()
+    full_address = _consignee_address_text(address)
+    if not phone or not pin or not line1 or not city or not state:
         raise HTTPException(
             status_code=400,
-            detail="Order address must include phone, postal code, and address line.",
+            detail="Order address must include phone, full street, city, state, and postal code.",
         )
 
     payment_method = str(order.get("paymentMethod") or "").lower()
@@ -562,13 +619,9 @@ def create_shipment(
             order_id=str(order["_id"]),
             consignee_name=str(address.get("fullName") or "Customer"),
             consignee_phone=phone,
-            address=" ".join(
-                part
-                for part in [line1, str(address.get("addressLine2") or "").strip()]
-                if part
-            ),
-            city=str(address.get("city") or ""),
-            state=str(address.get("state") or ""),
+            address=full_address,
+            city=city,
+            state=state,
             pincode=pin,
             country=str(address.get("country") or "India"),
             payment_mode=payment_mode,
@@ -685,6 +738,62 @@ def track_awb(
             },
         )
     return {"success": True, "data": data}
+
+
+def _packing_slip_fallback(order: dict | None, waybill: str) -> dict:
+    if not isinstance(order, dict):
+        return {"wbn": waybill}
+    address = order.get("address") if isinstance(order.get("address"), dict) else {}
+    items = order.get("items") if isinstance(order.get("items"), list) else []
+    payment_method = str(order.get("paymentMethod") or "").lower()
+    is_cod = payment_method in {"cod", "cash_on_delivery"}
+    try:
+        total_amount = float(order.get("totalAmount") or 0)
+    except (TypeError, ValueError):
+        total_amount = 0.0
+    oid = str(order.get("orderNumber") or order.get("_id") or "")
+    return {
+        "wbn": waybill,
+        "oid": oid[-10:] if len(oid) > 10 else oid,
+        "cn": str(address.get("fullName") or "").strip(),
+        "add": _consignee_address_text(address),
+        "pin": str(address.get("postalCode") or "").strip(),
+        "cty": str(address.get("city") or "").strip(),
+        "st": str(address.get("state") or "").strip(),
+        "ph": str(address.get("phone") or "").strip(),
+        "pt": "COD" if is_cod else "Prepaid",
+        "cod": total_amount if is_cod else 0,
+        "rs": total_amount,
+        "prd": ", ".join(str(item.get("name") or "Item")[:40] for item in items[:5]) or "Order",
+    }
+
+
+@router.get("/packing-slip/{awb}")
+def download_packing_slip(
+    awb: str,
+    current_user: Annotated[dict, Depends(require_admin)],
+    tenant_id: Annotated[str | None, Query(alias="tenantId")] = None,
+):
+    scoped = admin_tenant_id(current_user, tenant_id)
+    waybill = str(awb or "").strip()
+    owned = shipments.find_one({"tenantId": scoped, "provider": PROVIDER, "awb": waybill})
+    order_hit = orders.find_one({"tenantId": scoped, "courier.waybill": waybill})
+    if not owned and not order_hit:
+        raise HTTPException(status_code=404, detail="AWB not found for this store.")
+    try:
+        body, media_type = DelhiveryService().fetch_packing_slip(
+            scoped,
+            waybill,
+            fallback=_packing_slip_fallback(order_hit, waybill),
+        )
+    except DelhiveryError as error:
+        raise _provider_error(error) from error
+    filename = f"packing-slip-{waybill}.pdf" if "pdf" in media_type else f"packing-slip-{waybill}.html"
+    return Response(
+        content=body,
+        media_type=media_type,
+        headers={"Content-Disposition": f'inline; filename="{filename}"'},
+    )
 
 
 @router.get("/shipments/{shipment_id}/label")

@@ -42,6 +42,7 @@ export interface OrderCourier {
     labelUrl?: string;
     pickupLocation?: string;
     shippedAt?: string;
+    trackingStatus?: string;
 }
 
 export interface Order {

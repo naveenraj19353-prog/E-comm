@@ -73,6 +73,10 @@
           "method": "POST",
           "path": "/api/backend/clientwarehouse/create/"
         },
+        "warehouseEdit": {
+          "method": "POST",
+          "path": "/api/backend/clientwarehouse/edit/"
+        },
         "createShipment": {
           "method": "POST",
           "path": "/api/cmu/create.json"

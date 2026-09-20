@@ -17,6 +17,7 @@ import {
     AdminCustomers,
     AdminTenantProducts,
     AdminTenantBanners,
+    AdminTenantCoupons,
     AdminTenants,
     DelhiverySettingsPage,
     PeriskopeSettingsPage,
@@ -225,6 +226,16 @@ const adminRoutes = [
                                 allowed={["retail", "service"]}
                             >
                                 <AdminTenantBanners />
+                            </RequireTenantBusinessType>
+                        ),
+                    },
+                    {
+                        path: ":tenantId/coupons",
+                        element: (
+                            <RequireTenantBusinessType
+                                allowed={["retail", "service"]}
+                            >
+                                <AdminTenantCoupons />
                             </RequireTenantBusinessType>
                         ),
                     },

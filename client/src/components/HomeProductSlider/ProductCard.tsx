@@ -1,12 +1,7 @@
 import React, { useMemo } from "react";
-import { Swiper, SwiperSlide } from "swiper/react";
-import { Autoplay, Navigation, Pagination } from "swiper/modules";
-import "swiper/css";
-import "swiper/css/navigation";
-import "swiper/css/pagination";
 import styles from "./ProductCard.module.css";
 import { isProductOutOfStock, getProductImagesForColor } from "../../features/products/inventory";
-import ProductImage from "../ProductImage";
+import ProductCardMedia from "../ProductImage/ProductCardMedia";
 import { useProductNavigation } from "../../features/products/hooks/useProductNavigation";
 import { useStorefrontTenant } from "../../features/tenant/useTenant";
 import {
@@ -14,7 +9,7 @@ import {
     isServiceBusiness,
 } from "../../features/tenant/businessMode";
 import { getColorValue } from "./ProductCard.utils";
-import { ArrowIcon, BagIcon, HeartIcon, StarIcon } from "./ProductCardIcons";
+import { BagIcon, HeartIcon, StarIcon } from "./ProductCardIcons";
 import { useProductVariantSelection } from "./useProductVariantSelection";
 
 export interface ProductInventory {
@@ -43,6 +38,7 @@ interface ProductCardProps {
     onWishlist?: (productId: string, isAdding: boolean) => void;
     onAddToCart?: (productId: string, variantId: string, color: string, size: string) => void;
     isAdding?: boolean;
+    mediaVariant?: "hover" | "swiper";
 }
 
 export default function ProductCard({
@@ -51,6 +47,7 @@ export default function ProductCard({
     onWishlist,
     onAddToCart,
     isAdding = false,
+    mediaVariant = "swiper",
 }: ProductCardProps) {
     const { goToProduct } = useProductNavigation();
     const { tenant } = useStorefrontTenant();
@@ -101,10 +98,9 @@ export default function ProductCard({
 
     const handleAddToCart = (event: React.MouseEvent<HTMLButtonElement>) => {
         event.stopPropagation();
-        if (isAdding) {
+        if (isAdding || isOutOfStock) {
             return;
         }
-        // Always notify parent so guests can open the login modal first.
         onAddToCart?.(
             _id,
             selectedVariant?.variantId || "",
@@ -135,7 +131,7 @@ export default function ProductCard({
 
     return (
         <article
-            className={`${styles.card} ${!isActive ? styles.inactive : ""}`}
+            className={`${styles.card} ${!isActive ? styles.inactive : ""} ${isOutOfStock ? styles.soldOut : ""}`}
             onClick={handleCardClick}
             role="link"
             tabIndex={0}
@@ -148,51 +144,22 @@ export default function ProductCard({
         >
             <div className={styles.imageContainer}>
                 {validImages.length > 0 ? (
-                    <Swiper
-                        key={`${_id}-${selectedColor}`}
-                        modules={[Autoplay, Navigation, Pagination]}
-                        className={styles.productSwiper}
-                        slidesPerView={1}
-                        spaceBetween={0}
-                        loop={validImages.length > 1}
-                        speed={600}
-                        autoplay={validImages.length > 1 ? {
-                            delay: 3000,
-                            disableOnInteraction: false,
-                            pauseOnMouseEnter: true,
-                        } : false}
-                        navigation={validImages.length > 1 ? {
-                            prevEl: `.product-prev-${_id}`,
-                            nextEl: `.product-next-${_id}`,
-                        } : false}
-                        pagination={validImages.length > 1 ? { clickable: true } : false}
-                    >
-                        {validImages.map((image, index) => (
-                            <SwiperSlide key={`${_id}-${selectedColor}-${index}`} className={styles.productSlide}>
-                                <ProductImage
-                                    src={image}
-                                    alt={`${name} ${selectedColor} ${index + 1}`}
-                                    className={styles.productImage}
-                                    loading={index === 0 ? "eager" : "lazy"}
-                                    placeholder={
-                                        <div className={styles.noImage}>
-                                            <span>No Image</span>
-                                        </div>
-                                    }
-                                />
-                            </SwiperSlide>
-                        ))}
-                    </Swiper>
-                ) : (
-                    <ProductImage
-                        alt={name}
-                        className={styles.productImage}
-                        placeholder={
-                            <div className={styles.noImage}>
-                                <span>No Image</span>
-                            </div>
-                        }
+                    <ProductCardMedia
+                        sources={validImages}
+                        alt={`${name} ${selectedColor}`.trim()}
+                        mediaClassName={styles.productImage}
+                        loading="lazy"
+                        variant={mediaVariant}
                     />
+                ) : (
+                    <div className={styles.noImage}>
+                        <span>No Image</span>
+                    </div>
+                )}
+                {isOutOfStock && (
+                    <div className={styles.outOfStock}>
+                        {isServiceMode ? "Unavailable" : "Out of Stock"}
+                    </div>
                 )}
                 <div className={styles.gradient} />
                 {(!isServiceMode && discountPercentage > 0) && (
@@ -206,26 +173,6 @@ export default function ProductCard({
                 >
                     <HeartIcon filled={isWishlisted} />
                 </button>
-                {validImages.length > 1 && (
-                    <>
-                        <button
-                            type="button"
-                            className={`${styles.sliderArrow} ${styles.leftArrow} product-prev-${_id}`}
-                            onClick={stopPropagation}
-                            aria-label="Previous image"
-                        >
-                            <ArrowIcon direction="left" />
-                        </button>
-                        <button
-                            type="button"
-                            className={`${styles.sliderArrow} ${styles.rightArrow} product-next-${_id}`}
-                            onClick={stopPropagation}
-                            aria-label="Next image"
-                        >
-                            <ArrowIcon direction="right" />
-                        </button>
-                    </>
-                )}
                 {!isServiceMode && typeof averageRating === "number" && (
                     <div className={styles.rating}>
                         <span>{averageRating.toFixed(1)}</span>
@@ -244,7 +191,7 @@ export default function ProductCard({
                         type="button"
                         className={styles.cartButton}
                         onClick={handleAddToCart}
-                        disabled={isAdding}
+                        disabled={isAdding || isOutOfStock}
                     >
                         <BagIcon />
                         <span>{cartButtonLabel}</span>

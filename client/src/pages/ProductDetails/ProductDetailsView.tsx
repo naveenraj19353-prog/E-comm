@@ -6,6 +6,7 @@ import ProductGallery from "./ProductGallery";
 import ProductInfo from "./ProductInfo";
 import ProductReviews from "./ProductReviews";
 import ProductSpecifications from "./ProductSpecifications";
+import SimilarProducts from "./SimilarProducts";
 import { useLayoutSettings } from "../../theme/useThemeSettings";
 import styles from "./ProductDetails.module.css";
 
@@ -168,6 +169,11 @@ const ProductDetailsView = ({
                     reviewsLoading={reviewsLoading}
                 />
             )}
+            <SimilarProducts
+                product={product}
+                isServiceMode={isServiceMode}
+                isMenuMode={isMenuMode}
+            />
         </div>
     );
 };

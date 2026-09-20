@@ -5,7 +5,7 @@ from bson import ObjectId
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Path, Query
 from pymongo import DESCENDING
 
-from app.database.mongo import orders, users
+from app.database.mongo import orders, shipments, users
 from app.models.checkout import CreateCodOrder
 from app.models.menu import PlaceMenuOrderRequest
 from app.models.orders import UpdateOrderStatus
@@ -400,7 +400,7 @@ def _serialize_order(order: dict, customer: dict | None = None) -> dict:
         "counterNumber": order.get("counterNumber"),
         "phone": order.get("phone"),
         "paidAt": order.get("paidAt"),
-        "courier": _serialize_courier(order.get("courier")),
+        "courier": _resolve_courier(order),
         "createdAt": order.get("createdAt"),
         "updatedAt": order.get("updatedAt"),
     }
@@ -409,14 +409,51 @@ def _serialize_order(order: dict, customer: dict | None = None) -> dict:
     return payload
 
 
+DELHIVERY_TRACK_URL = "https://www.delhivery.com/track-v2/package/{waybill}"
+
+
+def _resolve_courier(order: dict) -> dict | None:
+    courier = order.get("courier") if isinstance(order.get("courier"), dict) else {}
+    waybill = str(courier.get("waybill") or "").strip()
+    if not waybill:
+        shipment = shipments.find_one(
+            {
+                "tenantId": order.get("tenantId"),
+                "orderId": str(order.get("_id")),
+            }
+        )
+        if shipment and shipment.get("awb"):
+            waybill = str(shipment.get("awb") or "").strip()
+            courier = {
+                "provider": shipment.get("provider") or "delhivery",
+                "waybill": waybill,
+                "trackingUrl": shipment.get("trackingUrl"),
+                "labelUrl": shipment.get("labelUrl"),
+                "pickupLocation": shipment.get("pickupLocation"),
+                "shippedAt": shipment.get("createdAt"),
+                "trackingStatus": shipment.get("trackingStatus"),
+            }
+    return _serialize_courier(courier)
+
+
 def _serialize_courier(courier) -> dict | None:
     if not isinstance(courier, dict):
         return None
+    waybill = str(courier.get("waybill") or "").strip()
+    if not waybill:
+        return None
+    tracking_url = str(courier.get("trackingUrl") or "").strip()
+    if not tracking_url or "/api/" in tracking_url:
+        tracking_url = DELHIVERY_TRACK_URL.format(waybill=waybill)
+    label_url = str(courier.get("labelUrl") or "").strip()
+    if "/api/" in label_url:
+        label_url = ""
     return {
-        "provider": courier.get("provider"),
-        "waybill": courier.get("waybill"),
-        "trackingUrl": courier.get("trackingUrl"),
-        "labelUrl": courier.get("labelUrl"),
+        "provider": courier.get("provider") or "delhivery",
+        "waybill": waybill,
+        "trackingUrl": tracking_url,
+        "labelUrl": label_url or None,
         "pickupLocation": courier.get("pickupLocation"),
         "shippedAt": courier.get("shippedAt"),
+        "trackingStatus": courier.get("trackingStatus"),
     }

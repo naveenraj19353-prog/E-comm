@@ -8,15 +8,17 @@ import styles from "./DealOfTheDay.module.css";
 import Countdown from "./Countdown";
 import ProductCard from "../Sliders/ProductSlider/ProductCard";
 import type { Product } from "../../features/products/types";
+import type { FestivalOffer } from "../../features/home/types/home.types";
 import { useStorefrontTenant } from "../../features/tenant/useTenant";
 import { routes, storefrontNavigate } from "../../routes/routes";
 interface DealOfTheDayProps {
     products: Product[];
+    festivalOffer?: FestivalOffer | null;
     isWishlisted?: (productId: string) => boolean;
     onToggleWishlist?: (id: string, wishlisted: boolean) => void;
     onQuickAdd?: (productId: string, variantId: string, color: string, size: string) => void;
 }
-const DealOfTheDay = ({ products, isWishlisted, onToggleWishlist, onQuickAdd, }: DealOfTheDayProps) => {
+const DealOfTheDay = ({ products, festivalOffer, isWishlisted, onToggleWishlist, onQuickAdd, }: DealOfTheDayProps) => {
     const navigate = useNavigate();
     const { tenantSlug } = useStorefrontTenant();
     const prevRef = useRef<HTMLButtonElement | null>(null);
@@ -26,16 +28,25 @@ const DealOfTheDay = ({ products, isWishlisted, onToggleWishlist, onQuickAdd, }:
     }
     return (<section className={styles.section}>
       <div className={styles.left}>
-        <span className={styles.tag}>🔥 Limited Time</span>
+        <span className={styles.tag}>{festivalOffer ? "Festival offer" : "Limited Time"}</span>
         <h2>
-          Deal
-          <br />
-          Of The Day
+          {festivalOffer?.title ? (
+            festivalOffer.title
+          ) : (
+            <>
+              Deal
+              <br />
+              Of The Day
+            </>
+          )}
         </h2>
         <p>
-          Grab your favourite products at unbeatable prices. Don't miss today's
-          exclusive deals.
+          {festivalOffer?.message ||
+            "Grab your favourite products at unbeatable prices. Don't miss today's exclusive deals."}
         </p>
+        {festivalOffer?.code ? (
+          <p>Use code {festivalOffer.code} at checkout.</p>
+        ) : null}
         <Countdown />
         <button type="button" className={styles.button} onClick={() => {
             if (tenantSlug) {

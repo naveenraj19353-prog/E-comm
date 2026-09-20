@@ -113,7 +113,8 @@
   box-shadow: 0 0 0 0.0625rem
     color-mix(in srgb, var(--primary) 12%, transparent);
 }
-.thumbnail img {
+.thumbnail img,
+.thumbnail video {
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -718,6 +719,17 @@
   padding-top: 1.75rem;
   border-top: 0.0625rem solid var(--border);
 }
+.similarSection {
+  margin-top: 2.5rem;
+  padding-top: 1.75rem;
+  border-top: 0.0625rem solid var(--border);
+  min-width: 0;
+}
+.similarLoading {
+  margin: 1.25rem 0 0;
+  color: color-mix(in srgb, var(--text) 55%, var(--surface));
+  font-size: 0.875rem;
+}
 .reviewsHeader {
   display: flex;
   align-items: flex-end;
@@ -970,7 +982,8 @@
     margin-top: 1.5rem;
     padding: 1.25rem;
   }
-  .reviewsSection {
+  .reviewsSection,
+  .similarSection {
     margin-top: 1.5rem;
     padding-top: 1.25rem;
   }
@@ -1074,7 +1087,8 @@
   .specRow strong {
     line-height: 1.5;
   }
-  .reviewsSection {
+  .reviewsSection,
+  .similarSection {
     margin-top: 1.25rem;
     padding-top: 1.125rem;
   }

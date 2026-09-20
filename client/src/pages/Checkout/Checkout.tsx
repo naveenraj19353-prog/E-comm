@@ -57,18 +57,7 @@ const Checkout = () => {
     const [isProcessing, setIsProcessing] = useState(false);
 
     const handleAddressSelect = (address: Address | null) => {
-        setSelectedAddress((prev) => {
-            if (!address) {
-                return null;
-            }
-            if (
-                prev?._id === address._id &&
-                prev.postalCode === address.postalCode
-            ) {
-                return prev;
-            }
-            return address;
-        });
+        setSelectedAddress(address);
     };
 
     const {
@@ -83,6 +72,9 @@ const Checkout = () => {
         couponCode: appliedCoupon || undefined,
         deliveryMethod,
         paymentMethod,
+        addressStamp: selectedAddress
+            ? `${selectedAddress.updatedAt || ""}:${selectedAddress.postalCode}:${selectedAddress.addressLine1}`
+            : undefined,
         enabled: Boolean(
             isRetail && user?._id && user?.tenantId && cart.length > 0,
         ),

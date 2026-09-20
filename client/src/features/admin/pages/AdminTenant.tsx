@@ -224,6 +224,15 @@ export default function AdminTenant() {
                 <b>→</b>
               </button>
 
+              <button type="button" className={styles.actionCard} onClick={() => navigate(`/admin/tenants/${tenant.tenantId}/coupons`)}>
+                <div className={styles.actionIcon}>%</div>
+                <div>
+                  <strong>Coupons</strong>
+                  <span>First-order, product, and festival offers for checkout.</span>
+                </div>
+                <b>→</b>
+              </button>
+
               {isRetail ? (
                 <button type="button" className={styles.actionCard} onClick={() => navigate(`/admin/tenants/${tenant.tenantId}/shipping/delhivery`)}>
                   <div className={styles.actionIcon}>⬡</div>

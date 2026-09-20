@@ -79,6 +79,8 @@ export const API_ENDPOINTS = {
     COUPON: {
         CREATE: "/coupon/create-coupon",
         APPLY: "/coupon/apply-coupon",
+        LIST: "/coupon/list",
+        update: (id: string) => `/coupon/${id}`,
     },
 
     PAYMENTS: {
@@ -151,6 +153,7 @@ export const API_ENDPOINTS = {
         SHIPMENTS: "/shipping/delhivery/shipments",
         PICKUP: "/shipping/delhivery/pickup",
         track: (awb: string) => `/shipping/delhivery/track/${awb}`,
+        packingSlip: (awb: string) => `/shipping/delhivery/packing-slip/${awb}`,
         label: (shipmentId: string) => `/shipping/delhivery/shipments/${shipmentId}/label`,
     },
 

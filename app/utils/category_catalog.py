@@ -3,6 +3,10 @@
 from __future__ import annotations
 
 from app.database.mongo import categories, products
+from app.utils.product_serialize import (
+    _resolve_image_for_response,
+    is_banner_video_src,
+)
 
 
 def _catalog_pipeline(
@@ -94,9 +98,9 @@ def _catalog_category(
     name = str(row.get("name") or meta.get("name") or category_id).strip()
     name = name or category_id
 
-    image = meta.get("image")
+    image = _resolve_category_image(meta.get("image"))
     if not image:
-        image = _first_product_image(row.get("sampleImages"))
+        image = _resolve_category_image(_first_product_image(row.get("sampleImages")))
 
     return {
         "_id": category_id,
@@ -157,26 +161,42 @@ def _image_string(value) -> str | None:
     return value.strip()
 
 
-def _first_image_in_list(images: list) -> str | None:
-    for item in images:
-        image = _image_string(item)
-        if image is not None:
-            return image
-    return None
-
-
-def _first_product_image(images) -> str | None:
+def _iter_image_strings(images):
     if isinstance(images, list):
-        return _first_image_in_list(images)
+        for item in images:
+            image = _image_string(item)
+            if image is not None:
+                yield image
+        return
     if not isinstance(images, dict):
-        return None
-
+        return
     for value in images.values():
         image = _image_string(value)
         if image is not None:
-            return image
+            yield image
         if isinstance(value, list):
-            image = _first_image_in_list(value)
-            if image is not None:
-                return image
-    return None
+            for item in value:
+                image = _image_string(item)
+                if image is not None:
+                    yield image
+
+
+def _first_product_image(images) -> str | None:
+    photos: list[str] = []
+    videos: list[str] = []
+    for item in _iter_image_strings(images):
+        if is_banner_video_src(item):
+            videos.append(item)
+        else:
+            photos.append(item)
+    return (photos[0] if photos else None) or (videos[0] if videos else None)
+
+
+def _resolve_category_image(value) -> str | None:
+    if not isinstance(value, str) or not value.strip():
+        return None
+    try:
+        resolved = _resolve_image_for_response(value.strip())
+    except Exception:
+        return None
+    return resolved or None

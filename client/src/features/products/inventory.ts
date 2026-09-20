@@ -100,6 +100,17 @@ export function getProductImagesForColor(
         }
     }
 
-    const fallback = getFirstProductImage(images as Record<string, string[]>);
-    return fallback ? [fallback] : [];
+    for (const colorImages of Object.values(images as ProductImageMap)) {
+        if (typeof colorImages === "string" && colorImages.trim()) {
+            return [colorImages.trim()];
+        }
+        if (!Array.isArray(colorImages)) {
+            continue;
+        }
+        const resolved = colorImages.filter((item) => typeof item === "string" && item.trim());
+        if (resolved.length > 0) {
+            return resolved;
+        }
+    }
+    return [];
 }
