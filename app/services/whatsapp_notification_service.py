@@ -220,6 +220,11 @@ def _merchant_message(
     )
 
 
+def _phone_local_key(value: str) -> str:
+    digits = "".join(character for character in str(value or "") if character.isdigit())
+    return digits[-10:] if len(digits) >= 10 else digits
+
+
 def _tenant_notify_phones(
     tenant_id: str,
     integration: dict | None,
@@ -245,12 +250,15 @@ def _tenant_notify_phones(
 
     phones: list[str] = []
     seen: set[str] = set()
+    exclude_keys = {exclude_phone, _phone_local_key(exclude_phone)} - {""}
     for raw in candidates:
         try:
             phone = normalize_phone(raw, country="India")
         except PhoneNormalizationError:
             continue
-        if phone == exclude_phone or phone in seen:
+        if phone in seen:
+            continue
+        if phone in exclude_keys or _phone_local_key(phone) in exclude_keys:
             continue
         seen.add(phone)
         phones.append(phone)
@@ -787,7 +795,8 @@ def process_notification(notification_id: str) -> None:
         **((integration or {}).get("notifications") or {}),
     }
     preference = EVENT_PREFERENCE[notification["eventType"]]
-    if not integration or not integration.get("enabled") or not preferences.get(preference):
+    explicitly_off = integration is not None and not integration.get("enabled")
+    if explicitly_off or not preferences.get(preference):
         notification_logs.update_one(
             {"_id": log_id},
             {
@@ -795,6 +804,19 @@ def process_notification(notification_id: str) -> None:
                     "tenantId": tenant_id,
                     "status": "skipped",
                     "error": "Notification is disabled.",
+                    "updatedAt": _now(),
+                }
+            },
+        )
+        return
+    if not PeriskopeService().configured:
+        notification_logs.update_one(
+            {"_id": log_id},
+            {
+                "$set": {
+                    "tenantId": tenant_id,
+                    "status": "skipped",
+                    "error": "Periskope credentials are not configured.",
                     "updatedAt": _now(),
                 }
             },

@@ -72,6 +72,8 @@ class WhatsAppNotificationTests(unittest.TestCase):
         self.assertIn(f"https://demo.{TENANT_BASE_DOMAIN}/orders", message)
         self.assertNotIn("localhost", message)
         self.assertNotIn("Shop now", message)
+        self.assertNotIn("Open Admin", message)
+        self.assertNotIn("NEW ORDER", message)
         sent_update = logs.update_one.call_args_list[-1].args[1]["$set"]
         self.assertEqual(sent_update["status"], "sent")
         self.assertEqual(sent_update["messageId"], "message-1")
@@ -443,6 +445,65 @@ class WhatsAppNotificationTests(unittest.TestCase):
         _chat_id, message = service.return_value.send_text_message.call_args.args
         self.assertIn("ORDER SHIPPED", message)
         self.assertIn("Naveen", message)
+
+
+    @patch("app.services.whatsapp_notification_service.PeriskopeService")
+    @patch("app.services.whatsapp_notification_service.shipping_locations")
+    @patch("app.services.whatsapp_notification_service.tenants")
+    @patch("app.services.whatsapp_notification_service.users")
+    @patch("app.services.whatsapp_notification_service.messaging_integrations")
+    @patch("app.services.whatsapp_notification_service.orders")
+    @patch("app.services.whatsapp_notification_service.notification_logs")
+    def test_tenant_alert_skips_customer_phone(
+        self,
+        logs: MagicMock,
+        orders: MagicMock,
+        integrations: MagicMock,
+        users: MagicMock,
+        tenants: MagicMock,
+        shipping: MagicMock,
+        service: MagicMock,
+    ):
+        logs.find_one.return_value = {**self.notification, "audience": "tenant"}
+        orders.find_one.return_value = {
+            **self.order,
+            "address": {
+                "fullName": "Naveen Raj",
+                "phone": "08088662317",
+                "country": "India",
+            },
+        }
+        integrations.find_one.return_value = {
+            "enabled": True,
+            "notifyPhone": "8088662317",
+            "notifications": {"orderConfirmation": True},
+        }
+        users.find.return_value = [{"phone": "918088662317", "role": "admin"}]
+        users.find_one.return_value = {"name": "Naveen Raj"}
+        tenants.find_one.return_value = {
+            "name": "Vedic Paan",
+            "slug": "vedic-paan",
+            "phone": "08088662317",
+        }
+        shipping.find_one.return_value = None
+
+        process_notification(str(self.notification_id))
+
+        service.return_value.send_text_message.assert_not_called()
+        skipped = logs.update_one.call_args_list[-1].args[1]["$set"]
+        self.assertEqual(skipped["status"], "skipped")
+
+    def test_customer_confirmation_copy_is_not_admin_copy(self):
+        message = _message_for(
+            "order.confirmed",
+            self.order,
+            {"name": "Naveen Raj", "phone": "8088662317"},
+            {"name": "Vedic Paan", "ordersUrl": "https://vedic-paan.example/orders"},
+        )
+        self.assertIn("your order is confirmed", message)
+        self.assertNotIn("Open Admin", message)
+        self.assertNotIn("NEW ORDER", message)
+        self.assertNotIn("A customer placed an order", message)
 
 
 if __name__ == "__main__":

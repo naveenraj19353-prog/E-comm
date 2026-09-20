@@ -56,6 +56,21 @@ const Checkout = () => {
     const [couponError, setCouponError] = useState<string | null>(null);
     const [isProcessing, setIsProcessing] = useState(false);
 
+    const handleAddressSelect = (address: Address | null) => {
+        setSelectedAddress((prev) => {
+            if (!address) {
+                return null;
+            }
+            if (
+                prev?._id === address._id &&
+                prev.postalCode === address.postalCode
+            ) {
+                return prev;
+            }
+            return address;
+        });
+    };
+
     const {
         data: checkoutPreview,
         isLoading: isPreviewLoading,
@@ -67,6 +82,7 @@ const Checkout = () => {
         addressId: selectedAddress?._id || undefined,
         couponCode: appliedCoupon || undefined,
         deliveryMethod,
+        paymentMethod,
         enabled: Boolean(
             isRetail && user?._id && user?.tenantId && cart.length > 0,
         ),
@@ -358,8 +374,10 @@ const Checkout = () => {
                             <AddressSection
                                 userId={user?._id}
                                 tenantId={user?.tenantId || tenantSlug}
-                                onAddressSelect={setSelectedAddress}
+                                onAddressSelect={handleAddressSelect}
                             />
+                            {checkoutPreview?.shippingProvider ||
+                            checkoutPreview?.shippingOptions?.length ? (
                             <DeliveryMethod
                                 selectedMethod={deliveryMethod}
                                 shippingOptions={checkoutPreview?.shippingOptions}
@@ -367,6 +385,7 @@ const Checkout = () => {
                                 shippingMessage={checkoutPreview?.shippingMeta?.message}
                                 onDeliveryChange={handleDeliveryChange}
                             />
+                            ) : null}
                             <CouponSection
                                 value={couponInput}
                                 appliedCode={
@@ -380,6 +399,8 @@ const Checkout = () => {
                             />
                             <PaymentMethod
                                 selectedMethod={paymentMethod}
+                                shippingQuoted={Boolean(checkoutPreview?.shippingQuoted)}
+                                deliveryCharge={summary.deliveryCharge}
                                 onMethodChange={setPaymentMethod}
                             />
                         </CheckoutMain>

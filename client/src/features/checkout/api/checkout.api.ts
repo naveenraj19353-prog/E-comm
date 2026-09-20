@@ -9,6 +9,7 @@ export interface CheckoutPreviewRequest {
     addressId?: string | null;
     couponCode?: string | null;
     deliveryMethod?: DeliveryMethodType;
+    paymentMethod?: string | null;
 }
 
 export interface CheckoutPreviewItem {
@@ -44,6 +45,13 @@ export interface CheckoutPreviewData {
         serviceable?: boolean | null;
         message?: string;
     };
+    address?: {
+        _id: string;
+        fullName?: string;
+        phone?: string;
+        postalCode?: string;
+        isDefault?: boolean;
+    } | null;
 }
 
 export interface CheckoutPreviewResponse {
@@ -79,6 +87,7 @@ export const previewCheckout = async (
             addressId: payload.addressId || undefined,
             couponCode: payload.couponCode || undefined,
             deliveryMethod: payload.deliveryMethod || "standard",
+            paymentMethod: payload.paymentMethod || undefined,
         },
     );
     return response.data?.data ?? (() => {

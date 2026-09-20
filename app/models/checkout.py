@@ -10,6 +10,7 @@ class CheckoutRequest(BaseModel):
     couponCode: Optional[str] = None
     addressId: Optional[str] = None
     deliveryMethod: DeliveryMethod = "standard"
+    paymentMethod: Optional[str] = None
 
 
 class CreateCodOrder(BaseModel):

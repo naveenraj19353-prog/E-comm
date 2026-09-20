@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { MapPin, Plus } from "lucide-react";
 import styles from "./AddressSection.module.css";
 import type { Address } from "../../../../../features/address/types/address.types";
@@ -10,7 +10,7 @@ import AddressCard from "./AddressCard";
 interface AddressSectionProps {
     userId?: string;
     tenantId?: string;
-    onAddressSelect?: (address: Address) => void;
+    onAddressSelect?: (address: Address | null) => void;
 }
 
 const AddressSection = ({
@@ -31,12 +31,32 @@ const AddressSection = ({
     const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
     const [showForm, setShowForm] = useState(false);
     const [editingAddress, setEditingAddress] = useState<Address | null>(null);
+    const onAddressSelectRef = useRef(onAddressSelect);
+    onAddressSelectRef.current = onAddressSelect;
 
     const selectedAddress =
         addresses.find((address) => address._id === selectedAddressId) ||
         addresses.find((address) => address.isDefault) ||
         addresses[0] ||
         null;
+
+    useEffect(() => {
+        if (!addresses.length) {
+            onAddressSelectRef.current?.(null);
+            return;
+        }
+        const stillSelected = addresses.find(
+            (address) => address._id === selectedAddressId,
+        );
+        const next =
+            stillSelected ||
+            addresses.find((address) => address.isDefault) ||
+            addresses[0];
+        if (!stillSelected) {
+            setSelectedAddressId(next._id);
+        }
+        onAddressSelectRef.current?.(next);
+    }, [addresses, selectedAddressId]);
 
     const handleSelectAddress = (address: Address) => {
         setSelectedAddressId(address._id);
@@ -61,6 +81,9 @@ const AddressSection = ({
     const handleCreateAddress = async (data: AddressFormData) => {
         try {
             await addAddress({ ...data });
+            if (data.isDefault) {
+                setSelectedAddressId(null);
+            }
             setShowForm(false);
             setEditingAddress(null);
         } catch (createError) {

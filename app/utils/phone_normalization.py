@@ -21,6 +21,13 @@ def normalize_phone(value: str | None, *, country: str | None = None) -> str:
         raise PhoneNormalizationError("Customer phone number is missing.")
 
     digits = re.sub(r"\D", "", raw)
+    country_code = _COUNTRY_CODES.get((country or "").strip().lower())
+
+    if not raw.startswith("+") and digits.startswith("0") and country_code:
+        national = digits.lstrip("0")
+        if len(national) == 10:
+            return f"{country_code}{national}"
+
     if raw.startswith("+"):
         if 8 <= len(digits) <= 15:
             return digits
@@ -30,7 +37,6 @@ def normalize_phone(value: str | None, *, country: str | None = None) -> str:
         return digits
 
     if len(digits) == 10:
-        country_code = _COUNTRY_CODES.get((country or "").strip().lower())
         if country_code:
             return f"{country_code}{digits}"
         raise PhoneNormalizationError(

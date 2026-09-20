@@ -32,12 +32,6 @@ const CartSummary = ({
                     <span>Subtotal</span>
                     <span>₹{grandTotal.toLocaleString("en-IN")}</span>
                 </div>
-                {!isSummaryOnly ? (
-                    <div className={styles.summaryRow}>
-                        <span>Delivery</span>
-                        <span className={styles.free}>FREE</span>
-                    </div>
-                ) : null}
             </div>
             <div className={styles.divider} />
             <div className={styles.total}>

@@ -430,6 +430,7 @@ def fulfill_cod_order(
         address_id=address_id,
         require_address=True,
         delivery_method=delivery_method,
+        payment_method="cod",
     )
     order = _finalize_order_from_checkout(
         checkout_data,

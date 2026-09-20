@@ -39,6 +39,7 @@ def checkout(
             coupon_code=request.couponCode,
             address_id=request.addressId,
             delivery_method=request.deliveryMethod,
+            payment_method=request.paymentMethod,
         )
         return {
             "success": True,

@@ -35,9 +35,16 @@ const PAYMENT_OPTIONS: PaymentOption[] = [
 ];
 interface PaymentMethodProps {
     selectedMethod?: PaymentMethodType;
+    shippingQuoted?: boolean;
+    deliveryCharge?: number;
     onMethodChange?: (method: PaymentMethodType) => void;
 }
-const PaymentMethod = ({ selectedMethod = "upi", onMethodChange, }: PaymentMethodProps) => {
+const PaymentMethod = ({
+    selectedMethod = "upi",
+    shippingQuoted = false,
+    deliveryCharge = 0,
+    onMethodChange,
+}: PaymentMethodProps) => {
     return (<section className={styles.section}>
       <div className={styles.header}>
         <div>
@@ -56,7 +63,15 @@ const PaymentMethod = ({ selectedMethod = "upi", onMethodChange, }: PaymentMetho
               </div>
               <div className={styles.content}>
                 <strong>{option.title}</strong>
-                <p>{option.description}</p>
+                <p>
+                  {option.id === "cod" &&
+                  shippingQuoted &&
+                  selectedMethod === "cod"
+                      ? deliveryCharge > 0
+                          ? `Pay when delivered. Partner delivery charge ₹${deliveryCharge.toLocaleString("en-IN")}`
+                          : "Pay when delivered. Partner delivery charge applied at checkout"
+                      : option.description}
+                </p>
               </div>
               <span className={`${styles.radio} ${isSelected ? styles.radioSelected : ""}`}>
                 {isSelected && <Check size={13}/>}

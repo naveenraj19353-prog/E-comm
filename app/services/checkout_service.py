@@ -346,12 +346,17 @@ def _checkout_totals(
     return normalized_delivery, shipping, grand_total
 
 
+def _rate_payment_mode(payment_method: str | None) -> str:
+    return "COD" if str(payment_method or "").strip().lower() == "cod" else "Prepaid"
+
+
 def _partner_shipping(
     tenant_id: str,
     address: dict | None,
     delivery_method: str,
     *,
     require_quote: bool = False,
+    payment_method: str | None = None,
 ) -> tuple[float | None, list[dict], dict]:
     """Return (selected_fee, options, meta). fee None => no partner quote yet."""
     from app.services.delhivery_service import DelhiveryError
@@ -400,6 +405,7 @@ def _partner_shipping(
             tenant_id,
             origin_pin=ctx["originPin"],
             destination_pin=dest_pin,
+            payment_mode=_rate_payment_mode(payment_method),
         )
     except DelhiveryError:
         options = []
@@ -439,6 +445,7 @@ def calculate_checkout(
     address_id: str | None = None,
     require_address: bool = False,
     delivery_method: str = "standard",
+    payment_method: str | None = None,
 ):
     tenant_id = normalize_tenant_id(tenant_id)
     cart_items = _load_cart_items(tenant_id, user_id)
@@ -459,6 +466,7 @@ def calculate_checkout(
         address,
         delivery_method,
         require_quote=require_address,
+        payment_method=payment_method,
     )
     normalized_delivery, shipping, grand_total = _checkout_totals(
         subtotal,
