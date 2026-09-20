@@ -5,6 +5,7 @@ import DealOfTheDay from "../../components/DealOfTheDay/DealOfTheDay";
 import { useHome } from "../../features/home/hooks/useHome";
 import styles from "./Home.module.css";
 import BannerSlider from "../../components/Banner/BannerSlider";
+import { isBannerVideoSrc } from "../../components/Banner/bannerMedia";
 import CategorySlider from "../../components/CategorySlider/CategorySlider";
 import { useStorefrontTenant } from "../../features/tenant/useTenant";
 import { useLayoutSettings } from "../../theme/useThemeSettings";
@@ -79,7 +80,12 @@ const Home = () => {
         newArrivals = [],
         topRatedProducts = [],
         dealOfTheDay = [],
+        festivalOffers = [],
     } = homeData;
+    const festivalOffer = festivalOffers[0] || null;
+    const shareBanner = banners.find(
+        (banner) => banner.image && !isBannerVideoSrc(banner.image, banner.mediaType),
+    );
 
     return (
         <main className={styles.home}>
@@ -88,7 +94,7 @@ const Home = () => {
                 description={storeDescription}
                 path="/"
                 tenantSlug={tenantSlug}
-                image={storeShareImage(tenant, banners[0]?.image) || undefined}
+                image={storeShareImage(tenant, shareBanner?.image) || undefined}
                 jsonLdId="store-home"
                 jsonLd={[
                     buildOrganizationJsonLd({
@@ -106,6 +112,19 @@ const Home = () => {
             {layoutSettings.showHomeBanner && (
                 <section className={`${styles.bannerSection} ${layoutSettings.homeBannerStyle === "contained" ? styles.bannerContained : ""}`}>
                     <BannerSlider banners={banners} />
+                </section>
+            )}
+
+            {festivalOffers.length > 0 && (
+                <section className={styles.festivalSection} aria-label="Festival offers">
+                    {festivalOffers.map((offer) => (
+                        <div key={offer.code} className={styles.festivalCard}>
+                            <span className={styles.festivalEyebrow}>Festival offer</span>
+                            <h2>{offer.title}</h2>
+                            <p>{offer.message}</p>
+                            <strong>Use code {offer.code}</strong>
+                        </div>
+                    ))}
                 </section>
             )}
 
@@ -154,6 +173,7 @@ const Home = () => {
                 <section className={styles.productSection}>
                     <DealOfTheDay
                         products={dealOfTheDay}
+                        festivalOffer={festivalOffer}
                         isWishlisted={isProductWishlisted}
                         onToggleWishlist={handleWishlist}
                         onQuickAdd={handleAddToCart}

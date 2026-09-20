@@ -132,6 +132,7 @@ export default function DelhiverySettingsPage() {
         phone: whPhone.trim(),
         address: whAddress.trim(),
         city: whCity.trim(),
+        state: whState.trim(),
         country: "India",
         pin: whPin.trim(),
         return_address: whAddress.trim(),

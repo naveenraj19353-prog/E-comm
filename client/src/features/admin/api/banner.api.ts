@@ -9,6 +9,7 @@ export type BannerRecord = {
   description?: string | null;
   image: string;
   mobileImage?: string | null;
+  mediaType?: "image" | "video" | string | null;
   buttonText?: string | null;
   link?: string | null;
   priority?: number;
@@ -26,6 +27,7 @@ export type BannerPayload = {
   description?: string;
   image: string;
   mobileImage?: string;
+  mediaType?: "image" | "video";
   buttonText?: string;
   link?: string;
   priority?: number;

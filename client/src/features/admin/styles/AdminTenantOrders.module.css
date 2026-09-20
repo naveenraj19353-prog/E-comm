@@ -348,6 +348,36 @@
   color: #b91c1c;
 }
 
+.trackingCell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.trackingCell strong {
+  color: #17211d;
+  font-size: 0.75rem;
+  font-weight: 700;
+  word-break: break-all;
+}
+
+.trackingCell a {
+  color: #2f6b52;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.trackingCell a:hover {
+  text-decoration: underline;
+}
+
+.noTracking {
+  color: #89948e;
+  font-size: 0.75rem;
+}
+
 .actions {
   display: flex;
   flex-wrap: wrap;
@@ -504,7 +534,7 @@
       "order total"
       "customer customer"
       "items items"
-      "status status"
+      "status tracking"
       "actions actions";
     gap: 0.625rem 0.75rem;
     margin-bottom: 0.75rem;
@@ -559,6 +589,11 @@
 
   .cellStatus {
     grid-area: status;
+  }
+
+  .cellTracking {
+    grid-area: tracking;
+    text-align: right;
   }
 
   .cellStatus .status {

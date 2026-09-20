@@ -3,6 +3,7 @@ import { ZoomIn } from "lucide-react";
 import ProductImage from "../../components/ProductImage";
 import { DEFAULT_PRODUCT_IMAGE } from "../../constants/images";
 import { getProductImagesForColor } from "../../features/products/inventory";
+import { isVideoSrc } from "../../utils/mediaSrc";
 import styles from "./ProductDetails.module.css";
 import type { Product } from "../../features/products/types";
 interface ProductGalleryProps {
@@ -26,7 +27,9 @@ const ProductGallery = ({ product, selectedColor, }: ProductGalleryProps) => {
         setZoomVisible(false);
     }, [selectedColor]);
     const currentImage = images[selectedImage] || images[0];
+    const currentIsVideo = isVideoSrc(currentImage);
     const handleMouseMove = (event: React.MouseEvent<HTMLDivElement>) => {
+        if (currentIsVideo) return;
         const rect = event.currentTarget.getBoundingClientRect();
         const x = ((event.clientX - rect.left) / rect.width) * 100;
         const y = ((event.clientY - rect.top) / rect.height) * 100;
@@ -36,17 +39,25 @@ const ProductGallery = ({ product, selectedColor, }: ProductGalleryProps) => {
         });
     };
     return (<div className={styles.gallery}>
-      <div className={styles.mainImageWrapper} onMouseEnter={() => setZoomVisible(true)} onMouseLeave={() => setZoomVisible(false)} onMouseMove={handleMouseMove}>
+      <div
+        className={styles.mainImageWrapper}
+        onMouseEnter={() => !currentIsVideo && setZoomVisible(true)}
+        onMouseLeave={() => setZoomVisible(false)}
+        onMouseMove={handleMouseMove}
+      >
         <ProductImage
             src={currentImage}
             alt={`${product.name} ${selectedColor || ""}`}
             className={styles.mainImage}
+            autoPlay
         />
+        {!currentIsVideo && (
         <div className={styles.zoomHint}>
           <ZoomIn size={15}/>
           Hover to zoom
         </div>
-        {zoomVisible && (<div className={styles.zoomPreview} style={{
+        )}
+        {!currentIsVideo && zoomVisible && (<div className={styles.zoomPreview} style={{
                 backgroundImage: `url("${currentImage}")`,
                 backgroundPosition: `${zoomPosition.x}% ${zoomPosition.y}%`,
                 backgroundSize: `${ZOOM_SCALE}% ${ZOOM_SCALE}%`,
@@ -60,6 +71,7 @@ const ProductGallery = ({ product, selectedColor, }: ProductGalleryProps) => {
             <ProductImage
                 src={image}
                 alt={`${product.name} ${selectedColor || ""} ${index + 1}`}
+                autoPlay={false}
             />
           </button>))}
       </div>

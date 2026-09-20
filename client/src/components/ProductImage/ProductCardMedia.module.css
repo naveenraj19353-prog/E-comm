@@ -1,0 +1,65 @@
+.wrap {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.swiper,
+.slide {
+  width: 100%;
+  height: 100%;
+}
+
+.layer {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  object-position: center;
+}
+
+.secondary {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.35s ease;
+}
+
+.empty {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--background, #f3f5f4);
+  color: var(--text, #3d4a44);
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.swiper :global(.swiper-pagination) {
+  bottom: 0.5rem;
+  z-index: 3;
+}
+
+.swiper :global(.swiper-pagination-bullet) {
+  width: 0.35rem;
+  height: 0.35rem;
+  background: #fff;
+  opacity: 0.65;
+}
+
+.swiper :global(.swiper-pagination-bullet-active) {
+  width: 1rem;
+  border-radius: 0.5rem;
+  opacity: 1;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .wrap:hover .secondary {
+    opacity: 1;
+  }
+}

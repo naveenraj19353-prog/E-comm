@@ -3,6 +3,7 @@ from app.database.mongo import (
     orders,
     banners,
 )
+from app.services.coupon_service import active_festival_offers
 from app.utils.category_catalog import get_catalog_categories
 from app.utils.product_serialize import resolve_banner_images, serialize_product
 
@@ -106,11 +107,6 @@ def get_home_data(
             {
                 **base_query,
                 "discountPercentage": {"$gt": 0},
-                "inventory": {
-                    "$elemMatch": {
-                        "stock": {"$gt": 0},
-                    }
-                },
             }
         )
         .sort(
@@ -216,4 +212,5 @@ def get_home_data(
         "topRatedProducts": top_rated_products,
         "dealOfTheDay": deal_of_the_day,
         "brands": brands,
+        "festivalOffers": active_festival_offers(tenant_id),
     }

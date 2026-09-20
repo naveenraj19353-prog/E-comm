@@ -156,6 +156,13 @@ export default function AdminLayout() {
             </NavLink>
           )}
 
+          {showStoreNav && showBanners && (
+            <NavLink to={`/admin/tenants/${storeTenantId}/coupons`} className={navClass}>
+              <span>%</span>
+              Coupons
+            </NavLink>
+          )}
+
           {showStoreNav && showRetailExtras && (
             <NavLink to={`/admin/tenants/${storeTenantId}/shipping/delhivery`} className={navClass}>
               <span>⬡</span>

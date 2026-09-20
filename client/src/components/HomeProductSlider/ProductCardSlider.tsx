@@ -13,8 +13,9 @@ interface ProductCardSliderProps {
     isWishlisted?: (productId: string) => boolean;
     onQuickAdd?: (productId: string, variantId: string, color: string, size: string) => void;
     slidesPerView?: number;
+    mediaVariant?: "hover" | "swiper";
 }
-export default function ProductCardSlider({ title, products = [], onToggleWishlist, onQuickAdd, slidesPerView, }: ProductCardSliderProps) {
+export default function ProductCardSlider({ title, products = [], onToggleWishlist, onQuickAdd, slidesPerView, mediaVariant = "swiper", }: ProductCardSliderProps) {
     const prevRef = useRef<HTMLButtonElement | null>(null);
     const nextRef = useRef<HTMLButtonElement | null>(null);
     if (products.length === 0) {
@@ -70,7 +71,7 @@ export default function ProductCardSlider({ title, products = [], onToggleWishli
             pauseOnMouseEnter: true,
         }}>
         {products.map((product) => (<SwiperSlide key={product._id} className={styles.slide}>
-            <ProductCard product={product} onWishlist={(productId, isAdding) => {
+            <ProductCard product={product} mediaVariant={mediaVariant} onWishlist={(productId, isAdding) => {
                 onToggleWishlist?.(productId, isAdding);
             }} onAddToCart={(productId, variantId, color, size) => {
                 onQuickAdd?.(productId, variantId, color, size);

@@ -20,6 +20,7 @@ export const useCheckoutPreview = (
             request.couponCode,
             request.deliveryMethod,
             request.paymentMethod,
+            request.addressStamp,
         ],
         queryFn: () => previewCheckout(request),
         enabled:

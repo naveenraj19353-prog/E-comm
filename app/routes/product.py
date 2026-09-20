@@ -712,7 +712,8 @@ def _add_inventory_filter(
         conditions.append(size_condition)
     if color_condition:
         conditions.append(color_condition)
-    conditions.append({"stock": {"$gt": 0}})
+    if not conditions:
+        return
     query["inventory"] = {
         MONGO_ELEM_MATCH_OPERATOR: {
             "$and": conditions,
@@ -969,7 +970,8 @@ def _add_search_inventory_filter(
         conditions.append({"size": {"$in": sizes}})
     if colors:
         conditions.append({"color": {"$in": colors}})
-    conditions.append({"stock": {"$gt": 0}})
+    if not conditions:
+        return
     query["inventory"] = {
         MONGO_ELEM_MATCH_OPERATOR: {
             "$and": conditions,

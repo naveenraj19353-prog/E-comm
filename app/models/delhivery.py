@@ -15,12 +15,13 @@ class DelhiveryWarehouseRequest(BaseModel):
     phone: str = Field(..., min_length=8, max_length=20)
     address: str = Field(..., min_length=3, max_length=350)
     city: str = Field(..., min_length=1, max_length=80)
+    state: str = Field(..., min_length=1, max_length=80)
     country: str = Field(default="India", max_length=80)
     pin: str = Field(..., min_length=6, max_length=6, pattern=r"^\d{6}$")
     return_address: Optional[str] = Field(default=None, max_length=350)
     return_pin: Optional[str] = Field(default=None, max_length=6, pattern=r"^\d{6}$")
     return_city: Optional[str] = Field(default=None, max_length=80)
-    return_state: str = Field(..., min_length=1, max_length=80)
+    return_state: Optional[str] = Field(default=None, max_length=80)
     return_country: str = Field(default="India", max_length=80)
 
 

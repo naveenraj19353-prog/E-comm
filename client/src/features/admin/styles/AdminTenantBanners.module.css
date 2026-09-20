@@ -227,6 +227,7 @@
 }
 
 .formGrid input,
+.formGrid select,
 .formGrid textarea {
   width: 100%;
   max-width: 100%;
@@ -265,6 +266,7 @@
 }
 
 .uploadBox {
+  position: relative;
   display: grid;
   gap: 0.55rem;
 }
@@ -286,6 +288,7 @@
   border-radius: 0.65rem;
   background: #eef3f0;
 }
+
 
 .formActions {
   display: flex;
@@ -343,5 +346,37 @@
     width: 100%;
     min-width: 0;
     padding: 0.55rem 0.35rem;
+  }
+}
+
+.uploadOverlay {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 0.65rem;
+  background: rgba(255, 255, 255, 0.88);
+  color: #2f6b52;
+  font-size: 0.8125rem;
+  font-weight: 700;
+}
+
+.uploadSpinner {
+  width: 1.75rem;
+  height: 1.75rem;
+  box-sizing: border-box;
+  border: 0.1875rem solid #d7e0db;
+  border-top-color: #2f6b52;
+  border-radius: 50%;
+  animation: bannerUploadSpin 0.7s linear infinite;
+}
+
+@keyframes bannerUploadSpin {
+  to {
+    transform: rotate(360deg);
   }
 }

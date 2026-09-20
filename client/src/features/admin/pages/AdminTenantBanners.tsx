@@ -10,6 +10,7 @@ import {
 } from "../api/banner.api";
 import { uploadImageToS3 } from "../api/upload.api";
 import { extractS3ObjectKey } from "../utils/s3Image";
+import { BANNER_MEDIA_ACCEPT, isBannerVideoSrc } from "../../../components/Banner/bannerMedia";
 import PageLoader from "../../../components/PageLoader";
 import styles from "../styles/AdminTenantBanners.module.css";
 
@@ -138,8 +139,8 @@ export default function AdminTenantBanners() {
     } catch (err) {
       setError(
         axios.isAxiosError(err)
-          ? String(err.response?.data?.detail || "Image upload failed.")
-          : "Image upload failed.",
+          ? String(err.response?.data?.detail || "Upload failed.")
+          : "Upload failed.",
       );
     } finally {
       setUploading(null);
@@ -156,7 +157,7 @@ export default function AdminTenantBanners() {
       return;
     }
     if (!form.imageKey.trim()) {
-      setError("Upload a banner image.");
+      setError("Upload a banner image or video.");
       return;
     }
 
@@ -168,6 +169,7 @@ export default function AdminTenantBanners() {
         description: form.description.trim() || undefined,
         image: form.imageKey.trim(),
         mobileImage: form.mobileImageKey.trim() || undefined,
+        mediaType: isBannerVideoSrc(form.imageKey) ? "video" : "image",
         buttonText: form.buttonText.trim() || "Shop Now",
         link: form.link.trim() || undefined,
         priority: Number(form.priority) || 0,
@@ -251,7 +253,7 @@ export default function AdminTenantBanners() {
           <span className={styles.eyebrow}>STOREFRONT</span>
           <h1>Home banners</h1>
           <p>
-            Upload hero images and copy for the storefront slider. Lower priority
+            Upload hero images or videos and copy for the storefront slider. Lower priority
             numbers appear first.
           </p>
         </div>
@@ -269,7 +271,8 @@ export default function AdminTenantBanners() {
         <form className={styles.card} onSubmit={handleSubmit}>
           <h2>{editingId ? "Edit banner" : "Add banner"}</h2>
           <p className={styles.help}>
-            Desktop image is required. Mobile image is optional and used under 768px.
+            Desktop media is required. Use an image or a short muted video (MP4/WebM, up to
+            50 MB). Mobile media is optional and used under 768px.
           </p>
 
           <div className={styles.formGrid}>
@@ -332,35 +335,63 @@ export default function AdminTenantBanners() {
             </label>
 
             <div className={`${styles.full} ${styles.uploadBox}`}>
-              <strong>Desktop / tablet image</strong>
+              <strong>Desktop / tablet image or video</strong>
               <input
                 type="file"
-                accept="image/*"
+                accept={BANNER_MEDIA_ACCEPT}
                 onChange={(e) => handleUpload(e.target.files?.[0], "desktop")}
                 disabled={uploading !== null}
               />
-              {uploading === "desktop" && <span>Uploading…</span>}
-              {form.imagePreview && (
-                <img src={form.imagePreview} alt="Banner preview" className={styles.preview} />
+              {uploading === "desktop" && (
+                <div className={styles.uploadOverlay} role="status" aria-live="polite">
+                  <span className={styles.uploadSpinner} />
+                  Uploading…
+                </div>
               )}
+              {form.imagePreview &&
+                (isBannerVideoSrc(form.imageKey || form.imagePreview) ? (
+                  <video
+                    src={form.imagePreview}
+                    className={styles.preview}
+                    muted
+                    controls
+                    playsInline
+                  />
+                ) : (
+                  <img src={form.imagePreview} alt="Banner preview" className={styles.preview} />
+                ))}
             </div>
 
             <div className={`${styles.full} ${styles.uploadBox}`}>
-              <strong>Mobile image (optional)</strong>
+              <strong>Mobile image or video (optional)</strong>
               <input
                 type="file"
-                accept="image/*"
+                accept={BANNER_MEDIA_ACCEPT}
                 onChange={(e) => handleUpload(e.target.files?.[0], "mobile")}
                 disabled={uploading !== null}
               />
-              {uploading === "mobile" && <span>Uploading…</span>}
-              {form.mobileImagePreview && (
-                <img
-                  src={form.mobileImagePreview}
-                  alt="Mobile banner preview"
-                  className={styles.preview}
-                />
+              {uploading === "mobile" && (
+                <div className={styles.uploadOverlay} role="status" aria-live="polite">
+                  <span className={styles.uploadSpinner} />
+                  Uploading…
+                </div>
               )}
+              {form.mobileImagePreview &&
+                (isBannerVideoSrc(form.mobileImageKey || form.mobileImagePreview) ? (
+                  <video
+                    src={form.mobileImagePreview}
+                    className={styles.preview}
+                    muted
+                    controls
+                    playsInline
+                  />
+                ) : (
+                  <img
+                    src={form.mobileImagePreview}
+                    alt="Mobile banner preview"
+                    className={styles.preview}
+                  />
+                ))}
             </div>
           </div>
 
@@ -391,7 +422,16 @@ export default function AdminTenantBanners() {
               {banners.map((banner) => (
                 <article key={banner._id} className={styles.bannerItem}>
                   {banner.image ? (
-                    <img src={banner.image} alt={banner.title} className={styles.thumb} />
+                    isBannerVideoSrc(banner.image, banner.mediaType) ? (
+                      <video
+                        src={banner.image}
+                        className={styles.thumb}
+                        muted
+                        playsInline
+                      />
+                    ) : (
+                      <img src={banner.image} alt={banner.title} className={styles.thumb} />
+                    )
                   ) : (
                     <div className={styles.thumb} />
                   )}
@@ -409,6 +449,9 @@ export default function AdminTenantBanners() {
                       <span className={`${styles.badge} ${styles.badgeMuted}`}>
                         Priority {banner.priority ?? 0}
                       </span>
+                      {isBannerVideoSrc(banner.image, banner.mediaType) && (
+                        <span className={`${styles.badge} ${styles.badgeMuted}`}>Video</span>
+                      )}
                     </div>
                     <div className={styles.itemActions}>
                       <button

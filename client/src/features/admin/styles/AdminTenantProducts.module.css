@@ -806,15 +806,15 @@
   align-items: center;
   justify-content: center;
   padding: 1.5rem;
-  overflow: hidden;
+  overflow: auto;
   background: rgba(20, 31, 26, 0.48);
   backdrop-filter: blur(0.1875rem);
 }
 .modal {
-  width: min(45rem, 100%);
+  width: min(52rem, 100%);
   min-width: 0;
   max-width: 100%;
-  max-height: calc(100vh - 3rem);
+  max-height: calc(100dvh - 2rem);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -870,10 +870,13 @@
   gap: 1rem;
   padding: 1.5rem;
   min-width: 0;
-  flex: 1 1 0;
+}
+.modalBody {
+  flex: 1 1 auto;
   min-height: 0;
   overflow-x: hidden;
   overflow-y: auto;
+  overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
 }
 .formGroup {
@@ -1059,7 +1062,6 @@
   .formGrid {
     grid-template-columns: 1fr;
     padding: 1rem;
-    flex: 1;
   }
   .fullWidth {
     grid-column: auto;
@@ -1284,7 +1286,8 @@
   overflow: hidden;
   background: #f8fafc;
 }
-.imagePreview img {
+.imagePreview img,
+.imagePreview video {
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -1390,7 +1393,39 @@
 .imageUploadText {
   color: #6b7280;
   font-size: 12px;
-  white-space: nowrap;
+}
+.mediaUploadWrap {
+  position: relative;
+  min-width: 0;
+}
+.uploadOverlay {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  border-radius: 0.75rem;
+  background: rgba(255, 255, 255, 0.86);
+  color: #2f6b52;
+  font-size: 0.8125rem;
+  font-weight: 700;
+}
+.uploadSpinner {
+  width: 1.75rem;
+  height: 1.75rem;
+  box-sizing: border-box;
+  border: 0.1875rem solid #d7e0db;
+  border-top-color: #2f6b52;
+  border-radius: 50%;
+  animation: uploadSpin 0.7s linear infinite;
+}
+@keyframes uploadSpin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 .imagePreviewGrid {
   display: flex;
@@ -1407,7 +1442,8 @@
   border-radius: 12px;
   background: #f8fafc;
 }
-.imagePreview img {
+.imagePreview img,
+.imagePreview video {
   display: block;
   width: 100%;
   height: 100%;

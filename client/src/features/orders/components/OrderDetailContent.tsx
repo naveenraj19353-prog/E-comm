@@ -128,6 +128,26 @@ const OrderDetailContent = ({
                     </div>
                 </section>
 
+                {order.courier?.waybill ? (
+                    <section className={styles.section}>
+                        <h2>
+                            <Package size={16} />
+                            Tracking
+                        </h2>
+                        <div className={styles.textBlock}>
+                            <strong>AWB {order.courier.waybill}</strong>
+                            {order.courier.trackingStatus ? (
+                                <span>{order.courier.trackingStatus}</span>
+                            ) : null}
+                            {order.courier.trackingUrl ? (
+                                <a href={order.courier.trackingUrl} target="_blank" rel="noreferrer">
+                                    Open tracking
+                                </a>
+                            ) : null}
+                        </div>
+                    </section>
+                ) : null}
+
                 <section className={styles.section}>
                     <h2>
                         <Receipt size={16} />

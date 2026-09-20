@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { Heart, ShoppingCart, Star } from "lucide-react";
 import styles from "./ProductCard.module.css";
 import { isProductOutOfStock, getProductImagesForColor } from "../../../features/products/inventory";
-import ProductImage from "../../ProductImage";
+import ProductCardMedia from "../../ProductImage/ProductCardMedia";
 import { useProductNavigation } from "../../../features/products/hooks/useProductNavigation";
 import { useLayoutSettings } from "../../../theme/useThemeSettings";
 import { useStorefrontTenant } from "../../../features/tenant/useTenant";
@@ -79,12 +79,11 @@ const ProductCard = ({
         );
     }, [availableInventory, activeColor, activeSize, isServiceMode, product.inventory]);
     const isOutOfStock = isProductOutOfStock(product);
-    const productImage = useMemo(() => {
+    const productImages = useMemo(() => {
         const colorKey = isServiceMode
             ? product.inventory?.[0]?.color || ""
             : activeColor;
-        const colorImages = getProductImagesForColor(product.images, colorKey);
-        return colorImages[0] || "";
+        return getProductImagesForColor(product.images, colorKey);
     }, [product.images, product.inventory, activeColor, isServiceMode]);
 
     const handleWishlist = (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -108,7 +107,7 @@ const ProductCard = ({
     };
     const handleAddToCart = (event: React.MouseEvent<HTMLButtonElement>) => {
         event.stopPropagation();
-        if (isAdding) return;
+        if (isAdding || isOutOfStock) return;
         // Always notify parent so guests can open the login modal first.
         onAddToCart?.(
             product._id,
@@ -136,7 +135,7 @@ const ProductCard = ({
 
     return (
         <div
-            className={`${styles.card} ${!product.isActive ? styles.inactive : ""}`}
+            className={`${styles.card} ${!product.isActive ? styles.inactive : ""} ${isOutOfStock ? styles.soldOut : ""}`}
             onClick={handleCardClick}
             role="link"
             tabIndex={0}
@@ -171,13 +170,16 @@ const ProductCard = ({
             </button>
 
             <div className={styles.imageWrapper}>
-                <ProductImage
-                    src={productImage}
-                    alt={`${product.name}${activeColor ? ` ${activeColor}` : ""}`}
-                    className={styles.image}
-                    loading="lazy"
-                    placeholder={<div className={styles.noImage}>No Image</div>}
-                />
+                {productImages.length > 0 ? (
+                    <ProductCardMedia
+                        sources={productImages}
+                        alt={`${product.name}${activeColor ? ` ${activeColor}` : ""}`}
+                        mediaClassName={styles.image}
+                        variant="swiper"
+                    />
+                ) : (
+                    <div className={styles.noImage}>No Image</div>
+                )}
                 {isOutOfStock && (
                     <div className={styles.outOfStock}>
                         {isServiceMode ? "Unavailable" : "Out of Stock"}
@@ -274,7 +276,7 @@ const ProductCard = ({
                         type="button"
                         className={styles.cartBtn}
                         onClick={handleAddToCart}
-                        disabled={isAdding}
+                        disabled={isAdding || isOutOfStock}
                     >
                         <ShoppingCart size={18} />
                         {cartLabel}

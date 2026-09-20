@@ -23,7 +23,17 @@
   object-position: center;
   transition: transform 6s ease;
 }
-.swiper :global(.swiper-slide-active) .image {
+.video {
+  transform: none !important;
+  background: #111;
+}
+.desktopOnly {
+  display: block;
+}
+.mobileOnly {
+  display: none;
+}
+.swiper :global(.swiper-slide-active) .image:not(.video) {
   transform: scale(1.04);
 }
 .overlay {
@@ -96,39 +106,6 @@
   background: var(--primary);
   color: var(--text-white);
 }
-.swiper :global(.swiper-button-prev),
-.swiper :global(.swiper-button-next) {
-  width: 2.875rem;
-  height: 2.875rem;
-  margin-top: 0;
-  top: 50%;
-  border: 0.0625rem solid color-mix(in srgb, var(--text-white) 45%, transparent);
-  border-radius: 50%;
-  background: color-mix(in srgb, var(--surface) 92%, transparent);
-  color: var(--text);
-  backdrop-filter: blur(0.5rem);
-  transition:
-    background 0.2s ease,
-    color 0.2s ease,
-    transform 0.2s ease;
-}
-.swiper :global(.swiper-button-prev) {
-  left: 1.5rem;
-}
-.swiper :global(.swiper-button-next) {
-  right: 1.5rem;
-}
-.swiper :global(.swiper-button-prev):hover,
-.swiper :global(.swiper-button-next):hover {
-  background: var(--primary);
-  color: var(--text-white);
-  transform: scale(1.06);
-}
-.swiper :global(.swiper-button-prev)::after,
-.swiper :global(.swiper-button-next)::after {
-  font-size: 1rem;
-  font-weight: 700;
-}
 .swiper :global(.swiper-pagination) {
   bottom: 1.375rem;
   display: flex;
@@ -175,6 +152,12 @@
   .section {
     padding: 0;
   }
+  .desktopOnly {
+    display: none !important;
+  }
+  .mobileOnly {
+    display: block;
+  }
   .swiper {
     border-radius: 0;
   }
@@ -209,21 +192,6 @@
     max-width: 100%;
     font-size: 0.875rem;
     margin-bottom: 1.25rem;
-  }
-  .swiper :global(.swiper-button-prev),
-  .swiper :global(.swiper-button-next) {
-    width: 2.25rem;
-    height: 2.25rem;
-  }
-  .swiper :global(.swiper-button-prev) {
-    left: 0.75rem;
-  }
-  .swiper :global(.swiper-button-next) {
-    right: 0.75rem;
-  }
-  .swiper :global(.swiper-button-prev)::after,
-  .swiper :global(.swiper-button-next)::after {
-    font-size: 0.8125rem;
   }
 }
 @media (max-width: 30rem) {

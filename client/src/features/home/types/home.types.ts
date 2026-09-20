@@ -33,6 +33,13 @@ export interface SellingProduct extends Product {
     totalSold?: number;
     orderCount?: number;
 }
+export interface FestivalOffer {
+    code: string;
+    title: string;
+    message: string;
+    discountType?: string;
+    discountValue?: number;
+}
 export interface HomeData {
     banners: Banner[];
     categories: HomeCategory[];
@@ -43,6 +50,7 @@ export interface HomeData {
     topRatedProducts: Product[];
     dealOfTheDay: Product[];
     brands: HomeBrand[];
+    festivalOffers?: FestivalOffer[];
 }
 export interface HomeResponse {
     success: boolean;

@@ -133,9 +133,15 @@ def serialize_product(product: dict) -> dict:
     return product
 
 
+def is_banner_video_src(value: str | None) -> bool:
+    path = (value or "").split("?", 1)[0].split("#", 1)[0].lower()
+    return path.endswith((".mp4", ".webm", ".ogg", ".mov"))
+
+
 def resolve_banner_images(banner: dict) -> dict:
     """Resolve S3 keys on banner image fields to temporary URLs."""
     data = dict(banner)
+    source = str(data.get("image") or "")
     for field in ("image", "mobileImage"):
         raw = data.get(field)
         if not isinstance(raw, str) or not raw.strip():
@@ -145,4 +151,9 @@ def resolve_banner_images(banner: dict) -> dict:
         except Exception:
             resolved = raw.strip()
         data[field] = resolved or raw.strip()
+    stored_type = str(data.get("mediaType") or "").strip().lower()
+    if stored_type not in {"image", "video"}:
+        data["mediaType"] = "video" if is_banner_video_src(source) else "image"
+    else:
+        data["mediaType"] = stored_type
     return data

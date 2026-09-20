@@ -10,6 +10,7 @@ export interface CheckoutPreviewRequest {
     couponCode?: string | null;
     deliveryMethod?: DeliveryMethodType;
     paymentMethod?: string | null;
+    addressStamp?: string | null;
 }
 
 export interface CheckoutPreviewItem {
