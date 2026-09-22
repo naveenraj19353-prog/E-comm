@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from app.services.s3_service import upload_image
 from app.utils.auth_dependencies import (
     admin_tenant_id,
-    require_admin,
+    require_any_permission,
 )
 
 
@@ -18,7 +18,14 @@ async def upload_image_file(
     tenantId: str,
     folder: str,
     file: UploadFile = File(...),
-    current_user: dict = Depends(require_admin),
+    current_user: dict = Depends(
+        require_any_permission(
+            "products_update",
+            "inventory",
+            "banners",
+            "layout",
+        )
+    ),
 ):
     """
     Upload an image to S3.
@@ -38,13 +45,10 @@ async def upload_image_file(
             detail="tenantId is required.",
         )
 
-    if folder not in {"products", "banners"}:
+    if folder not in {"products", "banners", "branding"}:
         raise HTTPException(
             status_code=400,
-            detail=(
-                "Folder must be either "
-                "'products' or 'banners'."
-            ),
+            detail="Folder must be 'products', 'banners', or 'branding'.",
         )
 
     if not file.filename:

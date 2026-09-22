@@ -1,5 +1,6 @@
 import type { FooterContent } from "../components/Footer/types";
 import { buildDefaultFooterContent } from "./footerDefaults";
+import { DEFAULT_HOME_SECTION_ORDER, type HomeSectionId } from "./homeSections";
 
 export type { FooterContent, FooterSection, FooterLink } from "../components/Footer/types";
 
@@ -27,6 +28,7 @@ export interface LayoutSettings {
     cardStyle: "rounded" | "soft" | "sharp";
     sectionSpacing: "compact" | "comfortable" | "spacious";
     homeBannerStyle: "full" | "contained";
+    homeSectionOrder: HomeSectionId[];
     showHomeBanner: boolean;
     showDealOfTheDay: boolean;
     showTestimonials: boolean;
@@ -50,6 +52,7 @@ export interface LayoutSettings {
     productViewMode: "grid" | "list";
     productDetailLayout: "gallery-left" | "gallery-right" | "stacked";
     cartLayout: "split" | "stacked";
+    productCardDesign: "classic" | "studio" | "minimal";
 }
 
 export interface StorefrontLayout {
@@ -75,6 +78,7 @@ export const DEFAULT_LAYOUT_SETTINGS: LayoutSettings = {
     cardStyle: "rounded",
     sectionSpacing: "comfortable",
     homeBannerStyle: "full",
+    homeSectionOrder: [...DEFAULT_HOME_SECTION_ORDER],
     showHomeBanner: true,
     showDealOfTheDay: true,
     showTestimonials: true,
@@ -98,6 +102,7 @@ export const DEFAULT_LAYOUT_SETTINGS: LayoutSettings = {
     productViewMode: "grid",
     productDetailLayout: "gallery-left",
     cartLayout: "split",
+    productCardDesign: "classic",
 };
 
 export const DEFAULT_THEME_COLORS: ThemeColors = {

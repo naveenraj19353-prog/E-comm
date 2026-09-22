@@ -26,7 +26,9 @@ from app.utils.auth_dependencies import (
     get_optional_user,
     require_admin,
     require_customer,
+    require_permission,
 )
+from app.services.store_permissions import user_has_permission
 from app.services.s3_service import (
     collect_image_keys,
     delete_tenant_image_keys,
@@ -35,6 +37,10 @@ from app.services.s3_service import (
 from app.utils.product_serialize import (
     calculate_total_stock,
     serialize_product,
+)
+from app.services.product_duplicates import (
+    duplicate_product_detail,
+    find_duplicate_product,
 )
 from app.services.whatsapp_notification_service import (
     ProductShareError,
@@ -298,22 +304,20 @@ def validate_color_images_against_inventory(
 )
 def create_product(
     product: CreateProduct,
-    current_user: Annotated[dict, Depends(require_admin)],
+    current_user: Annotated[dict, Depends(require_permission("products_update"))],
 ):
     tenant_id = admin_tenant_id(current_user, product.tenantId)
-
-
-    existing = products.find_one(
-        {
-            "tenantId": tenant_id,
-            "name": product.name.strip(),
-            "categoryId": product.categoryId,
-        }
+    category_id = product.categoryId.strip()
+    existing = find_duplicate_product(
+        tenant_id,
+        name=product.name,
+        category_id=category_id,
+        category_name=product.categoryName,
     )
     if existing:
         raise HTTPException(
-            status_code=400,
-            detail="Product already exists.",
+            status_code=409,
+            detail=duplicate_product_detail(existing),
         )
 
 
@@ -410,7 +414,7 @@ def create_product(
 )
 def bulk_import_products(
     body: BulkImportRequest,
-    current_user: Annotated[dict, Depends(require_admin)],
+    current_user: Annotated[dict, Depends(require_permission("products_update"))],
 ):
     from app.services.bulk_product_import import upsert_bulk_product
 
@@ -1332,6 +1336,24 @@ def update_product(
     product: UpdateProduct,
     current_user: Annotated[dict, Depends(require_admin)],
 ):
+    can_update = user_has_permission(current_user, "products_update")
+    can_inventory = user_has_permission(current_user, "inventory")
+    if not can_update and not can_inventory:
+        raise HTTPException(
+            status_code=403,
+            detail="You do not have permission for this action.",
+        )
+    if not can_update or not can_inventory:
+        payload = product.model_dump(exclude_unset=True)
+        if can_update:
+            payload.pop("inventory", None)
+        else:
+            payload = {
+                key: payload[key]
+                for key in ("tenantId", "inventory")
+                if key in payload
+            }
+        product = UpdateProduct(**payload)
     if not ObjectId.is_valid(id):
         raise HTTPException(
             status_code=400,
@@ -1379,7 +1401,7 @@ def update_product(
 def delete_product(
     id: str,
     tenant_id: Annotated[str, Query(alias="tenantId")],
-    current_user: Annotated[dict, Depends(require_admin)],
+    current_user: Annotated[dict, Depends(require_permission("products_update"))],
 ):
     if not ObjectId.is_valid(id):
         raise HTTPException(

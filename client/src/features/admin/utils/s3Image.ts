@@ -5,7 +5,7 @@ export type ProductImageRef = {
 };
 
 const S3_KEY_PATTERN =
-    /^tenants\/[a-zA-Z0-9_-]+\/(products|banners)\/[^/\\]+$/;
+    /^tenants\/[a-zA-Z0-9_-]+\/(products|banners|branding)\/[^/\\]+$/;
 
 export const isS3ObjectKey = (value: string) =>
     S3_KEY_PATTERN.test(value.trim());

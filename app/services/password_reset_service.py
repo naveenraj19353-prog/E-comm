@@ -7,7 +7,7 @@ from app.config import FRONTEND_URL, TENANT_BASE_DOMAIN
 from app.database.mongo import tenants, users
 from app.services.storefront_url import use_tenant_subdomains
 
-AccountKind = Literal["customer", "admin", "super_admin"]
+AccountKind = Literal["customer", "admin", "store_manager", "super_admin"]
 CollectionName = Literal["users", "tenants"]
 
 RESET_TOKEN_MINUTES = 15
@@ -65,6 +65,23 @@ def resolve_reset_account(
             "document": tenant_admin,
             "account_kind": "admin",
             "tenant_slug": tenant_admin.get("slug"),
+        }
+
+    manager = users.find_one(
+        {
+            "tenantId": tenant_id,
+            "email": email,
+            "role": "store_manager",
+            "isActive": True,
+        }
+    )
+    if manager:
+        tenant = tenants.find_one({"tenantId": tenant_id, "isActive": True})
+        return {
+            "collection": "users",
+            "document": manager,
+            "account_kind": "store_manager",
+            "tenant_slug": tenant.get("slug") if tenant else None,
         }
 
     customer = users.find_one(
@@ -141,6 +158,8 @@ def find_account_by_reset_token(token: str) -> dict | None:
             account_kind = "admin"
         elif document.get("role") == "super_admin":
             account_kind = "super_admin"
+        elif document.get("role") == "store_manager":
+            account_kind = "store_manager"
         else:
             account_kind = "customer"
             tenant = tenants.find_one(

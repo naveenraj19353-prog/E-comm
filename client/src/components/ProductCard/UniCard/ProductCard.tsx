@@ -6,6 +6,7 @@ import ProductCardMedia from "../../ProductImage/ProductCardMedia";
 import { useProductNavigation } from "../../../features/products/hooks/useProductNavigation";
 import { useLayoutSettings } from "../../../theme/useThemeSettings";
 import { useStorefrontTenant } from "../../../features/tenant/useTenant";
+import { useFormatStorePrice } from "../../../features/tenant/useFormatStorePrice";
 import {
     addToListLabel,
     isMenuBusiness,
@@ -31,6 +32,7 @@ const ProductCard = ({
 }: ProductCardProps) => {
     const layoutSettings = useLayoutSettings();
     const { tenant } = useStorefrontTenant();
+    const { formatPrice } = useFormatStorePrice();
     const isServiceMode = isServiceBusiness(tenant?.businessType);
     const isMenuMode = isMenuBusiness(tenant?.businessType);
     const { goToProduct } = useProductNavigation();
@@ -262,11 +264,11 @@ const ProductCard = ({
 
                 <div className={styles.price}>
                     <span className={styles.current}>
-                        ₹ {product.finalPrice.toLocaleString("en-IN")}
+                        {formatPrice(product.finalPrice)}
                     </span>
                     {!isServiceMode && product.price > product.finalPrice && (
                         <span className={styles.old}>
-                            ₹ {product.price.toLocaleString("en-IN")}
+                            {formatPrice(product.price)}
                         </span>
                     )}
                 </div>

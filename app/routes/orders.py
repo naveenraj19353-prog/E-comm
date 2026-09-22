@@ -27,8 +27,8 @@ from app.services.whatsapp_notification_service import (
 from app.utils.auth_dependencies import (
     admin_tenant_id,
     customer_scope,
-    require_admin,
     require_customer,
+    require_permission,
 )
 
 router = APIRouter(prefix="/orders", tags=["Orders"])
@@ -141,7 +141,7 @@ def create_menu_order(
     },
 )
 def list_tenant_orders(
-    current_user: Annotated[dict, Depends(require_admin)],
+    current_user: Annotated[dict, Depends(require_permission("orders"))],
     tenant_id: Annotated[str | None, Query(alias="tenantId")] = None,
 ):
     scoped_tenant_id = admin_tenant_id(current_user, tenant_id)
@@ -183,7 +183,7 @@ def update_order_status(
     order_id: str,
     payload: UpdateOrderStatus,
     background_tasks: BackgroundTasks,
-    current_user: Annotated[dict, Depends(require_admin)],
+    current_user: Annotated[dict, Depends(require_permission("orders"))],
     tenant_id: Annotated[str | None, Query(alias="tenantId")] = None,
 ):
     scoped_tenant_id = admin_tenant_id(current_user, tenant_id)
@@ -253,7 +253,7 @@ def update_order_status(
 )
 def get_admin_order_detail(
     order_id: str,
-    current_user: Annotated[dict, Depends(require_admin)],
+    current_user: Annotated[dict, Depends(require_permission("orders"))],
     tenant_id: Annotated[str | None, Query(alias="tenantId")] = None,
 ):
     scoped_tenant_id = admin_tenant_id(current_user, tenant_id)

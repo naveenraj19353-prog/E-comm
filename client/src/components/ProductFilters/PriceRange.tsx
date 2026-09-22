@@ -1,3 +1,4 @@
+import { useFormatStorePrice } from "../../features/tenant/useFormatStorePrice";
 import styles from "./PriceRange.module.css";
 interface PriceRangeProps {
     values: number[];
@@ -6,6 +7,7 @@ interface PriceRangeProps {
     onChange: (values: number[]) => void;
 }
 const PriceRange = ({ values, min, max, onChange }: PriceRangeProps) => {
+    const { formatPrice } = useFormatStorePrice();
     const minValue = values[0];
     const maxValue = values[1];
     const minPercent = ((minValue - min) / (max - min)) * 100;
@@ -26,8 +28,8 @@ const PriceRange = ({ values, min, max, onChange }: PriceRangeProps) => {
     };
     return (<div className={styles.container}>
       <div className={styles.values}>
-        <span>₹{minValue.toLocaleString("en-IN")}</span>
-        <span>₹{maxValue.toLocaleString("en-IN")}</span>
+        <span>{formatPrice(minValue)}</span>
+        <span>{formatPrice(maxValue)}</span>
       </div>
       <div className={styles.slider}>
         <div className={styles.track}/>
@@ -39,8 +41,8 @@ const PriceRange = ({ values, min, max, onChange }: PriceRangeProps) => {
         <input type="range" min={min} max={max} value={maxValue} onChange={handleMaxChange} className={`${styles.input} ${styles.maxInput}`}/>
       </div>
       <div className={styles.labels}>
-        <span>₹{min.toLocaleString("en-IN")}</span>
-        <span>₹{max.toLocaleString("en-IN")}</span>
+        <span>{formatPrice(min)}</span>
+        <span>{formatPrice(max)}</span>
       </div>
     </div>);
 };

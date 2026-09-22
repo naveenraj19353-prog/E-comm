@@ -10,6 +10,7 @@ type JwtPayload = {
     name: string;
     phone?: string;
     counterNumber?: string;
+    permissions?: Record<string, boolean>;
     exp: number;
 };
 
@@ -51,6 +52,7 @@ export const getUserFromAccessToken = (accessToken: string): User | null => {
         name: payload.name,
         phone: payload.phone,
         counterNumber: payload.counterNumber,
+        permissions: payload.permissions,
     };
 };
 

@@ -1,5 +1,7 @@
 import { NavLink, Outlet, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../auth/hooks/useAuth";
+import { hasStorePermission } from "../../auth/permissions";
+import { isStoreStaff, storeRoleLabel } from "../../auth/roles";
 import { usePageSeo } from "../../seo";
 import { useTenantByTenantId } from "../hooks/useTenants";
 import { isMenuBusiness, isRetailBusiness } from "../../tenant/businessMode";
@@ -22,7 +24,7 @@ export default function AdminLayout() {
     const { user, isAuthenticated, logout } = useAuth();
     const pathname = location.pathname;
     const storeTenantId =
-        user?.role === "admin"
+        isStoreStaff(user?.role)
             ? user.tenantId || ""
             : tenantIdFromAdminPath(pathname);
     const { data: storeTenant } = useTenantByTenantId(storeTenantId);
@@ -44,7 +46,10 @@ export default function AdminLayout() {
             }}/>);
     }
     const isSuperAdmin = user.role === "super_admin";
-    const isAdmin = user.role === "admin";
+    const isAdmin = isStoreStaff(user.role);
+    const isStoreOwner = user.role === "admin";
+    const can = (permission: Parameters<typeof hasStorePermission>[1]) =>
+        hasStorePermission(user, permission);
     if (!isSuperAdmin && !isAdmin) {
         return (<Navigate to="/admin/login" replace/>);
     }
@@ -121,63 +126,63 @@ export default function AdminLayout() {
             </NavLink>
           )}
 
-          {showStoreNav && (
+          {showStoreNav && (can("products_update") || can("inventory") || can("read")) && (
             <NavLink to={`/admin/tenants/${storeTenantId}/products`} className={navClass}>
               <span>◫</span>
               Products
             </NavLink>
           )}
 
-          {showStoreNav && showRetailExtras && (
+          {showStoreNav && showRetailExtras && can("orders") && (
             <NavLink to={`/admin/tenants/${storeTenantId}/orders`} className={navClass}>
               <span>⧉</span>
               Orders
             </NavLink>
           )}
 
-          {showStoreNav && showMenuDesk && (
+          {showStoreNav && showMenuDesk && can("menu") && (
             <NavLink to={`/admin/tenants/${storeTenantId}/menu`} className={navClass}>
               <span>▤</span>
               Menu Desk
             </NavLink>
           )}
 
-          {showStoreNav && (
+          {showStoreNav && can("customers") && (
             <NavLink to={`/admin/tenants/${storeTenantId}/customers`} className={navClass}>
               <span>◎</span>
               Customers
             </NavLink>
           )}
 
-          {showStoreNav && showBanners && (
+          {showStoreNav && showBanners && can("banners") && (
             <NavLink to={`/admin/tenants/${storeTenantId}/banners`} className={navClass}>
               <span>▣</span>
               Banners
             </NavLink>
           )}
 
-          {showStoreNav && showBanners && (
+          {showStoreNav && showBanners && can("coupons") && (
             <NavLink to={`/admin/tenants/${storeTenantId}/coupons`} className={navClass}>
               <span>%</span>
               Coupons
             </NavLink>
           )}
 
-          {showStoreNav && showRetailExtras && (
+          {showStoreNav && showRetailExtras && can("shipping") && (
             <NavLink to={`/admin/tenants/${storeTenantId}/shipping/delhivery`} className={navClass}>
               <span>⬡</span>
               Shipping
             </NavLink>
           )}
 
-          {showStoreNav && (
+          {showStoreNav && can("whatsapp") && (
             <NavLink to={`/admin/tenants/${storeTenantId}/integrations/periskope`} className={navClass}>
               <span>◌</span>
               WhatsApp
             </NavLink>
           )}
 
-          {showStoreNav && storeTenant?.slug && (
+          {showStoreNav && storeTenant?.slug && can("layout") && (
             <button
               type="button"
               className={styles.navItem}
@@ -190,7 +195,14 @@ export default function AdminLayout() {
             </button>
           )}
 
-          {showStoreNav && (
+          {showStoreNav && (isStoreOwner || isSuperAdmin) && (
+            <NavLink to={`/admin/tenants/${storeTenantId}/team`} className={navClass}>
+              <span>☺</span>
+              Team
+            </NavLink>
+          )}
+
+          {showStoreNav && (isStoreOwner || isSuperAdmin) && (
             <NavLink to={`/admin/tenants/${storeTenantId}/edit`} className={navClass}>
               <span>✎</span>
               Edit Tenant
@@ -223,9 +235,7 @@ export default function AdminLayout() {
                 {user.name}
               </strong>
               <span>
-                {isSuperAdmin
-            ? "Super Admin"
-            : "Tenant Admin"}
+                {storeRoleLabel(user.role)}
               </span>
             </div>
           </div>

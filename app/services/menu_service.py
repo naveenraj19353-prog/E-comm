@@ -7,6 +7,7 @@ from fastapi import HTTPException
 
 from app.database.mongo import carts, orders, tenants, users
 from app.services.checkout_service import (
+    apply_zero_shipping_totals,
     calculate_checkout,
     cart_owner_query,
     normalize_tenant_id,
@@ -178,13 +179,9 @@ def fulfill_menu_order(
         delivery_method="standard",
     )
     # Dine-in / hotel menu: no delivery charge.
-    checkout_data["shipping"] = 0.0
-    checkout_data["grandTotal"] = round(
-        float(checkout_data["subtotal"]) - float(checkout_data.get("discount") or 0),
-        2,
-    )
     checkout_data["deliveryMethod"] = "dine_in"
     checkout_data["address"] = None
+    apply_zero_shipping_totals(checkout_data, tenant_id)
 
     order_items = _build_order_items(checkout_data)
     now = datetime.now(timezone.utc)
@@ -327,13 +324,9 @@ def settle_menu_cart(tenant_id: str, user_id: str) -> dict:
         require_address=False,
         delivery_method="standard",
     )
-    checkout_data["shipping"] = 0.0
-    checkout_data["grandTotal"] = round(
-        float(checkout_data["subtotal"]) - float(checkout_data.get("discount") or 0),
-        2,
-    )
     checkout_data["deliveryMethod"] = "dine_in"
     checkout_data["address"] = None
+    apply_zero_shipping_totals(checkout_data, tenant_id)
 
     order_items = _build_order_items(checkout_data)
     now = datetime.now(timezone.utc)

@@ -1,5 +1,6 @@
 import { Minus, Plus, Trash2 } from "lucide-react";
 import ProductImage from "../../components/ProductImage";
+import { useFormatStorePrice } from "../../features/tenant/useFormatStorePrice";
 import styles from "./Cart.module.css";
 
 interface CartItemProps {
@@ -31,6 +32,7 @@ const CartItem = ({
     onUpdateQuantity,
     onRemove,
 }: CartItemProps) => {
+    const { formatPrice } = useFormatStorePrice();
     return (
         <div className={styles.item}>
             <div className={styles.imageWrapper}>
@@ -43,7 +45,7 @@ const CartItem = ({
             <div className={styles.details}>
                 <h2>{item.name}</h2>
                 <p className={styles.price}>
-                    ₹{item.price.toLocaleString("en-IN")}
+                    {formatPrice(item.price)}
                 </p>
                 <div className={styles.actions}>
                     {allowQuantityUpdates ? (
@@ -92,7 +94,7 @@ const CartItem = ({
             </div>
             <div className={styles.subtotal}>
                 <span>Subtotal</span>
-                <strong>₹{item.subtotal.toLocaleString("en-IN")}</strong>
+                <strong>{formatPrice(item.subtotal)}</strong>
             </div>
         </div>
     );

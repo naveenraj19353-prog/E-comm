@@ -1,7 +1,7 @@
 import apiClient from "../../../api/client";
 import { API_ENDPOINTS } from "../../../api/endpoints";
 
-export type UploadFolder = "products" | "banners";
+export type UploadFolder = "products" | "banners" | "branding";
 
 export type UploadImageResponse = {
     success: boolean;

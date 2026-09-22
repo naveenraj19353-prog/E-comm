@@ -17,7 +17,7 @@ from app.routes.response_metadata import (
     INTERNAL_SERVER_ERROR_RESPONSE,
     NOT_FOUND_RESPONSE,
 )
-from app.utils.auth_dependencies import admin_tenant_id, require_admin
+from app.utils.auth_dependencies import admin_tenant_id, require_permission
 from app.utils.product_serialize import resolve_banner_images
 
 
@@ -45,7 +45,7 @@ router = APIRouter(
 )
 def create_banner(
     banner: CreateBanner,
-    current_user: Annotated[dict, Depends(require_admin)],
+    current_user: Annotated[dict, Depends(require_permission("banners"))],
 ):
     try:
         banner_data = banner.model_dump()
@@ -252,7 +252,7 @@ def get_active_banners(
 def update_banner(
     banner_id: str,
     banner: UpdateBanner,
-    current_user: Annotated[dict, Depends(require_admin)],
+    current_user: Annotated[dict, Depends(require_permission("banners"))],
 ):
     try:
 
@@ -350,7 +350,7 @@ def update_banner(
 )
 def delete_banner(
     banner_id: str,
-    current_user: Annotated[dict, Depends(require_admin)],
+    current_user: Annotated[dict, Depends(require_permission("banners"))],
 ):
     try:
 

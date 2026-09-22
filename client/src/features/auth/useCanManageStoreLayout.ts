@@ -1,4 +1,6 @@
 import { useAuth } from "./hooks/useAuth";
+import { hasStorePermission } from "./permissions";
+import { isStoreStaff } from "./roles";
 import { useStorefrontTenant } from "../tenant/useTenant";
 
 export const useCanManageStoreLayout = (): boolean => {
@@ -8,6 +10,8 @@ export const useCanManageStoreLayout = (): boolean => {
         isAuthenticated &&
         user &&
         (user?.role === "super_admin" ||
-            (user?.role === "admin" && user?.tenantId === tenantId)),
+            (isStoreStaff(user?.role) &&
+                user?.tenantId === tenantId &&
+                hasStorePermission(user, "layout"))),
     );
 };

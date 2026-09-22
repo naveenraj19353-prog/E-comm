@@ -27,7 +27,7 @@ const getInitials = (name?: string) => {
 export default function Navbar() {
     const navigate = useNavigate();
     const navigateToLogin = useNavigateToLogin();
-    const { tenantSlug, tenantId: catalogTenantId } = useStorefrontTenant();
+    const { tenantSlug, tenantId: catalogTenantId, tenant } = useStorefrontTenant();
     const { user, isAuthenticated } = useAuth();
     const go = (to: string) => storefrontNavigate(navigate, to);
     const layoutSettings = useLayoutSettings();
@@ -42,9 +42,15 @@ export default function Navbar() {
     const [menuOpen, setMenuOpen] = useState(false);
     const [searchOpen, setSearchOpen] = useState(false);
     const [searchValue, setSearchValue] = useState("");
+    const [logoFailed, setLogoFailed] = useState(false);
+    const logoSrc = (tenant?.logo || "").trim();
+    const showStoreLogo = Boolean(logoSrc) && !logoFailed;
     const categories: Category[] = categoryResponse?.data
         ? categoryResponse.data.slice(0, 8)
         : [];
+    useEffect(() => {
+        setLogoFailed(false);
+    }, [logoSrc]);
     useEffect(() => {
         if (categories.length <= 8) {
             return;
@@ -148,8 +154,19 @@ export default function Navbar() {
       <div className={headerLayoutClass}>
         
         <button type="button" className={styles.logo} onClick={handleHome} aria-label="Home">
-          <span className={styles.logoIcon}>{getInitials(tenantSlug)}</span>
-          <span className={styles.logoText}>{tenantSlug.toUpperCase()}</span>
+          {showStoreLogo ? (
+            <img
+              className={styles.logoImage}
+              src={logoSrc}
+              alt=""
+              onError={() => setLogoFailed(true)}
+            />
+          ) : (
+            <>
+              <span className={styles.logoIcon}>{getInitials(tenantSlug)}</span>
+              <span className={styles.logoText}>{tenantSlug.toUpperCase()}</span>
+            </>
+          )}
         </button>
         
         {searchPosition === "after-logo" && renderDesktopSearch(styles.searchSlotInline)}
@@ -249,7 +266,11 @@ export default function Navbar() {
       <aside className={`${styles.mobileMenu} ${menuOpen ? styles.mobileMenuOpen : ""}`}>
         <div className={styles.mobileMenuHeader}>
           <div className={styles.mobileMenuTitle}>
-            <span className={styles.mobileMenuLogo}>LT</span>
+            {showStoreLogo ? (
+              <img className={styles.mobileMenuLogoImage} src={logoSrc} alt="" />
+            ) : (
+              <span className={styles.mobileMenuLogo}>LT</span>
+            )}
             <span className={styles.mobileMenuText}>Menu</span>
           </div>
           <button type="button" className={styles.closeButton} onClick={() => setMenuOpen(false)}>

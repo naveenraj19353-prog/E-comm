@@ -3,6 +3,7 @@ import { Truck, PackageCheck, RotateCcw, CreditCard, MapPin } from "lucide-react
 import axios from "axios";
 import styles from "./ProductDetails.module.css";
 import { useStorefrontTenant } from "../../features/tenant/useTenant";
+import { useFormatStorePrice } from "../../features/tenant/useFormatStorePrice";
 import {
     checkDeliveryPincode,
     type ShippingOptionQuote,
@@ -10,6 +11,7 @@ import {
 
 const ProductDelivery = () => {
     const { tenantId } = useStorefrontTenant();
+    const { formatPrice } = useFormatStorePrice();
     const [pincode, setPincode] = useState("");
     const [pincodeMessage, setPincodeMessage] = useState("");
     const [pincodeOk, setPincodeOk] = useState(false);
@@ -78,7 +80,7 @@ const ProductDelivery = () => {
 
     const chargesDescription = shippingOptions.length
         ? shippingOptions
-              .map((option) => `₹${Math.round(option.shippingCost)} ${option.mode}`)
+              .map((option) => `${formatPrice(option.shippingCost)} ${option.mode}`)
               .join(" · ")
         : pincodeOk
           ? "Charges will be confirmed at checkout"
@@ -124,7 +126,7 @@ const ProductDelivery = () => {
                     {shippingOptions.map((option) => (
                         <li key={option.id}>
                             <span>{option.mode}</span>
-                            <strong>₹{Math.round(option.shippingCost)}</strong>
+                            <strong>{formatPrice(option.shippingCost)}</strong>
                             {option.estimatedDays ? (
                                 <em>{option.estimatedDays} days</em>
                             ) : null}

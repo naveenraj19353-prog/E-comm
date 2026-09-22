@@ -6,6 +6,7 @@ from fastapi import HTTPException
 
 from app.database.mongo import products
 from app.models.product import BulkImportProductItem
+from app.services.product_duplicates import find_duplicate_product
 
 
 def _get_validators():
@@ -50,12 +51,11 @@ def _find_existing_product(
             ),
         )
 
-    return products.find_one(
-        {
-            "tenantId": tenant_id,
-            "name": item.name.strip(),
-            "categoryId": item.categoryId,
-        }
+    return find_duplicate_product(
+        tenant_id,
+        name=item.name,
+        category_id=item.categoryId,
+        category_name=item.categoryName,
     )
 
 

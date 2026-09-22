@@ -184,6 +184,13 @@
   font-size: 1.25rem;
   font-weight: 800;
 }
+.currencyNote {
+  margin: 0.5rem 0 0;
+  color: var(--text);
+  font-size: 0.6875rem;
+  line-height: 1.4;
+  opacity: 0.75;
+}
 .placeOrder {
   width: 100%;
   height: 3rem;

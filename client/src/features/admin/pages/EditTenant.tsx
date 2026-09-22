@@ -1,6 +1,13 @@
 import { useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { Navigate, useNavigate, useParams } from "react-router-dom";
+import { useAuth } from "../../auth/hooks/useAuth";
+import { isStoreOwner } from "../../auth/roles";
 import { useTenantByTenantId, useUpdateTenant } from "../hooks/useTenants";
+import TenantLogoField from "../components/TenantLogoField";
+import TenantCurrencyField from "../components/TenantCurrencyField";
+import TenantStoreHoursField from "../components/TenantStoreHoursField";
+import { emptyStoreHours, payloadStoreHours, type StoreHours } from "../../tenant/storeHours";
+import { DISPLAY_CURRENCIES } from "../../../utils/currency";
 import styles from "../styles/EditTenant.module.css";
 import type { SubmitEvent } from "react";
 import {
@@ -10,7 +17,11 @@ import {
 export default function EditTenant() {
     const { tenantId } = useParams();
     const navigate = useNavigate();
+    const { user } = useAuth();
     const { data: tenant, isLoading, isError, } = useTenantByTenantId(tenantId || "");
+    if (user && user.role !== "super_admin" && !isStoreOwner(user.role)) {
+        return <Navigate to={`/admin/tenants/${tenantId}`} replace />;
+    }
     if (isLoading) {
         return (<div className={styles.state}>
         <div className={styles.spinner}/>
@@ -39,10 +50,21 @@ function EditTenantForm({ tenant }: EditTenantFormProps) {
     const [logo, setLogo] = useState(tenant.logo || "");
     const [phone, setPhone] = useState(tenant.phone || "");
     const [theme, setTheme] = useState(tenant.theme || "green");
+    const [displayCurrency, setDisplayCurrency] = useState(tenant.displayCurrency || "INR");
+    const [inrPerUnit, setInrPerUnit] = useState(
+        String(
+            tenant.inrPerUnit
+            || DISPLAY_CURRENCIES.find((item) => item.code === (tenant.displayCurrency || "INR"))?.inrPerUnit
+            || 1,
+        ),
+    );
     const [businessType, setBusinessType] = useState<BusinessType>(
         tenant.businessType || "retail",
     );
     const [isActive, setIsActive] = useState(tenant.isActive ?? true);
+    const [storeHours, setStoreHours] = useState<StoreHours>(
+        tenant.storeHours || emptyStoreHours(),
+    );
     const [error, setError] = useState("");
     const handleSubmit = async (event: SubmitEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -65,7 +87,10 @@ function EditTenantForm({ tenant }: EditTenantFormProps) {
                     logo: logo.trim(),
                     phone: phone.trim(),
                     theme,
+                    displayCurrency,
+                    inrPerUnit: Number(inrPerUnit) || undefined,
                     isActive,
+                    storeHours: payloadStoreHours(storeHours),
                 },
             });
             navigate(`/admin/tenants/${tenant.tenantId}`);
@@ -138,15 +163,19 @@ function EditTenantForm({ tenant }: EditTenantFormProps) {
             <small>New customer orders are sent to this WhatsApp number.</small>
           </div>
           
-          <div className={styles.field}>
-            <label htmlFor="tenant-logo">Logo URL</label>
-            <input id="tenant-logo" type="text" value={logo} onChange={(event) => setLogo(event.target.value)} placeholder="https://example.com/logo.png"/>
-            {logo && (<div className={styles.logoPreview}>
-                <img src={logo} alt="Tenant logo preview" onError={(event) => {
-                event.currentTarget.style.display = "none";
-            }}/>
-              </div>)}
-          </div>
+          <TenantLogoField
+              tenantId={tenant.tenantId}
+              value={logo}
+              onChange={setLogo}
+              disabled={updateTenantMutation.isPending}
+            />
+
+          <TenantCurrencyField
+              currency={displayCurrency}
+              inrPerUnit={inrPerUnit}
+              onCurrencyChange={setDisplayCurrency}
+              onRateChange={setInrPerUnit}
+            />
           
           <div className={styles.field}>
             <label htmlFor="tenant-business-type">
@@ -187,6 +216,13 @@ function EditTenantForm({ tenant }: EditTenantFormProps) {
               <span />
             </button>
           </div>
+
+          <TenantStoreHoursField
+            tenantId={tenant.tenantId}
+            value={storeHours}
+            onChange={setStoreHours}
+            disabled={updateTenantMutation.isPending}
+          />
           
           {error && <div className={styles.error}>{error}</div>}
         </div>

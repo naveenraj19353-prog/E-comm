@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Check, Clock, Truck } from "lucide-react";
 import type { DeliveryMethodType } from "../../../../../features/checkout/api/checkout.api";
+import { useFormatStorePrice } from "../../../../../features/tenant/useFormatStorePrice";
 import styles from "./DeliveryMethod.module.css";
 
 export interface DeliveryOption {
@@ -31,6 +32,7 @@ const DeliveryMethod = ({
     shippingMessage,
     onDeliveryChange,
 }: DeliveryMethodProps) => {
+    const { formatPrice } = useFormatStorePrice();
     const [selectedId, setSelectedId] = useState<DeliveryMethodType>(selectedMethod);
 
     useEffect(() => {
@@ -96,7 +98,7 @@ const DeliveryMethod = ({
                                     <div className={styles.titleRow}>
                                         <strong>{option.name}</strong>
                                         <span className={styles.price}>
-                                            {`₹${option.price.toLocaleString("en-IN")}`}
+                                            {formatPrice(option.price)}
                                         </span>
                                     </div>
                                     <p>{option.description}</p>

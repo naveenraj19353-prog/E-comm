@@ -2,10 +2,12 @@ import { X } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../../app/hooks";
 import { setFilters, clearFilters } from "../../features/products/productSlice";
+import { useFormatStorePrice } from "../../features/tenant/useFormatStorePrice";
 import styles from "./AppliedFilters.module.css";
 
 const AppliedFilters = () => {
   const dispatch = useAppDispatch();
+  const { formatPrice } = useFormatStorePrice();
   const [searchParams, setSearchParams] = useSearchParams();
   const filters = useAppSelector((state) => state.products.filters);
   const catalogFilter = useAppSelector((state) => state.products.catalogFilter);
@@ -218,8 +220,9 @@ const AppliedFilters = () => {
         )}
         {hasPriceFilter && (
           <button type="button" className={styles.chip} onClick={removePrice}>
-            ₹{filters.priceRange[0]}
-            {" - "}₹{filters.priceRange[1]}
+            {formatPrice(filters.priceRange[0])}
+            {" - "}
+            {formatPrice(filters.priceRange[1])}
             <X size={14} />
           </button>
         )}

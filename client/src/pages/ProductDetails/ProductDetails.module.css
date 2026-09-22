@@ -55,6 +55,7 @@
   min-width: 0;
   background: var(--surface);
   border-radius: 0.75rem;
+  cursor: zoom-in;
 }
 
 .mainImage {
@@ -144,18 +145,26 @@
 }
 .zoomPreview {
   position: absolute;
-  left: calc(100% + 1.25rem);
-  top: 0;
-  width: 32rem;
-  height: 32rem;
+  inset: 0;
+  width: auto;
+  height: auto;
   background-repeat: no-repeat;
   background-color: var(--surface);
-  border: 0.0625rem solid var(--border);
+  border: none;
   border-radius: 0.75rem;
-  box-shadow:
-    0 0.625rem 1.875rem rgba(0, 0, 0, 0.15);
-  z-index: 100;
+  z-index: 4;
   pointer-events: none;
+}
+
+@media (hover: none) and (pointer: coarse) {
+  .zoomPreview,
+  .zoomHint {
+    display: none;
+  }
+
+  .mainImageWrapper {
+    cursor: default;
+  }
 }
 
 .info {
@@ -973,10 +982,6 @@
     aspect-ratio: 4 / 5;
     max-height: 28rem;
     overflow: hidden;
-  }
-  .zoomPreview,
-  .zoomHint {
-    display: none;
   }
   .detailsSection {
     margin-top: 1.5rem;

@@ -21,8 +21,8 @@ from app.services.coupon_service import (
 from app.utils.auth_dependencies import (
     admin_tenant_id,
     customer_scope,
-    require_admin,
     require_customer,
+    require_permission,
 )
 
 router = APIRouter(prefix="/coupon", tags=["Coupon"])
@@ -33,7 +33,7 @@ router = APIRouter(prefix="/coupon", tags=["Coupon"])
     responses={403: FORBIDDEN_RESPONSE[403]},
 )
 def list_coupons(
-    current_user: Annotated[dict, Depends(require_admin)],
+    current_user: Annotated[dict, Depends(require_permission("coupons"))],
     tenantId: Annotated[str | None, Query()] = None,
 ):
     tenant_id = admin_tenant_id(current_user, tenantId)
@@ -56,7 +56,7 @@ def list_coupons(
 )
 def create_coupon(
     request: CreateCoupon,
-    current_user: Annotated[dict, Depends(require_admin)],
+    current_user: Annotated[dict, Depends(require_permission("coupons"))],
 ):
     tenant_id = admin_tenant_id(current_user, request.tenantId)
     existing = coupons.find_one(
@@ -88,7 +88,7 @@ def create_coupon(
 def update_coupon(
     coupon_id: str,
     request: UpdateCoupon,
-    current_user: Annotated[dict, Depends(require_admin)],
+    current_user: Annotated[dict, Depends(require_permission("coupons"))],
 ):
     object_id = as_object_id(coupon_id)
     if not object_id:

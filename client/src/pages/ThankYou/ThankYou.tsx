@@ -1,6 +1,7 @@
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { CheckCircle2 } from "lucide-react";
 import { useStorefrontTenant } from "../../features/tenant/useTenant";
+import { useFormatStorePrice } from "../../features/tenant/useFormatStorePrice";
 import { routes } from "../../routes/routes";
 import { storefrontNavigate } from "../../routes/routes";
 import styles from "./ThankYou.module.css";
@@ -11,25 +12,19 @@ interface ThankYouLocationState {
     paymentMethod?: "cod" | "online";
 }
 
-const formatAmount = (amount?: number) => {
-    if (typeof amount !== "number" || !Number.isFinite(amount)) {
-        return null;
-    }
-    return `₹${amount.toLocaleString("en-IN", {
-        minimumFractionDigits: amount % 1 === 0 ? 0 : 2,
-        maximumFractionDigits: 2,
-    })}`;
-};
-
 const ThankYou = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const { orderId } = useParams<{ orderId: string }>();
     const { tenantSlug, tenant } = useStorefrontTenant();
+    const { formatPrice } = useFormatStorePrice();
     const state = (location.state || {}) as ThankYouLocationState;
 
     const shortOrderId = orderId ? orderId.slice(-8).toUpperCase() : null;
-    const amountLabel = formatAmount(state.amount);
+    const amountLabel =
+        typeof state.amount === "number" && Number.isFinite(state.amount)
+            ? formatPrice(state.amount)
+            : null;
     const paymentLabel =
         state.paymentMethod === "cod"
             ? "Cash on Delivery"

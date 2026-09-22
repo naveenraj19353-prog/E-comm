@@ -22,6 +22,7 @@ import {
     isProductOutOfStock,
 } from "../../features/products/inventory";
 import { isMenuBusiness, isServiceBusiness } from "../../features/tenant/businessMode";
+import { useFormatStorePrice } from "../../features/tenant/useFormatStorePrice";
 const ProductDetails = () => {
     const { productId } = useParams<{
         tenantSlug: string;
@@ -29,6 +30,7 @@ const ProductDetails = () => {
     }>();
     const { user, isAuthenticated } = useAuth();
     const { tenantId, tenantSlug, tenant } = useStorefrontTenant();
+    const { formatPrice } = useFormatStorePrice();
     const isServiceMode = isServiceBusiness(tenant?.businessType);
     const isMenuMode = isMenuBusiness(tenant?.businessType);
     const navigateToLogin = useNavigateToLogin();
@@ -212,7 +214,7 @@ const ProductDetails = () => {
     const productUrl = buildCanonicalUrl(productPath, tenantSlug);
     const inStock = !isProductOutOfStock(product);
     const storeName = tenant?.name || tenantSlug || "Store";
-    const priceLabel = `₹${(product.finalPrice ?? product.price).toLocaleString("en-IN")}`;
+    const priceLabel = formatPrice(product.finalPrice ?? product.price);
     const ogTitle = `${product.name} - ${priceLabel}`;
     const ogDescription = (
         product.description?.trim() ||

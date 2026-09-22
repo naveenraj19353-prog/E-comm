@@ -1,4 +1,5 @@
 import { Banknote, Check, CreditCard, Landmark, Wallet } from "lucide-react";
+import { useFormatStorePrice } from "../../../../../features/tenant/useFormatStorePrice";
 import styles from "./PaymentMethod.module.css";
 export type PaymentMethodType = "card" | "upi" | "netbanking" | "cod";
 type PaymentOption = {
@@ -45,6 +46,7 @@ const PaymentMethod = ({
     deliveryCharge = 0,
     onMethodChange,
 }: PaymentMethodProps) => {
+    const { formatPrice } = useFormatStorePrice();
     return (<section className={styles.section}>
       <div className={styles.header}>
         <div>
@@ -68,7 +70,7 @@ const PaymentMethod = ({
                   shippingQuoted &&
                   selectedMethod === "cod"
                       ? deliveryCharge > 0
-                          ? `Pay when delivered. Partner delivery charge ₹${deliveryCharge.toLocaleString("en-IN")}`
+                          ? `Pay when delivered. Partner delivery charge ${formatPrice(deliveryCharge)}`
                           : "Pay when delivered. Partner delivery charge applied at checkout"
                       : option.description}
                 </p>

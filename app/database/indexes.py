@@ -9,6 +9,7 @@ from app.database.mongo import (
     shipping_integrations,
     shipping_locations,
     shipments,
+    store_signup_otps,
     users,
 )
 
@@ -137,6 +138,19 @@ def ensure_indexes() -> None:
             IndexModel(
                 [("tenantId", ASCENDING), ("createdAt", DESCENDING)],
                 name="notification_logs_tenant_created",
+            ),
+        ]
+    )
+    store_signup_otps.create_indexes(
+        [
+            IndexModel(
+                [("email", ASCENDING), ("createdAt", DESCENDING)],
+                name="store_signup_otps_email_created",
+            ),
+            IndexModel(
+                [("expiresAt", ASCENDING)],
+                name="store_signup_otps_expires",
+                expireAfterSeconds=0,
             ),
         ]
     )

@@ -10,7 +10,7 @@ interface ProductGalleryProps {
     product: Product;
     selectedColor?: string;
 }
-const ZOOM_SCALE = 300;
+const ZOOM_SCALE = 180;
 const ProductGallery = ({ product, selectedColor, }: ProductGalleryProps) => {
     const [selectedImage, setSelectedImage] = useState(0);
     const [zoomVisible, setZoomVisible] = useState(false);
@@ -51,17 +51,22 @@ const ProductGallery = ({ product, selectedColor, }: ProductGalleryProps) => {
             className={styles.mainImage}
             autoPlay
         />
-        {!currentIsVideo && (
+        {!currentIsVideo && !zoomVisible && (
         <div className={styles.zoomHint}>
           <ZoomIn size={15}/>
           Hover to zoom
         </div>
         )}
-        {!currentIsVideo && zoomVisible && (<div className={styles.zoomPreview} style={{
-                backgroundImage: `url("${currentImage}")`,
+        {!currentIsVideo && zoomVisible && (
+        <div
+            className={styles.zoomPreview}
+            style={{
+                backgroundImage: `url(${JSON.stringify(currentImage)})`,
                 backgroundPosition: `${zoomPosition.x}% ${zoomPosition.y}%`,
-                backgroundSize: `${ZOOM_SCALE}% ${ZOOM_SCALE}%`,
-            }}/>)}
+                backgroundSize: `${ZOOM_SCALE}%`,
+            }}
+        />
+        )}
       </div>
       {images.length > 1 && (
       <div className={styles.thumbnails}>

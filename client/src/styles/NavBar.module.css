@@ -140,6 +140,13 @@
   letter-spacing: -0.01em;
   white-space: nowrap;
 }
+.logoImage {
+  display: block;
+  height: 2.25rem;
+  max-width: 10.5rem;
+  width: auto;
+  object-fit: contain;
+}
 .navLinks {
   display: flex;
   align-items: center;
@@ -447,6 +454,13 @@
   font-size: 0.6875rem;
   font-weight: 800;
 }
+.mobileMenuLogoImage {
+  display: block;
+  height: 2rem;
+  max-width: 8rem;
+  width: auto;
+  object-fit: contain;
+}
 .mobileMenuText {
   font-size: 1.125rem;
   font-weight: 700;
@@ -617,6 +631,10 @@
     width: 1.875rem;
     height: 1.875rem;
     border-radius: 0.4375rem;
+  }
+  .logoImage {
+    height: 1.875rem;
+    max-width: 8.5rem;
   }
   .logoText {
     font-size: 0.9375rem;

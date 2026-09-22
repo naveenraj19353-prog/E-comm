@@ -4,13 +4,15 @@ import { isProductOutOfStock, getProductImagesForColor } from "../../features/pr
 import ProductCardMedia from "../ProductImage/ProductCardMedia";
 import { useProductNavigation } from "../../features/products/hooks/useProductNavigation";
 import { useStorefrontTenant } from "../../features/tenant/useTenant";
+import { useFormatStorePrice } from "../../features/tenant/useFormatStorePrice";
 import {
     addToListLabel,
     isServiceBusiness,
 } from "../../features/tenant/businessMode";
 import { getColorValue } from "./ProductCard.utils";
-import { BagIcon, HeartIcon, StarIcon } from "./ProductCardIcons";
+import { HeartIcon, StarIcon, BagIcon } from "./ProductCardIcons";
 import { useProductVariantSelection } from "./useProductVariantSelection";
+import { useLayoutSettings } from "../../theme/useThemeSettings";
 
 export interface ProductInventory {
     variantId: string;
@@ -22,6 +24,9 @@ export interface ProductInventory {
 export interface Product {
     _id: string;
     name: string;
+    description?: string;
+    brand?: string;
+    categoryName?: string;
     price: number;
     finalPrice: number;
     discountPercentage: number;
@@ -49,18 +54,28 @@ export default function ProductCard({
     isAdding = false,
     mediaVariant = "swiper",
 }: ProductCardProps) {
+    const layoutSettings = useLayoutSettings();
+    const design =
+        layoutSettings.productCardDesign === "studio" ||
+        layoutSettings.productCardDesign === "minimal"
+            ? layoutSettings.productCardDesign
+            : "classic";
     const { goToProduct } = useProductNavigation();
     const { tenant } = useStorefrontTenant();
+    const { formatPrice } = useFormatStorePrice();
     const isServiceMode = isServiceBusiness(tenant?.businessType);
     const {
         _id,
         name,
+        description = "",
+        brand = "",
+        categoryName = "",
         price,
         finalPrice,
         discountPercentage,
         images = {},
         inventory = [],
-        averageRating,
+        averageRating = 0,
         reviewCount = 0,
         isActive = true,
     } = product;
@@ -90,6 +105,30 @@ export default function ProductCard({
             ),
         [images, selectedColor, isServiceMode, inventory],
     );
+
+    const summary = description.replace(/\s+/g, " ").trim().slice(0, 72);
+    const hasRating = !isServiceMode && averageRating > 0 && reviewCount > 0;
+    const filledStars = Math.max(0, Math.min(5, Math.round(averageRating)));
+    const displayColors = availableColors.filter(
+        (color) => color && color !== "Default",
+    );
+    const displaySizes = availableSizes.filter(
+        (size) =>
+            size &&
+            size !== "Not Specified" &&
+            size !== "One Size" &&
+            size !== "Standard",
+    );
+    const specs = [
+        brand ? { label: "Brand", value: brand } : null,
+        categoryName ? { label: "Category", value: categoryName } : null,
+        !isServiceMode && selectedColor && selectedColor !== "Default"
+            ? { label: "Color", value: selectedColor }
+            : null,
+        !isServiceMode && selectedSize && displaySizes.includes(selectedSize)
+            ? { label: "Size", value: selectedSize }
+            : null,
+    ].filter(Boolean) as Array<{ label: string; value: string }>;
 
     const handleWishlist = (event: React.MouseEvent<HTMLButtonElement>) => {
         event.stopPropagation();
@@ -129,63 +168,55 @@ export default function ProductCard({
                     : "Select Variant"
                 : addToListLabel(isServiceMode);
 
-    return (
-        <article
-            className={`${styles.card} ${!isActive ? styles.inactive : ""} ${isOutOfStock ? styles.soldOut : ""}`}
-            onClick={handleCardClick}
-            role="link"
-            tabIndex={0}
-            onKeyDown={(event) => {
-                if (event.key === "Enter" || event.key === " ") {
-                    event.preventDefault();
-                    handleCardClick();
-                }
-            }}
-        >
-            <div className={styles.imageContainer}>
-                {validImages.length > 0 ? (
-                    <ProductCardMedia
-                        sources={validImages}
-                        alt={`${name} ${selectedColor}`.trim()}
-                        mediaClassName={styles.productImage}
-                        loading="lazy"
-                        variant={mediaVariant}
-                    />
-                ) : (
-                    <div className={styles.noImage}>
-                        <span>No Image</span>
-                    </div>
-                )}
-                {isOutOfStock && (
-                    <div className={styles.outOfStock}>
-                        {isServiceMode ? "Unavailable" : "Out of Stock"}
-                    </div>
-                )}
-                <div className={styles.gradient} />
-                {(!isServiceMode && discountPercentage > 0) && (
-                    <div className={styles.discount}>{discountPercentage}% OFF</div>
-                )}
-                <button
-                    type="button"
-                    className={`${styles.wishlist} ${isWishlisted ? styles.wishlistActive : ""}`}
-                    onClick={handleWishlist}
-                    aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
-                >
-                    <HeartIcon filled={isWishlisted} />
-                </button>
-                {!isServiceMode && typeof averageRating === "number" && (
-                    <div className={styles.rating}>
-                        <span>{averageRating.toFixed(1)}</span>
-                        <StarIcon />
-                        <span className={styles.ratingSeparator} />
-                        <span>{reviewCount}</span>
-                    </div>
-                )}
-                {isServiceMode && (
-                    <div className={styles.rating}>
-                        <span>{isOutOfStock ? "Unavailable" : "Available"}</span>
-                    </div>
-                )}
+    const showRating = layoutSettings.showProductRating && hasRating;
+    const showDiscount = layoutSettings.showDiscountBadge && !isServiceMode && discountPercentage > 0;
+    const showCart = layoutSettings.showQuickAddOnCard;
+    const heartLeft = layoutSettings.wishlistIconPosition === "left";
+
+    const media = (
+        <div className={styles.imageContainer}>
+            {design === "studio" && <div className={styles.glow} aria-hidden />}
+            {validImages.length > 0 ? (
+                <ProductCardMedia
+                    sources={validImages}
+                    alt={`${name} ${selectedColor}`.trim()}
+                    mediaClassName={styles.productImage}
+                    loading="lazy"
+                    variant={mediaVariant}
+                />
+            ) : (
+                <div className={styles.noImage}>
+                    <span>No Image</span>
+                </div>
+            )}
+            {isOutOfStock && (
+                <div className={styles.outOfStock}>
+                    {isServiceMode ? "Unavailable" : "Out of Stock"}
+                </div>
+            )}
+            {showDiscount && <div className={styles.discount}>{discountPercentage}% OFF</div>}
+            <button
+                type="button"
+                className={`${styles.wishlist} ${heartLeft ? styles.wishlistLeft : styles.wishlistRight} ${isWishlisted ? styles.wishlistActive : ""}`}
+                onClick={handleWishlist}
+                aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
+            >
+                <HeartIcon filled={isWishlisted} />
+            </button>
+            {design === "studio" && (
+                <div className={styles.priceBadge}>
+                    {formatPrice(finalPrice)}
+                </div>
+            )}
+            {design === "classic" && showRating && (
+                <div className={styles.rating}>
+                    <span>{averageRating.toFixed(1)}</span>
+                    <StarIcon />
+                    <span className={styles.ratingSeparator} />
+                    <span>{reviewCount}</span>
+                </div>
+            )}
+            {design === "classic" && showCart && (
                 <div className={styles.cartContainer}>
                     <button
                         type="button"
@@ -197,73 +228,152 @@ export default function ProductCard({
                         <span>{cartButtonLabel}</span>
                     </button>
                 </div>
-            </div>
-            <div className={styles.info}>
-                <h3 className={styles.name}>{name}</h3>
-                {!isServiceMode && availableColors.length > 0 && (
-                    <div className={styles.colorSection}>
-                        <span className={styles.optionLabel}>Color:</span>
-                        <div className={styles.colorOptions}>
-                            {availableColors.map((color) => (
-                                <button
-                                    key={color}
-                                    type="button"
-                                    className={`${styles.colorButton} ${selectedColor === color ? styles.colorButtonActive : ""}`}
-                                    onClick={(event) => {
-                                        stopPropagation(event);
-                                        selectColor(color);
-                                    }}
-                                    aria-label={`Select ${color}`}
-                                    title={color}
-                                >
-                                    <span
-                                        className={styles.colorDot}
-                                        style={{ backgroundColor: getColorValue(color) }}
-                                    />
-                                </button>
-                            ))}
+            )}
+        </div>
+    );
+
+    const colorPickers = displayColors.length > 1 && (
+        <div className={styles.colorOptions}>
+            {displayColors.map((color) => (
+                <button
+                    key={color}
+                    type="button"
+                    className={`${styles.colorButton} ${selectedColor === color ? styles.colorButtonActive : ""}`}
+                    onClick={(event) => {
+                        stopPropagation(event);
+                        selectColor(color);
+                    }}
+                    aria-label={`Select ${color}`}
+                    title={color}
+                >
+                    <span
+                        className={styles.colorDot}
+                        style={{ backgroundColor: getColorValue(color) }}
+                    />
+                </button>
+            ))}
+        </div>
+    );
+
+    const sizePickers = displaySizes.length > 0 && (
+        <div className={styles.sizeOptions}>
+            {displaySizes.map((size) => (
+                <button
+                    key={size}
+                    type="button"
+                    className={`${styles.sizeButton} ${selectedSize === size ? styles.sizeButtonActive : ""}`}
+                    onClick={(event) => {
+                        stopPropagation(event);
+                        selectSize(size);
+                    }}
+                    aria-label={`Select size ${size}`}
+                >
+                    {size}
+                </button>
+            ))}
+        </div>
+    );
+
+    return (
+        <article
+            className={`${styles.card} ${styles[design]} ${!isActive ? styles.inactive : ""} ${isOutOfStock ? styles.soldOut : ""}`}
+            onClick={handleCardClick}
+            role="link"
+            tabIndex={0}
+            onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    handleCardClick();
+                }
+            }}
+        >
+            {media}
+            {design === "studio" ? (
+                <div className={styles.info}>
+                    <div className={styles.infoGrid}>
+                        <div className={styles.infoMain}>
+                            <h3 className={styles.name}>{name}</h3>
+                            {summary ? <p className={styles.summary}>{summary}</p> : null}
+                            {showRating ? (
+                                <div className={styles.stars} aria-label={`${averageRating.toFixed(1)} out of 5`}>
+                                    {Array.from({ length: 5 }, (_, index) => (
+                                        <span
+                                            key={index}
+                                            className={index < filledStars ? styles.starOn : styles.starOff}
+                                        >
+                                            <StarIcon />
+                                        </span>
+                                    ))}
+                                </div>
+                            ) : isServiceMode ? (
+                                <p className={styles.availability}>
+                                    {isOutOfStock ? "Unavailable" : "Available"}
+                                </p>
+                            ) : null}
+                            {colorPickers}
+                            {sizePickers}
                         </div>
+                        {specs.length > 0 && (
+                            <div className={styles.infoMeta}>
+                                {specs.slice(0, 3).map((spec) => (
+                                    <div key={spec.label} className={styles.spec}>
+                                        <span>{spec.label}</span>
+                                        <strong>{spec.value}</strong>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
                     </div>
-                )}
-                {!isServiceMode && availableSizes.filter((size) => size && size !== "Not Specified").length > 0 && (
-                    <div className={styles.sizeSection}>
-                        <span className={styles.optionLabel}>Size:</span>
-                        <div className={styles.sizeOptions}>
-                            {availableSizes
-                                .filter((size) => size && size !== "Not Specified")
-                                .map((size) => (
-                                <button
-                                    key={size}
-                                    type="button"
-                                    className={`${styles.sizeButton} ${selectedSize === size ? styles.sizeButtonActive : ""}`}
-                                    onClick={(event) => {
-                                        stopPropagation(event);
-                                        selectSize(size);
-                                    }}
-                                    aria-label={`Select size ${size}`}
-                                >
-                                    {size}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-                )}
-                <div className={styles.priceRow}>
-                    <span className={styles.finalPrice}>
-                        ₹{finalPrice?.toLocaleString("en-IN")}
-                    </span>
-                    {!isServiceMode && price > finalPrice && (
-                        <span className={styles.originalPrice}>
-                            ₹{price.toLocaleString("en-IN")}
-                        </span>
-                    )}
-                    {!isServiceMode && discountPercentage > 0 && (
-                        <span className={styles.discountPill}>
-                            {discountPercentage}% OFF
-                        </span>
+                    {showCart && (
+                        <button
+                            type="button"
+                            className={styles.cartButton}
+                            onClick={handleAddToCart}
+                            disabled={isAdding || isOutOfStock}
+                        >
+                            {cartButtonLabel}
+                        </button>
                     )}
                 </div>
-            </div>
+            ) : (
+                <div className={styles.info}>
+                    <h3 className={styles.name}>{name}</h3>
+                    {design === "minimal" && showRating && (
+                        <div className={styles.stars} aria-label={`${averageRating.toFixed(1)} out of 5`}>
+                            {Array.from({ length: 5 }, (_, index) => (
+                                <span
+                                    key={index}
+                                    className={index < filledStars ? styles.starOn : styles.starOff}
+                                >
+                                    <StarIcon />
+                                </span>
+                            ))}
+                        </div>
+                    )}
+                    {colorPickers}
+                    {sizePickers}
+                    <div className={styles.priceRow}>
+                        <span className={styles.finalPrice}>
+                            {formatPrice(finalPrice)}
+                        </span>
+                        {!isServiceMode && price > finalPrice && (
+                            <span className={styles.originalPrice}>
+                                {formatPrice(price)}
+                            </span>
+                        )}
+                    </div>
+                    {design === "minimal" && showCart && (
+                        <button
+                            type="button"
+                            className={styles.cartButton}
+                            onClick={handleAddToCart}
+                            disabled={isAdding || isOutOfStock}
+                        >
+                            {cartButtonLabel}
+                        </button>
+                    )}
+                </div>
+            )}
         </article>
     );
 }

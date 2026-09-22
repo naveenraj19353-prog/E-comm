@@ -7,7 +7,15 @@ export type RegisterStorePayload = {
   slug: string;
   businessType: BusinessType;
   email: string;
+  phone: string;
   password: string;
+  otp: string;
+};
+
+export type SendStoreSignupOtpResponse = {
+  success: boolean;
+  message?: string;
+  expiresInSeconds?: number;
 };
 
 export type RegisterStoreResponse = {
@@ -37,6 +45,17 @@ export const registerStoreApi = async (
 ): Promise<RegisterStoreResponse> => {
   const response = await apiClient.post<RegisterStoreResponse>(
     API_ENDPOINTS.TENANTS.REGISTER,
+    payload,
+  );
+  return response.data;
+};
+
+export const sendStoreSignupOtpApi = async (payload: {
+  email: string;
+  phone: string;
+}): Promise<SendStoreSignupOtpResponse> => {
+  const response = await apiClient.post<SendStoreSignupOtpResponse>(
+    API_ENDPOINTS.TENANTS.REGISTER_SEND_OTP,
     payload,
   );
   return response.data;

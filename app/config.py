@@ -56,8 +56,9 @@ except ValueError:
     PERISKOPE_TIMEOUT_SECONDS = 10.0
 _periskope_verify_ssl = (_env("PERISKOPE_VERIFY_SSL") or "true").lower()
 
-EMAIL = os.getenv("EMAIL")
-APP_PASSWORD = os.getenv("APP_PASSWORD")
+EMAIL = _env("EMAIL")
+# Gmail app passwords are 16 characters; Google often copies them with spaces.
+APP_PASSWORD = (_env("APP_PASSWORD") or "").replace(" ", "") or None
 
 FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173").rstrip("/")
 

@@ -1,9 +1,11 @@
 import axios from "axios";
 import type { ProductFilter, ProductFilterCategory } from "../products/types";
+import { formatStorePrice, type StoreCurrencySettings } from "../../utils/currency";
 
 const formatCategoryLabel = (name: string): string => name.replace(/_/g, " ").trim();
 
-const formatPrice = (value: number): string => `₹${Math.round(value).toLocaleString("en-IN")}`;
+const money = (value: number, settings?: StoreCurrencySettings | null): string =>
+    formatStorePrice(value, settings);
 
 export const getChatbotErrorMessage = (error: unknown, fallback: string): string => {
     if (axios.isAxiosError(error)) {
@@ -46,7 +48,11 @@ export const getChatbotErrorMessage = (error: unknown, fallback: string): string
     return fallback;
 };
 
-export const buildWelcomeMessage = (filter: ProductFilter | null, catalogError?: string | null): string => {
+export const buildWelcomeMessage = (
+    filter: ProductFilter | null,
+    catalogError?: string | null,
+    settings?: StoreCurrencySettings | null,
+): string => {
     if (catalogError) {
         return `Hi! I can help you find products by name or price.\n\nNote: Category suggestions are unavailable right now (${catalogError}). You can still search by product name and price range.`;
     }
@@ -71,17 +77,20 @@ export const buildWelcomeMessage = (filter: ProductFilter | null, catalogError?:
         lines.push(`Sizes: ${filter.size.slice(0, 6).join(", ")}.`);
     }
     if (filter.price.max > filter.price.min) {
-        lines.push(`Price range: ${formatPrice(filter.price.min)} – ${formatPrice(filter.price.max)}.`);
+        lines.push(`Price range: ${money(filter.price.min, settings)} – ${money(filter.price.max, settings)}.`);
     }
     lines.push("Try:");
-    const examples = buildExampleQueries(filter);
+    const examples = buildExampleQueries(filter, settings);
     examples.slice(0, 4).forEach((example) => {
         lines.push(`• "${example}"`);
     });
     return lines.join("\n");
 };
 
-export const buildExampleQueries = (filter: ProductFilter | null): string[] => {
+export const buildExampleQueries = (
+    filter: ProductFilter | null,
+    settings?: StoreCurrencySettings | null,
+): string[] => {
     if (!filter) {
         return [
             "shoes under 2000",
@@ -120,11 +129,14 @@ export const buildExampleQueries = (filter: ProductFilter | null): string[] => {
     return [...new Set(examples)].filter(Boolean);
 };
 
-export const buildQuickPrompts = (filter: ProductFilter | null): string[] => {
+export const buildQuickPrompts = (
+    filter: ProductFilter | null,
+    settings?: StoreCurrencySettings | null,
+): string[] => {
     if (!filter) {
         return [
             "Show all products",
-            "Under ₹1000",
+            `Under ${money(1000, settings)}`,
         ];
     }
 
@@ -137,8 +149,8 @@ export const buildQuickPrompts = (filter: ProductFilter | null): string[] => {
     if (max > min) {
         const underPrice = Math.max(min + 1, Math.round(min + (max - min) * 0.25));
         const rangeEnd = Math.max(underPrice + 1, Math.round(min + (max - min) * 0.5));
-        prompts.push(`Under ${formatPrice(underPrice)}`);
-        prompts.push(`Between ${formatPrice(min)} and ${formatPrice(rangeEnd)}`);
+        prompts.push(`Under ${money(underPrice, settings)}`);
+        prompts.push(`Between ${money(min, settings)} and ${money(rangeEnd, settings)}`);
     }
 
     if (filter.brand[0]) {

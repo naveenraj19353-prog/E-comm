@@ -14,7 +14,6 @@ import {
     isMenuBusiness,
     isServiceBusiness,
 } from "../../tenant/businessMode";
-import styles from "../styles/CreateProduct.module.css";
 interface InventoryRow {
     variantId: string;
     color: string;
@@ -23,6 +22,50 @@ interface InventoryRow {
 }
 interface ColorImages {
     [color: string]: ProductImageRef[];
+}
+
+type DuplicateProductNotice = {
+    productId: string;
+    name: string;
+    categoryName?: string;
+    message: string;
+};
+
+function parseDuplicateProductError(error: unknown): DuplicateProductNotice | null {
+    if (!axios.isAxiosError(error)) {
+        return null;
+    }
+    const detail = error.response?.data?.detail;
+    if (detail && typeof detail === "object" && detail.code === "PRODUCT_ALREADY_EXISTS") {
+        return {
+            productId: String(detail.productId || ""),
+            name: String(detail.name || ""),
+            categoryName: String(detail.categoryName || detail.categoryId || ""),
+            message: String(
+                detail.message
+                || "This product is already in this category. Edit or update it instead of creating it again.",
+            ),
+        };
+    }
+    return null;
+}
+
+function createProductErrorMessage(error: unknown): string {
+    if (axios.isAxiosError(error)) {
+        const detail = error.response?.data?.detail;
+        if (typeof detail === "string") {
+            return detail;
+        }
+        if (Array.isArray(detail)) {
+            return detail
+                .map((item) => (typeof item === "object" && item?.msg ? item.msg : String(item)))
+                .join(" ");
+        }
+    }
+    if (error instanceof Error) {
+        return error.message;
+    }
+    return "Failed to create product.";
 }
 export default function CreateProduct() {
     const navigate = useNavigate();
@@ -54,6 +97,7 @@ export default function CreateProduct() {
     const [colorImages, setColorImages] = useState<ColorImages>({});
     const [isUploadingImages, setIsUploadingImages] = useState(false);
     const [error, setError] = useState("");
+    const [duplicateNotice, setDuplicateNotice] = useState<DuplicateProductNotice | null>(null);
     const basePriceNumber = Number(basePrice) || 0;
     const marginNumber = Number(marginPercentage) || 0;
     const discountNumber = isServiceMode ? 0 : Number(discountPercentage) || 0;
@@ -261,6 +305,7 @@ export default function CreateProduct() {
     const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         setError("");
+        setDuplicateNotice(null);
         if (!tenantId) {
             setError("Tenant ID is missing.");
             return;
@@ -342,16 +387,13 @@ export default function CreateProduct() {
                 navigate(`/admin/tenants/${tenantId}/products`);
             }
             catch (createError) {
+                const duplicate = parseDuplicateProductError(createError);
+                if (duplicate) {
+                    setDuplicateNotice(duplicate);
+                    return;
+                }
                 console.error("Failed to create product:", createError);
-                if (axios.isAxiosError(createError)) {
-                    setError(createError.response?.data?.detail || "Failed to create product.");
-                }
-                else if (createError instanceof Error) {
-                    setError(createError.message);
-                }
-                else {
-                    setError("Failed to create product.");
-                }
+                setError(createProductErrorMessage(createError));
             }
             return;
         }
@@ -421,16 +463,13 @@ export default function CreateProduct() {
             navigate(`/admin/tenants/${tenantId}/products`);
         }
         catch (error) {
+            const duplicate = parseDuplicateProductError(error);
+            if (duplicate) {
+                setDuplicateNotice(duplicate);
+                return;
+            }
             console.error("Failed to create product:", error);
-            if (axios.isAxiosError(error)) {
-                setError(error.response?.data?.detail || "Failed to create product.");
-            }
-            else if (error instanceof Error) {
-                setError(error.message);
-            }
-            else {
-                setError("Failed to create product.");
-            }
+            setError(createProductErrorMessage(error));
         }
     };
     const handleBack = () => {
@@ -952,5 +991,55 @@ export default function CreateProduct() {
           </button>
         </div>
       </form>
+      {duplicateNotice ? (
+        <div
+          className={styles.modalOverlay}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="duplicate-product-title"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) {
+              setDuplicateNotice(null);
+            }
+          }}
+        >
+          <div className={styles.duplicateModal}>
+            <h2 id="duplicate-product-title">Product already exists</h2>
+            <p>
+              {duplicateNotice.message}
+            </p>
+            <p className={styles.duplicateMeta}>
+              <strong>{duplicateNotice.name || name.trim()}</strong>
+              {duplicateNotice.categoryName
+                ? ` in ${duplicateNotice.categoryName}`
+                : categoryId.trim()
+                  ? ` in ${categoryId.trim()}`
+                  : ""}
+            </p>
+            <div className={styles.duplicateActions}>
+              <button
+                type="button"
+                className={styles.cancelButton}
+                onClick={() => setDuplicateNotice(null)}
+              >
+                Stay here
+              </button>
+              {duplicateNotice.productId && tenantId ? (
+                <button
+                  type="button"
+                  className={styles.createButton}
+                  onClick={() =>
+                    navigate(
+                      `/admin/tenants/${tenantId}/products?edit=${duplicateNotice.productId}`,
+                    )
+                  }
+                >
+                  Edit existing product
+                </button>
+              ) : null}
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>);
 }

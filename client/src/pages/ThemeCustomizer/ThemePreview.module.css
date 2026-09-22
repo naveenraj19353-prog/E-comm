@@ -249,6 +249,14 @@
   border-radius: var(--layout-card-radius);
   background: var(--surface);
 }
+.card_studio {
+  background: #151518;
+  border-color: rgba(255, 255, 255, 0.08);
+}
+.card_studio strong,
+.card_studio span {
+  color: #f8fafc;
+}
 
 .productImage,
 .detailImage,

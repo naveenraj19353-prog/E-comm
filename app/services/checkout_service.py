@@ -448,3 +448,11 @@ def calculate_checkout(
         "shippingQuoted": shipping_override is not None,
         "shippingMeta": shipping_meta,
     }
+
+
+def apply_zero_shipping_totals(checkout_data: dict, _tenant_id: str) -> dict:
+    discount = float(checkout_data.get("discount") or 0)
+    subtotal = float(checkout_data.get("subtotal") or 0)
+    checkout_data["shipping"] = 0.0
+    checkout_data["grandTotal"] = round(max(subtotal - discount, 0), 2)
+    return checkout_data

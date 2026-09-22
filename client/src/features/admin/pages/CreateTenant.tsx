@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { type SubmitEvent } from "react";
 import { useNavigate } from "react-router-dom";
+import TenantLogoField from "../components/TenantLogoField";
+import TenantCurrencyField from "../components/TenantCurrencyField";
 import styles from "../styles/CreateTenant.module.css";
 import { useCreateTenant } from "../hooks/useTenants";
 import {
@@ -25,6 +27,8 @@ export default function CreateTenant() {
     const [businessType, setBusinessType] = useState<BusinessType | "">("");
     const [logo, setLogo] = useState("");
     const [theme, setTheme] = useState("green");
+    const [displayCurrency, setDisplayCurrency] = useState("INR");
+    const [inrPerUnit, setInrPerUnit] = useState("1");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
@@ -75,6 +79,8 @@ export default function CreateTenant() {
                 businessType: businessType as BusinessType,
                 logo: logo.trim(),
                 theme,
+                displayCurrency,
+                inrPerUnit: Number(inrPerUnit) || undefined,
                 email: email.trim().toLowerCase(),
                 password,
             });
@@ -187,17 +193,19 @@ export default function CreateTenant() {
                         </small>
                     </div>
 
-                    <div className={styles.field}>
-                        <label htmlFor="tenant-logo">Logo URL</label>
-                        <input
-                            id="tenant-logo"
-                            type="text"
-                            value={logo}
-                            onChange={(event) => setLogo(event.target.value)}
-                            placeholder="https://example.com/logo.png"
-                        />
-                        <small>Optional. You can add a logo later.</small>
-                    </div>
+                    <TenantLogoField
+                        tenantId={tenantId}
+                        value={logo}
+                        onChange={setLogo}
+                        disabled={createTenantMutation.isPending}
+                    />
+
+                    <TenantCurrencyField
+                        currency={displayCurrency}
+                        inrPerUnit={inrPerUnit}
+                        onCurrencyChange={setDisplayCurrency}
+                        onRateChange={setInrPerUnit}
+                    />
 
                     <div className={styles.field}>
                         <label htmlFor="tenant-theme">Theme</label>

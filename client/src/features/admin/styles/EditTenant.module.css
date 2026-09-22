@@ -121,7 +121,8 @@
   color: #c44949;
 }
 .field input,
-.field select {
+.field select,
+.field textarea {
   width: 100%;
   height: 2.6875rem;
   box-sizing: border-box;
@@ -136,8 +137,15 @@
     border-color 0.2s ease,
     box-shadow 0.2s ease;
 }
+.field textarea {
+  height: auto;
+  min-height: 5.5rem;
+  padding: 0.7rem 0.75rem;
+  resize: vertical;
+}
 .field input:focus,
-.field select:focus {
+.field select:focus,
+.field textarea:focus {
   border-color: #2f6b52;
   box-shadow: 0 0 0 0.1875rem rgba(47, 107, 82, 0.08);
 }
@@ -151,11 +159,14 @@
   color: #89948e;
   font-size: 0.6875rem;
 }
+.field input[type="file"] {
+  height: auto;
+  padding: 0.45rem 0.5rem;
+}
 
 .logoPreview {
   width: 5rem;
   height: 5rem;
-  margin-top: 0.625rem;
   overflow: hidden;
   border: 0.0625rem solid #e4e9e6;
   border-radius: 0.625rem;
@@ -166,6 +177,15 @@
   height: 100%;
   display: block;
   object-fit: contain;
+}
+.logoPreviewRow {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.625rem;
+}
+.logoError {
+  color: #c44949 !important;
 }
 
 .statusSection {
@@ -217,6 +237,61 @@
 }
 .toggleActive span {
   transform: translateX(1.375rem);
+}
+
+.scheduleBlock {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+.permissionActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.scheduleWindow {
+  display: grid;
+  grid-template-columns: 5.5rem 1fr 1fr auto;
+  gap: 0.5rem;
+  align-items: center;
+}
+.scheduleWindow input,
+.scheduleWindow select {
+  width: 100%;
+  height: 2.5rem;
+  box-sizing: border-box;
+  padding: 0 0.6rem;
+  border: 0.0625rem solid #dfe5e1;
+  border-radius: 0.5rem;
+  background: #fff;
+}
+.scheduleImages {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-top: 0.6rem;
+}
+.scheduleImage {
+  width: 5.5rem;
+}
+.scheduleImage img {
+  width: 5.5rem;
+  height: 5.5rem;
+  display: block;
+  object-fit: cover;
+  border-radius: 0.5rem;
+  border: 0.0625rem solid #e4e9e6;
+  background: #f5f7f6;
+}
+.scheduleImage button {
+  margin-top: 0.3rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #7a4a4a;
+  font-size: 0.75rem;
+  cursor: pointer;
 }
 
 .error {
@@ -337,6 +412,11 @@
 
   .statusSection {
     grid-column: auto;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .scheduleWindow {
+    grid-template-columns: 1fr;
     gap: 0.75rem;
   }
 

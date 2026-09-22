@@ -1,4 +1,7 @@
+import type { ReactNode } from "react";
 import type { ThemeDraft } from "../../theme/types";
+import { useFormatStorePrice } from "../../features/tenant/useFormatStorePrice";
+import { HOME_SECTION_LABELS, normalizeHomeSectionOrder, type HomeSectionId } from "../../theme/homeSections";
 import styles from "./ThemePreview.module.css";
 
 type PreviewTab = "home" | "products" | "detail" | "cart" | "wishlist";
@@ -19,6 +22,7 @@ const getCardRadius = (cardStyle: ThemeDraft["layoutSettings"]["cardStyle"]) => 
 };
 
 const ThemePreview = ({ tab, draft }: ThemePreviewProps) => {
+    const { formatPrice } = useFormatStorePrice();
     const { themeColors, layoutSettings, footerContent } = draft;
     const previewStyle = {
         "--primary": themeColors.primary,
@@ -79,6 +83,52 @@ const ThemePreview = ({ tab, draft }: ThemePreviewProps) => {
             : styles.previewNavHidden,
     ].join(" ");
 
+    const productPreview = (section: HomeSectionId) => (
+        <div className={styles.dealCard}>
+            <strong>{HOME_SECTION_LABELS[section]}</strong>
+            <span>{formatPrice(1299)}</span>
+        </div>
+    );
+
+    const homePreviewBlocks: Partial<Record<HomeSectionId, ReactNode>> = {
+        banner: layoutSettings.showHomeBanner ? (
+            <div className={`${styles.banner} ${layoutSettings.homeBannerStyle === "contained" ? styles.bannerContained : ""}`}>
+                <span>Summer Collection</span>
+                <button type="button">Shop now</button>
+            </div>
+        ) : null,
+        festival: (
+            <div className={styles.dealCard}>
+                <strong>Festival offer</strong>
+                <span>Use code FESTIVE</span>
+            </div>
+        ),
+        categories: layoutSettings.showCategorySlider ? (
+            <div className={styles.chips}>
+                <span>Men</span>
+                <span>Women</span>
+                <span>Kids</span>
+            </div>
+        ) : null,
+        trending: productPreview("trending"),
+        discounts: productPreview("discounts"),
+        mostSelling: productPreview("mostSelling"),
+        newArrivals: productPreview("newArrivals"),
+        topRated: productPreview("topRated"),
+        dealOfTheDay: layoutSettings.showDealOfTheDay ? (
+            <div className={styles.dealCard}>
+                <strong>Deal of the Day</strong>
+                <span>Ends in 04:22:10</span>
+            </div>
+        ) : null,
+        testimonials: layoutSettings.showTestimonials ? (
+            <div className={styles.testimonialCard}>
+                <strong>What customers say</strong>
+                <span>★★★★★ Great quality and fast delivery!</span>
+            </div>
+        ) : null,
+    };
+
     return (
         <div className={styles.previewWell}>
         <div className={styles.previewFrame} style={previewStyle}>
@@ -91,42 +141,10 @@ const ThemePreview = ({ tab, draft }: ThemePreviewProps) => {
             </div>
       {tab === "home" && (
                 <>
-                    {layoutSettings.showHomeBanner && (
-                        <div className={`${styles.banner} ${layoutSettings.homeBannerStyle === "contained" ? styles.bannerContained : ""}`}>
-                            <span>Summer Collection</span>
-                            <button type="button">Shop now</button>
-                        </div>
-                    )}
-                    {layoutSettings.showCategorySlider && (
-                        <div className={styles.chips}>
-                            <span>Men</span>
-                            <span>Women</span>
-                            <span>Kids</span>
-                        </div>
-                    )}
-                    {layoutSettings.showDealOfTheDay && (
-                        <div className={styles.dealCard}>
-                            <strong>Deal of the Day</strong>
-                            <span>Ends in 04:22:10</span>
-                        </div>
-                    )}
-                    <div className={styles.miniGrid} style={{ gridTemplateColumns: gridColumns }}>
-                        {[1, 2, 3].map((item) => (
-                            <div key={item} className={`${styles.productCard} ${layoutSettings.productViewMode === "list" ? styles.productCardList : ""}`}>
-                                <div className={styles.productImage} style={{ position: "relative" }}>
-                                    {layoutSettings.wishlistIconPosition === "left" ? <span className={styles.heartLeft}>♥</span> : <span className={styles.heartRight}>♥</span>}
-                                </div>
-                                <strong>Product {item}</strong>
-                                <span>₹1,299</span>
-                            </div>
-                        ))}
-                    </div>
-                    {layoutSettings.showTestimonials && (
-                        <div className={styles.testimonialCard}>
-                            <strong>What customers say</strong>
-                            <span>★★★★★ Great quality and fast delivery!</span>
-                        </div>
-                    )}
+                    {normalizeHomeSectionOrder(layoutSettings.homeSectionOrder).map((section) => {
+                        const preview = homePreviewBlocks[section];
+                        return preview ? <div key={section}>{preview}</div> : null;
+                    })}
                     {layoutSettings.footerLayout !== "minimal" && (
                         <div className={`${styles.footerPreview} ${layoutSettings.footerLayout === "compact" ? styles.footerPreviewCompact : ""}`}>
                             <strong>{footerContent.companyName}</strong>
@@ -154,11 +172,11 @@ const ThemePreview = ({ tab, draft }: ThemePreviewProps) => {
                         )}
                         <div className={styles.miniGrid} style={{ gridTemplateColumns: gridColumns }}>
                             {[1, 2, 3, 4, 5, 6].map((item) => (
-                                <div key={item} className={`${styles.productCard} ${layoutSettings.productViewMode === "list" ? styles.productCardList : ""}`}>
+                                <div key={item} className={`${styles.productCard} ${layoutSettings.productViewMode === "list" ? styles.productCardList : ""} ${styles[`card_${layoutSettings.productCardDesign}`] || ""}`}>
                                     <div className={styles.productImage} />
                                     <div>
                                         <strong>Listing {item}</strong>
-                                        <span>₹899</span>
+                                        <span>{formatPrice(899)}</span>
                                     </div>
                                 </div>
                             ))}
@@ -173,7 +191,7 @@ const ThemePreview = ({ tab, draft }: ThemePreviewProps) => {
                     <div className={styles.detailInfo}>
                         <h3>Premium Cotton Shirt</h3>
                         <span className={styles.rating}>★ 4.5 (120 reviews)</span>
-                        <strong className={styles.price}>₹1,499</strong>
+                        <strong className={styles.price}>{formatPrice(1499)}</strong>
                         <div className={styles.sizes}>
                             {["S", "M", "L"].map((size) => (
                                 <span key={size}>{size}</span>
@@ -194,12 +212,12 @@ const ThemePreview = ({ tab, draft }: ThemePreviewProps) => {
                                     <strong>Cart item {item}</strong>
                                     <span>Size M · Black</span>
                                 </div>
-                                <strong>₹999</strong>
+                                <strong>{formatPrice(999)}</strong>
                             </div>
                         ))}
                     </div>
                     <div className={styles.summaryCard}>
-                        <div><span>Subtotal</span><strong>₹1,998</strong></div>
+                        <div><span>Subtotal</span><strong>{formatPrice(1998)}</strong></div>
                         <button type="button" className={styles.primaryButton}>Checkout</button>
                     </div>
                 </div>

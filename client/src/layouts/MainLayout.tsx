@@ -2,6 +2,7 @@ import { Outlet } from "react-router-dom";
 import Navbar from "../components/Layout/Header";
 import Footer from "../components/Footer";
 import ProductChatbot from "../components/ProductChatbot/ProductChatbot";
+import StoreClosedOverlay from "../components/StoreClosedOverlay/StoreClosedOverlay";
 import { useStorefrontTenant } from "../features/tenant/useTenant";
 import { useFooterContent } from "../theme/useFooterContent";
 import StorefrontSeoDefaults from "../features/seo/StorefrontSeoDefaults";
@@ -29,6 +30,7 @@ const MainLayout = () => {
           sections={footerContent.sections}
         />
         <ProductChatbot />
+        <StoreClosedOverlay />
       </div>
     );
 };

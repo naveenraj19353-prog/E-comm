@@ -685,6 +685,49 @@
   font-weight: 800;
 }
 
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.25rem;
+  background: rgba(20, 31, 26, 0.48);
+  backdrop-filter: blur(0.2rem);
+}
+.duplicateModal {
+  width: min(28rem, 100%);
+  padding: 1.35rem 1.4rem 1.25rem;
+  border-radius: 1rem;
+  background: #fff;
+  box-shadow: 0 1.25rem 3rem rgba(20, 35, 28, 0.22);
+}
+.duplicateModal h2 {
+  margin: 0;
+  font-size: 1.2rem;
+  color: #17211d;
+}
+.duplicateModal p {
+  margin: 0.7rem 0 0;
+  color: #4d5b55;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+.duplicateMeta {
+  padding: 0.7rem 0.8rem;
+  border-radius: 0.7rem;
+  background: #f4f7f5;
+  color: #2f3d37 !important;
+}
+.duplicateActions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.6rem;
+  margin-top: 1.1rem;
+}
+
 .footer {
   display: flex;
   align-items: center;

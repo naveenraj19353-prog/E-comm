@@ -3,6 +3,7 @@ import styles from "./ProductGrid.module.css";
 import { useLayoutSettings } from "../../theme/useThemeSettings";
 import { useStorefrontProductActions } from "../../features/storefront/hooks/useStorefrontProductActions";
 import ProductCard from "../ProductCard/UniCard/ProductCard";
+import HomeProductCard from "../HomeProductSlider/ProductCard";
 
 interface ProductGridProps {
     products: Product[];
@@ -10,6 +11,7 @@ interface ProductGridProps {
 
 const ProductGrid = ({ products }: ProductGridProps) => {
     const layoutSettings = useLayoutSettings();
+    const useHomeCard = layoutSettings.productCardDesign !== "classic";
     const {
         addingProductId,
         toggleWishlist,
@@ -29,16 +31,27 @@ const ProductGrid = ({ products }: ProductGridProps) => {
 
     return (
         <div className={`${styles.grid} ${layoutSettings.productViewMode === "list" ? styles.listView : ""}`}>
-            {products.map((product) => (
-                <ProductCard
-                    key={product._id}
-                    product={product}
-                    isWishlisted={isProductWishlisted(product._id)}
-                    onWishlist={toggleWishlist}
-                    onAddToCart={handleAddToCart}
-                    isAdding={addingProductId === product._id}
-                />
-            ))}
+            {products.map((product) =>
+                useHomeCard ? (
+                    <HomeProductCard
+                        key={product._id}
+                        product={product}
+                        isWishlisted={isProductWishlisted(product._id)}
+                        onWishlist={(productId) => toggleWishlist(productId)}
+                        onAddToCart={handleAddToCart}
+                        isAdding={addingProductId === product._id}
+                    />
+                ) : (
+                    <ProductCard
+                        key={product._id}
+                        product={product}
+                        isWishlisted={isProductWishlisted(product._id)}
+                        onWishlist={toggleWishlist}
+                        onAddToCart={handleAddToCart}
+                        isAdding={addingProductId === product._id}
+                    />
+                ),
+            )}
         </div>
     );
 };
