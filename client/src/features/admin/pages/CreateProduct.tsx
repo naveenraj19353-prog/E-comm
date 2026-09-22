@@ -14,6 +14,7 @@ import {
     isMenuBusiness,
     isServiceBusiness,
 } from "../../tenant/businessMode";
+import styles from "../styles/CreateProduct.module.css";
 interface InventoryRow {
     variantId: string;
     color: string;
