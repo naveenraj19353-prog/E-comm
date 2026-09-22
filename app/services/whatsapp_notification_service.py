@@ -809,6 +809,47 @@ def process_notification(notification_id: str) -> None:
             },
         )
         return
+
+    if notification.get("audience") == "tenant":
+        if not PeriskopeService().configured:
+            notification_logs.update_one(
+                {"_id": log_id},
+                {
+                    "$set": {
+                        "tenantId": tenant_id,
+                        "status": "skipped",
+                        "error": "Periskope credentials are not configured.",
+                        "updatedAt": _now(),
+                    }
+                },
+            )
+            return
+        _deliver_tenant_order_alert(
+            log_id,
+            order=order,
+            tenant_id=tenant_id,
+            integration=integration,
+            event_type=str(notification.get("eventType") or "order.confirmed"),
+        )
+        return
+
+    customer = _customer(order)
+    try:
+        phone = normalize_phone(customer["phone"], country=customer["country"])
+    except PhoneNormalizationError as error:
+        notification_logs.update_one(
+            {"_id": log_id},
+            {
+                "$set": {
+                    "tenantId": tenant_id,
+                    "status": "failed",
+                    "error": str(error)[:300],
+                    "updatedAt": _now(),
+                }
+            },
+        )
+        return
+
     if not PeriskopeService().configured:
         notification_logs.update_one(
             {"_id": log_id},
@@ -823,19 +864,7 @@ def process_notification(notification_id: str) -> None:
         )
         return
 
-    if notification.get("audience") == "tenant":
-        _deliver_tenant_order_alert(
-            log_id,
-            order=order,
-            tenant_id=tenant_id,
-            integration=integration,
-            event_type=str(notification.get("eventType") or "order.confirmed"),
-        )
-        return
-
-    customer = _customer(order)
     try:
-        phone = normalize_phone(customer["phone"], country=customer["country"])
         store = _store(order)
         message = _message_for(notification["eventType"], order, customer, store)
         media_url = _public_image_url(order, store)
