@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ShoppingCart, Palette } from "lucide-react";
 import styles from "../../styles/NavBar.module.css";
@@ -38,40 +38,61 @@ export default function Navbar() {
     const cartTenantId = isCustomer ? (user!.tenantId || catalogTenantId || "") : "";
     const { cartCount } = useCart(cartUserId, cartTenantId);
     const { wishlistCount } = useWishlist(cartUserId, cartTenantId);
-    const [categoryStart, setCategoryStart] = useState(0);
     const [menuOpen, setMenuOpen] = useState(false);
+    const [moreOpen, setMoreOpen] = useState(false);
     const [searchOpen, setSearchOpen] = useState(false);
     const [searchValue, setSearchValue] = useState("");
     const [logoFailed, setLogoFailed] = useState(false);
+    const [visibleCount, setVisibleCount] = useState(0);
+    const navRef = useRef<HTMLElement | null>(null);
+    const measureRef = useRef<HTMLDivElement | null>(null);
+    const moreRef = useRef<HTMLDivElement | null>(null);
     const logoSrc = (tenant?.logo || "").trim();
     const showStoreLogo = Boolean(logoSrc) && !logoFailed;
-    const categories: Category[] = categoryResponse?.data
-        ? categoryResponse.data.slice(0, 8)
-        : [];
+    const categories: Category[] = categoryResponse?.data || [];
+    const visibleCategories = categories.slice(0, visibleCount);
+    const overflowCategories = categories.slice(visibleCount);
     useEffect(() => {
         setLogoFailed(false);
     }, [logoSrc]);
-    useEffect(() => {
-        if (categories.length <= 8) {
+    useLayoutEffect(() => {
+        const nav = navRef.current;
+        const measure = measureRef.current;
+        if (!nav || !measure || !layoutSettings.showHeaderCategories) {
+            setVisibleCount(categories.length);
             return;
         }
-        const interval = window.setInterval(() => {
-            setCategoryStart((current) => {
-                const next = current + 8;
-                return next >= categories.length ? 0 : next;
-            });
-        }, 3000);
-        return () => {
-            window.clearInterval(interval);
+        const update = () => {
+            const items = Array.from(measure.querySelectorAll("[data-nav-item]")) as HTMLElement[];
+            const moreEl = measure.querySelector("[data-nav-more]") as HTMLElement | null;
+            const available = nav.clientWidth;
+            const gap = Number.parseFloat(getComputedStyle(measure).columnGap || getComputedStyle(measure).gap) || 16;
+            const moreWidth = moreEl?.offsetWidth || 72;
+            const widths = items.map((item) => item.offsetWidth);
+            let used = 0;
+            let fit = 0;
+            for (let index = 0; index < widths.length; index += 1) {
+                const nextUsed = used + (fit > 0 ? gap : 0) + widths[index];
+                const remaining = widths.length - index - 1;
+                const limit = remaining > 0 ? available - gap - moreWidth : available;
+                if (nextUsed <= limit + 1) {
+                    used = nextUsed;
+                    fit += 1;
+                } else {
+                    break;
+                }
+            }
+            setVisibleCount(fit);
         };
-    }, [categories.length]);
-    let visibleCategories = categories.slice(categoryStart, categoryStart + 8);
-    if (visibleCategories.length < 8 && categories.length > 8) {
-        visibleCategories = [
-            ...visibleCategories,
-            ...categories.slice(0, 8 - visibleCategories.length),
-        ];
-    }
+        update();
+        const observer = new ResizeObserver(update);
+        observer.observe(nav);
+        window.addEventListener("resize", update);
+        return () => {
+            observer.disconnect();
+            window.removeEventListener("resize", update);
+        };
+    }, [categories, layoutSettings.showHeaderCategories, tenantSlug]);
     const handleSearch = () => {
         const search = searchValue.trim();
         if (!search || !tenantSlug) {
@@ -80,6 +101,7 @@ export default function Navbar() {
         go(withQuery(routes.products(tenantSlug), { search }));
         setSearchOpen(false);
         setMenuOpen(false);
+        setMoreOpen(false);
     };
     const handleCategoryClick = (category: Category) => {
         if (!tenantSlug) {
@@ -92,6 +114,7 @@ export default function Navbar() {
         go(withQuery(routes.products(tenantSlug), { categoryIds: categoryId }));
         setMenuOpen(false);
         setSearchOpen(false);
+        setMoreOpen(false);
     };
     const handleHome = () => {
         if (!tenantSlug) {
@@ -100,6 +123,7 @@ export default function Navbar() {
         go(routes.home(tenantSlug));
         setMenuOpen(false);
         setSearchOpen(false);
+        setMoreOpen(false);
     };
     useEffect(() => {
         document.body.style.overflow = menuOpen ? "hidden" : "";
@@ -112,11 +136,19 @@ export default function Navbar() {
             if (event.key === "Escape") {
                 setMenuOpen(false);
                 setSearchOpen(false);
+                setMoreOpen(false);
+            }
+        };
+        const handlePointerDown = (event: PointerEvent) => {
+            if (moreRef.current && !moreRef.current.contains(event.target as Node)) {
+                setMoreOpen(false);
             }
         };
         window.addEventListener("keydown", handleKeyDown);
+        window.addEventListener("pointerdown", handlePointerDown);
         return () => {
             window.removeEventListener("keydown", handleKeyDown);
+            window.removeEventListener("pointerdown", handlePointerDown);
         };
     }, []);
     const headerLayoutClass = [
@@ -171,16 +203,51 @@ export default function Navbar() {
         
         {searchPosition === "after-logo" && renderDesktopSearch(styles.searchSlotInline)}
 
-        {layoutSettings.showHeaderCategories && (<nav className={styles.navLinks} aria-label="Primary navigation">
-          {categoriesLoading ? (<span className={styles.navLink}>Loading...</span>) : (visibleCategories.map((category) => {
-            const key = category._id ||
-                category.categoryId ||
-                category.slug ||
-                category.name;
+        {layoutSettings.showHeaderCategories && (<nav ref={navRef} className={styles.navLinks} aria-label="Primary navigation">
+          <div ref={measureRef} className={styles.navMeasure} aria-hidden="true">
+            {categories.map((category, index) => (
+              <span key={`${category._id || category.categoryId || category.slug || category.name}-measure-${index}`} data-nav-item className={styles.navLink}>
+                {category.name}
+              </span>
+            ))}
+            <span data-nav-more className={styles.navLink}>More</span>
+          </div>
+          {categoriesLoading ? (<span className={styles.navLink}>Loading...</span>) : (<>
+            {visibleCategories.map((category, index) => {
+            const key = `${category._id || category.categoryId || category.slug || category.name}-${index}`;
             return (<button key={key} type="button" className={styles.navLink} onClick={() => handleCategoryClick(category)}>
                   {category.name}
                 </button>);
-        }))}
+            })}
+            {overflowCategories.length > 0 && (
+              <div ref={moreRef} className={styles.moreWrap}>
+                <button
+                  type="button"
+                  className={`${styles.navLink} ${styles.moreButton} ${moreOpen ? styles.moreButtonOpen : ""}`}
+                  aria-expanded={moreOpen}
+                  aria-haspopup="menu"
+                  onClick={() => setMoreOpen((open) => !open)}
+                >
+                  More
+                </button>
+                {moreOpen && (
+                  <div className={styles.moreMenu} role="menu">
+                    {overflowCategories.map((category, index) => (
+                      <button
+                        key={`${category._id || category.categoryId || category.slug || category.name}-more-${index}`}
+                        type="button"
+                        role="menuitem"
+                        className={styles.moreItem}
+                        onClick={() => handleCategoryClick(category)}
+                      >
+                        {category.name}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </>)}
         </nav>)}
         
         {searchPosition === "center" && renderDesktopSearch(styles.searchSlotCenter)}
@@ -241,7 +308,7 @@ export default function Navbar() {
               UK
             </button>)}
           
-          <button type="button" className={styles.menuButton} onClick={() => setMenuOpen((value) => !value)} aria-label="Open menu" aria-expanded={menuOpen}>
+          <button type="button" className={`${styles.menuButton} ${menuOpen ? styles.menuButtonOpen : ""}`} onClick={() => setMenuOpen((value) => !value)} aria-label="Open menu" aria-expanded={menuOpen}>
             <span />
             <span />
             <span />

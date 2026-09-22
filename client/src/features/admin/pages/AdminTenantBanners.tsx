@@ -11,6 +11,7 @@ import {
 import { uploadImageToS3 } from "../api/upload.api";
 import { extractS3ObjectKey } from "../utils/s3Image";
 import { BANNER_MEDIA_ACCEPT, isBannerVideoSrc } from "../../../components/Banner/bannerMedia";
+import { isAllowedProductMediaFile } from "../../../utils/mediaSrc";
 import PageLoader from "../../../components/PageLoader";
 import styles from "../styles/AdminTenantBanners.module.css";
 
@@ -119,6 +120,14 @@ export default function AdminTenantBanners() {
     target: "desktop" | "mobile",
   ) => {
     if (!file || !tenantId) return;
+    if (!isAllowedProductMediaFile(file)) {
+      setError(
+        file.type.startsWith("video/") || /\.(mp4|webm|ogg|mov)$/i.test(file.name)
+          ? "Video must be MP4, WebM, or MOV and 50 MB or less."
+          : "Image must be JPEG, PNG, WEBP, or GIF and 10 MB or less.",
+      );
+      return;
+    }
     setError("");
     setUploading(target);
     try {
@@ -139,7 +148,9 @@ export default function AdminTenantBanners() {
     } catch (err) {
       setError(
         axios.isAxiosError(err)
-          ? String(err.response?.data?.detail || "Upload failed.")
+          ? err.response?.status === 413
+            ? "This video is too large for the server. Use MP4/WebM/MOV at 50 MB or less."
+            : String(err.response?.data?.detail || "Upload failed.")
           : "Upload failed.",
       );
     } finally {
@@ -152,12 +163,13 @@ export default function AdminTenantBanners() {
     setError("");
     setSuccess("");
 
-    if (!form.title.trim()) {
-      setError("Title is required.");
-      return;
-    }
     if (!form.imageKey.trim()) {
       setError("Upload a banner image or video.");
+      return;
+    }
+    const isVideoBanner = isBannerVideoSrc(form.imageKey);
+    if (!isVideoBanner && !form.title.trim()) {
+      setError("Title is required for image banners.");
       return;
     }
 
@@ -277,16 +289,16 @@ export default function AdminTenantBanners() {
 
           <div className={styles.formGrid}>
             <label className={styles.full}>
-              Title
+              Title {isBannerVideoSrc(form.imageKey) ? "(optional for video)" : ""}
               <input
                 value={form.title}
                 onChange={(e) => updateField("title", e.target.value)}
                 placeholder="Summer collection"
-                required
+                required={!isBannerVideoSrc(form.imageKey)}
               />
             </label>
             <label className={styles.full}>
-              Subtitle
+              Subtitle {isBannerVideoSrc(form.imageKey) ? "(optional)" : ""}
               <input
                 value={form.subtitle}
                 onChange={(e) => updateField("subtitle", e.target.value)}
@@ -436,7 +448,12 @@ export default function AdminTenantBanners() {
                     <div className={styles.thumb} />
                   )}
                   <div className={styles.bannerMeta}>
-                    <strong>{banner.title}</strong>
+                    <strong>
+                      {banner.title?.trim() ||
+                        (isBannerVideoSrc(banner.image, banner.mediaType)
+                          ? "Video banner"
+                          : "Untitled")}
+                    </strong>
                     {banner.subtitle && <p>{banner.subtitle}</p>}
                     <div className={styles.badgeRow}>
                       <span

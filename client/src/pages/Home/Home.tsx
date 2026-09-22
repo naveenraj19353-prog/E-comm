@@ -129,14 +129,26 @@ const Home = () => {
                 <ProductCardSlider title={title} products={products} onToggleWishlist={handleWishlist} onQuickAdd={handleAddToCart} />
             </section>
         ) : null;
+    const shownProductSets = new Set<string>();
+    const uniqueProductSlider = (title: string, products: typeof trendingProducts) => {
+        if (!products.length) {
+            return null;
+        }
+        const signature = products.map((product) => product._id).join(",");
+        if (shownProductSets.has(signature)) {
+            return null;
+        }
+        shownProductSets.add(signature);
+        return productSlider(title, products);
+    };
 
-    const homeSections: Partial<Record<HomeSectionId, ReactNode>> = {
-        banner: layoutSettings.showHomeBanner ? (
+    const homeSections: Partial<Record<HomeSectionId, () => ReactNode>> = {
+        banner: () => layoutSettings.showHomeBanner ? (
             <section className={`${styles.bannerSection} ${layoutSettings.homeBannerStyle === "contained" ? styles.bannerContained : ""}`}>
                 <BannerSlider banners={banners} />
             </section>
         ) : null,
-        festival: festivalOffers.length > 0 ? (
+        festival: () => festivalOffers.length > 0 ? (
             <section className={styles.festivalSection} aria-label="Festival offers">
                 {festivalOffers.map((offer) => (
                     <div key={offer.code} className={styles.festivalCard}>
@@ -148,7 +160,7 @@ const Home = () => {
                 ))}
             </section>
         ) : null,
-        categories: layoutSettings.showCategorySlider ? (
+        categories: () => layoutSettings.showCategorySlider ? (
             <CategorySlider
                 tenantId={tenantId}
                 onCategoryClick={(category) => {
@@ -158,12 +170,12 @@ const Home = () => {
                 }}
             />
         ) : null,
-        trending: productSlider("Trending Products", trendingProducts),
-        discounts: productSlider("Best Discounts", bestDiscountProducts),
-        mostSelling: productSlider("Most Selling", mostSellingProducts),
-        newArrivals: productSlider("New Arrivals", newArrivals),
-        topRated: productSlider("Top Rated Products", topRatedProducts),
-        dealOfTheDay: layoutSettings.showDealOfTheDay && dealOfTheDay.length > 0 ? (
+        trending: () => uniqueProductSlider("Trending Products", trendingProducts),
+        discounts: () => uniqueProductSlider("Best Discounts", bestDiscountProducts),
+        mostSelling: () => uniqueProductSlider("Most Selling", mostSellingProducts),
+        newArrivals: () => uniqueProductSlider("New Arrivals", newArrivals),
+        topRated: () => uniqueProductSlider("Top Rated Products", topRatedProducts),
+        dealOfTheDay: () => layoutSettings.showDealOfTheDay && dealOfTheDay.length > 0 ? (
             <section className={styles.productSection}>
                 <DealOfTheDay
                     products={dealOfTheDay}
@@ -174,7 +186,7 @@ const Home = () => {
                 />
             </section>
         ) : null,
-        testimonials: layoutSettings.showTestimonials ? (
+        testimonials: () => layoutSettings.showTestimonials ? (
             <section className={styles.productSection}>
                 <Testimonials testimonials={dummyTestimonials} />
             </section>
@@ -204,7 +216,7 @@ const Home = () => {
                 ]}
             />
             {normalizeHomeSectionOrder(layoutSettings.homeSectionOrder).map((section) => {
-                const block = homeSections[section];
+                const block = homeSections[section]?.() ?? null;
                 return block ? <Fragment key={section}>{block}</Fragment> : null;
             })}
         </main>

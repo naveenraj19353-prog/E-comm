@@ -9,6 +9,7 @@ from pymongo.errors import PyMongoError
 from app.config import CORS_ORIGIN_REGEX, CORS_ORIGINS
 from app.database.indexes import ensure_indexes
 from app.database.mongo import client
+from app.upload_limits import MAX_UPLOAD_BODY_BYTES, configure_upload_limits
 from app.routes.auth import router as auth_router
 from app.routes.users import router as users_router
 from app.routes.product import router as create_product_router
@@ -35,6 +36,8 @@ from app.routes.periskope_webhook import router as periskope_webhook_router
 
 logger = logging.getLogger(__name__)
 
+configure_upload_limits()
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -47,6 +50,8 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(lifespan=lifespan)
+if hasattr(app.router, "max_body_size"):
+    app.router.max_body_size = MAX_UPLOAD_BODY_BYTES
 
 app.add_middleware(
     CORSMiddleware,

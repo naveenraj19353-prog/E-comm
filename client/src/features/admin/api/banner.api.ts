@@ -4,7 +4,7 @@ import { API_ENDPOINTS } from "../../../api/endpoints";
 export type BannerRecord = {
   _id: string;
   tenantId: string;
-  title: string;
+  title?: string;
   subtitle?: string | null;
   description?: string | null;
   image: string;
@@ -22,7 +22,7 @@ export type BannerRecord = {
 
 export type BannerPayload = {
   tenantId: string;
-  title: string;
+  title?: string;
   subtitle?: string;
   description?: string;
   image: string;

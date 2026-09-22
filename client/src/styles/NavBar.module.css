@@ -26,7 +26,8 @@
 }
 .container {
   width: 100%;
-  max-width: var(--layout-page-max-width, 90%);
+  max-width: min(var(--layout-page-max-width, 90%), 100%);
+  min-width: 0;
   height: 4rem;
   margin: 0 auto;
   padding: 0 1.5rem;
@@ -139,6 +140,9 @@
   color: var(--text);
   letter-spacing: -0.01em;
   white-space: nowrap;
+  max-width: 11rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .logoImage {
   display: block;
@@ -150,8 +154,67 @@
 .navLinks {
   display: flex;
   align-items: center;
-  gap: 1.75rem;
+  gap: 1.15rem;
   flex: 1;
+  min-width: 0;
+  position: relative;
+}
+.navMeasure {
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: flex;
+  align-items: center;
+  gap: inherit;
+  width: max-content;
+  visibility: hidden;
+  pointer-events: none;
+  z-index: -1;
+}
+.moreWrap {
+  position: relative;
+  flex-shrink: 0;
+}
+.moreButton {
+  display: inline-flex;
+  align-items: center;
+}
+.moreButtonOpen {
+  color: var(--primary);
+}
+.moreMenu {
+  position: absolute;
+  top: calc(100% + 0.6rem);
+  right: 0;
+  z-index: 120;
+  min-width: 13.5rem;
+  max-width: min(20rem, 70vw);
+  max-height: min(70vh, 24rem);
+  overflow: auto;
+  padding: 0.4rem;
+  border: 0.0625rem solid var(--border);
+  border-radius: 0.75rem;
+  background: var(--surface);
+  box-shadow: 0 0.75rem 1.75rem rgba(17, 24, 39, 0.12);
+}
+.moreItem {
+  width: 100%;
+  display: block;
+  padding: 0.65rem 0.75rem;
+  border: none;
+  border-radius: 0.5rem;
+  background: transparent;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+.moreItem:hover,
+.moreItem:focus-visible {
+  background: color-mix(in srgb, var(--primary) 8%, var(--surface));
+  color: var(--primary);
 }
 .navLink {
   position: relative;
@@ -196,6 +259,7 @@
   align-items: center;
   gap: 0.5rem;
   width: 16.25rem;
+  flex-shrink: 0;
   padding: 0.4375rem 0.625rem 0.4375rem 0.875rem;
   border: 0.0625rem solid var(--border);
   border-radius: 62.4375rem;
@@ -580,15 +644,24 @@
   border-color: var(--secondary);
   color: var(--primary);
 }
+@media (max-width: 90rem) {
+  .container {
+    gap: 1rem;
+    padding: 0 1.15rem;
+  }
+  .navLinks {
+    gap: 0.85rem;
+  }
+  .searchWrapper {
+    width: 13.5rem;
+  }
+  .searchAfterLogo .searchSlotInline {
+    width: 12rem;
+  }
+}
 @media (min-width: 64.0625rem) {
   .navLinks {
     display: flex;
-  }
-  .searchWrapper {
-    display: flex;
-  }
-  .searchRow {
-    display: none;
   }
   .menuButton {
     display: none;
@@ -596,6 +669,27 @@
   .mobileMenu,
   .overlay {
     display: none;
+  }
+}
+@media (min-width: 80.0625rem) {
+  .searchWrapper {
+    display: flex;
+  }
+  .searchRow {
+    display: none;
+  }
+}
+@media (max-width: 80rem) {
+  .searchWrapper,
+  .searchAfterLogo .searchSlotInline,
+  .searchCenter .searchSlotCenter {
+    display: none;
+  }
+  .rightSection > .iconButton:first-of-type {
+    display: flex;
+  }
+  .searchRow {
+    display: flex;
   }
 }
 @media (max-width: 64rem) {

@@ -2,7 +2,7 @@ from pydantic import BaseModel
 from typing import List, Optional
 class Banner(BaseModel):
     id: str
-    title: str
+    title: Optional[str] = ""
     subtitle: Optional[str] = None
     image: str
     buttonText: Optional[str] = None

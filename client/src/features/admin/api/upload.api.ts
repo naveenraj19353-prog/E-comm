@@ -26,6 +26,9 @@ export const uploadImageToS3 = async (
                 tenantId,
                 folder,
             },
+            timeout: 120_000,
+            maxBodyLength: Infinity,
+            maxContentLength: Infinity,
             transformRequest: [
                 (data, headers) => {
                     // Drop JSON default so the browser sets multipart boundary.

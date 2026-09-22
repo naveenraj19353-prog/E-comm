@@ -1,4 +1,5 @@
-import { Pagination } from "swiper/modules";
+import { useRef } from "react";
+import { Autoplay, Pagination } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
 import type { Swiper as SwiperType } from "swiper";
 import "swiper/css";
@@ -39,6 +40,10 @@ export default function ProductCardMedia({
   loading = "lazy",
   variant = "swiper",
 }: ProductCardMediaProps) {
+  const draggedRef = useRef(false);
+  const pointerActiveRef = useRef(false);
+  const pointerStartRef = useRef({ x: 0, y: 0 });
+
   if (variant === "swiper") {
     const slides = listingSwiperSources(sources);
     const many = slides.length > 1;
@@ -52,22 +57,67 @@ export default function ProductCardMedia({
     return (
       <div
         className={[styles.wrap, className].filter(Boolean).join(" ")}
+        onPointerDown={(event) => {
+          pointerActiveRef.current = true;
+          draggedRef.current = false;
+          pointerStartRef.current = { x: event.clientX, y: event.clientY };
+          if (many) {
+            event.stopPropagation();
+          }
+        }}
+        onPointerMove={(event) => {
+          if (!pointerActiveRef.current) {
+            return;
+          }
+          const dx = event.clientX - pointerStartRef.current.x;
+          const dy = event.clientY - pointerStartRef.current.y;
+          if (Math.hypot(dx, dy) > 8) {
+            draggedRef.current = true;
+          }
+        }}
+        onPointerUp={() => {
+          pointerActiveRef.current = false;
+        }}
+        onPointerCancel={() => {
+          pointerActiveRef.current = false;
+        }}
         onClick={(event) => {
           const target = event.target as HTMLElement;
-          if (target.classList.contains("swiper-pagination-bullet")) {
+          if (
+            draggedRef.current ||
+            target.closest(".swiper-pagination") ||
+            target.classList.contains("swiper-pagination-bullet")
+          ) {
+            event.preventDefault();
             event.stopPropagation();
           }
         }}
       >
         <Swiper
-          modules={[Pagination]}
+          modules={[Pagination, Autoplay]}
           className={styles.swiper}
           slidesPerView={1}
           spaceBetween={0}
-          loop={many}
-          speed={500}
+          loop={false}
+          rewind={many}
+          speed={420}
           nested
-          autoplay={false}
+          observer
+          observeParents
+          watchOverflow
+          simulateTouch
+          allowTouchMove={many}
+          touchStartPreventDefault={false}
+          touchMoveStopPropagation
+          autoplay={
+            many
+              ? {
+                  delay: 2800,
+                  disableOnInteraction: false,
+                  pauseOnMouseEnter: true,
+                }
+              : false
+          }
           pagination={many ? { clickable: true } : false}
           onSwiper={playActiveVideos}
           onSlideChange={playActiveVideos}
@@ -80,6 +130,7 @@ export default function ProductCardMedia({
                 className={[styles.layer, mediaClassName].filter(Boolean).join(" ")}
                 loading={index === 0 ? loading : "lazy"}
                 autoPlay={isVideoSrc(src)}
+                draggable={false}
               />
             </SwiperSlide>
           ))}
