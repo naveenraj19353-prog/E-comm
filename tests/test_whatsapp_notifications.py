@@ -96,6 +96,7 @@ class WhatsAppNotificationTests(unittest.TestCase):
         update = logs.update_one.call_args.args[1]["$set"]
         self.assertEqual(update["status"], "skipped")
 
+    @patch("app.services.whatsapp_notification_service.PeriskopeService")
     @patch("app.services.whatsapp_notification_service.tenants")
     @patch("app.services.whatsapp_notification_service.users")
     @patch("app.services.whatsapp_notification_service.messaging_integrations")
@@ -108,6 +109,7 @@ class WhatsAppNotificationTests(unittest.TestCase):
         integrations: MagicMock,
         users: MagicMock,
         tenants: MagicMock,
+        service: MagicMock,
     ):
         self.order["address"]["country"] = None
         logs.find_one.return_value = self.notification
@@ -115,11 +117,13 @@ class WhatsAppNotificationTests(unittest.TestCase):
         integrations.find_one.return_value = {"enabled": True}
         users.find_one.return_value = {}
         tenants.find_one.return_value = {"name": "Demo Store"}
+        service.return_value.configured = False
 
         process_notification(str(self.notification_id))
 
         update = logs.update_one.call_args.args[1]["$set"]
         self.assertEqual(update["status"], "failed")
+        self.assertIn("country", str(update.get("error") or "").lower())
 
     def test_supported_event_messages(self):
         customer = {"name": "Naveen"}
@@ -193,6 +197,7 @@ class WhatsAppNotificationTests(unittest.TestCase):
         self.assertNotIn("6aaa564765a9517ecb24ac1d", message)
         service.return_value.send_text_message.assert_not_called()
 
+    @patch("app.services.whatsapp_notification_service.PeriskopeService")
     @patch("app.services.whatsapp_notification_service.tenants")
     @patch("app.services.whatsapp_notification_service.users")
     @patch("app.services.whatsapp_notification_service.messaging_integrations")
@@ -205,6 +210,7 @@ class WhatsAppNotificationTests(unittest.TestCase):
         integrations: MagicMock,
         users: MagicMock,
         tenants: MagicMock,
+        service: MagicMock,
     ):
         self.order["address"]["phone"] = ""
         logs.find_one.return_value = self.notification
@@ -212,11 +218,13 @@ class WhatsAppNotificationTests(unittest.TestCase):
         integrations.find_one.return_value = {"enabled": True}
         users.find_one.return_value = {}
         tenants.find_one.return_value = {"name": "Demo Store"}
+        service.return_value.configured = False
 
         process_notification(str(self.notification_id))
 
         update = logs.update_one.call_args.args[1]["$set"]
         self.assertEqual(update["status"], "failed")
+        self.assertIn("phone", str(update.get("error") or "").lower())
 
     @patch("app.services.whatsapp_notification_service.PeriskopeService")
     @patch("app.services.whatsapp_notification_service.notification_logs")

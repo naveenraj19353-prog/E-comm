@@ -1,4 +1,5 @@
 import type { BusinessType } from "../constants/businessTypes";
+import type { HomeSectionId } from "../theme/homeSections";
 import type { StorefrontLayout, ThemeColors } from "../theme/types";
 
 export interface ThemeColorsPartial {
@@ -20,7 +21,7 @@ export interface LayoutSettingsPartial {
     cardStyle?: "rounded" | "soft" | "sharp";
     sectionSpacing?: "compact" | "comfortable" | "spacious";
     homeBannerStyle?: "full" | "contained";
-    homeSectionOrder?: string[];
+    homeSectionOrder?: HomeSectionId[];
     showHomeBanner?: boolean;
     showDealOfTheDay?: boolean;
     showTestimonials?: boolean;
