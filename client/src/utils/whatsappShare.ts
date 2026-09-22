@@ -1,3 +1,5 @@
+import { formatStorePrice } from "./currency";
+
 /** Build a WhatsApp click-to-chat URL with a prefilled message. */
 export const buildWhatsAppShareUrl = (text: string): string =>
   `https://wa.me/?text=${encodeURIComponent(text.trim())}`;
@@ -5,14 +7,16 @@ export const buildWhatsAppShareUrl = (text: string): string =>
 export const buildProductWhatsAppText = (input: {
   name: string;
   price?: number;
+  priceLabel?: string;
   url: string;
   storeName?: string;
 }): string => {
   const store = input.storeName?.trim() || "the store";
   const price =
-    typeof input.price === "number" && Number.isFinite(input.price)
-      ? ` at ₹${input.price.toLocaleString("en-IN")}`
-      : "";
+    input.priceLabel?.trim()
+    || (typeof input.price === "number" && Number.isFinite(input.price)
+      ? ` at ${formatStorePrice(input.price)}`
+      : "");
   return [
     `Why wait? *${input.name}* is ready for you ☀️`,
     "",

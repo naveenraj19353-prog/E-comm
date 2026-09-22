@@ -2,6 +2,7 @@ import { useState, type FormEvent } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import styles from "../../styles/Auth.module.css";
 import { useAuth } from "../../features/auth/hooks/useAuth";
+import { isStoreStaff } from "../../features/auth/roles";
 import { SeoHead } from "../../features/seo";
 import BrandMark from "../../components/BrandMark/BrandMark";
 
@@ -42,7 +43,7 @@ export default function Login() {
                 return;
             }
             const user = response.user;
-            if (redirectPath && (user.role === "super_admin" || user.role === "admin")) {
+            if (redirectPath && (user.role === "super_admin" || isStoreStaff(user.role))) {
                 navigate(redirectPath, { replace: true });
                 return;
             }
@@ -52,7 +53,7 @@ export default function Login() {
                 });
                 return;
             }
-            if (user.role === "admin" &&
+            if (isStoreStaff(user.role) &&
                 user.tenantId) {
                 navigate(`/admin/tenants/${user.tenantId}`, {
                     replace: true,

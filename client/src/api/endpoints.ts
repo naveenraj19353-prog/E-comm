@@ -18,14 +18,15 @@ export const API_ENDPOINTS = {
     },
 
     USERS: {
-        LIST: "/users/",
-        byId: (id: string) => `/users/${id}`,
+        STORE_MANAGERS: "/users/store-managers",
+        storeManagerById: (id: string) => `/users/store-managers/${id}`,
     },
 
     TENANTS: {
         LIST: "/tenants/",
         CREATE: "/tenants/",
         REGISTER: "/tenants/register",
+        REGISTER_SEND_OTP: "/tenants/register/send-otp",
         PUBLIC: "/tenants/public",
         byId: (id: string) => `/tenants/${id}`,
         byTenantId: (tenantId: string) => `/tenants/tenant-id/${tenantId}`,

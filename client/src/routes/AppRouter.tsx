@@ -6,6 +6,7 @@ import RequireStorefrontAuth from "../features/auth/RequireStorefrontAuth";
 import RequireStoreAdminAuth from "../features/auth/RequireStoreAdminAuth";
 import AdminLayout from "../features/admin/components/AdminLayout";
 import RequireTenantBusinessType from "../features/admin/components/RequireTenantBusinessType";
+import RequireStorePermission from "../features/admin/components/RequireStorePermission";
 import {
     AdminDashboard,
     AdminForgotPassword,
@@ -15,6 +16,7 @@ import {
     AdminTenantOrders,
     AdminMenuDesk,
     AdminCustomers,
+    AdminStoreManagers,
     AdminTenantProducts,
     AdminTenantBanners,
     AdminTenantCoupons,
@@ -181,25 +183,47 @@ const adminRoutes = [
                     },
                     {
                         path: ":tenantId/products",
-                        element: <AdminTenantProducts />,
+                        element: (
+                            <RequireStorePermission anyOf={["read", "products_update", "inventory"]}>
+                                <AdminTenantProducts />
+                            </RequireStorePermission>
+                        ),
                     },
                     {
                         path: ":tenantId/customers",
-                        element: <AdminCustomers />,
+                        element: (
+                            <RequireStorePermission permission="customers">
+                                <AdminCustomers />
+                            </RequireStorePermission>
+                        ),
+                    },
+                    {
+                        path: ":tenantId/team",
+                        element: <AdminStoreManagers />,
                     },
                     {
                         path: ":tenantId/products/create",
-                        element: <CreateProduct />,
+                        element: (
+                            <RequireStorePermission permission="products_update">
+                                <CreateProduct />
+                            </RequireStorePermission>
+                        ),
                     },
                     {
                         path: ":tenantId/products/bulk",
-                        element: <BulkProductImport />,
+                        element: (
+                            <RequireStorePermission permission="products_update">
+                                <BulkProductImport />
+                            </RequireStorePermission>
+                        ),
                     },
                     {
                         path: ":tenantId/orders",
                         element: (
                             <RequireTenantBusinessType allowed={["retail"]}>
-                                <AdminTenantOrders />
+                                <RequireStorePermission permission="orders">
+                                    <AdminTenantOrders />
+                                </RequireStorePermission>
                             </RequireTenantBusinessType>
                         ),
                     },
@@ -207,7 +231,9 @@ const adminRoutes = [
                         path: ":tenantId/menu",
                         element: (
                             <RequireTenantBusinessType allowed={["menu"]}>
-                                <AdminMenuDesk />
+                                <RequireStorePermission permission="menu">
+                                    <AdminMenuDesk />
+                                </RequireStorePermission>
                             </RequireTenantBusinessType>
                         ),
                     },
@@ -215,7 +241,9 @@ const adminRoutes = [
                         path: ":tenantId/orders/:orderId",
                         element: (
                             <RequireTenantBusinessType allowed={["retail"]}>
-                                <AdminOrderDetail />
+                                <RequireStorePermission permission="orders">
+                                    <AdminOrderDetail />
+                                </RequireStorePermission>
                             </RequireTenantBusinessType>
                         ),
                     },
@@ -225,7 +253,9 @@ const adminRoutes = [
                             <RequireTenantBusinessType
                                 allowed={["retail", "service"]}
                             >
-                                <AdminTenantBanners />
+                                <RequireStorePermission permission="banners">
+                                    <AdminTenantBanners />
+                                </RequireStorePermission>
                             </RequireTenantBusinessType>
                         ),
                     },
@@ -235,7 +265,9 @@ const adminRoutes = [
                             <RequireTenantBusinessType
                                 allowed={["retail", "service"]}
                             >
-                                <AdminTenantCoupons />
+                                <RequireStorePermission permission="coupons">
+                                    <AdminTenantCoupons />
+                                </RequireStorePermission>
                             </RequireTenantBusinessType>
                         ),
                     },
@@ -243,13 +275,19 @@ const adminRoutes = [
                         path: ":tenantId/shipping/delhivery",
                         element: (
                             <RequireTenantBusinessType allowed={["retail"]}>
-                                <DelhiverySettingsPage />
+                                <RequireStorePermission permission="shipping">
+                                    <DelhiverySettingsPage />
+                                </RequireStorePermission>
                             </RequireTenantBusinessType>
                         ),
                     },
                     {
                         path: ":tenantId/integrations/periskope",
-                        element: <PeriskopeSettingsPage />,
+                        element: (
+                            <RequireStorePermission permission="whatsapp">
+                                <PeriskopeSettingsPage />
+                            </RequireStorePermission>
+                        ),
                     },
                 ],
             },

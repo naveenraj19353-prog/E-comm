@@ -1,4 +1,4 @@
-import { ArrowLeft, Database, Palette, RotateCcw, Save, Sparkles } from "lucide-react";
+import { ArrowLeft, ChevronDown, ChevronUp, Database, Palette, RotateCcw, Save, Sparkles } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useThemeCustomizer } from "../../features/theme/hooks/useThemeCustomizer";
 import { useStorefrontTenant } from "../../features/tenant/useTenant";
@@ -8,6 +8,11 @@ import FooterContentEditor from "./FooterContentEditor";
 import CustomizationOverview from "./CustomizationOverview";
 import styles from "./ThemeCustomizer.module.css";
 import { routes, storefrontNavigate } from "../../routes/routes";
+import {
+    HOME_SECTION_LABELS,
+    moveHomeSection,
+    normalizeHomeSectionOrder,
+} from "../../theme/homeSections";
 
 const previewTabs = [
     { id: "home", label: "Home" },
@@ -109,6 +114,34 @@ const ThemeCustomizer = () => {
 
                         {activeTab === "home" && (
                             <div className={styles.fieldGrid}>
+                                <div className={styles.orderField}>
+                                    <span>Home section order</span>
+                                    <p>Move sections up or down. Banner first, categories next — whatever you want. Save to apply for shoppers.</p>
+                                    <ol className={styles.orderList}>
+                                        {normalizeHomeSectionOrder(draft.layoutSettings.homeSectionOrder).map((section, index, order) => (
+                                            <li key={section} className={styles.orderRow}>
+                                                <em>{index + 1}</em>
+                                                <span>{HOME_SECTION_LABELS[section]}</span>
+                                                <button
+                                                    type="button"
+                                                    aria-label={`Move ${HOME_SECTION_LABELS[section]} up`}
+                                                    disabled={index === 0}
+                                                    onClick={() => updateLayout("homeSectionOrder", moveHomeSection(order, index, -1))}
+                                                >
+                                                    <ChevronUp size={16} />
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    aria-label={`Move ${HOME_SECTION_LABELS[section]} down`}
+                                                    disabled={index === order.length - 1}
+                                                    onClick={() => updateLayout("homeSectionOrder", moveHomeSection(order, index, 1))}
+                                                >
+                                                    <ChevronDown size={16} />
+                                                </button>
+                                            </li>
+                                        ))}
+                                    </ol>
+                                </div>
                                 <Toggle label="Show home banner" checked={draft.layoutSettings.showHomeBanner} onChange={(v) => updateLayout("showHomeBanner", v)} />
                                 <Toggle label="Show category slider" checked={draft.layoutSettings.showCategorySlider} onChange={(v) => updateLayout("showCategorySlider", v)} />
                                 <Toggle label="Show deal of the day" checked={draft.layoutSettings.showDealOfTheDay} onChange={(v) => updateLayout("showDealOfTheDay", v)} />
@@ -125,7 +158,8 @@ const ThemeCustomizer = () => {
                                 <Select label="Grid columns" value={String(draft.layoutSettings.productGridColumns)} onChange={(v) => updateLayout("productGridColumns", Number(v))} options={[["2", "2"], ["3", "3"], ["4", "4"], ["5", "5"]]} />
                                 <Select label="Product detail layout" value={draft.layoutSettings.productDetailLayout} onChange={(v) => updateLayout("productDetailLayout", v as typeof draft.layoutSettings.productDetailLayout)} options={[["gallery-left", "Gallery left"], ["gallery-right", "Gallery right"], ["stacked", "Stacked"]]} />
                                 <Select label="Cart layout" value={draft.layoutSettings.cartLayout} onChange={(v) => updateLayout("cartLayout", v as typeof draft.layoutSettings.cartLayout)} options={[["split", "Split"], ["stacked", "Stacked"]]} />
-                                <Select label="Card style" value={draft.layoutSettings.cardStyle} onChange={(v) => updateLayout("cardStyle", v as typeof draft.layoutSettings.cardStyle)} options={[["sharp", "Sharp"], ["rounded", "Rounded"], ["soft", "Soft"]]} />
+                                <Select label="Product card design" value={draft.layoutSettings.productCardDesign} onChange={(v) => updateLayout("productCardDesign", v as typeof draft.layoutSettings.productCardDesign)} options={[["classic", "Classic overlay"], ["studio", "Studio dark"], ["minimal", "Minimal light"]]} />
+                                <Select label="Card corners" value={draft.layoutSettings.cardStyle} onChange={(v) => updateLayout("cardStyle", v as typeof draft.layoutSettings.cardStyle)} options={[["sharp", "Sharp"], ["rounded", "Rounded"], ["soft", "Soft"]]} />
                                 <Select label="Section spacing" value={draft.layoutSettings.sectionSpacing} onChange={(v) => updateLayout("sectionSpacing", v as typeof draft.layoutSettings.sectionSpacing)} options={[["compact", "Compact"], ["comfortable", "Comfortable"], ["spacious", "Spacious"]]} />
                             </div>
                         )}

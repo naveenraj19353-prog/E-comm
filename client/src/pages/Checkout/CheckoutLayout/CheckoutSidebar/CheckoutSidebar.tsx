@@ -1,5 +1,6 @@
 import { Check, ChevronRight, Lock, Tag, Truck } from "lucide-react";
 import type { PaymentMethodType } from "../CheckoutMain/PaymentMethod/PaymentMethod";
+import { useFormatStorePrice } from "../../../../features/tenant/useFormatStorePrice";
 import styles from "./CheckoutSidebar.module.css";
 
 interface CheckoutItem {
@@ -37,7 +38,7 @@ const CheckoutSidebar = ({
     isPlacingOrder = false,
     isPreviewLoading = false,
 }: CheckoutSidebarProps) => {
-    const formatPrice = (value: number) => `₹${value.toLocaleString("en-IN")}`;
+    const { formatPrice, isForeignCurrency } = useFormatStorePrice();
     const isCod = paymentMethod === "cod";
     const placeOrderLabel = isPlacingOrder
         ? "Placing Order..."
@@ -132,6 +133,11 @@ const CheckoutSidebar = ({
                         {isPreviewLoading ? "..." : formatPrice(total)}
                     </strong>
                 </div>
+                {isForeignCurrency ? (
+                    <p className={styles.currencyNote}>
+                        Amounts are shown in your store currency. Payment is collected in INR.
+                    </p>
+                ) : null}
 
                 <button
                     type="button"

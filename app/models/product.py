@@ -148,8 +148,6 @@ class UpdateProduct(BaseModel):
 
 
     images: Optional[dict[str, list[str]]] = None
-
-
     isActive: Optional[bool] = None
 
 

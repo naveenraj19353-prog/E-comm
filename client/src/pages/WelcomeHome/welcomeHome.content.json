@@ -9,7 +9,8 @@
       { "label": "Overview", "href": "#intro" },
       { "label": "Platform", "href": "#platform" },
       { "label": "1 minute", "href": "#one-minute" },
-      { "label": "Studio", "href": "#studio" }
+      { "label": "Studio", "href": "#studio" },
+      { "label": "Pricing", "href": "#pricing" }
     ],
     "signIn": { "label": "Log in", "href": "/admin/login" },
     "primaryCta": { "label": "Create store", "href": "/create-store" }
@@ -25,20 +26,18 @@
     "lead": "",
     "primaryCta": { "label": "Create your store", "href": "/create-store" },
     "secondaryCta": { "label": "Open live demo", "href": "/your-store" },
-    "image": "/images/welcome/banner/slide-01.jpg",
+    "image": "/images/welcome/banner/slide-08.jpg?v=2",
     "images": [
-      "/images/welcome/banner/slide-01.jpg",
-      "/images/welcome/banner/slide-12.jpg",
-      "/images/welcome/banner/slide-02.jpg",
-      "/images/welcome/banner/slide-03.jpg",
-      "/images/welcome/banner/slide-04.jpg",
-      "/images/welcome/banner/slide-05.jpg",
-      "/images/welcome/banner/slide-06.jpg",
-      "/images/welcome/banner/slide-07.jpg",
-      "/images/welcome/banner/slide-08.jpg",
-      "/images/welcome/banner/slide-09.jpg",
-      "/images/welcome/banner/slide-10.jpg",
-      "/images/welcome/banner/slide-11.jpg"
+      "/images/welcome/banner/slide-08.jpg?v=2",
+      "/images/welcome/banner/slide-04.jpg?v=2",
+      "/images/welcome/banner/slide-01.jpg?v=2",
+      "/images/welcome/banner/slide-02.jpg?v=2",
+      "/images/welcome/banner/slide-03.jpg?v=2",
+      "/images/welcome/banner/slide-05.jpg?v=2",
+      "/images/welcome/banner/slide-06.jpg?v=2",
+      "/images/welcome/banner/slide-07.jpg?v=2",
+      "/images/welcome/banner/slide-09.jpg?v=2",
+      "/images/welcome/banner/slide-10.jpg?v=2"
     ]
   },
   "introLoop": {
@@ -120,6 +119,40 @@
     "playLabel": "Watch customization",
     "durationLabel": "Demo"
   },
+  "pricing": {
+    "id": "pricing",
+    "promoImage": "/images/welcome/pricing-free.png",
+    "promoAlt": "3 months free. 100% free. No credit card required. Start now.",
+    "eyebrow": "Our plan",
+    "title": "Start selling online",
+    "lead": "Your first 3 months are completely free. Pay only from the 4th month if you want to continue.",
+    "badge": "Full access",
+    "price": "₹0",
+    "priceSuffix": "month",
+    "priceNote": "Months 1–3 — full access, ₹0",
+    "afterPrice": "From the 4th month: ₹999/month only if you continue. If not, that's fine — no charge.",
+    "featureIntro": "Everything you need to launch your online store:",
+    "features": [
+      "Your own online store",
+      "Product catalogue",
+      "Inventory management",
+      "Store theme & layout studio",
+      "Online checkout",
+      "Payments",
+      "Order management",
+      "Customer management",
+      "WhatsApp sharing",
+      "Store analytics",
+      "Mobile-friendly storefront",
+      "Support & onboarding"
+    ],
+    "finePrint": "No credit card required. No setup fee. Nothing to pay until the 4th month, and only if you choose to continue.",
+    "cta": { "label": "Start My Free Store", "href": "/create-store" },
+    "afterNote": "Payment starts only in the 4th month: ₹999/month if you want to keep your store. If you don't, you're done — no charge.",
+    "tagline": "Start free. Sell first. Pay from the 4th month only if you want to continue.",
+    "promiseTitle": "We want you to succeed first.",
+    "promise": "Use Retail Cosmos completely free for 3 months with full access. You pay only from the 4th month — ₹999/month — if you want to continue. If you don't, that's completely fine. No charge."
+  },
   "footer": {
     "columns": [
       {
@@ -134,6 +167,7 @@
         "links": [
           { "label": "Live demo", "href": "/your-store" },
           { "label": "Studio", "href": "#studio" },
+          { "label": "Pricing", "href": "#pricing" },
           { "label": "Create store", "href": "/create-store" }
         ]
       }

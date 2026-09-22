@@ -78,5 +78,10 @@ export const formatOrderDate = (value?: string): string => {
     });
 };
 
-export const formatOrderAmount = (value: number): string =>
-    `₹${value.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+export const formatOrderAmount = (value?: number): string => {
+    return new Intl.NumberFormat("en-IN", {
+        style: "currency",
+        currency: "INR",
+        maximumFractionDigits: 2,
+    }).format(value || 0);
+};

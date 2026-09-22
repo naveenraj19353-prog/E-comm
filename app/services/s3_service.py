@@ -43,12 +43,12 @@ CONTENT_TYPE_BY_EXTENSION = {
     ".ogg": "video/ogg",
 }
 
-ALLOWED_FOLDERS = {"products", "banners"}
+ALLOWED_FOLDERS = {"products", "banners", "branding"}
 MAX_IMAGE_SIZE = 10 * 1024 * 1024  # 10 MB
 MAX_VIDEO_SIZE = 50 * 1024 * 1024  # 50 MB
 
 _S3_KEY_PATTERN = re.compile(
-    r"^tenants/(?P<tenant>[a-zA-Z0-9_-]+)/(?P<folder>products|banners)/(?P<filename>[^/\\]+)$"
+    r"^tenants/(?P<tenant>[a-zA-Z0-9_-]+)/(?P<folder>products|banners|branding)/(?P<filename>[^/\\]+)$"
 )
 
 
@@ -149,7 +149,7 @@ def upload_image(
     """
     if folder not in ALLOWED_FOLDERS:
         raise ValueError(
-            "Folder must be either 'products' or 'banners'."
+            "Folder must be 'products', 'banners', or 'branding'."
         )
 
     extension = Path(file.filename or "").suffix.lower()
@@ -158,6 +158,8 @@ def upload_image(
         content_type = CONTENT_TYPE_BY_EXTENSION.get(extension, content_type)
 
     allowed_types = set(ALLOWED_IMAGE_TYPES) | ALLOWED_VIDEO_TYPES
+    if folder == "branding":
+        allowed_types = set(ALLOWED_IMAGE_TYPES)
     if content_type not in allowed_types:
         if folder in {"banners", "products"}:
             raise ValueError(

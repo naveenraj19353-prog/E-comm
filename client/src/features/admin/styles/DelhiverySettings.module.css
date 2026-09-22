@@ -121,7 +121,8 @@
 }
 
 .field input,
-.field textarea {
+.field textarea,
+.field select {
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;

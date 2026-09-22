@@ -28,6 +28,7 @@ from app.services.menu_service import (
     upsert_menu_guest,
     verify_daily_password,
 )
+from app.services.store_permissions import permissions_for_staff_doc
 from app.routes.response_metadata import (
     BAD_REQUEST_RESPONSE,
     INTERNAL_SERVER_ERROR_RESPONSE,
@@ -208,6 +209,55 @@ def login(
             },
         }
 
+    manager = users.find_one({
+        "tenantId": tenant_id,
+        "email": email,
+        "role": "store_manager",
+        "isActive": True,
+    })
+    if manager:
+        if not verify_password(
+            user.password,
+            manager["password"],
+        ):
+            raise HTTPException(
+                status_code=401,
+                detail=INVALID_CREDENTIALS,
+            )
+        manager_permissions = permissions_for_staff_doc(manager)
+        token = create_token({
+            "userId": str(
+                manager["_id"]
+            ),
+            "tenantId": manager.get(
+                "tenantId"
+            ),
+            "email": email,
+            "role": "store_manager",
+            "name": manager.get(
+                "name"
+            ),
+            "permissions": manager_permissions,
+        })
+        return {
+            "success": True,
+            "access_token": token,
+            "token_type": "Bearer",
+            "user": {
+                "userId": str(
+                    manager["_id"]
+                ),
+                "name": manager.get(
+                    "name"
+                ),
+                "email": email,
+                "tenantId": manager.get(
+                    "tenantId"
+                ),
+                "role": "store_manager",
+                "permissions": manager_permissions,
+            },
+        }
 
     existing = users.find_one({
         "tenantId": tenant_id,

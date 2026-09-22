@@ -209,6 +209,51 @@
   font-weight: 500;
 }
 
+.notice {
+  margin: 0;
+  padding: 0.75rem 0.85rem;
+  border-radius: 0.4rem;
+  background: #f0f7f3;
+  border: 1px solid #bbd5c8;
+  color: #143d2d;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.otpInput {
+  letter-spacing: 0.35em;
+  font-size: 1.15rem;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+.otpActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.25rem;
+  justify-content: space-between;
+}
+
+.textButton {
+  padding: 0;
+  border: none;
+  background: none;
+  color: #2f6b52;
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.textButton:hover:not(:disabled) {
+  text-decoration: underline;
+}
+
+.textButton:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
 .submit {
   margin-top: 0.5rem;
   padding: 0.85rem 1.25rem;

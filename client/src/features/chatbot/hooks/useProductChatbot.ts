@@ -38,9 +38,19 @@ export const useProductChatbot = (tenantId: string) => {
     const storedCatalogFilter = useAppSelector(
         (state) => state.products.catalogFilter,
     );
+    const displayCurrency = useAppSelector(
+        (state) => state.tenant.currentTenant?.displayCurrency,
+    );
+    const inrPerUnit = useAppSelector(
+        (state) => state.tenant.currentTenant?.inrPerUnit,
+    );
+    const currencySettings = useMemo(
+        () => ({ displayCurrency, inrPerUnit }),
+        [displayCurrency, inrPerUnit],
+    );
     const [catalogError, setCatalogError] = useState<string | null>(null);
     const [messages, setMessages] = useState<ChatMessage[]>([
-        createWelcomeMessage(buildWelcomeMessage(null)),
+        createWelcomeMessage(buildWelcomeMessage(null, undefined, currencySettings)),
     ]);
 
     const openChat = useCallback(() => {
@@ -79,7 +89,7 @@ export const useProductChatbot = (tenantId: string) => {
                 "Unable to load category filters.",
             );
             setCatalogError(message);
-            setMessages([createWelcomeMessage(buildWelcomeMessage(null, message))]);
+            setMessages([createWelcomeMessage(buildWelcomeMessage(null, message, currencySettings))]);
             return;
         }
         setCatalogError(null);
@@ -88,12 +98,15 @@ export const useProductChatbot = (tenantId: string) => {
                 if (current.length !== 1 || current[0]?.role !== "bot") {
                     return current;
                 }
-                return [createWelcomeMessage(buildWelcomeMessage(catalogFilter))];
+                return [createWelcomeMessage(buildWelcomeMessage(catalogFilter, undefined, currencySettings))];
             });
         }
-    }, [catalogFilter, catalogQuery.error, catalogQuery.isError, hasOpened]);
+    }, [catalogFilter, catalogQuery.error, catalogQuery.isError, currencySettings, hasOpened]);
 
-    const quickPrompts = useMemo(() => buildQuickPrompts(catalogFilter), [catalogFilter]);
+    const quickPrompts = useMemo(
+        () => buildQuickPrompts(catalogFilter, currencySettings),
+        [catalogFilter, currencySettings],
+    );
     const inputPlaceholder = useMemo(
         () => buildInputPlaceholder(catalogFilter, categories),
         [catalogFilter, categories],

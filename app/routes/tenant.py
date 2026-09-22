@@ -1,11 +1,21 @@
 from datetime import datetime, timezone
 from typing import Annotated
+from urllib.parse import unquote, urlparse
 
 from bson import ObjectId
 from fastapi import APIRouter, Depends, HTTPException
 
 from app.database.mongo import products, tenants
-from app.models.tenant import CreateTenant, RegisterStore, UpdateTenant, UpdateTenantTheme
+from app.services.store_currency import currency_fields_for_tenant
+from app.services.store_schedule import normalize_store_hours, resolve_store_hours
+from app.services.storefront_layout import build_storefront_layout
+from app.models.tenant import (
+    CreateTenant,
+    RegisterStore,
+    SendStoreSignupOtpRequest,
+    UpdateTenant,
+    UpdateTenantTheme,
+)
 from app.routes.detail_messages import (
     INVALID_TENANT_ID,
     NO_UPDATE_FIELDS,
@@ -17,10 +27,16 @@ from app.routes.response_metadata import (
     INTERNAL_SERVER_ERROR_RESPONSE,
     NOT_FOUND_RESPONSE,
 )
-from app.services.storefront_layout import build_storefront_layout
+from app.services.store_signup_otp_service import (
+    consume_store_signup_otp,
+    send_store_signup_otp,
+)
 from app.services.tenant_service import create_tenant_document
 from app.utils.auth_dependencies import (
+    admin_tenant_id,
     require_admin,
+    require_permission,
+    require_store_owner,
     require_super_admin,
 )
 from app.utils.category_catalog import _first_product_image
@@ -64,6 +80,22 @@ def _normalize_tenant_phone(value: object) -> str:
         ) from error
 
 
+def _normalize_stored_logo(value: object) -> str:
+    raw = str(value or "").strip()
+    if not raw:
+        return ""
+    from app.services.s3_service import is_s3_object_key
+
+    if is_s3_object_key(raw):
+        return raw
+    if raw.startswith("http://") or raw.startswith("https://"):
+        path = unquote(urlparse(raw).path).lstrip("/")
+        if is_s3_object_key(path):
+            return path
+        return raw
+    return raw
+
+
 def _serialize_tenant(tenant: dict) -> dict:
     """Public tenant payload: strip secrets and always expose businessType."""
     payload = dict(tenant)
@@ -72,6 +104,16 @@ def _serialize_tenant(tenant: dict) -> dict:
     payload.pop("password", None)
     payload["businessType"] = _normalize_business_type(payload.get("businessType"))
     payload["phone"] = str(payload.get("phone") or "").strip()
+    raw_logo = payload.get("logo") if isinstance(payload.get("logo"), str) else ""
+    payload["logo"] = _safe_resolve_image(raw_logo) or ""
+    payload.update(currency_fields_for_tenant(payload))
+    hours = resolve_store_hours(payload.get("storeHours"))
+    hours["images"] = [
+        resolved
+        for item in hours.get("images") or []
+        if (resolved := _safe_resolve_image(item) or item)
+    ]
+    payload["storeHours"] = hours
     return payload
 
 
@@ -139,9 +181,11 @@ def create_tenant(
             email=str(tenant.email),
             password=tenant.password,
             business_type=tenant.businessType,
-            logo=tenant.logo or "",
+            logo=_normalize_stored_logo(tenant.logo or ""),
             theme=tenant.theme or "green",
             phone=tenant.phone or "",
+            display_currency=tenant.displayCurrency or "INR",
+            inr_per_unit=tenant.inrPerUnit,
         )
         return {
             "success": True,
@@ -161,6 +205,18 @@ def create_tenant(
 
 
 @router.post(
+    "/register/send-otp",
+    responses={
+        400: BAD_REQUEST_RESPONSE[400],
+        500: INTERNAL_SERVER_ERROR_RESPONSE[500],
+    },
+)
+def send_store_register_otp(payload: SendStoreSignupOtpRequest):
+    """WhatsApp a one-time code before public store signup."""
+    return send_store_signup_otp(str(payload.email), payload.phone)
+
+
+@router.post(
     "/register",
     responses={
         400: BAD_REQUEST_RESPONSE[400],
@@ -170,6 +226,7 @@ def create_tenant(
 def register_store(payload: RegisterStore):
     """Public self-serve store creation (no super-admin required)."""
     try:
+        consume_store_signup_otp(str(payload.email), payload.otp, payload.phone)
         slug = payload.slug.strip().lower()
         # Self-serve: tenantId matches slug for simple storefront URLs.
         response_data = create_tenant_document(
@@ -455,7 +512,7 @@ def get_tenant_by_id(
 def update_tenant(
     id: str,
     tenant: UpdateTenant,
-    current_user: Annotated[dict, Depends(require_admin)],
+    current_user: Annotated[dict, Depends(require_store_owner)],
 ):
     try:
         object_id = ObjectId(id)
@@ -506,6 +563,18 @@ def update_tenant(
         )
     if "phone" in update_data:
         update_data["phone"] = _normalize_tenant_phone(update_data.get("phone"))
+    if "logo" in update_data:
+        update_data["logo"] = _normalize_stored_logo(update_data.get("logo"))
+    if "storeHours" in update_data:
+        hours = normalize_store_hours(update_data.get("storeHours"))
+        hours["images"] = [
+            _normalize_stored_logo(item) for item in hours.get("images") or []
+        ]
+        hours["images"] = [item for item in hours["images"] if item]
+        update_data["storeHours"] = hours
+    if "displayCurrency" in update_data or "inrPerUnit" in update_data:
+        merged = {**existing_tenant, **update_data}
+        update_data.update(currency_fields_for_tenant(merged))
 
 
     if "businessType" in update_data:
@@ -584,7 +653,7 @@ def update_tenant(
 def update_tenant_theme(
     id: str,
     payload: UpdateTenantTheme,
-    current_user: Annotated[dict, Depends(require_admin)],
+    current_user: Annotated[dict, Depends(require_permission("layout"))],
 ):
     try:
         object_id = ObjectId(id)

@@ -1,10 +1,10 @@
 import { MapPin, Package, Receipt, User } from "lucide-react";
 import type { Order } from "../types/order.types";
 import {
-    formatOrderAmount,
     formatOrderDate,
     orderStatusLabel,
 } from "../api/order.api";
+import { useFormatStorePrice } from "../../tenant/useFormatStorePrice";
 import ProductImage from "../../../components/ProductImage";
 import styles from "./OrderDetailContent.module.css";
 
@@ -36,6 +36,7 @@ const OrderDetailContent = ({
     showPaymentIds = false,
     variant = "storefront",
 }: OrderDetailContentProps) => {
+    const { formatPrice } = useFormatStorePrice();
     const status = order.orderStatus || "confirmed";
     const isAdmin = variant === "admin";
     const orderItems = order.items ?? [];
@@ -103,10 +104,10 @@ const OrderDetailContent = ({
                                     {item.size ? ` · Size ${item.size}` : ""}
                                     {item.color ? ` · ${item.color}` : ""}
                                 </span>
-                                <span>{formatOrderAmount(item.price)} each</span>
+                                <span>{formatPrice(item.price)} each</span>
                             </div>
                             <strong className={styles.itemPrice}>
-                                {formatOrderAmount(item.subtotal)}
+                                {formatPrice(item.subtotal)}
                             </strong>
                         </div>
                     ))}
@@ -156,13 +157,13 @@ const OrderDetailContent = ({
                     <div className={styles.priceRows}>
                         <div className={styles.priceRow}>
                             <span>Subtotal</span>
-                            <strong>{formatOrderAmount(order.subtotal)}</strong>
+                            <strong>{formatPrice(order.subtotal)}</strong>
                         </div>
                         {(order.discount ?? 0) > 0 && (
                             <div className={styles.priceRow}>
                                 <span>Discount</span>
                                 <strong className={styles.discount}>
-                                    -{formatOrderAmount(order.discount ?? 0)}
+                                    -{formatPrice(order.discount ?? 0)}
                                 </strong>
                             </div>
                         )}
@@ -171,12 +172,12 @@ const OrderDetailContent = ({
                             <strong>
                                 {(order.shipping ?? 0) === 0
                                     ? "FREE"
-                                    : formatOrderAmount(order.shipping ?? 0)}
+                                    : formatPrice(order.shipping ?? 0)}
                             </strong>
                         </div>
                         <div className={`${styles.priceRow} ${styles.totalRow}`}>
                             <span>Total paid</span>
-                            <strong>{formatOrderAmount(order.totalAmount)}</strong>
+                            <strong>{formatPrice(order.totalAmount)}</strong>
                         </div>
                     </div>
                 </section>

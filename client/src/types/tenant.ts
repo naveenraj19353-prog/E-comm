@@ -20,6 +20,7 @@ export interface LayoutSettingsPartial {
     cardStyle?: "rounded" | "soft" | "sharp";
     sectionSpacing?: "compact" | "comfortable" | "spacious";
     homeBannerStyle?: "full" | "contained";
+    homeSectionOrder?: string[];
     showHomeBanner?: boolean;
     showDealOfTheDay?: boolean;
     showTestimonials?: boolean;
@@ -43,6 +44,7 @@ export interface LayoutSettingsPartial {
     productViewMode?: "grid" | "list";
     productDetailLayout?: "gallery-left" | "gallery-right" | "stacked";
     cartLayout?: "split" | "stacked";
+    productCardDesign?: "classic" | "studio" | "minimal";
 }
 
 export interface FooterLinkPartial {
@@ -69,12 +71,33 @@ export interface Tenant {
     businessType?: BusinessType;
     logo: string;
     theme: string;
+    displayCurrency?: string;
+    inrPerUnit?: number;
     themeColors?: ThemeColorsPartial | null;
     layoutSettings?: LayoutSettingsPartial | null;
     footerContent?: FooterContentPartial | null;
     storefrontLayout?: StorefrontLayout | null;
+    storeHours?: StoreHours;
     phone?: string;
     isActive?: boolean;
 }
+
+export type StoreHoursKind = "on" | "off";
+
+export type StoreHoursWindow = {
+    kind: StoreHoursKind;
+    startAt: string;
+    endAt: string;
+};
+
+export type StoreHours = {
+    enabled?: boolean;
+    defaultOpen?: boolean;
+    message?: string;
+    images?: string[];
+    windows?: StoreHoursWindow[];
+    isOpen?: boolean;
+    nextChangeAt?: string | null;
+};
 
 export type { BusinessType, StorefrontLayout, ThemeColors };

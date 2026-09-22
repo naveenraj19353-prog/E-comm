@@ -10,6 +10,7 @@ from fastapi import HTTPException
 from app.database.mongo import tenants
 from app.utils.hash import hash_password
 from app.utils.phone_normalization import PhoneNormalizationError, normalize_phone
+from app.services.store_currency import currency_fields_for_tenant
 
 RESERVED_SLUGS = frozenset(
     {
@@ -69,6 +70,8 @@ def create_tenant_document(
     logo: str = "",
     theme: str = "green",
     phone: str = "",
+    display_currency: str = "INR",
+    inr_per_unit: float | None = None,
 ) -> dict:
     tenant_id = normalize_slug(tenant_id)
     slug = validate_slug(slug)
@@ -123,6 +126,14 @@ def create_tenant_document(
         "createdAt": now,
         "updatedAt": now,
     }
+    payload.update(
+        currency_fields_for_tenant(
+            {
+                "displayCurrency": display_currency,
+                "inrPerUnit": inr_per_unit,
+            }
+        )
+    )
     result = tenants.insert_one(payload)
     response = {
         **payload,

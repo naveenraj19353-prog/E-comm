@@ -17,7 +17,8 @@ export const CUSTOMIZATION_GROUPS = [
     lines: [
       "Filters left / right / top",
       "Grid or list view, 2–5 columns",
-      "Product detail & cart layouts, card style, spacing",
+      "Product card design: classic, studio dark, or minimal",
+      "Product detail & cart layouts, card corners, spacing",
     ],
   },
   {

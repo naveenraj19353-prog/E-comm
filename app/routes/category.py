@@ -16,7 +16,7 @@ from app.routes.response_metadata import (
     FORBIDDEN_RESPONSE,
     NOT_FOUND_RESPONSE,
 )
-from app.utils.auth_dependencies import admin_tenant_id, require_admin
+from app.utils.auth_dependencies import admin_tenant_id, require_permission
 from app.utils.category_catalog import get_catalog_categories
 
 router = APIRouter(
@@ -34,7 +34,7 @@ router = APIRouter(
 )
 def create_category(
     category: CreateCategory,
-    current_user: Annotated[dict, Depends(require_admin)],
+    current_user: Annotated[dict, Depends(require_permission("products_update"))],
 ):
     tenant_id = admin_tenant_id(current_user, category.tenantId)
     existing = categories.find_one(
@@ -131,7 +131,7 @@ def get_category_by_id(
 def update_category(
     id: str,
     category: UpdateCategory,
-    current_user: Annotated[dict, Depends(require_admin)],
+    current_user: Annotated[dict, Depends(require_permission("products_update"))],
 ):
     if not ObjectId.is_valid(id):
         raise HTTPException(
@@ -191,7 +191,7 @@ def update_category(
 def delete_category(
     id: str,
     tenant_id: Annotated[str, Query(alias="tenantId")],
-    current_user: Annotated[dict, Depends(require_admin)],
+    current_user: Annotated[dict, Depends(require_permission("products_update"))],
 ):
     scoped_tenant_id = admin_tenant_id(current_user, tenant_id)
     if not ObjectId.is_valid(id):

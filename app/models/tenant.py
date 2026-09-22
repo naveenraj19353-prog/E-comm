@@ -24,6 +24,7 @@ class LayoutSettings(BaseModel):
     cardStyle: Optional[str] = None
     sectionSpacing: Optional[str] = None
     homeBannerStyle: Optional[str] = None
+    homeSectionOrder: Optional[list[str]] = None
     showHomeBanner: Optional[bool] = None
     showDealOfTheDay: Optional[bool] = None
     showTestimonials: Optional[bool] = None
@@ -47,6 +48,7 @@ class LayoutSettings(BaseModel):
     productViewMode: Optional[str] = None
     productDetailLayout: Optional[str] = None
     cartLayout: Optional[str] = None
+    productCardDesign: Optional[str] = None
 
 
 class FooterLink(BaseModel):
@@ -63,6 +65,20 @@ class FooterContent(BaseModel):
     companyName: Optional[str] = Field(default=None, max_length=120)
     description: Optional[str] = Field(default=None, max_length=500)
     sections: Optional[list[FooterSection]] = None
+
+
+class StoreHoursWindow(BaseModel):
+    kind: Literal["on", "off"]
+    startAt: str = Field(..., min_length=1, max_length=40)
+    endAt: str = Field(..., min_length=1, max_length=40)
+
+
+class StoreHours(BaseModel):
+    enabled: Optional[bool] = False
+    defaultOpen: Optional[bool] = True
+    message: Optional[str] = Field(default="", max_length=400)
+    images: Optional[list[str]] = None
+    windows: Optional[list[StoreHoursWindow]] = None
 
 
 class CreateTenant(BaseModel):
@@ -84,6 +100,8 @@ class CreateTenant(BaseModel):
     businessType: BusinessType
     logo: Optional[str] = ""
     theme: Optional[str] = "green"
+    displayCurrency: Optional[str] = "INR"
+    inrPerUnit: Optional[float] = None
     email: EmailStr
     phone: Optional[str] = Field(default=None, max_length=20)
     password: str = Field(
@@ -100,8 +118,14 @@ class RegisterStore(BaseModel):
     slug: str = Field(..., min_length=2, max_length=48)
     businessType: BusinessType
     email: EmailStr
-    phone: Optional[str] = Field(default=None, max_length=20)
+    phone: str = Field(..., min_length=10, max_length=20)
     password: str = Field(..., min_length=6, max_length=128)
+    otp: str = Field(..., min_length=6, max_length=6)
+
+
+class SendStoreSignupOtpRequest(BaseModel):
+    email: EmailStr
+    phone: str = Field(..., min_length=10, max_length=20)
 
 
 class UpdateTenant(BaseModel):
@@ -118,6 +142,8 @@ class UpdateTenant(BaseModel):
     businessType: Optional[BusinessType] = None
     logo: Optional[str] = None
     theme: Optional[str] = None
+    displayCurrency: Optional[str] = None
+    inrPerUnit: Optional[float] = None
     themeColors: Optional[ThemeColors] = None
     layoutSettings: Optional[LayoutSettings] = None
     email: Optional[EmailStr] = None
@@ -128,6 +154,7 @@ class UpdateTenant(BaseModel):
         max_length=128,
     )
     isActive: Optional[bool] = None
+    storeHours: Optional[StoreHours] = None
 
 
 class UpdateTenantTheme(BaseModel):

@@ -8,6 +8,7 @@ import {
 import ProductCardMedia from "../../ProductImage/ProductCardMedia";
 import { useProductNavigation } from "../../../features/products/hooks/useProductNavigation";
 import { useStorefrontTenant } from "../../../features/tenant/useTenant";
+import { useFormatStorePrice } from "../../../features/tenant/useFormatStorePrice";
 import {
     addToListLabel,
     isServiceBusiness,
@@ -35,6 +36,7 @@ const ProductCard = ({
 }: ProductCardProps) => {
     const { goToProduct } = useProductNavigation();
     const { tenant } = useStorefrontTenant();
+    const { formatPrice } = useFormatStorePrice();
     const isServiceMode = isServiceBusiness(tenant?.businessType);
     const outOfStock = isProductOutOfStock(product);
     const images = getProductImagesForColor(product.images);
@@ -118,11 +120,11 @@ const ProductCard = ({
                 )}
                 <div className={styles.price}>
                     <span className={styles.current}>
-                        ₹{product.finalPrice.toLocaleString()}
+                        {formatPrice(product.finalPrice)}
                     </span>
                     {!isServiceMode && product.price > product.finalPrice && (
                         <span className={styles.old}>
-                            ₹{product.price.toLocaleString()}
+                            {formatPrice(product.price)}
                         </span>
                     )}
                 </div>

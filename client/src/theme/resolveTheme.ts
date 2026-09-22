@@ -3,6 +3,7 @@ import { DEFAULT_LAYOUT_SETTINGS, buildDefaultStorefrontLayout } from "./types";
 import { buildDefaultFooterContent } from "./footerDefaults";
 import { getThemePreviewDraft, type ThemePreviewDraft } from "./themeStorage";
 import { resolveThemeColors } from "./resolveThemeColors";
+import { normalizeHomeSectionOrder } from "./homeSections";
 
 interface FooterContentSource {
     companyName?: string;
@@ -24,13 +25,19 @@ interface TenantThemeSource {
     storefrontLayout?: StorefrontLayout | null;
 }
 
-const mergeLayout = (...sources: Array<Partial<LayoutSettings> | null | undefined>): LayoutSettings => ({
-    ...DEFAULT_LAYOUT_SETTINGS,
-    ...sources.reduce<Partial<LayoutSettings>>((accumulator, source) => ({
-        ...accumulator,
-        ...source,
-    }), {}),
-});
+const mergeLayout = (...sources: Array<Partial<LayoutSettings> | null | undefined>): LayoutSettings => {
+    const merged = {
+        ...DEFAULT_LAYOUT_SETTINGS,
+        ...sources.reduce<Partial<LayoutSettings>>((accumulator, source) => ({
+            ...accumulator,
+            ...source,
+        }), {}),
+    };
+    return {
+        ...merged,
+        homeSectionOrder: normalizeHomeSectionOrder(merged.homeSectionOrder),
+    };
+};
 
 const cloneFooterSections = (sections: FooterContent["sections"]) =>
     sections.map((section) => ({

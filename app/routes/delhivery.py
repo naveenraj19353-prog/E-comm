@@ -39,7 +39,7 @@ from app.services.shipping_context import (
 )
 from app.services.shipping_partner_config import partner_display_name
 from app.services.whatsapp_notification_service import send_shipment_created
-from app.utils.auth_dependencies import admin_tenant_id, require_admin
+from app.utils.auth_dependencies import admin_tenant_id, require_permission
 from app.utils.secret_crypto import encrypt_secret, mask_secret, decrypt_secret
 from bson import ObjectId
 
@@ -121,7 +121,7 @@ def _active_location(tenant_id: str) -> dict | None:
 
 @router.get("/settings")
 def get_delhivery_settings(
-    current_user: Annotated[dict, Depends(require_admin)],
+    current_user: Annotated[dict, Depends(require_permission("shipping"))],
     tenant_id: Annotated[str | None, Query(alias="tenantId")] = None,
 ):
     scoped = admin_tenant_id(current_user, tenant_id)
@@ -135,7 +135,7 @@ def get_delhivery_settings(
 @router.put("/settings")
 def save_delhivery_settings(
     body: DelhiveryConnectRequest,
-    current_user: Annotated[dict, Depends(require_admin)],
+    current_user: Annotated[dict, Depends(require_permission("shipping"))],
     tenant_id: Annotated[str | None, Query(alias="tenantId")] = None,
 ):
     scoped = admin_tenant_id(current_user, tenant_id)
@@ -203,7 +203,7 @@ def save_delhivery_settings(
 @router.post("/test")
 def test_delhivery_connection(
     body: DelhiveryTestRequest,
-    current_user: Annotated[dict, Depends(require_admin)],
+    current_user: Annotated[dict, Depends(require_permission("shipping"))],
     tenant_id: Annotated[str | None, Query(alias="tenantId")] = None,
 ):
     scoped = admin_tenant_id(current_user, tenant_id)
@@ -343,7 +343,7 @@ def public_pincode_check(
 
 @router.get("/serviceability")
 def small_parcel_serviceability(
-    current_user: Annotated[dict, Depends(require_admin)],
+    current_user: Annotated[dict, Depends(require_permission("shipping"))],
     pincode: Annotated[str, Query(min_length=6, max_length=6, pattern=r"^\d{6}$")],
     tenant_id: Annotated[str | None, Query(alias="tenantId")] = None,
 ):
@@ -357,7 +357,7 @@ def small_parcel_serviceability(
 
 @router.get("/serviceability/heavy")
 def heavy_serviceability(
-    current_user: Annotated[dict, Depends(require_admin)],
+    current_user: Annotated[dict, Depends(require_permission("shipping"))],
     pincode: Annotated[str, Query(min_length=6, max_length=6, pattern=r"^\d{6}$")],
     tenant_id: Annotated[str | None, Query(alias="tenantId")] = None,
 ):
@@ -372,7 +372,7 @@ def heavy_serviceability(
 @router.post("/warehouse")
 def create_warehouse(
     body: DelhiveryWarehouseRequest,
-    current_user: Annotated[dict, Depends(require_admin)],
+    current_user: Annotated[dict, Depends(require_permission("shipping"))],
     tenant_id: Annotated[str | None, Query(alias="tenantId")] = None,
 ):
     scoped = admin_tenant_id(current_user, tenant_id)
@@ -452,7 +452,7 @@ def create_warehouse(
 
 @router.get("/waybills")
 def fetch_waybills(
-    current_user: Annotated[dict, Depends(require_admin)],
+    current_user: Annotated[dict, Depends(require_permission("shipping"))],
     count: Annotated[int, Query(ge=1, le=50)] = 30,
     tenant_id: Annotated[str | None, Query(alias="tenantId")] = None,
 ):
@@ -467,7 +467,7 @@ def fetch_waybills(
 @router.post("/rate")
 def calculate_rate(
     body: DelhiveryRateRequest,
-    current_user: Annotated[dict, Depends(require_admin)],
+    current_user: Annotated[dict, Depends(require_permission("shipping"))],
     tenant_id: Annotated[str | None, Query(alias="tenantId")] = None,
 ):
     scoped = admin_tenant_id(current_user, tenant_id)
@@ -521,7 +521,7 @@ def _consignee_address_text(address: dict) -> str:
 def create_shipment(
     body: CreateDelhiveryShipmentRequest,
     background_tasks: BackgroundTasks,
-    current_user: Annotated[dict, Depends(require_admin)],
+    current_user: Annotated[dict, Depends(require_permission("shipping"))],
     tenant_id: Annotated[str | None, Query(alias="tenantId")] = None,
 ):
     scoped = admin_tenant_id(current_user, tenant_id)
@@ -710,7 +710,7 @@ def create_shipment(
 @router.get("/track/{awb}")
 def track_awb(
     awb: str,
-    current_user: Annotated[dict, Depends(require_admin)],
+    current_user: Annotated[dict, Depends(require_permission("shipping"))],
     tenant_id: Annotated[str | None, Query(alias="tenantId")] = None,
 ):
     scoped = admin_tenant_id(current_user, tenant_id)
@@ -771,7 +771,7 @@ def _packing_slip_fallback(order: dict | None, waybill: str) -> dict:
 @router.get("/packing-slip/{awb}")
 def download_packing_slip(
     awb: str,
-    current_user: Annotated[dict, Depends(require_admin)],
+    current_user: Annotated[dict, Depends(require_permission("shipping"))],
     tenant_id: Annotated[str | None, Query(alias="tenantId")] = None,
 ):
     scoped = admin_tenant_id(current_user, tenant_id)
@@ -799,7 +799,7 @@ def download_packing_slip(
 @router.get("/shipments/{shipment_id}/label")
 def get_label(
     shipment_id: str,
-    current_user: Annotated[dict, Depends(require_admin)],
+    current_user: Annotated[dict, Depends(require_permission("shipping"))],
     tenant_id: Annotated[str | None, Query(alias="tenantId")] = None,
 ):
     scoped = admin_tenant_id(current_user, tenant_id)
@@ -820,7 +820,7 @@ def get_label(
 @router.post("/pickup")
 def request_pickup(
     body: DelhiveryPickupRequest,
-    current_user: Annotated[dict, Depends(require_admin)],
+    current_user: Annotated[dict, Depends(require_permission("shipping"))],
     tenant_id: Annotated[str | None, Query(alias="tenantId")] = None,
 ):
     scoped = admin_tenant_id(current_user, tenant_id)

@@ -50,11 +50,25 @@ THEME_PRESET_COLORS: dict[str, dict[str, str]] = {
     },
 }
 
+HOME_SECTION_IDS: list[str] = [
+    "banner",
+    "festival",
+    "categories",
+    "trending",
+    "discounts",
+    "mostSelling",
+    "newArrivals",
+    "topRated",
+    "dealOfTheDay",
+    "testimonials",
+]
+
 DEFAULT_LAYOUT_SETTINGS: dict[str, Any] = {
     "productGridColumns": 4,
     "cardStyle": "rounded",
     "sectionSpacing": "comfortable",
     "homeBannerStyle": "full",
+    "homeSectionOrder": list(HOME_SECTION_IDS),
     "showHomeBanner": True,
     "showDealOfTheDay": True,
     "showTestimonials": True,
@@ -78,6 +92,7 @@ DEFAULT_LAYOUT_SETTINGS: dict[str, Any] = {
     "productViewMode": "grid",
     "productDetailLayout": "gallery-left",
     "cartLayout": "split",
+    "productCardDesign": "classic",
 }
 
 DEFAULT_FOOTER_SECTIONS: list[dict[str, Any]] = [
@@ -137,6 +152,23 @@ def _merge_dict(base: dict[str, Any], override: dict[str, Any] | None) -> dict[s
     return merged
 
 
+def normalize_home_section_order(order: object) -> list[str]:
+    allowed = set(HOME_SECTION_IDS)
+    next_order: list[str] = []
+    seen: set[str] = set()
+    if isinstance(order, list):
+        for item in order:
+            key = str(item or "").strip()
+            if key not in allowed or key in seen:
+                continue
+            seen.add(key)
+            next_order.append(key)
+    for item in HOME_SECTION_IDS:
+        if item not in seen:
+            next_order.append(item)
+    return next_order
+
+
 def _pick_color_overrides(
     saved_colors: dict[str, Any],
     baseline: dict[str, str] | None = None,
@@ -166,6 +198,9 @@ def build_storefront_layout(tenant: dict[str, Any] | None) -> dict[str, Any]:
 
     theme_colors = _resolve_theme_colors(saved_theme, saved_colors)
     layout_settings = _merge_dict(DEFAULT_LAYOUT_SETTINGS, saved_layout)
+    layout_settings["homeSectionOrder"] = normalize_home_section_order(
+        layout_settings.get("homeSectionOrder")
+    )
     footer_content = _build_footer_content(tenant)
 
     has_customization = bool(

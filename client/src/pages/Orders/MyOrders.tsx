@@ -2,9 +2,9 @@ import { Package, ChevronLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../features/auth/hooks/useAuth";
 import { useStorefrontTenant } from "../../features/tenant/useTenant";
+import { useFormatStorePrice } from "../../features/tenant/useFormatStorePrice";
 import { useUserOrders } from "../../features/orders/hooks/useOrders";
 import {
-    formatOrderAmount,
     formatOrderDate,
     orderStatusLabel,
 } from "../../features/orders/api/order.api";
@@ -18,6 +18,7 @@ const MyOrders = () => {
     const navigate = useNavigate();
     const { user } = useAuth();
     const { tenantSlug, tenantId } = useStorefrontTenant();
+    const { formatPrice } = useFormatStorePrice();
     const userId = user?._id || "";
     const { data: orders = [], isLoading, isError } = useUserOrders(userId);
     const go = (to: string) => storefrontNavigate(navigate, to);
@@ -124,7 +125,7 @@ const MyOrders = () => {
                                                 </span>
                                             </div>
                                             <strong className={styles.itemPrice}>
-                                                {formatOrderAmount(item.subtotal)}
+                                                {formatPrice(item.subtotal)}
                                             </strong>
                                         </div>
                                     ))}
@@ -133,7 +134,7 @@ const MyOrders = () => {
                                 <div className={styles.cardFooter}>
                                     <div>
                                         <span>Total paid</span>
-                                        <strong>{formatOrderAmount(order.totalAmount)}</strong>
+                                        <strong>{formatPrice(order.totalAmount)}</strong>
                                     </div>
                                     {order.address?.fullName && (
                                         <div className={styles.address}>

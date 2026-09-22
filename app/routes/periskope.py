@@ -21,7 +21,7 @@ from app.services.whatsapp_notification_service import (
     DEFAULT_NOTIFICATIONS,
     retry_notification,
 )
-from app.utils.auth_dependencies import admin_tenant_id, require_admin
+from app.utils.auth_dependencies import admin_tenant_id, require_permission
 from app.utils.phone_normalization import (
     PhoneNormalizationError,
     mask_phone,
@@ -71,7 +71,7 @@ def _public_settings(doc: dict | None) -> dict:
 
 @router.get("/settings")
 def get_settings(
-    current_user: Annotated[dict, Depends(require_admin)],
+    current_user: Annotated[dict, Depends(require_permission("whatsapp"))],
     tenant_id: Annotated[str | None, Query(alias="tenantId")] = None,
 ):
     scoped = admin_tenant_id(current_user, tenant_id)
@@ -84,7 +84,7 @@ def get_settings(
 @router.put("/settings")
 def save_settings(
     body: PeriskopeSettingsUpdate,
-    current_user: Annotated[dict, Depends(require_admin)],
+    current_user: Annotated[dict, Depends(require_permission("whatsapp"))],
     tenant_id: Annotated[str | None, Query(alias="tenantId")] = None,
 ):
     scoped = admin_tenant_id(current_user, tenant_id)
@@ -132,7 +132,7 @@ def save_settings(
 
 @router.post("/test")
 def test_connection(
-    current_user: Annotated[dict, Depends(require_admin)],
+    current_user: Annotated[dict, Depends(require_permission("whatsapp"))],
     tenant_id: Annotated[str | None, Query(alias="tenantId")] = None,
 ):
     admin_tenant_id(current_user, tenant_id)
@@ -148,7 +148,7 @@ def test_connection(
 
 @router.get("/notifications")
 def list_notifications(
-    current_user: Annotated[dict, Depends(require_admin)],
+    current_user: Annotated[dict, Depends(require_permission("whatsapp"))],
     tenant_id: Annotated[str | None, Query(alias="tenantId")] = None,
     limit: Annotated[int, Query(ge=1, le=100)] = 25,
 ):
@@ -181,7 +181,7 @@ def list_notifications(
 def retry_failed_notification(
     notification_id: str,
     background_tasks: BackgroundTasks,
-    current_user: Annotated[dict, Depends(require_admin)],
+    current_user: Annotated[dict, Depends(require_permission("whatsapp"))],
     tenant_id: Annotated[str | None, Query(alias="tenantId")] = None,
 ):
     scoped = admin_tenant_id(current_user, tenant_id)

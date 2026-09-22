@@ -1,6 +1,9 @@
-import { useNavigate, useParams } from "react-router-dom";
+import { Navigate, useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../../auth/hooks/useAuth";
+import { hasStorePermission } from "../../auth/permissions";
+import { isStoreOwner, isStoreStaff } from "../../auth/roles";
 import { useTenantByTenantId } from "../hooks/useTenants";
+import { useProducts } from "../hooks/useTenantProducts";
 import styles from "../styles/AdminTenant.module.css";
 import { formatStorefrontHost } from "../../tenant/tenantHost";
 import { isRetailBusiness } from "../../tenant/businessMode";
@@ -11,6 +14,20 @@ export default function AdminTenant() {
     const { user } = useAuth();
     const showBackToTenants = user?.role === "super_admin";
     const { data: tenant, isLoading, isError, } = useTenantByTenantId(tenantId || "");
+    const productsQuery = useProducts({
+        tenantId: tenantId || "",
+        page: 1,
+        limit: 1,
+        includeInactive: true,
+    });
+    const hasProducts = Boolean(
+        productsQuery.data?.pages?.some((page) => {
+            if (Array.isArray(page)) {
+                return page.length > 0;
+            }
+            return Array.isArray(page?.data) && page.data.length > 0;
+        }),
+    );
     if (isLoading) {
         return (<div className={styles.state}>
         <div className={styles.spinner}/>
@@ -27,6 +44,20 @@ export default function AdminTenant() {
           ← Back to Tenants
         </button>
       </div>);
+    }
+    if (
+        isStoreStaff(user?.role)
+        && hasStorePermission(user, "products_update")
+        && !productsQuery.isLoading
+        && !productsQuery.isError
+        && !hasProducts
+    ) {
+        return (
+            <Navigate
+                to={`/admin/tenants/${tenant.tenantId}/products/create`}
+                replace
+            />
+        );
     }
     const storeHost = formatStorefrontHost(tenant.slug);
     const isRetail = isRetailBusiness(tenant.businessType);
@@ -95,6 +126,11 @@ export default function AdminTenant() {
             <span>Theme</span>
             <strong>{tenant.theme || "green"}</strong>
           </div>
+
+          <div className={styles.infoCard}>
+            <span>Storefront currency</span>
+            <strong>{tenant.displayCurrency || "INR"}</strong>
+          </div>
           
           <div className={styles.infoCard}>
             <span>Created</span>
@@ -148,6 +184,7 @@ export default function AdminTenant() {
           </div>
         </div>
         <div className={styles.actionsGrid}>
+          {hasStorePermission(user, "layout") ? (
           <button type="button" className={styles.actionCard} onClick={() => openStore(routes.customize(tenant.slug))}>
             <div className={styles.actionIcon}>▣</div>
             <div>
@@ -156,7 +193,20 @@ export default function AdminTenant() {
             </div>
             <b>→</b>
           </button>
+          ) : null}
 
+          {isStoreOwner(user?.role) || user?.role === "super_admin" ? (
+          <button type="button" className={styles.actionCard} onClick={() => navigate(`/admin/tenants/${tenant.tenantId}/team`)}>
+            <div className={styles.actionIcon}>☺</div>
+            <div>
+              <strong>Store managers</strong>
+              <span>Add a manager login for this store.</span>
+            </div>
+            <b>→</b>
+          </button>
+          ) : null}
+
+          {isStoreOwner(user?.role) || user?.role === "super_admin" ? (
           <button type="button" className={styles.actionCard} onClick={() => navigate(`/admin/tenants/${tenant.tenantId}/edit`)}>
             <div className={styles.actionIcon}>✎</div>
             <div>
@@ -165,7 +215,9 @@ export default function AdminTenant() {
             </div>
             <b>→</b>
           </button>
+          ) : null}
           
+          {hasStorePermission(user, "products_update") || hasStorePermission(user, "inventory") || hasStorePermission(user, "read") ? (
           <button type="button" className={styles.actionCard} onClick={() => navigate(`/admin/tenants/${tenant.tenantId}/products`)}>
             <div className={styles.actionIcon}>◫</div>
             <div>
@@ -174,7 +226,9 @@ export default function AdminTenant() {
             </div>
             <b>→</b>
           </button>
+          ) : null}
 
+          {hasStorePermission(user, "customers") ? (
           <button type="button" className={styles.actionCard} onClick={() => navigate(`/admin/tenants/${tenant.tenantId}/customers`)}>
             <div className={styles.actionIcon}>☺</div>
             <div>
@@ -183,7 +237,9 @@ export default function AdminTenant() {
             </div>
             <b>→</b>
           </button>
+          ) : null}
 
+          {hasStorePermission(user, "whatsapp") ? (
           <button type="button" className={styles.actionCard} onClick={() => navigate(`/admin/tenants/${tenant.tenantId}/integrations/periskope`)}>
             <div className={styles.actionIcon}>◌</div>
             <div>
@@ -192,8 +248,10 @@ export default function AdminTenant() {
             </div>
             <b>→</b>
           </button>
+          ) : null}
 
           {tenant.businessType === "menu" ? (
+            hasStorePermission(user, "menu") ? (
             <button type="button" className={styles.actionCard} onClick={() => navigate(`/admin/tenants/${tenant.tenantId}/menu`)}>
               <div className={styles.actionIcon}>☰</div>
               <div>
@@ -202,9 +260,10 @@ export default function AdminTenant() {
               </div>
               <b>→</b>
             </button>
+            ) : null
           ) : (
             <>
-              {isRetail ? (
+              {isRetail && hasStorePermission(user, "orders") ? (
                 <button type="button" className={styles.actionCard} onClick={() => navigate(`/admin/tenants/${tenant.tenantId}/orders`)}>
                   <div className={styles.actionIcon}>⧉</div>
                   <div>
@@ -215,6 +274,7 @@ export default function AdminTenant() {
                 </button>
               ) : null}
 
+              {hasStorePermission(user, "banners") ? (
               <button type="button" className={styles.actionCard} onClick={() => navigate(`/admin/tenants/${tenant.tenantId}/banners`)}>
                 <div className={styles.actionIcon}>▣</div>
                 <div>
@@ -223,7 +283,9 @@ export default function AdminTenant() {
                 </div>
                 <b>→</b>
               </button>
+              ) : null}
 
+              {hasStorePermission(user, "coupons") ? (
               <button type="button" className={styles.actionCard} onClick={() => navigate(`/admin/tenants/${tenant.tenantId}/coupons`)}>
                 <div className={styles.actionIcon}>%</div>
                 <div>
@@ -232,8 +294,9 @@ export default function AdminTenant() {
                 </div>
                 <b>→</b>
               </button>
+              ) : null}
 
-              {isRetail ? (
+              {isRetail && hasStorePermission(user, "shipping") ? (
                 <button type="button" className={styles.actionCard} onClick={() => navigate(`/admin/tenants/${tenant.tenantId}/shipping/delhivery`)}>
                   <div className={styles.actionIcon}>⬡</div>
                   <div>

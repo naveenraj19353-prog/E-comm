@@ -1,0 +1,90 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1400;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.25rem;
+  background: rgba(12, 18, 16, 0.72);
+  backdrop-filter: blur(0.5rem);
+}
+.card {
+  width: min(28rem, 100%);
+  padding: 1.25rem 1.25rem 1.5rem;
+  border-radius: 1.25rem;
+  background: var(--surface, #fff);
+  color: var(--text, #1f2a26);
+  box-shadow: 0 1.5rem 3rem rgba(0, 0, 0, 0.28);
+  text-align: center;
+}
+.image {
+  display: block;
+  width: 100%;
+  height: 10.5rem;
+  margin-bottom: 1rem;
+  object-fit: cover;
+  border-radius: 0.875rem;
+  background: #edf1ef;
+}
+.eyebrow {
+  margin: 0 0 0.35rem;
+  color: var(--primary, #2f6b52);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.card h2 {
+  margin: 0;
+  font-size: 1.375rem;
+}
+.message {
+  margin: 0.6rem 0 0;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  opacity: 0.86;
+}
+.hint {
+  margin: 1rem 0 0;
+  font-size: 0.8125rem;
+  opacity: 0.7;
+}
+.timer {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 1.125rem;
+}
+.timer div {
+  min-width: 3.5rem;
+  padding: 0.6rem 0.4rem;
+  border-radius: 0.75rem;
+  background: rgba(47, 107, 82, 0.1);
+}
+.timer span {
+  display: block;
+  font-size: 1.25rem;
+  font-weight: 800;
+  line-height: 1;
+}
+.timer small {
+  display: block;
+  margin-top: 0.3rem;
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+.staffButton {
+  margin-top: 1rem;
+  padding: 0.6rem 0.9rem;
+  border: 0;
+  border-radius: 0.7rem;
+  background: #2f6b52;
+  color: #fff;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+}

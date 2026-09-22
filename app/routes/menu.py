@@ -17,7 +17,7 @@ from app.routes.response_metadata import (
     NOT_FOUND_RESPONSE,
     UNAUTHORIZED_RESPONSE,
 )
-from app.utils.auth_dependencies import admin_tenant_id, require_admin
+from app.utils.auth_dependencies import admin_tenant_id, require_permission
 
 router = APIRouter(prefix="/menu", tags=["Menu"])
 
@@ -31,7 +31,7 @@ router = APIRouter(prefix="/menu", tags=["Menu"])
     },
 )
 def daily_password_status(
-    current_user: Annotated[dict, Depends(require_admin)],
+    current_user: Annotated[dict, Depends(require_permission("menu"))],
     tenant_id: Annotated[str | None, Query(alias="tenantId")] = None,
 ):
     scoped = admin_tenant_id(current_user, tenant_id)
@@ -47,7 +47,7 @@ def daily_password_status(
     },
 )
 def daily_password_rotate(
-    current_user: Annotated[dict, Depends(require_admin)],
+    current_user: Annotated[dict, Depends(require_permission("menu"))],
     tenant_id: Annotated[str | None, Query(alias="tenantId")] = None,
 ):
     scoped = admin_tenant_id(current_user, tenant_id)
@@ -63,7 +63,7 @@ def daily_password_rotate(
     },
 )
 def menu_carts(
-    current_user: Annotated[dict, Depends(require_admin)],
+    current_user: Annotated[dict, Depends(require_permission("menu"))],
     tenant_id: Annotated[str | None, Query(alias="tenantId")] = None,
 ):
     scoped = admin_tenant_id(current_user, tenant_id)
@@ -82,7 +82,7 @@ def menu_carts(
 )
 def menu_cart_payment_done(
     user_id: str,
-    current_user: Annotated[dict, Depends(require_admin)],
+    current_user: Annotated[dict, Depends(require_permission("menu"))],
     tenant_id: Annotated[str | None, Query(alias="tenantId")] = None,
 ):
     scoped = admin_tenant_id(current_user, tenant_id)
@@ -106,7 +106,7 @@ def menu_cart_payment_done(
 )
 def payment_done(
     order_id: str,
-    current_user: Annotated[dict, Depends(require_admin)],
+    current_user: Annotated[dict, Depends(require_permission("menu"))],
     tenant_id: Annotated[str | None, Query(alias="tenantId")] = None,
 ):
     scoped = admin_tenant_id(current_user, tenant_id)

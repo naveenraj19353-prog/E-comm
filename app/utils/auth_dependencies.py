@@ -8,6 +8,7 @@ from fastapi.security import (
 from jose import JWTError, jwt
 from bson import ObjectId
 from app.database.mongo import users, tenants
+from app.services.store_permissions import permissions_for_staff_doc
 from app.utils.jwt_handler import (
     SECRET_KEY,
     ALGORITHM,
@@ -42,6 +43,7 @@ def get_current_user(
     if role in [
         "super_admin",
         "customer",
+        "store_manager",
     ]:
         user_id = payload.get(
             "userId"
@@ -93,6 +95,11 @@ def get_current_user(
             "isActive": user.get(
                 "isActive",
                 False,
+            ),
+            "permissions": (
+                permissions_for_staff_doc(user)
+                if user.get("role") == "store_manager"
+                else None
             ),
         }
 
@@ -219,11 +226,68 @@ def require_admin(
         "role"
     ) not in [
         "admin",
+        "store_manager",
         "super_admin",
     ]:
         raise HTTPException(
             status_code=403,
             detail="Admin access required.",
+        )
+    return current_user
+
+
+def require_permission(permission: str):
+    def dependency(
+        current_user: Annotated[dict, Depends(require_admin)],
+    ):
+        from app.services.store_permissions import user_has_permission
+
+        if not user_has_permission(current_user, permission):
+            raise HTTPException(
+                status_code=403,
+                detail="You do not have permission for this action.",
+            )
+        return current_user
+
+    return dependency
+
+
+def require_any_permission(*permissions: str):
+    def dependency(
+        current_user: Annotated[dict, Depends(require_admin)],
+    ):
+        from app.services.store_permissions import user_has_permission
+
+        if any(user_has_permission(current_user, key) for key in permissions):
+            return current_user
+        raise HTTPException(
+            status_code=403,
+            detail="You do not have permission for this action.",
+        )
+
+    return dependency
+
+
+def require_store_owner(
+    current_user: Annotated[dict, Depends(get_current_user)],
+):
+    if current_user.get(
+        "role"
+    ) not in [
+        "admin",
+        "super_admin",
+    ]:
+        raise HTTPException(
+            status_code=403,
+            detail="Store admin access required.",
+        )
+    if (
+        current_user.get("role") == "admin"
+        and not current_user.get("tenantId")
+    ):
+        raise HTTPException(
+            status_code=403,
+            detail="Admin must belong to a tenant.",
         )
     return current_user
 

@@ -1,4 +1,5 @@
 import type { Location } from "react-router-dom";
+import { isStoreStaff } from "./roles";
 import type { User } from "./types";
 import { getTenantSlugFromHostname } from "../tenant/tenantHost";
 import { routes } from "../../routes/routes";
@@ -80,7 +81,7 @@ export function resolvePostLoginPath(
     if (user.role === "super_admin") {
         return "/admin";
     }
-    if (user.role === "admin" && user.tenantId) {
+    if (isStoreStaff(user.role) && user.tenantId) {
         return `/admin/tenants/${user.tenantId}`;
     }
     return resolveStorefrontReturnPath(from, tenantSlug);

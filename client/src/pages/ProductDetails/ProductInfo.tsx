@@ -5,6 +5,7 @@ import styles from "./ProductDetails.module.css";
 import type { Product, ProductInventory } from "../../features/products/types";
 import { getColorValue } from "../../utils/productColors";
 import { addToListLabel } from "../../features/tenant/businessMode";
+import { useFormatStorePrice } from "../../features/tenant/useFormatStorePrice";
 
 interface ProductInfoProps {
     product: Product;
@@ -41,6 +42,7 @@ const ProductInfo = ({
     isServiceMode = false,
     isMenuMode = false,
 }: ProductInfoProps) => {
+    const { formatPrice } = useFormatStorePrice();
     const usesSimpleVariant = isServiceMode;
     const [quantity, setQuantity] = useState(1);
     const availableColors = useMemo(() => {
@@ -109,12 +111,12 @@ const ProductInfo = ({
 
             <div className={styles.priceSection}>
                 <span className={styles.currentPrice}>
-                    ₹{product.finalPrice.toLocaleString("en-IN")}
+                    {formatPrice(product.finalPrice)}
                 </span>
                 {showDiscount && (
                     <>
                         <span className={styles.originalPrice}>
-                            ₹{product.price.toLocaleString("en-IN")}
+                            {formatPrice(product.price)}
                         </span>
                         <span className={styles.discount}>
                             {product.discountPercentage}% OFF

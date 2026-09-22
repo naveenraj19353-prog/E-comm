@@ -2,6 +2,7 @@ import { ArrowRight } from "lucide-react";
 import styles from "./Cart.module.css";
 import { useNavigate } from "react-router-dom";
 import { routes, storefrontNavigate } from "../../routes/routes";
+import { useFormatStorePrice } from "../../features/tenant/useFormatStorePrice";
 
 interface CartSummaryProps {
     cartCount: number;
@@ -17,6 +18,7 @@ const CartSummary = ({
     mode = "checkout",
 }: CartSummaryProps) => {
     const navigate = useNavigate();
+    const { formatPrice } = useFormatStorePrice();
     const isSummaryOnly = mode === "summary";
 
     return (
@@ -30,7 +32,7 @@ const CartSummary = ({
             <div className={styles.summaryRows}>
                 <div className={styles.summaryRow}>
                     <span>Subtotal</span>
-                    <span>₹{grandTotal.toLocaleString("en-IN")}</span>
+                    <span>{formatPrice(grandTotal)}</span>
                 </div>
             </div>
             <div className={styles.divider} />
@@ -38,7 +40,7 @@ const CartSummary = ({
                 <div>
                     <span>Total</span>
                 </div>
-                <strong>₹{grandTotal.toLocaleString("en-IN")}</strong>
+                <strong>{formatPrice(grandTotal)}</strong>
             </div>
             {!isSummaryOnly ? (
                 <button

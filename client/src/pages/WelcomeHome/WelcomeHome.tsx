@@ -7,6 +7,7 @@ import {
   Boxes,
   Building2,
   Camera,
+  Check,
   Heart,
   Menu,
   Network,
@@ -255,6 +256,18 @@ export default function WelcomeHome() {
         </div>
       </header>
 
+      <AppLink
+        to={c.pricing.cta.href}
+        className={styles.saleSticker}
+        aria-label={c.pricing.promoAlt}
+      >
+        <img
+          src={c.pricing.promoImage}
+          alt=""
+          className={styles.saleStickerImg}
+        />
+      </AppLink>
+
       <section className={styles.hero}>
         <div className={styles.heroBanner}>
           <Swiper
@@ -319,17 +332,57 @@ export default function WelcomeHome() {
             </h1>
             <p className={styles.heroLead}>{c.hero.lead}</p>
             <div className={styles.heroCtas}>
-              <AppLink to={c.hero.primaryCta.href} className={styles.btnWhite}>
+              <AppLink to={c.hero.primaryCta.href} className={styles.heroCtaPrimary}>
                 {c.hero.primaryCta.label}
+                <ArrowRight size={16} strokeWidth={2.25} />
               </AppLink>
-              <AppLink to={c.hero.secondaryCta.href} className={styles.btnGhost}>
+              <AppLink to={c.hero.secondaryCta.href} className={styles.heroCtaGhost}>
+                <Play size={14} strokeWidth={2.25} fill="currentColor" />
                 {c.hero.secondaryCta.label}
               </AppLink>
             </div>
           </div>
         </div>
       </section>
-
+      <section className={styles.pricing} id={c.pricing.id}>
+        <article className={styles.pricingPhone}>
+          <div className={styles.pricingPhoneTop}>
+            <h2 className={styles.pricingTitle}>{c.pricing.promiseTitle}</h2>
+            <p className={styles.pricingLead}>{c.pricing.promise}</p>
+          </div>
+          <div className={styles.pricingSheet}>
+            <p className={styles.pricingBadge}>{c.pricing.badge}</p>
+            <div className={styles.pricingSheetBody}>
+              <div className={styles.pricingPriceRow}>
+                <p className={styles.pricingPrice}>
+                  {c.pricing.price}
+                  <span>/{c.pricing.priceSuffix}</span>
+                </p>
+                <p className={styles.pricingPriceNote}>{c.pricing.priceNote}</p>
+              </div>
+              <p className={styles.pricingContinue}>{c.pricing.afterNote}</p>
+              <p className={styles.pricingFeatureIntro}>
+                {c.pricing.featureIntro}
+              </p>
+              <ul className={styles.pricingFeatures}>
+                {c.pricing.features.map((feature) => (
+                  <li key={feature}>
+                    <span className={styles.pricingCheck} aria-hidden>
+                      <Check size={13} strokeWidth={2.75} />
+                    </span>
+                    {feature}
+                  </li>
+                ))}
+              </ul>
+              <p className={styles.pricingFinePrint}>{c.pricing.finePrint}</p>
+              <AppLink to={c.pricing.cta.href} className={styles.pricingCta}>
+                {c.pricing.cta.label}
+                <ArrowRight size={16} strokeWidth={2.25} />
+              </AppLink>
+            </div>
+          </div>
+        </article>
+      </section>
       <section className={styles.introLoop} id={c.introLoop.id}>
         <div className={styles.wrap}>
           <div className={styles.introLoopHead}>
@@ -532,6 +585,8 @@ export default function WelcomeHome() {
           </div>
         </div>
       </section>
+
+
 
       <footer className={styles.footer}>
         <div className={styles.wrap}>

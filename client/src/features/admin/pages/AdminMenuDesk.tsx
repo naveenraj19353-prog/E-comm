@@ -7,9 +7,9 @@ import {
     markMenuCartPaymentDone,
 } from "../api/menu.api";
 import { useTenantByTenantId } from "../hooks/useTenants";
-import { formatOrderAmount } from "../../orders/api/order.api";
 import type { MenuCart } from "../api/menu.api";
 import { isMenuBusiness } from "../../tenant/businessMode";
+import { formatOrderAmount } from "../../orders/api/order.api";
 import styles from "../styles/AdminMenuDesk.module.css";
 
 export default function AdminMenuDesk() {

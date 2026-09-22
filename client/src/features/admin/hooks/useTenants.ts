@@ -37,6 +37,9 @@ export const useUpdateTenant = () => {
             queryClient.invalidateQueries({
                 queryKey: TENANTS_QUERY_KEY,
             });
+            queryClient.invalidateQueries({
+                queryKey: ["tenant"],
+            });
         },
     });
 };

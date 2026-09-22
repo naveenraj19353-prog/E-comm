@@ -1,9 +1,12 @@
+import { Fragment } from "react";
+import type { ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import PageLoader from "../../components/PageLoader";
 import ProductCardSlider from "../../components/HomeProductSlider/ProductCardSlider";
 import DealOfTheDay from "../../components/DealOfTheDay/DealOfTheDay";
 import { useHome } from "../../features/home/hooks/useHome";
 import styles from "./Home.module.css";
+import StoreOpeningPlaceholder from "./StoreOpeningPlaceholder";
 import BannerSlider from "../../components/Banner/BannerSlider";
 import { isBannerVideoSrc } from "../../components/Banner/bannerMedia";
 import CategorySlider from "../../components/CategorySlider/CategorySlider";
@@ -20,6 +23,7 @@ import {
     buildWebSiteJsonLd,
     storeShareImage,
 } from "../../features/seo";
+import { normalizeHomeSectionOrder, type HomeSectionId } from "../../theme/homeSections";
 
 const Home = () => {
     const { tenantId, tenantSlug, tenant } = useStorefrontTenant();
@@ -83,9 +87,99 @@ const Home = () => {
         festivalOffers = [],
     } = homeData;
     const festivalOffer = festivalOffers[0] || null;
+    const hasCatalog = [
+        trendingProducts,
+        bestDiscountProducts,
+        mostSellingProducts,
+        newArrivals,
+        topRatedProducts,
+        dealOfTheDay,
+    ].some((list) => list.length > 0);
+
+    if (!hasCatalog) {
+        return (
+            <main className={styles.home}>
+                <SeoHead
+                    title={storeName}
+                    description={storeDescription}
+                    path="/"
+                    tenantSlug={tenantSlug}
+                    image={storeImage || undefined}
+                    jsonLdId="store-home"
+                    jsonLd={[
+                        buildOrganizationJsonLd({
+                            name: storeName,
+                            url: storeUrl,
+                            description: storeDescription,
+                        }),
+                    ]}
+                />
+                <StoreOpeningPlaceholder storeName={storeName} tenant={tenant} />
+            </main>
+        );
+    }
+
     const shareBanner = banners.find(
         (banner) => banner.image && !isBannerVideoSrc(banner.image, banner.mediaType),
     );
+
+    const productSlider = (title: string, products: typeof trendingProducts) =>
+        products.length > 0 ? (
+            <section className={styles.productSection}>
+                <ProductCardSlider title={title} products={products} onToggleWishlist={handleWishlist} onQuickAdd={handleAddToCart} />
+            </section>
+        ) : null;
+
+    const homeSections: Partial<Record<HomeSectionId, ReactNode>> = {
+        banner: layoutSettings.showHomeBanner ? (
+            <section className={`${styles.bannerSection} ${layoutSettings.homeBannerStyle === "contained" ? styles.bannerContained : ""}`}>
+                <BannerSlider banners={banners} />
+            </section>
+        ) : null,
+        festival: festivalOffers.length > 0 ? (
+            <section className={styles.festivalSection} aria-label="Festival offers">
+                {festivalOffers.map((offer) => (
+                    <div key={offer.code} className={styles.festivalCard}>
+                        <span className={styles.festivalEyebrow}>Festival offer</span>
+                        <h2>{offer.title}</h2>
+                        <p>{offer.message}</p>
+                        <strong>Use code {offer.code}</strong>
+                    </div>
+                ))}
+            </section>
+        ) : null,
+        categories: layoutSettings.showCategorySlider ? (
+            <CategorySlider
+                tenantId={tenantId}
+                onCategoryClick={(category) => {
+                    go(withQuery(routes.products(tenantSlug), {
+                        categoryIds: category._id || category.name,
+                    }));
+                }}
+            />
+        ) : null,
+        trending: productSlider("Trending Products", trendingProducts),
+        discounts: productSlider("Best Discounts", bestDiscountProducts),
+        mostSelling: productSlider("Most Selling", mostSellingProducts),
+        newArrivals: productSlider("New Arrivals", newArrivals),
+        topRated: productSlider("Top Rated Products", topRatedProducts),
+        dealOfTheDay: layoutSettings.showDealOfTheDay && dealOfTheDay.length > 0 ? (
+            <section className={styles.productSection}>
+                <DealOfTheDay
+                    products={dealOfTheDay}
+                    festivalOffer={festivalOffer}
+                    isWishlisted={isProductWishlisted}
+                    onToggleWishlist={handleWishlist}
+                    onQuickAdd={handleAddToCart}
+                />
+            </section>
+        ) : null,
+        testimonials: layoutSettings.showTestimonials ? (
+            <section className={styles.productSection}>
+                <Testimonials testimonials={dummyTestimonials} />
+            </section>
+        ) : null,
+    };
 
     return (
         <main className={styles.home}>
@@ -109,83 +203,10 @@ const Home = () => {
                     }),
                 ]}
             />
-            {layoutSettings.showHomeBanner && (
-                <section className={`${styles.bannerSection} ${layoutSettings.homeBannerStyle === "contained" ? styles.bannerContained : ""}`}>
-                    <BannerSlider banners={banners} />
-                </section>
-            )}
-
-            {festivalOffers.length > 0 && (
-                <section className={styles.festivalSection} aria-label="Festival offers">
-                    {festivalOffers.map((offer) => (
-                        <div key={offer.code} className={styles.festivalCard}>
-                            <span className={styles.festivalEyebrow}>Festival offer</span>
-                            <h2>{offer.title}</h2>
-                            <p>{offer.message}</p>
-                            <strong>Use code {offer.code}</strong>
-                        </div>
-                    ))}
-                </section>
-            )}
-
-            {layoutSettings.showCategorySlider && (
-                <CategorySlider
-                    tenantId={tenantId}
-                    onCategoryClick={(category) => {
-                        go(withQuery(routes.products(tenantSlug), {
-                            categoryIds: category._id || category.name,
-                        }));
-                    }}
-                />
-            )}
-
-            {trendingProducts.length > 0 && (
-                <section className={styles.productSection}>
-                    <ProductCardSlider title="Trending Products" products={trendingProducts} onToggleWishlist={handleWishlist} onQuickAdd={handleAddToCart} />
-                </section>
-            )}
-
-            {bestDiscountProducts.length > 0 && (
-                <section className={styles.productSection}>
-                    <ProductCardSlider title="Best Discounts" products={bestDiscountProducts} onToggleWishlist={handleWishlist} onQuickAdd={handleAddToCart} />
-                </section>
-            )}
-
-            {mostSellingProducts.length > 0 && (
-                <section className={styles.productSection}>
-                    <ProductCardSlider title="Most Selling" products={mostSellingProducts} onToggleWishlist={handleWishlist} onQuickAdd={handleAddToCart} />
-                </section>
-            )}
-
-            {newArrivals.length > 0 && (
-                <section className={styles.productSection}>
-                    <ProductCardSlider title="New Arrivals" products={newArrivals} onToggleWishlist={handleWishlist} onQuickAdd={handleAddToCart} />
-                </section>
-            )}
-
-            {topRatedProducts.length > 0 && (
-                <section className={styles.productSection}>
-                    <ProductCardSlider title="Top Rated Products" products={topRatedProducts} onToggleWishlist={handleWishlist} onQuickAdd={handleAddToCart} />
-                </section>
-            )}
-
-            {layoutSettings.showDealOfTheDay && dealOfTheDay.length > 0 && (
-                <section className={styles.productSection}>
-                    <DealOfTheDay
-                        products={dealOfTheDay}
-                        festivalOffer={festivalOffer}
-                        isWishlisted={isProductWishlisted}
-                        onToggleWishlist={handleWishlist}
-                        onQuickAdd={handleAddToCart}
-                    />
-                </section>
-            )}
-
-            {layoutSettings.showTestimonials && (
-                <section className={styles.productSection}>
-                    <Testimonials testimonials={dummyTestimonials} />
-                </section>
-            )}
+            {normalizeHomeSectionOrder(layoutSettings.homeSectionOrder).map((section) => {
+                const block = homeSections[section];
+                return block ? <Fragment key={section}>{block}</Fragment> : null;
+            })}
         </main>
     );
 };

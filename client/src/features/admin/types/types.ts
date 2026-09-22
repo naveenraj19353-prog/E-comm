@@ -1,5 +1,6 @@
 import type { BusinessType } from "../../../constants/businessTypes";
 import type { StorefrontLayout } from "../../../theme/types";
+import type { StoreHours } from "../../tenant/storeHours";
 
 export type { StorefrontLayout, BusinessType };
 
@@ -11,10 +12,13 @@ export interface Tenant {
     businessType?: BusinessType;
     logo: string;
     theme: string;
+    displayCurrency?: string;
+    inrPerUnit?: number;
     themeColors?: ThemeColors | null;
     layoutSettings?: LayoutSettings | null;
     phone?: string;
     isActive: boolean;
+    storeHours?: StoreHours;
     createdAt: string;
     updatedAt: string;
 }
@@ -38,6 +42,7 @@ export interface LayoutSettings {
     cardStyle?: "rounded" | "soft" | "sharp";
     sectionSpacing?: "compact" | "comfortable" | "spacious";
     homeBannerStyle?: "full" | "contained";
+    homeSectionOrder?: string[];
     showHomeBanner?: boolean;
     showDealOfTheDay?: boolean;
     showTestimonials?: boolean;
@@ -61,6 +66,7 @@ export interface LayoutSettings {
     productViewMode?: "grid" | "list";
     productDetailLayout?: "gallery-left" | "gallery-right" | "stacked";
     cartLayout?: "split" | "stacked";
+    productCardDesign?: "classic" | "studio" | "minimal";
 }
 export interface TenantResponse {
     success: boolean;
@@ -81,6 +87,8 @@ export interface CreateTenantPayload {
     businessType: BusinessType;
     logo?: string;
     theme?: string;
+    displayCurrency?: string;
+    inrPerUnit?: number;
     email: string;
     password: string;
 }
@@ -90,10 +98,13 @@ export interface UpdateTenantPayload {
     businessType?: BusinessType;
     logo?: string;
     theme?: string;
+    displayCurrency?: string;
+    inrPerUnit?: number;
     themeColors?: ThemeColors;
     layoutSettings?: LayoutSettings;
     phone?: string;
     isActive?: boolean;
+    storeHours?: StoreHours;
 }
 
 export interface UpdateTenantThemePayload {

@@ -67,6 +67,16 @@ class CreateAdminUser(BaseModel):
         min_length=6,
         max_length=128,
     )
+    permissions: Optional[dict[str, bool]] = None
+
+
+class UpdateStoreManager(BaseModel):
+    tenantId: str = Field(
+        ...,
+        min_length=1,
+        max_length=100,
+    )
+    permissions: dict[str, bool]
 
 
 class ForgotPasswordRequest(BaseModel):

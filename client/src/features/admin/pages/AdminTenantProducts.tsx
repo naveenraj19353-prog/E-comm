@@ -1,11 +1,15 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { Navigate, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import ProductImage from "../../../components/ProductImage";
 import { getFirstProductImage } from "../../products/inventory";
 import { uploadImageToS3 } from "../api/upload.api";
 import { useDeleteProduct, useProducts, useUpdateProduct, } from "../hooks/useTenantProducts";
 import { useTenantByTenantId } from "../hooks/useTenants";
+import { useAuth } from "../../auth/hooks/useAuth";
+import { hasStorePermission } from "../../auth/permissions";
+import { isStoreStaff } from "../../auth/roles";
 import { useCategory } from "../../products/hooks/useCategory";
+import { getProductDetails } from "../../products/api/product.api";
 import type { ProductImageRef } from "../utils/s3Image";
 import { hasUnresolvedImageRefs, imageRefsToKeys, toProductImageRef } from "../utils/s3Image";
 import { PRODUCT_MEDIA_ACCEPT, isAllowedProductMediaFile, isVideoSrc } from "../../../utils/mediaSrc";
@@ -106,6 +110,13 @@ const getProductColors = (product: Product, images: Record<string, ProductImageR
 export default function AdminTenantProducts() {
     const { tenantId } = useParams();
     const navigate = useNavigate();
+    const [searchParams, setSearchParams] = useSearchParams();
+    const { user } = useAuth();
+    const canCreateProducts = hasStorePermission(user, "products_update");
+    const canEditProduct =
+        hasStorePermission(user, "products_update") ||
+        hasStorePermission(user, "inventory");
+    const canDeleteProduct = hasStorePermission(user, "products_update");
     const imageInputRef = useRef<HTMLInputElement | null>(null);
     const { data: tenant, isLoading: tenantLoading, isError: tenantError, } = useTenantByTenantId(tenantId || "");
     const { data: categoryResponse } = useCategory(tenantId || "");
@@ -335,6 +346,40 @@ export default function AdminTenantProducts() {
             isActive: Boolean(product.isActive),
         });
     };
+    const handleEditRef = useRef(handleEdit);
+    handleEditRef.current = handleEdit;
+    const editProductId = searchParams.get("edit") || "";
+    useEffect(() => {
+        if (!editProductId || !tenantId) {
+            return;
+        }
+        let cancelled = false;
+        void getProductDetails(editProductId, tenantId)
+            .then((response) => {
+                if (cancelled) {
+                    return;
+                }
+                const product = ((response as { data?: Product })?.data || response) as Product;
+                if (!product?._id && !product?.id) {
+                    return;
+                }
+                handleEditRef.current(product);
+            })
+            .catch((error) => {
+                console.error("Failed to open existing product:", error);
+            })
+            .finally(() => {
+                if (cancelled) {
+                    return;
+                }
+                const next = new URLSearchParams(searchParams);
+                next.delete("edit");
+                setSearchParams(next, { replace: true });
+            });
+        return () => {
+            cancelled = true;
+        };
+    }, [editProductId, tenantId, searchParams, setSearchParams]);
     const handleImageSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
         const files = event.target.files;
         if (!files || files.length === 0) {
@@ -734,6 +779,21 @@ export default function AdminTenantProducts() {
     if (productsError) {
         return <div className={styles.error}>Failed to load products.</div>;
     }
+    if (
+        isStoreStaff(user?.role)
+        && canCreateProducts
+        && !productsLoading
+        && !search
+        && !category
+        && products.length === 0
+    ) {
+        return (
+            <Navigate
+                to={`/admin/tenants/${tenant.tenantId}/products/create`}
+                replace
+            />
+        );
+    }
     return (<div className={styles.page}>
       <div className={styles.header}>
         <div>
@@ -744,13 +804,17 @@ export default function AdminTenantProducts() {
           </p>
         </div>
         <div className={styles.headerActions}>
+          {canCreateProducts ? (
           <button type="button" className={styles.secondaryButton} onClick={handleBulkImport}>
             Bulk Import
           </button>
+          ) : null}
+          {canCreateProducts ? (
           <button type="button" className={styles.addButton} onClick={handleAddProduct}>
             <span>+</span>
             Add Product
           </button>
+          ) : null}
         </div>
       </div>
       <div className={styles.summaryGrid}>
@@ -917,12 +981,16 @@ export default function AdminTenantProducts() {
                       </td>
                       <td>
                         <div className={styles.actions}>
+                          {canEditProduct ? (
                           <button type="button" className={styles.editButton} onClick={() => handleEdit(product)}>
                             Edit
                           </button>
+                          ) : null}
+                          {canDeleteProduct ? (
                           <button type="button" className={styles.deleteButton} onClick={() => setDeleteProduct(product)}>
                             Delete
                           </button>
+                          ) : null}
                         </div>
                       </td>
                     </tr>);

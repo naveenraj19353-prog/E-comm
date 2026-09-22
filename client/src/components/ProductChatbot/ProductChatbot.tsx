@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useProductChatbot } from "../../features/chatbot/hooks/useProductChatbot";
 import type { ChatProductResult } from "../../features/chatbot/types";
 import { useStorefrontTenant } from "../../features/tenant/useTenant";
+import { useFormatStorePrice } from "../../features/tenant/useFormatStorePrice";
 import { routes, storefrontNavigate } from "../../routes/routes";
 import ProductImage from "../../components/ProductImage";
 import styles from "./ProductChatbot.module.css";
@@ -11,6 +12,7 @@ import styles from "./ProductChatbot.module.css";
 const ProductChatbot = () => {
     const navigate = useNavigate();
     const { tenantId, tenantSlug } = useStorefrontTenant();
+    const { formatPrice } = useFormatStorePrice();
     const {
         isOpen,
         setIsOpen,
@@ -82,7 +84,7 @@ const ProductChatbot = () => {
                             <span className={styles.productName}>{product.name}</span>
                             {product.categoryName && (<span className={styles.productCategory}>{product.categoryName}</span>)}
                             <span className={styles.productPrice}>
-                              ₹{product.finalPrice.toLocaleString("en-IN")}
+                              {formatPrice(product.finalPrice)}
                             </span>
                           </div>
                         </button>))}

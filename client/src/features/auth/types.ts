@@ -7,6 +7,7 @@ export interface User {
     userId?: string;
     phone?: string;
     counterNumber?: string;
+    permissions?: Partial<Record<string, boolean>>;
 }
 export interface LoginRequest {
     tenantId: string | null;

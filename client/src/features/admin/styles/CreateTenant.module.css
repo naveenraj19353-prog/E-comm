@@ -229,8 +229,45 @@
   opacity: 0.6;
   cursor: not-allowed;
 }
+.permissionBlock {
+  grid-column: 1 / -1;
+}
+.permissionHint {
+  margin: 0 0 0.75rem;
+  color: #5d6b65;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+}
+.permissionGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem 1rem;
+}
+.permissionItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  color: #26332e;
+  font-size: 0.8125rem;
+  font-weight: 500;
+}
+.permissionItem input {
+  margin-top: 0.15rem;
+}
+.permissionActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+.tablePermissions {
+  min-width: 16rem;
+}
 @media (max-width: 43.75rem) {
   .formBody {
+    grid-template-columns: 1fr;
+  }
+  .permissionGrid {
     grid-template-columns: 1fr;
   }
   .preview {
