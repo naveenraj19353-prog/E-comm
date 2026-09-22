@@ -18,6 +18,8 @@ export const API_ENDPOINTS = {
     },
 
     USERS: {
+        LIST: "/users/",
+        byId: (id: string) => `/users/${id}`,
         STORE_MANAGERS: "/users/store-managers",
         storeManagerById: (id: string) => `/users/store-managers/${id}`,
     },

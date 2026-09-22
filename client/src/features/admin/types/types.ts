@@ -1,5 +1,6 @@
 import type { BusinessType } from "../../../constants/businessTypes";
 import type { StorefrontLayout } from "../../../theme/types";
+import type { HomeSectionId } from "../../../theme/homeSections";
 import type { StoreHours } from "../../tenant/storeHours";
 
 export type { StorefrontLayout, BusinessType };
@@ -42,7 +43,7 @@ export interface LayoutSettings {
     cardStyle?: "rounded" | "soft" | "sharp";
     sectionSpacing?: "compact" | "comfortable" | "spacious";
     homeBannerStyle?: "full" | "contained";
-    homeSectionOrder?: string[];
+    homeSectionOrder?: HomeSectionId[];
     showHomeBanner?: boolean;
     showDealOfTheDay?: boolean;
     showTestimonials?: boolean;

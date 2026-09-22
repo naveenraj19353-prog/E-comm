@@ -93,8 +93,8 @@ export const buildExampleQueries = (
 ): string[] => {
     if (!filter) {
         return [
-            "shoes under 2000",
-            "products between 500 and 2000",
+            `shoes under ${money(2000, settings)}`,
+            `products between ${money(500, settings)} and ${money(2000, settings)}`,
         ];
     }
 
@@ -110,11 +110,11 @@ export const buildExampleQueries = (
         examples.push(`show ${formatCategoryLabel(firstCategory.name).toLowerCase()}`);
     }
     if (secondCategory && max > min) {
-        examples.push(`${formatCategoryLabel(secondCategory.name).toLowerCase()} under ${Math.max(Math.round(underPrice), Math.round(min))}`);
+        examples.push(`${formatCategoryLabel(secondCategory.name).toLowerCase()} under ${money(Math.max(Math.round(underPrice), Math.round(min)), settings)}`);
     }
     if (max > min) {
-        examples.push(`products between ${Math.round(min)} and ${Math.round(midPrice)}`);
-        examples.push(`under ${Math.round(underPrice)}`);
+        examples.push(`products between ${money(Math.round(min), settings)} and ${money(Math.round(midPrice), settings)}`);
+        examples.push(`under ${money(Math.round(underPrice), settings)}`);
     }
     if (filter.brand[0]) {
         examples.push(`brand ${filter.brand[0]}`);
@@ -123,7 +123,7 @@ export const buildExampleQueries = (
         examples.push(`${filter.color[0].toLowerCase()} ${firstCategory ? formatCategoryLabel(firstCategory.name).toLowerCase() : "products"}`.trim());
     }
     if (filter.size[0]) {
-        examples.push(`size ${filter.size[0]} under ${Math.round(underPrice)}`);
+        examples.push(`size ${filter.size[0]} under ${money(Math.round(underPrice), settings)}`);
     }
     examples.push("4 star rating");
     return [...new Set(examples)].filter(Boolean);
