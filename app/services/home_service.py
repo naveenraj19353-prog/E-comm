@@ -64,7 +64,12 @@ def get_home_data(
 
 
     discount_cursor = (
-        products.find(base_query)
+        products.find(
+            {
+                **base_query,
+                "discountPercentage": {"$gt": 0},
+            }
+        )
         .sort(
             [
                 ("discountPercentage", -1),

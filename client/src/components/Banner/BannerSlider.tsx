@@ -140,6 +140,10 @@ const BannerSlider = ({ banners }: BannerSliderProps) => {
           <SwiperSlide key={banner._id}>
             <div className={styles.banner}>
               <BannerMedia banner={banner} index={index} />
+              {(banner.subtitle ||
+                banner.title ||
+                banner.description ||
+                (banner.buttonText && banner.link)) && (
               <div className={styles.overlay}>
                 <div className={styles.content}>
                   {banner.subtitle && (
@@ -156,6 +160,7 @@ const BannerSlider = ({ banners }: BannerSliderProps) => {
                   )}
                 </div>
               </div>
+              )}
             </div>
           </SwiperSlide>
         ))}

@@ -16,7 +16,7 @@ def _normalize_media_type(value: Optional[str]) -> Optional[str]:
 
 class CreateBanner(BaseModel):
     tenantId: str
-    title: str
+    title: Optional[str] = ""
     subtitle: Optional[str] = None
     description: Optional[str] = None
     image: str
@@ -33,6 +33,11 @@ class CreateBanner(BaseModel):
     @classmethod
     def validate_media_type(cls, value: Optional[str]) -> Optional[str]:
         return _normalize_media_type(value)
+
+    @field_validator("title", mode="before")
+    @classmethod
+    def empty_title(cls, value: Optional[str]) -> str:
+        return str(value or "").strip()
 
 
 class UpdateBanner(BaseModel):

@@ -20,13 +20,13 @@ class BannerMediaTests(unittest.TestCase):
         self.assertEqual(data["mediaType"], "video")
         self.assertEqual(data["image"], "https://cdn.example/hero.mp4")
 
-    def test_create_banner_accepts_video_media_type(self):
+    def test_create_banner_accepts_video_without_title(self):
         banner = CreateBanner(
             tenantId="vedic-paan",
-            title="Launch",
             image="tenants/vedic-paan/banners/clip.mp4",
             mediaType="video",
         )
+        self.assertEqual(banner.title, "")
         self.assertEqual(banner.mediaType, "video")
 
 

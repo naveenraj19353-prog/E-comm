@@ -6,6 +6,7 @@ import "swiper/css/navigation";
 import ProductCard from "./ProductCard";
 import styles from "./ProductCardSlider.module.css";
 import type { Product } from "../../features/products/types";
+
 interface ProductCardSliderProps {
     title: string;
     products?: Product[];
@@ -15,7 +16,15 @@ interface ProductCardSliderProps {
     slidesPerView?: number;
     mediaVariant?: "hover" | "swiper";
 }
-export default function ProductCardSlider({ title, products = [], onToggleWishlist, onQuickAdd, slidesPerView, mediaVariant = "swiper", }: ProductCardSliderProps) {
+
+export default function ProductCardSlider({
+    title,
+    products = [],
+    onToggleWishlist,
+    onQuickAdd,
+    slidesPerView,
+    mediaVariant = "swiper",
+}: ProductCardSliderProps) {
     const prevRef = useRef<HTMLButtonElement | null>(null);
     const nextRef = useRef<HTMLButtonElement | null>(null);
     if (products.length === 0) {
@@ -42,51 +51,91 @@ export default function ProductCardSlider({ title, products = [], onToggleWishli
             spaceBetween: 18,
         },
     };
-    return (<section className={styles.section}>
-      <div className={styles.header}>
-        {title && <h2 className={styles.title}>{title}</h2>}
-        {products.length > 1 && (
-        <div className={styles.arrows}>
-          <button ref={prevRef} type="button" className={styles.arrowButton} aria-label="Scroll left">
-            <ArrowIcon direction="left"/>
-          </button>
-          <button ref={nextRef} type="button" className={styles.arrowButton} aria-label="Scroll right">
-            <ArrowIcon direction="right"/>
-          </button>
-        </div>
-        )}
-      </div>
-      <Swiper modules={[Navigation, FreeMode, Autoplay]} onBeforeInit={(swiper) => {
-            const navigation = swiper.params.navigation;
-            if (navigation && typeof navigation !== "boolean") {
-                navigation.prevEl = prevRef.current;
-                navigation.nextEl = nextRef.current;
-            }
-        }} freeMode={{
-            enabled: true,
-            momentum: true,
-        }} slidesPerView={slidesPerView || 1} spaceBetween={16} centeredSlides={products.length === 1} breakpoints={slidesPerView ? undefined : defaultBreakpoints} className={`${styles.swiper} ${products.length === 1 ? styles.single : ""}`} autoplay={{
-            delay: 2600,
-            disableOnInteraction: false,
-            pauseOnMouseEnter: true,
-        }}>
-        {products.map((product) => (<SwiperSlide key={product._id} className={styles.slide}>
-            <ProductCard product={product} mediaVariant={mediaVariant} onWishlist={(productId, isAdding) => {
-                onToggleWishlist?.(productId, isAdding);
-            }} onAddToCart={(productId, variantId, color, size) => {
-                onQuickAdd?.(productId, variantId, color, size);
-            }}/>
-          </SwiperSlide>))}
-      </Swiper>
-    </section>);
+    return (
+        <section className={styles.section}>
+            <div className={styles.header}>
+                {title && <h2 className={styles.title}>{title}</h2>}
+                {products.length > 1 && (
+                    <div className={styles.arrows}>
+                        <button
+                            ref={prevRef}
+                            type="button"
+                            className={styles.arrowButton}
+                            aria-label="Scroll left"
+                        >
+                            <ArrowIcon direction="left" />
+                        </button>
+                        <button
+                            ref={nextRef}
+                            type="button"
+                            className={styles.arrowButton}
+                            aria-label="Scroll right"
+                        >
+                            <ArrowIcon direction="right" />
+                        </button>
+                    </div>
+                )}
+            </div>
+            <Swiper
+                modules={[Navigation, FreeMode, Autoplay]}
+                onBeforeInit={(swiper) => {
+                    const navigation = swiper.params.navigation;
+                    if (navigation && typeof navigation !== "boolean") {
+                        navigation.prevEl = prevRef.current;
+                        navigation.nextEl = nextRef.current;
+                    }
+                }}
+                freeMode={{
+                    enabled: true,
+                    momentum: true,
+                }}
+                slidesPerView={slidesPerView || 1}
+                spaceBetween={16}
+                breakpoints={slidesPerView ? undefined : defaultBreakpoints}
+                className={styles.swiper}
+                autoplay={{
+                    delay: 2600,
+                    disableOnInteraction: false,
+                    pauseOnMouseEnter: true,
+                }}
+            >
+                {products.map((product) => (
+                    <SwiperSlide key={product._id} className={styles.slide}>
+                        <ProductCard
+                            product={product}
+                            mediaVariant={mediaVariant}
+                            onWishlist={(productId, isAdding) => {
+                                onToggleWishlist?.(productId, isAdding);
+                            }}
+                            onAddToCart={(productId, variantId, color, size) => {
+                                onQuickAdd?.(productId, variantId, color, size);
+                            }}
+                        />
+                    </SwiperSlide>
+                ))}
+            </Swiper>
+        </section>
+    );
 }
-function ArrowIcon({ direction = "right" }: {
-    direction?: "left" | "right";
-}) {
+
+function ArrowIcon({ direction = "right" }: { direction?: "left" | "right" }) {
     const rotate = direction === "left" ? "rotate(180deg)" : "none";
-    return (<svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{
-            transform: rotate,
-        }} aria-hidden="true">
-      <path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-    </svg>);
+    return (
+        <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            style={{ transform: rotate }}
+            aria-hidden="true"
+        >
+            <path
+                d="M5 12h14M13 6l6 6-6 6"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+            />
+        </svg>
+    );
 }
