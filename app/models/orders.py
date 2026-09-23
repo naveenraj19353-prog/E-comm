@@ -9,6 +9,10 @@ OrderStatus = Literal[
     "cancelled",
     "open",
     "closed",
+    "return_requested",
+    "return_approved",
+    "returned",
+    "refunded",
 ]
 
 
@@ -35,3 +39,11 @@ class CreateOrder(BaseModel):
 
 class UpdateOrderStatus(BaseModel):
     orderStatus: OrderStatus
+
+
+class RequestReturn(BaseModel):
+    reason: str = Field(min_length=3, max_length=500)
+
+
+class RejectReturn(BaseModel):
+    reason: str = Field(min_length=3, max_length=500)

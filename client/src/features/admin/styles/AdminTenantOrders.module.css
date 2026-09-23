@@ -348,6 +348,14 @@
   color: #b91c1c;
 }
 
+.status_return_requested,
+.status_return_approved,
+.status_returned,
+.status_refunded {
+  background: #fff7ed;
+  color: #c2410c;
+}
+
 .trackingCell {
   display: flex;
   flex-direction: column;

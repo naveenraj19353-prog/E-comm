@@ -5,7 +5,18 @@ export type OrderStatus =
     | "delivered"
     | "cancelled"
     | "open"
-    | "closed";
+    | "closed"
+    | "return_requested"
+    | "return_approved"
+    | "returned"
+    | "refunded";
+
+export type ReturnStatus =
+    | "requested"
+    | "approved"
+    | "rejected"
+    | "received"
+    | "refunded";
 
 export interface OrderItem {
     productId: string;
@@ -45,6 +56,25 @@ export interface OrderCourier {
     trackingStatus?: string;
 }
 
+export interface OrderReturnRequest {
+    status: ReturnStatus;
+    reason?: string;
+    rejectReason?: string;
+    requestedAt?: string;
+    approvedAt?: string;
+    rejectedAt?: string;
+    receivedAt?: string;
+    refundedAt?: string;
+    refundId?: string;
+    refundStatus?: string;
+    refundNote?: string;
+    reverseAwb?: string;
+    reverseTrackingUrl?: string;
+    reverseNote?: string;
+    stockRestored?: boolean;
+    windowDays?: number;
+}
+
 export interface Order {
     orderId: string;
     razorpayOrderId?: string;
@@ -66,6 +96,9 @@ export interface Order {
     addressId?: string | null;
     customer?: OrderCustomer;
     courier?: OrderCourier | null;
+    deliveredAt?: string;
+    returnRequest?: OrderReturnRequest | null;
+    canRequestReturn?: boolean;
     createdAt?: string;
     updatedAt?: string;
 }

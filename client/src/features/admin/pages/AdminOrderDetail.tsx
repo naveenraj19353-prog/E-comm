@@ -77,8 +77,17 @@ export default function AdminOrderDetail() {
     >([]);
     const [isTracking, setIsTracking] = useState(false);
     const [isLabel, setIsLabel] = useState(false);
+    const [rejectReason, setRejectReason] = useState("");
+    const [returnMessage, setReturnMessage] = useState("");
     const { data: order, isLoading, isError } = useAdminOrderDetail(orderId, tenantId);
-    const { updateOrderStatus } = useAdminOrders(tenantId);
+    const {
+        updateOrderStatus,
+        approveReturn,
+        rejectReturn,
+        markReturnReceived,
+        issueRefund,
+        isHandlingReturn,
+    } = useAdminOrders(tenantId);
 
     const status = order?.orderStatus || "confirmed";
 
@@ -102,6 +111,34 @@ export default function AdminOrderDetail() {
             await updateOrderStatus({ orderId: order.orderId, orderStatus });
         } finally {
             setIsUpdating(false);
+        }
+    };
+
+    const handleReturnAction = async (action: "approve" | "reject" | "received" | "refund") => {
+        if (!order) return;
+        setReturnMessage("");
+        try {
+            if (action === "approve") {
+                await approveReturn(order.orderId);
+                setReturnMessage("Return approved. Reverse pickup was created when Delhivery is connected.");
+            } else if (action === "reject") {
+                if (rejectReason.trim().length < 3) {
+                    setReturnMessage("Add a reject reason (at least 3 characters).");
+                    return;
+                }
+                await rejectReturn({ orderId: order.orderId, reason: rejectReason.trim() });
+                setRejectReason("");
+                setReturnMessage("Return request rejected.");
+            } else if (action === "received") {
+                await markReturnReceived(order.orderId);
+                setReturnMessage("Return marked received. Stock restored.");
+            } else {
+                if (!window.confirm("Issue the refund for this return?")) return;
+                await issueRefund(order.orderId);
+                setReturnMessage("Refund recorded.");
+            }
+        } catch (err) {
+            setReturnMessage(errMsg(err, "Return action failed."));
         }
     };
 
@@ -205,7 +242,11 @@ export default function AdminOrderDetail() {
     const canShip =
         !order.courier?.waybill &&
         status !== "cancelled" &&
-        status !== "delivered";
+        status !== "delivered" &&
+        status !== "return_requested" &&
+        status !== "return_approved" &&
+        status !== "returned" &&
+        status !== "refunded";
 
     return (
         <div className={styles.page}>
@@ -365,6 +406,114 @@ export default function AdminOrderDetail() {
                 ) : null}
                 {shipMessage ? <p className={styles.courierMessage}>{shipMessage}</p> : null}
             </section>
+
+            {order.returnRequest || status === "delivered" ? (
+                <section className={styles.courierCard}>
+                    <div className={styles.courierHeader}>
+                        <div>
+                            <span className={styles.eyebrow}>RETURNS</span>
+                            <h2>Return and refund</h2>
+                        </div>
+                        <div className={styles.courierActions}>
+                            {order.returnRequest?.status === "requested" ? (
+                                <>
+                                    <button
+                                        type="button"
+                                        className={styles.primaryButton}
+                                        disabled={isHandlingReturn}
+                                        onClick={() => void handleReturnAction("approve")}
+                                    >
+                                        {isHandlingReturn ? "Saving..." : "Approve return"}
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className={styles.cancelButton}
+                                        disabled={isHandlingReturn}
+                                        onClick={() => void handleReturnAction("reject")}
+                                    >
+                                        Reject
+                                    </button>
+                                </>
+                            ) : null}
+                            {order.returnRequest?.status === "approved" ? (
+                                <button
+                                    type="button"
+                                    className={styles.primaryButton}
+                                    disabled={isHandlingReturn}
+                                    onClick={() => void handleReturnAction("received")}
+                                >
+                                    {isHandlingReturn ? "Saving..." : "Mark return received"}
+                                </button>
+                            ) : null}
+                            {order.returnRequest?.status === "received" ? (
+                                <button
+                                    type="button"
+                                    className={styles.primaryButton}
+                                    disabled={isHandlingReturn}
+                                    onClick={() => void handleReturnAction("refund")}
+                                >
+                                    {isHandlingReturn ? "Saving..." : "Issue refund"}
+                                </button>
+                            ) : null}
+                        </div>
+                    </div>
+                    {order.returnRequest ? (
+                        <>
+                            <p className={styles.courierMeta}>
+                                Status <strong>{order.returnRequest.status}</strong>
+                                {order.returnRequest.reason
+                                    ? ` · customer: ${order.returnRequest.reason}`
+                                    : ""}
+                            </p>
+                            {order.returnRequest.reverseAwb ? (
+                                <p className={styles.courierMeta}>
+                                    Reverse AWB <strong>{order.returnRequest.reverseAwb}</strong>
+                                    {order.returnRequest.reverseTrackingUrl ? (
+                                        <>
+                                            {" · "}
+                                            <a
+                                                className={styles.trackLink}
+                                                href={order.returnRequest.reverseTrackingUrl}
+                                                target="_blank"
+                                                rel="noreferrer"
+                                            >
+                                                Track pickup
+                                            </a>
+                                        </>
+                                    ) : null}
+                                </p>
+                            ) : null}
+                            {order.returnRequest.reverseNote ? (
+                                <p className={styles.courierMessage}>
+                                    {order.returnRequest.reverseNote}
+                                </p>
+                            ) : null}
+                            {order.returnRequest.refundNote ? (
+                                <p className={styles.courierMessage}>
+                                    {order.returnRequest.refundNote}
+                                </p>
+                            ) : null}
+                        </>
+                    ) : (
+                        <p className={styles.courierMeta}>
+                            No return requested yet. Customers can request a return
+                            within 2 days of delivery.
+                        </p>
+                    )}
+                    {order.returnRequest?.status === "requested" ? (
+                        <textarea
+                            className={styles.rejectReason}
+                            value={rejectReason}
+                            onChange={(event) => setRejectReason(event.target.value)}
+                            placeholder="Reject reason (required to reject)"
+                            maxLength={500}
+                        />
+                    ) : null}
+                    {returnMessage ? (
+                        <p className={styles.courierMessage}>{returnMessage}</p>
+                    ) : null}
+                </section>
+            ) : null}
 
             <OrderDetailContent
                 order={order}

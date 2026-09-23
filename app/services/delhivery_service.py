@@ -374,6 +374,99 @@ class DelhiveryService:
             "remarks": package.get("remarks") or package.get("status"),
         }
 
+    def create_reverse_shipment(
+        self,
+        tenant_id: str,
+        *,
+        pickup_location_name: str,
+        order_id: str,
+        consignee_name: str,
+        consignee_phone: str,
+        address: str,
+        city: str,
+        state: str,
+        pincode: str,
+        country: str,
+        return_name: str,
+        return_address: str,
+        return_city: str,
+        return_state: str,
+        return_pincode: str,
+        return_phone: str,
+        products_description: str,
+        weight_grams: int = DEFAULT_WEIGHT_GRAMS,
+    ) -> dict:
+        pin = _validate_pincode(pincode)
+        return_pin = _validate_pincode(return_pincode)
+        phone = "".join(ch for ch in str(consignee_phone or "") if ch.isdigit())[-10:]
+        warehouse_phone = "".join(ch for ch in str(return_phone or "") if ch.isdigit())[-10:]
+        if len(phone) < 10:
+            raise DelhiveryError(
+                "Customer phone must be a valid 10-digit number.",
+                code="INVALID_PHONE",
+                status_code=400,
+            )
+        shipment = {
+            "name": str(consignee_name or "Customer")[:100],
+            "add": str(address or "")[:350],
+            "pin": pin,
+            "city": str(city or "")[:80],
+            "state": str(state or "")[:80],
+            "country": str(country or "India")[:40] or "India",
+            "phone": phone,
+            "order": f"{str(order_id)[:45]}-R",
+            "payment_mode": "Pickup",
+            "order_type": "Reverse",
+            "cod_amount": 0,
+            "total_amount": 0,
+            "products_desc": str(products_description or "Return goods")[:200],
+            "weight": max(int(weight_grams or DEFAULT_WEIGHT_GRAMS), 50),
+            "return_name": str(return_name or pickup_location_name)[:100],
+            "return_add": str(return_address or "")[:350],
+            "return_city": str(return_city or "")[:80],
+            "return_state": str(return_state or "")[:80],
+            "return_pin": return_pin,
+            "return_phone": warehouse_phone or phone,
+        }
+        payload = {
+            "shipments": [shipment],
+            "pickup_location": {"name": str(pickup_location_name or "").strip()},
+        }
+        raw = self._request(
+            "POST",
+            self._operation_path("createShipment", "/api/cmu/create.json"),
+            tenant_id=tenant_id,
+            form_body={
+                "format": "json",
+                "data": json.dumps(payload),
+            },
+        )
+        package = _first_package(raw)
+        waybill = (
+            package.get("waybill")
+            or package.get("wbn")
+            or (raw.get("waybill") if isinstance(raw, dict) else None)
+        )
+        if not waybill:
+            remark = package.get("remarks") or package.get("status") or raw
+            raise DelhiveryError(
+                f"Reverse shipment not created: {remark}",
+                code="REVERSE_SHIPMENT_FAILED",
+                status_code=400,
+            )
+        waybill = str(waybill)
+        logger.info(
+            "[DELHIVERY] tenant=%s order=%s operation=create_reverse status=success awb=%s",
+            tenant_id,
+            order_id,
+            waybill,
+        )
+        return {
+            "waybill": waybill,
+            "trackingUrl": TRACKING_URL_TEMPLATE.format(waybill=waybill),
+            "remarks": package.get("remarks") or package.get("status"),
+        }
+
     def track_shipment(self, tenant_id: str, waybill: str) -> dict:
         wbn = str(waybill or "").strip()
         if not wbn:

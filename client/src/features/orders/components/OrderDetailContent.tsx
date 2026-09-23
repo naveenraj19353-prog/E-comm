@@ -149,6 +149,27 @@ const OrderDetailContent = ({
                     </section>
                 ) : null}
 
+                {order.returnRequest?.reverseAwb ? (
+                    <section className={styles.section}>
+                        <h2>
+                            <Package size={16} />
+                            Return pickup
+                        </h2>
+                        <div className={styles.textBlock}>
+                            <strong>AWB {order.returnRequest.reverseAwb}</strong>
+                            {order.returnRequest.reverseTrackingUrl ? (
+                                <a
+                                    href={order.returnRequest.reverseTrackingUrl}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                >
+                                    Open reverse tracking
+                                </a>
+                            ) : null}
+                        </div>
+                    </section>
+                ) : null}
+
                 <section className={styles.section}>
                     <h2>
                         <Receipt size={16} />

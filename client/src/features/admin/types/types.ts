@@ -113,6 +113,7 @@ export interface UpdateTenantThemePayload {
     themeColors?: ThemeColors;
     layoutSettings?: LayoutSettings;
     footerContent?: FooterContent;
+    aboutContent?: AboutContent;
 }
 
 export interface FooterLink {
@@ -129,6 +130,15 @@ export interface FooterContent {
     companyName?: string;
     description?: string;
     sections?: FooterSection[];
+}
+
+export interface AboutSection {
+    heading?: string;
+    body?: string;
+}
+
+export interface AboutContent {
+    sections?: AboutSection[];
 }
 export interface Product {
     _id: string;

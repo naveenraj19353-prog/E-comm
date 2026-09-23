@@ -119,6 +119,14 @@
   color: var(--danger);
 }
 
+.status_return_requested,
+.status_return_approved,
+.status_returned,
+.status_refunded {
+  background: color-mix(in srgb, var(--warning) 14%, var(--surface));
+  color: var(--warning);
+}
+
 .items {
   display: flex;
   flex-direction: column;

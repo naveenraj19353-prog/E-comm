@@ -153,25 +153,33 @@
     "promiseTitle": "We want you to succeed first.",
     "promise": "Use Retail Cosmos completely free for 3 months with full access. You pay only from the 4th month — ₹999/month — if you want to continue. If you don't, that's completely fine. No charge."
   },
-  "footer": {
-    "columns": [
-      {
-        "title": "Retail Cosmos",
-        "links": [
-          { "label": "Create a store", "href": "/create-store" },
-          { "label": "Admin login", "href": "/admin/login" }
-        ]
-      },
-      {
-        "title": "Explore",
-        "links": [
-          { "label": "Live demo", "href": "/your-store" },
-          { "label": "Studio", "href": "#studio" },
-          { "label": "Pricing", "href": "#pricing" },
-          { "label": "Create store", "href": "/create-store" }
-        ]
-      }
-    ],
-    "legal": "© Retail Cosmos"
-  }
+    "footer": {
+        "columns": [
+            {
+                "title": "Retail Cosmos",
+                "links": [
+                    { "label": "Create a store", "href": "/create-store" },
+                    { "label": "Admin login", "href": "/admin/login" }
+                ]
+            },
+            {
+                "title": "Explore",
+                "links": [
+                    { "label": "Live demo", "href": "/your-store" },
+                    { "label": "Studio", "href": "#studio" },
+                    { "label": "Pricing", "href": "#pricing" },
+                    { "label": "Create store", "href": "/create-store" }
+                ]
+            },
+            {
+                "title": "Legal",
+                "links": [
+                    { "label": "About", "href": "/legal/about" },
+                    { "label": "Privacy Policy", "href": "/legal/privacy" },
+                    { "label": "Terms", "href": "/legal/terms" }
+                ]
+            }
+        ],
+        "legal": "© Retail Cosmos"
+    }
 }

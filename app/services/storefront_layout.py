@@ -1,6 +1,9 @@
 from copy import deepcopy
 from typing import Any
 
+from app.services.about_content import merge_about_content
+from app.services.footer_links import normalize_footer_sections
+
 DEFAULT_THEME_COLORS: dict[str, str] = {
     "primary": "#2f6b52",
     "secondary": "#4c8a6d",
@@ -99,46 +102,105 @@ DEFAULT_FOOTER_SECTIONS: list[dict[str, Any]] = [
     {
         "title": "Shop",
         "links": [
-            {"label": "Men", "href": "#"},
-            {"label": "Women", "href": "#"},
-            {"label": "Kids", "href": "#"},
-            {"label": "Accessories", "href": "#"},
+            {"label": "Shop all", "href": "/products"},
+            {"label": "Wishlist", "href": "/wishlist"},
+            {"label": "Cart", "href": "/cart"},
+            {"label": "My orders", "href": "/orders"},
         ],
     },
     {
         "title": "Company",
         "links": [
-            {"label": "About", "href": "#"},
-            {"label": "Careers", "href": "#"},
-            {"label": "Contact", "href": "#"},
-            {"label": "Blogs", "href": "#"},
+            {"label": "About", "href": "/about"},
+            {"label": "Contact", "href": "/contact"},
         ],
     },
     {
         "title": "Support",
         "links": [
-            {"label": "FAQs", "href": "#"},
-            {"label": "Returns", "href": "#"},
-            {"label": "Shipping", "href": "#"},
-            {"label": "Privacy Policy", "href": "#"},
+            {"label": "Returns", "href": "/returns"},
+            {"label": "Shipping", "href": "/shipping"},
+            {"label": "Privacy Policy", "href": "/privacy"},
+            {"label": "Terms", "href": "/terms"},
         ],
     },
 ]
 
 DEFAULT_FOOTER_DESCRIPTION = (
-    "Discover premium fashion, accessories and lifestyle products "
-    "with secure shopping and fast delivery."
+    "Shop this store with secure checkout. Delivery and returns follow the "
+    "policies published on this site."
 )
+
+# Default footer per business type. Keep in sync with client/src/theme/footerDefaults.ts.
+_COMPANY_SECTION: dict[str, Any] = {
+    "title": "Company",
+    "links": [
+        {"label": "About", "href": "/about"},
+        {"label": "Contact", "href": "/contact"},
+    ],
+}
+_PRIVACY_ONLY_SUPPORT: dict[str, Any] = {
+    "title": "Support",
+    "links": [{"label": "Privacy Policy", "href": "/privacy"}],
+}
+
+DEFAULT_FOOTER_SECTIONS_BY_BUSINESS: dict[str, list[dict[str, Any]]] = {
+    "retail": DEFAULT_FOOTER_SECTIONS,
+    "service": [
+        {
+            "title": "Services",
+            "links": [
+                {"label": "All services", "href": "/products"},
+                {"label": "Saved", "href": "/wishlist"},
+                {"label": "My list", "href": "/cart"},
+            ],
+        },
+        _COMPANY_SECTION,
+        _PRIVACY_ONLY_SUPPORT,
+    ],
+    "menu": [
+        {
+            "title": "Menu",
+            "links": [
+                {"label": "Full menu", "href": "/products"},
+                {"label": "My order", "href": "/cart"},
+                {"label": "Order history", "href": "/orders"},
+            ],
+        },
+        _COMPANY_SECTION,
+        _PRIVACY_ONLY_SUPPORT,
+    ],
+}
+
+DEFAULT_FOOTER_DESCRIPTION_BY_BUSINESS: dict[str, str] = {
+    "retail": DEFAULT_FOOTER_DESCRIPTION,
+    "service": (
+        "Browse our services and save the ones you like. "
+        "Contact us to book or ask a question."
+    ),
+    "menu": "Browse the menu, order from your table and pay at the counter.",
+}
+
+
+def _business_type(tenant: dict[str, Any]) -> str:
+    value = str(tenant.get("businessType") or "").strip().lower()
+    return value if value in DEFAULT_FOOTER_SECTIONS_BY_BUSINESS else "retail"
 
 
 def _build_footer_content(tenant: dict[str, Any]) -> dict[str, Any]:
     saved = tenant.get("footerContent") or {}
     default_name = tenant.get("name") or "Store"
-    sections = saved.get("sections") if saved.get("sections") else deepcopy(DEFAULT_FOOTER_SECTIONS)
+    business_type = _business_type(tenant)
+    sections = (
+        saved.get("sections")
+        if saved.get("sections")
+        else deepcopy(DEFAULT_FOOTER_SECTIONS_BY_BUSINESS[business_type])
+    )
     return {
         "companyName": saved.get("companyName") or default_name,
-        "description": saved.get("description") or DEFAULT_FOOTER_DESCRIPTION,
-        "sections": sections,
+        "description": saved.get("description")
+        or DEFAULT_FOOTER_DESCRIPTION_BY_BUSINESS[business_type],
+        "sections": normalize_footer_sections(sections),
     }
 
 
@@ -195,6 +257,7 @@ def build_storefront_layout(tenant: dict[str, Any] | None) -> dict[str, Any]:
     saved_colors = tenant.get("themeColors") or {}
     saved_layout = tenant.get("layoutSettings") or {}
     saved_footer = tenant.get("footerContent") or {}
+    saved_about = tenant.get("aboutContent") or {}
 
     theme_colors = _resolve_theme_colors(saved_theme, saved_colors)
     layout_settings = _merge_dict(DEFAULT_LAYOUT_SETTINGS, saved_layout)
@@ -202,9 +265,10 @@ def build_storefront_layout(tenant: dict[str, Any] | None) -> dict[str, Any]:
         layout_settings.get("homeSectionOrder")
     )
     footer_content = _build_footer_content(tenant)
+    about_content = merge_about_content(tenant)
 
     has_customization = bool(
-        saved_colors or saved_layout or saved_footer or tenant.get("theme")
+        saved_colors or saved_layout or saved_footer or saved_about or tenant.get("theme")
     )
 
     return {
@@ -212,6 +276,7 @@ def build_storefront_layout(tenant: dict[str, Any] | None) -> dict[str, Any]:
         "themeColors": theme_colors,
         "layoutSettings": layout_settings,
         "footerContent": footer_content,
+        "aboutContent": about_content,
         "isCustomized": has_customization,
         "source": "database" if has_customization else "default",
     }

@@ -1,8 +1,11 @@
 import type { FooterContent } from "../components/Footer/types";
+import type { AboutContent } from "../pages/Legal/aboutDefaults";
 import { buildDefaultFooterContent } from "./footerDefaults";
+import { defaultAboutContent } from "../pages/Legal/aboutDefaults";
 import { DEFAULT_HOME_SECTION_ORDER, type HomeSectionId } from "./homeSections";
 
 export type { FooterContent, FooterSection, FooterLink } from "../components/Footer/types";
+export type { AboutContent, AboutSectionContent } from "../pages/Legal/aboutDefaults";
 
 export interface ThemeColors {
     primary: string;
@@ -60,6 +63,7 @@ export interface StorefrontLayout {
     themeColors: ThemeColors;
     layoutSettings: LayoutSettings;
     footerContent: FooterContent;
+    aboutContent: AboutContent;
     isCustomized: boolean;
     source: "database" | "default";
 }
@@ -69,6 +73,7 @@ export interface ThemeDraft {
     themeColors: ThemeColors;
     layoutSettings: LayoutSettings;
     footerContent: FooterContent;
+    aboutContent: AboutContent;
 }
 
 export type ThemeColorKey = keyof ThemeColors;
@@ -119,11 +124,15 @@ export const DEFAULT_THEME_COLORS: ThemeColors = {
     danger: "#DC2626",
 };
 
-export const buildDefaultStorefrontLayout = (companyName = "Store"): StorefrontLayout => ({
+export const buildDefaultStorefrontLayout = (
+    companyName = "Store",
+    businessType?: string | null,
+): StorefrontLayout => ({
     theme: "green",
     themeColors: { ...DEFAULT_THEME_COLORS },
     layoutSettings: { ...DEFAULT_LAYOUT_SETTINGS },
-    footerContent: buildDefaultFooterContent(companyName),
+    footerContent: buildDefaultFooterContent(companyName, businessType),
+    aboutContent: defaultAboutContent(companyName),
     isCustomized: false,
     source: "default",
 });

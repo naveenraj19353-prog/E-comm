@@ -69,6 +69,14 @@
   color: var(--danger);
 }
 
+.status_return_requested,
+.status_return_approved,
+.status_returned,
+.status_refunded {
+  background: color-mix(in srgb, var(--warning) 14%, var(--surface));
+  color: var(--warning);
+}
+
 .section {
   padding: 1.125rem 1.25rem;
   border: 0.0625rem solid var(--border);
@@ -273,6 +281,14 @@
 .admin .status_cancelled {
   background: #fef2f2;
   color: #b91c1c;
+}
+
+.admin .status_return_requested,
+.admin .status_return_approved,
+.admin .status_returned,
+.admin .status_refunded {
+  background: #fff7ed;
+  color: #c2410c;
 }
 
 .admin .paymentValue {

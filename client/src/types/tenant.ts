@@ -1,6 +1,7 @@
 import type { BusinessType } from "../constants/businessTypes";
 import type { HomeSectionId } from "../theme/homeSections";
 import type { StorefrontLayout, ThemeColors } from "../theme/types";
+import type { AboutContent } from "../pages/Legal/aboutDefaults";
 
 export interface ThemeColorsPartial {
     primary?: string;
@@ -77,9 +78,11 @@ export interface Tenant {
     themeColors?: ThemeColorsPartial | null;
     layoutSettings?: LayoutSettingsPartial | null;
     footerContent?: FooterContentPartial | null;
+    aboutContent?: AboutContent | null;
     storefrontLayout?: StorefrontLayout | null;
     storeHours?: StoreHours;
     phone?: string;
+    email?: string;
     isActive?: boolean;
 }
 
