@@ -7,8 +7,8 @@ export type ThemePresetName = (typeof THEME_PRESET_NAMES)[number];
 export const themePresets: Record<ThemePresetName, ThemeColors> = {
     green: {
         ...DEFAULT_THEME_COLORS,
-        primary: "#2f6b52",
-        secondary: "#4c8a6d",
+        primary: "#EA580C",
+        secondary: "#F97316",
     },
     blue: {
         ...DEFAULT_THEME_COLORS,

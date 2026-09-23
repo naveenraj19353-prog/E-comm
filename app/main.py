@@ -33,6 +33,7 @@ from app.routes.delhivery import router as delhivery_router
 from app.routes.menu import router as menu_router
 from app.routes.periskope import router as periskope_router
 from app.routes.periskope_webhook import router as periskope_webhook_router
+from app.routes.contact import router as contact_router
 
 logger = logging.getLogger(__name__)
 
@@ -85,6 +86,7 @@ app.include_router(delhivery_router)
 app.include_router(menu_router)
 app.include_router(periskope_router)
 app.include_router(periskope_webhook_router)
+app.include_router(contact_router)
 
 
 def _database_status() -> tuple[str, str | None]:

@@ -1,9 +1,14 @@
 import type { FooterContent, LayoutSettings, StorefrontLayout, ThemeColors, ThemeDraft } from "./types";
 import { DEFAULT_LAYOUT_SETTINGS, buildDefaultStorefrontLayout } from "./types";
-import { buildDefaultFooterContent } from "./footerDefaults";
+import { buildDefaultFooterContent, normalizeFooterSections } from "./footerDefaults";
+import { mergeAboutContent } from "../pages/Legal/aboutDefaults";
 import { getThemePreviewDraft, type ThemePreviewDraft } from "./themeStorage";
 import { resolveThemeColors } from "./resolveThemeColors";
 import { normalizeHomeSectionOrder } from "./homeSections";
+
+interface AboutContentSource {
+    sections?: Array<{ heading?: string; body?: string }>;
+}
 
 interface FooterContentSource {
     companyName?: string;
@@ -16,12 +21,14 @@ interface FooterContentSource {
 
 interface TenantThemeSource {
     name?: string;
+    businessType?: string | null;
     tenantId?: string;
     slug?: string;
     theme?: string;
     themeColors?: Partial<ThemeColors> | null;
     layoutSettings?: Partial<LayoutSettings> | null;
     footerContent?: FooterContentSource | null;
+    aboutContent?: AboutContentSource | null;
     storefrontLayout?: StorefrontLayout | null;
 }
 
@@ -47,9 +54,10 @@ const cloneFooterSections = (sections: FooterContent["sections"]) =>
 
 const mergeFooterContent = (
     tenantName: string | undefined,
+    businessType: string | null | undefined,
     ...sources: Array<FooterContentSource | null | undefined>
 ): FooterContent => {
-    const base = buildDefaultFooterContent(tenantName || "Store");
+    const base = buildDefaultFooterContent(tenantName || "Store", businessType);
     let result: FooterContent = {
         companyName: base.companyName,
         description: base.description,
@@ -77,7 +85,10 @@ const mergeFooterContent = (
         }
     }
 
-    return result;
+    return {
+        ...result,
+        sections: normalizeFooterSections(result.sections),
+    };
 };
 
 export const resolveThemeDraft = (
@@ -86,7 +97,7 @@ export const resolveThemeDraft = (
     livePreview?: ThemePreviewDraft | null,
 ): ThemeDraft => {
     const preview = livePreview ?? (slug ? getThemePreviewDraft(slug) : null);
-    const apiLayout = tenant?.storefrontLayout ?? buildDefaultStorefrontLayout(tenant?.name);
+    const apiLayout = tenant?.storefrontLayout ?? buildDefaultStorefrontLayout(tenant?.name, tenant?.businessType);
 
     const themeKey = preview?.theme
         ?? apiLayout.theme
@@ -108,9 +119,17 @@ export const resolveThemeDraft = (
 
     const footerContent = mergeFooterContent(
         tenant?.name,
+        tenant?.businessType,
         apiLayout.footerContent,
         tenant?.footerContent,
         preview?.footerContent,
+    );
+
+    const aboutContent = mergeAboutContent(
+        tenant?.name || "Store",
+        apiLayout.aboutContent,
+        tenant?.aboutContent,
+        preview?.aboutContent,
     );
 
     return {
@@ -118,6 +137,7 @@ export const resolveThemeDraft = (
         themeColors,
         layoutSettings,
         footerContent,
+        aboutContent,
     };
 };
 

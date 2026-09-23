@@ -56,7 +56,7 @@ const FooterContentEditor = ({ value, onChange }: FooterContentEditorProps) => {
                 ...cloneSections(value.sections),
                 {
                     title: "New section",
-                    links: [{ label: "Link", href: "#" }],
+                    links: [{ label: "Link", href: "/about" }],
                 },
             ],
         });
@@ -73,7 +73,7 @@ const FooterContentEditor = ({ value, onChange }: FooterContentEditorProps) => {
         const sections = cloneSections(value.sections);
         sections[sectionIndex] = {
             ...sections[sectionIndex],
-            links: [...sections[sectionIndex].links, { label: "New link", href: "#" }],
+                    links: [...sections[sectionIndex].links, { label: "New link", href: "/about" }],
         };
         onChange({ ...value, sections });
     };
@@ -151,7 +151,7 @@ const FooterContentEditor = ({ value, onChange }: FooterContentEditorProps) => {
                                     type="text"
                                     value={link.href}
                                     onChange={(event) => updateLink(sectionIndex, linkIndex, "href", event.target.value)}
-                                    placeholder="URL"
+                                    placeholder="/privacy or https://"
                                 />
                                 <button
                                     type="button"

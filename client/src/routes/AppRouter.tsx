@@ -16,6 +16,7 @@ import {
     AdminTenantOrders,
     AdminMenuDesk,
     AdminCustomers,
+    AdminContactMessages,
     AdminStoreManagers,
     AdminTenantProducts,
     AdminTenantBanners,
@@ -49,6 +50,8 @@ import {
     Welcome,
     WelcomeHome,
     Wishlist,
+    StorefrontLegalPage,
+    PlatformLegalPage,
 } from "./LazyRouteComponents";
 
 const hostTenantSlug = getTenantSlugFromHostname();
@@ -137,6 +140,30 @@ const storefrontChildRoutes = [
                     </RequireStorefrontAuth>
                 ),
             },
+            {
+                path: "about",
+                element: <StorefrontLegalPage />,
+            },
+            {
+                path: "contact",
+                element: <StorefrontLegalPage />,
+            },
+            {
+                path: "privacy",
+                element: <StorefrontLegalPage />,
+            },
+            {
+                path: "terms",
+                element: <StorefrontLegalPage />,
+            },
+            {
+                path: "returns",
+                element: <StorefrontLegalPage />,
+            },
+            {
+                path: "shipping",
+                element: <StorefrontLegalPage />,
+            },
         ],
     },
 ];
@@ -194,6 +221,14 @@ const adminRoutes = [
                         element: (
                             <RequireStorePermission permission="customers">
                                 <AdminCustomers />
+                            </RequireStorePermission>
+                        ),
+                    },
+                    {
+                        path: ":tenantId/messages",
+                        element: (
+                            <RequireStorePermission permission="customers">
+                                <AdminContactMessages />
                             </RequireStorePermission>
                         ),
                     },
@@ -303,6 +338,10 @@ export const router = createBrowserRouter([
     {
         path: "/welcome-alt",
         element: <Welcome />,
+    },
+    {
+        path: "/legal/:page",
+        element: <PlatformLegalPage />,
     },
     ...(hostTenantSlug
         ? [

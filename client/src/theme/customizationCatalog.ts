@@ -48,6 +48,14 @@ export const CUSTOMIZATION_GROUPS = [
     ],
   },
   {
+    id: "about",
+    title: "About page",
+    lines: [
+      "Three About sections shoppers see",
+      "Store can rewrite headings and copy",
+    ],
+  },
+  {
     id: "colors",
     title: "Colors",
     lines: [

@@ -104,6 +104,7 @@ def _serialize_tenant(tenant: dict) -> dict:
     payload.pop("password", None)
     payload["businessType"] = _normalize_business_type(payload.get("businessType"))
     payload["phone"] = str(payload.get("phone") or "").strip()
+    payload["email"] = str(payload.get("email") or "").strip()
     raw_logo = payload.get("logo") if isinstance(payload.get("logo"), str) else ""
     payload["logo"] = _safe_resolve_image(raw_logo) or ""
     payload.update(currency_fields_for_tenant(payload))

@@ -1,9 +1,14 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
+    approveAdminReturn,
     getAdminOrderDetail,
     getAdminOrders,
     getOrderDetail,
     getUserOrders,
+    markAdminReturnReceived,
+    refundAdminReturn,
+    rejectAdminReturn,
+    requestOrderReturn,
     updateAdminOrderStatus,
 } from "../api/order.api";
 import type { OrderStatus } from "../types/order.types";
@@ -40,6 +45,15 @@ export const useAdminOrders = (tenantId: string) => {
         enabled: Boolean(tenantId),
     });
 
+    const invalidate = () => {
+        queryClient.invalidateQueries({
+            queryKey: ["orders", "admin", tenantId],
+        });
+        queryClient.invalidateQueries({
+            queryKey: ["orders", "admin", "detail", tenantId],
+        });
+    };
+
     const statusMutation = useMutation({
         mutationFn: ({
             orderId,
@@ -48,19 +62,52 @@ export const useAdminOrders = (tenantId: string) => {
             orderId: string;
             orderStatus: OrderStatus;
         }) => updateAdminOrderStatus(orderId, tenantId, { orderStatus }),
-        onSuccess: () => {
-            queryClient.invalidateQueries({
-                queryKey: ["orders", "admin", tenantId],
-            });
-            queryClient.invalidateQueries({
-                queryKey: ["orders", "admin", "detail", tenantId],
-            });
-        },
+        onSuccess: invalidate,
+    });
+
+    const approveMutation = useMutation({
+        mutationFn: (orderId: string) => approveAdminReturn(orderId, tenantId),
+        onSuccess: invalidate,
+    });
+
+    const rejectMutation = useMutation({
+        mutationFn: ({ orderId, reason }: { orderId: string; reason: string }) =>
+            rejectAdminReturn(orderId, tenantId, reason),
+        onSuccess: invalidate,
+    });
+
+    const receivedMutation = useMutation({
+        mutationFn: (orderId: string) => markAdminReturnReceived(orderId, tenantId),
+        onSuccess: invalidate,
+    });
+
+    const refundMutation = useMutation({
+        mutationFn: (orderId: string) => refundAdminReturn(orderId, tenantId),
+        onSuccess: invalidate,
     });
 
     return {
         ...ordersQuery,
         updateOrderStatus: statusMutation.mutateAsync,
         isUpdatingStatus: statusMutation.isPending,
+        approveReturn: approveMutation.mutateAsync,
+        rejectReturn: rejectMutation.mutateAsync,
+        markReturnReceived: receivedMutation.mutateAsync,
+        issueRefund: refundMutation.mutateAsync,
+        isHandlingReturn:
+            approveMutation.isPending
+            || rejectMutation.isPending
+            || receivedMutation.isPending
+            || refundMutation.isPending,
     };
+};
+
+export const useRequestReturn = (orderId: string) => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: (reason: string) => requestOrderReturn(orderId, reason),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["orders"] });
+        },
+    });
 };

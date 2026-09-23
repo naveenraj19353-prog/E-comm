@@ -1,10 +1,11 @@
-import type { LayoutSettings, ThemeColors, FooterContent } from "./types";
+import type { LayoutSettings, ThemeColors, FooterContent, AboutContent } from "./types";
 
 export interface ThemePreviewDraft {
     theme?: string;
     themeColors?: Partial<ThemeColors>;
     layoutSettings?: Partial<LayoutSettings>;
     footerContent?: Partial<FooterContent>;
+    aboutContent?: AboutContent;
 }
 
 const previewKey = (slug: string) => `ecommerce_theme_preview_${slug}`;

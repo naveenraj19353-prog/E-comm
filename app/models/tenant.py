@@ -67,6 +67,15 @@ class FooterContent(BaseModel):
     sections: Optional[list[FooterSection]] = None
 
 
+class AboutSection(BaseModel):
+    heading: Optional[str] = Field(default=None, max_length=120)
+    body: Optional[str] = Field(default=None, max_length=4000)
+
+
+class AboutContent(BaseModel):
+    sections: Optional[list[AboutSection]] = None
+
+
 class StoreHoursWindow(BaseModel):
     kind: Literal["on", "off"]
     startAt: str = Field(..., min_length=1, max_length=40)
@@ -162,3 +171,4 @@ class UpdateTenantTheme(BaseModel):
     themeColors: Optional[ThemeColors] = None
     layoutSettings: Optional[LayoutSettings] = None
     footerContent: Optional[FooterContent] = None
+    aboutContent: Optional[AboutContent] = None

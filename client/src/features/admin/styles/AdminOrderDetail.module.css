@@ -97,6 +97,14 @@
   color: #b91c1c;
 }
 
+.status_return_requested,
+.status_return_approved,
+.status_returned,
+.status_refunded {
+  background: #fff7ed;
+  color: #c2410c;
+}
+
 .paidLabel {
   color: #047857;
   font-weight: 650;
@@ -327,6 +335,20 @@
 
 .trackLink:hover {
   text-decoration: underline;
+}
+
+.rejectReason {
+  display: block;
+  width: 100%;
+  min-height: 4.5rem;
+  margin-top: 0.75rem;
+  padding: 0.7rem 0.8rem;
+  border: 0.0625rem solid #d7e0db;
+  border-radius: 0.65rem;
+  background: #fff;
+  color: #17211d;
+  font: inherit;
+  resize: vertical;
 }
 
 .trackHistory {

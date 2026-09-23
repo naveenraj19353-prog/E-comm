@@ -24,7 +24,11 @@ const STATUS_FILTERS: Array<{ id: "all" | OrderStatus; label: string }> = [
     { id: "processing", label: "Processing" },
     { id: "shipped", label: "Shipped" },
     { id: "delivered", label: "Delivered" },
-    { id: "cancelled", label: "Cancelled" },
+        { id: "cancelled", label: "Cancelled" },
+        { id: "return_requested", label: "Return requested" },
+        { id: "return_approved", label: "Return approved" },
+        { id: "returned", label: "Returned" },
+        { id: "refunded", label: "Refunded" },
 ];
 
 const nextActions: Partial<Record<OrderStatus, Array<{ status: OrderStatus; label: string; primary?: boolean }>>> = {

@@ -239,6 +239,17 @@ export default function AdminTenant() {
           </button>
           ) : null}
 
+          {hasStorePermission(user, "customers") ? (
+          <button type="button" className={styles.actionCard} onClick={() => navigate(`/admin/tenants/${tenant.tenantId}/messages`)}>
+            <div className={styles.actionIcon}>✉</div>
+            <div>
+              <strong>Messages</strong>
+              <span>Read Contact page submissions.</span>
+            </div>
+            <b>→</b>
+          </button>
+          ) : null}
+
           {hasStorePermission(user, "whatsapp") ? (
           <button type="button" className={styles.actionCard} onClick={() => navigate(`/admin/tenants/${tenant.tenantId}/integrations/periskope`)}>
             <div className={styles.actionIcon}>◌</div>

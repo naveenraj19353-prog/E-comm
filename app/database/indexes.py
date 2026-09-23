@@ -1,6 +1,7 @@
 from pymongo import ASCENDING, DESCENDING, IndexModel
 from app.database.mongo import (
     carts,
+    contact_messages,
     messaging_integrations,
     notification_logs,
     orders,
@@ -85,6 +86,18 @@ def ensure_indexes() -> None:
             IndexModel(
                 [("tenantId", ASCENDING), ("userId", ASCENDING)],
                 name="carts_tenant_user",
+            ),
+        ]
+    )
+    contact_messages.create_indexes(
+        [
+            IndexModel(
+                [("tenantId", ASCENDING), ("createdAt", DESCENDING)],
+                name="contact_messages_tenant_created",
+            ),
+            IndexModel(
+                [("tenantId", ASCENDING), ("email", ASCENDING), ("createdAt", DESCENDING)],
+                name="contact_messages_tenant_email_created",
             ),
         ]
     )

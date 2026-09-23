@@ -154,6 +154,13 @@ export default function AdminLayout() {
             </NavLink>
           )}
 
+          {showStoreNav && can("customers") && (
+            <NavLink to={`/admin/tenants/${storeTenantId}/messages`} className={navClass}>
+              <span>✉</span>
+              Messages
+            </NavLink>
+          )}
+
           {showStoreNav && showBanners && can("banners") && (
             <NavLink to={`/admin/tenants/${storeTenantId}/banners`} className={navClass}>
               <span>▣</span>

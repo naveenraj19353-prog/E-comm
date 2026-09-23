@@ -42,7 +42,28 @@ export const routes = {
     register: (tenant: string) => withTenantPath(tenant, "/register"),
     forgotPassword: (tenant: string) => withTenantPath(tenant, "/forgot-password"),
     resetPassword: (tenant: string) => withTenantPath(tenant, "/reset-password"),
+    about: (tenant: string) => withTenantPath(tenant, "/about"),
+    contact: (tenant: string) => withTenantPath(tenant, "/contact"),
+    privacy: (tenant: string) => withTenantPath(tenant, "/privacy"),
+    terms: (tenant: string) => withTenantPath(tenant, "/terms"),
+    returns: (tenant: string) => withTenantPath(tenant, "/returns"),
+    shipping: (tenant: string) => withTenantPath(tenant, "/shipping"),
 };
+
+/** Resolve a footer or content path against the current tenant host/path mode. */
+export function storefrontHref(tenant: string, path: string): string {
+    const trimmed = path.trim();
+    if (!trimmed) {
+        return withTenantPath(tenant, "/");
+    }
+    if (/^(https?:|mailto:|tel:|\/\/)/i.test(trimmed)) {
+        return trimmed;
+    }
+    if (trimmed.startsWith("#")) {
+        return trimmed;
+    }
+    return withTenantPath(tenant, trimmed.startsWith("/") ? trimmed : `/${trimmed}`);
+}
 
 export function withQuery(href: string, query: Record<string, string | undefined | null>): string {
     const params = new URLSearchParams();

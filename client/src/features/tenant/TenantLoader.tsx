@@ -48,6 +48,7 @@ const TenantLoader = () => {
                     themeColors: layout.themeColors,
                     layoutSettings: layout.layoutSettings,
                     footerContent: layout.footerContent,
+                    aboutContent: layout.aboutContent,
                     isCustomized: layout.isCustomized,
                     source: layout.source,
                 }

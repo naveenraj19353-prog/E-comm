@@ -8,7 +8,7 @@ from pymongo import DESCENDING
 from app.database.mongo import orders, shipments, users
 from app.models.checkout import CreateCodOrder
 from app.models.menu import PlaceMenuOrderRequest
-from app.models.orders import UpdateOrderStatus
+from app.models.orders import RejectReturn, RequestReturn, UpdateOrderStatus
 from app.routes.detail_messages import ORDER_NOT_FOUND
 from app.routes.response_metadata import (
     BAD_REQUEST_RESPONSE,
@@ -20,6 +20,15 @@ from app.routes.response_metadata import (
 )
 from app.services.menu_service import fulfill_menu_order, normalize_counter_number
 from app.services.order_fulfillment import fulfill_cod_order, restore_variant_stock
+from app.services.return_service import (
+    approve_return,
+    can_customer_request_return,
+    issue_refund,
+    mark_return_received,
+    reject_return,
+    request_return,
+    serialize_return,
+)
 from app.services.whatsapp_notification_service import (
     send_order_confirmation,
     send_order_status_update,
@@ -41,6 +50,10 @@ ADMIN_STATUS_TRANSITIONS: dict[str, set[str]] = {
     "cancelled": set(),
     "open": {"closed", "cancelled"},
     "closed": set(),
+    "return_requested": set(),
+    "return_approved": set(),
+    "returned": set(),
+    "refunded": set(),
 }
 
 
@@ -225,14 +238,16 @@ def update_order_status(
                 now,
             )
 
+    status_fields = {
+        "orderStatus": next_status,
+        "updatedAt": now,
+    }
+    if next_status == "delivered":
+        status_fields["deliveredAt"] = now
+
     orders.update_one(
         {"_id": object_id},
-        {
-            "$set": {
-                "orderStatus": next_status,
-                "updatedAt": now,
-            }
-        },
+        {"$set": status_fields},
     )
     updated = orders.find_one({"_id": object_id})
     send_order_status_update(background_tasks, order_id, next_status)
@@ -282,6 +297,83 @@ def get_admin_order_detail(
     }
 
 
+@router.post(
+    "/admin/{order_id}/return/approve",
+    responses={
+        400: BAD_REQUEST_RESPONSE[400],
+        403: FORBIDDEN_RESPONSE[403],
+        404: NOT_FOUND_RESPONSE[404],
+    },
+)
+def admin_approve_return(
+    order_id: str,
+    current_user: Annotated[dict, Depends(require_permission("orders"))],
+    tenant_id: Annotated[str | None, Query(alias="tenantId")] = None,
+):
+    scoped_tenant_id = admin_tenant_id(current_user, tenant_id)
+    order = approve_return(order_id=order_id, tenant_id=scoped_tenant_id)
+    return {"success": True, "order": _serialize_order(order)}
+
+
+@router.post(
+    "/admin/{order_id}/return/reject",
+    responses={
+        400: BAD_REQUEST_RESPONSE[400],
+        403: FORBIDDEN_RESPONSE[403],
+        404: NOT_FOUND_RESPONSE[404],
+    },
+)
+def admin_reject_return(
+    order_id: str,
+    payload: RejectReturn,
+    current_user: Annotated[dict, Depends(require_permission("orders"))],
+    tenant_id: Annotated[str | None, Query(alias="tenantId")] = None,
+):
+    scoped_tenant_id = admin_tenant_id(current_user, tenant_id)
+    order = reject_return(
+        order_id=order_id,
+        tenant_id=scoped_tenant_id,
+        reason=payload.reason,
+    )
+    return {"success": True, "order": _serialize_order(order)}
+
+
+@router.post(
+    "/admin/{order_id}/return/received",
+    responses={
+        400: BAD_REQUEST_RESPONSE[400],
+        403: FORBIDDEN_RESPONSE[403],
+        404: NOT_FOUND_RESPONSE[404],
+    },
+)
+def admin_mark_return_received(
+    order_id: str,
+    current_user: Annotated[dict, Depends(require_permission("orders"))],
+    tenant_id: Annotated[str | None, Query(alias="tenantId")] = None,
+):
+    scoped_tenant_id = admin_tenant_id(current_user, tenant_id)
+    order = mark_return_received(order_id=order_id, tenant_id=scoped_tenant_id)
+    return {"success": True, "order": _serialize_order(order)}
+
+
+@router.post(
+    "/admin/{order_id}/return/refund",
+    responses={
+        400: BAD_REQUEST_RESPONSE[400],
+        403: FORBIDDEN_RESPONSE[403],
+        404: NOT_FOUND_RESPONSE[404],
+    },
+)
+def admin_issue_refund(
+    order_id: str,
+    current_user: Annotated[dict, Depends(require_permission("orders"))],
+    tenant_id: Annotated[str | None, Query(alias="tenantId")] = None,
+):
+    scoped_tenant_id = admin_tenant_id(current_user, tenant_id)
+    order = issue_refund(order_id=order_id, tenant_id=scoped_tenant_id)
+    return {"success": True, "order": _serialize_order(order)}
+
+
 @router.get(
     "/detail/{order_id}",
     responses={
@@ -313,6 +405,29 @@ def get_order(
     except Exception as error:
         print("Get order error:", str(error))
         raise HTTPException(status_code=500, detail="Unable to fetch order.")
+
+
+@router.post(
+    "/detail/{order_id}/return",
+    responses={
+        400: BAD_REQUEST_RESPONSE[400],
+        403: FORBIDDEN_RESPONSE[403],
+        404: NOT_FOUND_RESPONSE[404],
+    },
+)
+def customer_request_return(
+    order_id: str,
+    payload: RequestReturn,
+    current_user: Annotated[dict, Depends(require_customer)],
+):
+    scoped_tenant_id, token_user_id = customer_scope(current_user)
+    order = request_return(
+        order_id=order_id,
+        tenant_id=scoped_tenant_id,
+        user_id=token_user_id,
+        reason=payload.reason,
+    )
+    return {"success": True, "order": _serialize_order(order)}
 
 
 @router.get(
@@ -392,6 +507,9 @@ def _serialize_order(order: dict, customer: dict | None = None) -> dict:
         "totalAmount": order.get("totalAmount", 0),
         "paymentStatus": order.get("paymentStatus"),
         "orderStatus": order.get("orderStatus"),
+        "deliveredAt": order.get("deliveredAt"),
+        "returnRequest": serialize_return(order),
+        "canRequestReturn": can_customer_request_return(order),
         "address": address_payload,
         "addressId": address_id,
         "paymentMethod": order.get("paymentMethod"),

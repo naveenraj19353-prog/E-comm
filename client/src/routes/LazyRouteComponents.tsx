@@ -27,6 +27,9 @@ export const CreateTenant = lazy(() => import("../features/admin/pages/CreateTen
 export const AdminTenantProducts = lazy(() => import("../features/admin/pages/AdminTenantProducts"));
 export const AdminStoreManagers = lazy(() => import("../features/admin/pages/AdminStoreManagers"));
 export const AdminCustomers = lazy(() => import("../features/admin/pages/AdminCustomers"));
+export const AdminContactMessages = lazy(
+    () => import("../features/admin/pages/AdminContactMessages"),
+);
 export const CreateProduct = lazy(() => import("../features/admin/pages/CreateProduct"));
 export const BulkProductImport = lazy(() => import("../features/admin/pages/BulkProductImport"));
 export const AdminTenantOrders = lazy(() => import("../features/admin/pages/AdminTenantOrders"));
@@ -45,3 +48,5 @@ export const NotFound = lazy(() => import("../pages/NotFound"));
 export const Welcome = lazy(() => import("../pages/Welcome"));
 export const WelcomeHome = lazy(() => import("../pages/WelcomeHome"));
 export const CreateStore = lazy(() => import("../pages/CreateStore"));
+export const StorefrontLegalPage = lazy(() => import("../pages/Legal/StorefrontLegalPage"));
+export const PlatformLegalPage = lazy(() => import("../pages/Legal/PlatformLegalPage"));

@@ -5,6 +5,7 @@ import { getStorefrontLayout, updateTenantTheme } from "../../admin/api/tenant.a
 import { setTenant } from "../../tenant/tenantSlice";
 import { getStorefrontLayoutSource, resolveThemeDraft } from "../../../theme/resolveTheme";
 import { themePresets, THEME_PRESET_NAMES, type ThemePresetName } from "../../../theme/themePresets";
+import type { AboutContent } from "../../../pages/Legal/aboutDefaults";
 import type { FooterContent } from "../../../components/Footer/types";
 import type { LayoutSettings, ThemeColors, ThemeDraft } from "../../../theme/types";
 import { DEFAULT_LAYOUT_SETTINGS, DEFAULT_THEME_COLORS, buildDefaultStorefrontLayout } from "../../../theme/types";
@@ -37,7 +38,7 @@ export const useThemeCustomizer = () => {
     const layoutSource = getStorefrontLayoutSource(tenant);
     const baseDraft = useMemo(() => resolveThemeDraft(tenant, slug), [tenant, slug]);
     const [draft, setDraft] = useState<ThemeDraft>(baseDraft);
-    const [activeTab, setActiveTab] = useState<"colors" | "home" | "catalog" | "components" | "chrome" | "footer" | "platform">("home");
+    const [activeTab, setActiveTab] = useState<"colors" | "home" | "catalog" | "components" | "chrome" | "footer" | "about" | "platform">("home");
     const [previewTab, setPreviewTab] = useState<"home" | "products" | "detail" | "cart" | "wishlist">("home");
     const [statusMessage, setStatusMessage] = useState("");
     const [isSaving, setIsSaving] = useState(false);
@@ -52,6 +53,7 @@ export const useThemeCustomizer = () => {
             themeColors: draft.themeColors,
             layoutSettings: draft.layoutSettings,
             footerContent: draft.footerContent,
+            aboutContent: draft.aboutContent,
         }));
         return () => {
             dispatch(clearLiveThemePreview());
@@ -96,6 +98,13 @@ export const useThemeCustomizer = () => {
         }));
     }, []);
 
+    const updateAboutContent = useCallback((aboutContent: AboutContent) => {
+        setDraft((current) => ({
+            ...current,
+            aboutContent,
+        }));
+    }, []);
+
     const applyBrowserPreview = useCallback(() => {
         if (!slug) {
             return;
@@ -105,6 +114,7 @@ export const useThemeCustomizer = () => {
             themeColors: draft.themeColors,
             layoutSettings: draft.layoutSettings,
             footerContent: draft.footerContent,
+            aboutContent: draft.aboutContent,
         });
         dispatch(clearLiveThemePreview());
         dispatch(bumpThemeRevision());
@@ -121,15 +131,16 @@ export const useThemeCustomizer = () => {
     }, [baseDraft, dispatch, slug]);
 
     const resetToDefaultLayout = useCallback(() => {
-        const defaults = buildDefaultStorefrontLayout(tenant?.name);
+        const defaults = buildDefaultStorefrontLayout(tenant?.name, tenant?.businessType);
         setDraft({
             theme: defaults.theme,
             themeColors: defaults.themeColors,
             layoutSettings: defaults.layoutSettings,
             footerContent: defaults.footerContent,
+            aboutContent: defaults.aboutContent,
         });
         setStatusMessage("Loaded platform default layout. Save to persist for your store.");
-    }, [tenant?.name]);
+    }, [tenant?.name, tenant?.businessType]);
 
     const saveForStore = useCallback(async () => {
         if (!tenant || !slug) {
@@ -148,6 +159,7 @@ export const useThemeCustomizer = () => {
                 themeColors: draft.themeColors,
                 layoutSettings: draft.layoutSettings,
                 footerContent: draft.footerContent,
+                aboutContent: draft.aboutContent,
             });
             const layout = await getStorefrontLayout(slug);
             dispatch(setTenant({
@@ -156,11 +168,13 @@ export const useThemeCustomizer = () => {
                 themeColors: draft.themeColors,
                 layoutSettings: draft.layoutSettings,
                 footerContent: draft.footerContent,
+                aboutContent: draft.aboutContent,
                 storefrontLayout: {
                     theme: layout.theme,
                     themeColors: layout.themeColors,
                     layoutSettings: layout.layoutSettings,
                     footerContent: layout.footerContent,
+                    aboutContent: layout.aboutContent,
                     isCustomized: layout.isCustomized,
                     source: layout.source,
                 },
@@ -196,6 +210,7 @@ export const useThemeCustomizer = () => {
         updateColor,
         updateLayout,
         updateFooterContent,
+        updateAboutContent,
         applyBrowserPreview,
         resetDraft,
         resetToDefaultLayout,

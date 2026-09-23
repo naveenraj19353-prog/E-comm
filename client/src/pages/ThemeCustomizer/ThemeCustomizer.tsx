@@ -5,6 +5,7 @@ import { useStorefrontTenant } from "../../features/tenant/useTenant";
 import { presetLabels, themePresets, type ThemePresetName } from "../../theme/themePresets";
 import ThemePreview from "./ThemePreview";
 import FooterContentEditor from "./FooterContentEditor";
+import AboutContentEditor from "./AboutContentEditor";
 import CustomizationOverview from "./CustomizationOverview";
 import styles from "./ThemeCustomizer.module.css";
 import { routes, storefrontNavigate } from "../../routes/routes";
@@ -29,6 +30,7 @@ const editorTabs = [
     { id: "components", label: "Components" },
     { id: "chrome", label: "Header & Footer" },
     { id: "footer", label: "Footer content" },
+    { id: "about", label: "About page" },
     { id: "colors", label: "Colors" },
 ] as const;
 
@@ -51,6 +53,7 @@ const ThemeCustomizer = () => {
         updateColor,
         updateLayout,
         updateFooterContent,
+        updateAboutContent,
         applyBrowserPreview,
         resetDraft,
         resetToDefaultLayout,
@@ -104,6 +107,7 @@ const ThemeCustomizer = () => {
                                         tabId === "components" ||
                                         tabId === "chrome" ||
                                         tabId === "footer" ||
+                                        tabId === "about" ||
                                         tabId === "colors"
                                     ) {
                                         setActiveTab(tabId);
@@ -199,6 +203,13 @@ const ThemeCustomizer = () => {
                             <FooterContentEditor
                                 value={draft.footerContent}
                                 onChange={updateFooterContent}
+                            />
+                        )}
+
+                        {activeTab === "about" && (
+                            <AboutContentEditor
+                                value={draft.aboutContent}
+                                onChange={updateAboutContent}
                             />
                         )}
 

@@ -115,7 +115,16 @@ export const API_ENDPOINTS = {
         ADMIN_LIST: "/orders/admin/list",
         adminDetail: (orderId: string) => `/orders/admin/detail/${orderId}`,
         adminStatus: (orderId: string) => `/orders/admin/${orderId}/status`,
+        adminReturnApprove: (orderId: string) =>
+            `/orders/admin/${orderId}/return/approve`,
+        adminReturnReject: (orderId: string) =>
+            `/orders/admin/${orderId}/return/reject`,
+        adminReturnReceived: (orderId: string) =>
+            `/orders/admin/${orderId}/return/received`,
+        adminReturnRefund: (orderId: string) =>
+            `/orders/admin/${orderId}/return/refund`,
         detail: (orderId: string) => `/orders/detail/${orderId}`,
+        requestReturn: (orderId: string) => `/orders/detail/${orderId}/return`,
         byUserId: (userId: string) => `/orders/${userId}`,
     },
 
@@ -130,6 +139,12 @@ export const API_ENDPOINTS = {
 
     HOME: {
         GET: "/home/",
+    },
+
+    CONTACT: {
+        CREATE: "/contact/",
+        ADMIN_LIST: "/contact/admin/list",
+        adminRead: (messageId: string) => `/contact/admin/${messageId}/read`,
     },
 
     UPLOAD: {
