@@ -44,7 +44,12 @@ export const mergeAboutContent = (
     ...sources: Array<{ sections?: Array<{ heading?: string; body?: string }> } | null | undefined>
 ): AboutContent => {
     const base = defaultAboutContent(storeName);
-    let sections = base.sections.map((section) => ({ ...section }));
+    // Keep the fixed 3-section tuple type (a plain .map() would widen it to an array).
+    let sections: AboutContent["sections"] = [
+        { ...base.sections[0] },
+        { ...base.sections[1] },
+        { ...base.sections[2] },
+    ];
     for (const source of sources) {
         const incoming = source?.sections;
         if (!incoming?.length) {
