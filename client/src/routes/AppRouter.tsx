@@ -404,3 +404,19 @@ export const router = createBrowserRouter([
 
 // Swap the signed-in session when moving between stores / the admin panel.
 startAuthSessionSync(router);
+
+// Land at the top of the new page instead of wherever the last page was
+// scrolled to. Browser back/forward keeps the position it already had.
+let lastPathname = router.state.location.pathname;
+router.subscribe((state) => {
+    if (state.navigation.state !== "idle") {
+        return;
+    }
+    if (state.location.pathname === lastPathname) {
+        return;
+    }
+    lastPathname = state.location.pathname;
+    if (state.historyAction !== "POP") {
+        window.scrollTo({ top: 0, left: 0, behavior: "instant" as ScrollBehavior });
+    }
+});

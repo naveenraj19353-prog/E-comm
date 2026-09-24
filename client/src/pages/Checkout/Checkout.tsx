@@ -120,6 +120,7 @@ const Checkout = () => {
                 deliveryCharge: checkoutPreview.shipping,
                 discount: checkoutPreview.discount,
                 total: checkoutPreview.grandTotal,
+                codHandlingCharge: checkoutPreview.codHandlingCharge ?? null,
             };
         }
         return {
@@ -127,6 +128,7 @@ const Checkout = () => {
             deliveryCharge: 0,
             discount: 0,
             total: grandTotal,
+            codHandlingCharge: null as number | null,
         };
     }, [checkoutPreview, grandTotal]);
 
@@ -446,7 +448,15 @@ const Checkout = () => {
                             <PaymentMethod
                                 selectedMethod={paymentMethod}
                                 shippingQuoted={Boolean(checkoutPreview?.shippingQuoted)}
-                                deliveryCharge={summary.deliveryCharge}
+                                deliveryCharge={
+                                    // `summary.deliveryCharge` is the total for whichever
+                                    // method is selected; when that's COD it already has
+                                    // the handling charge baked in, so subtract it back out
+                                    // to show a stable, method-independent delivery fee.
+                                    summary.deliveryCharge -
+                                    (paymentMethod === "cod" ? summary.codHandlingCharge ?? 0 : 0)
+                                }
+                                codHandlingCharge={summary.codHandlingCharge}
                                 onMethodChange={setPaymentMethod}
                             />
                         </CheckoutMain>
@@ -461,7 +471,11 @@ const Checkout = () => {
                                 price: item.price,
                             }))}
                             subtotal={summary.subtotal}
-                            deliveryCharge={summary.deliveryCharge}
+                            deliveryCharge={
+                                summary.deliveryCharge -
+                                (paymentMethod === "cod" ? summary.codHandlingCharge ?? 0 : 0)
+                            }
+                            codHandlingCharge={paymentMethod === "cod" ? summary.codHandlingCharge : null}
                             shippingQuoted={Boolean(checkoutPreview?.shippingQuoted)}
                             discount={summary.discount}
                             appliedCoupon={checkoutPreview?.couponCode || appliedCoupon}

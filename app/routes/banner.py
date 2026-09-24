@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime, timezone
 from typing import Annotated
 
@@ -21,6 +22,9 @@ from app.services.cache import invalidate_tenant
 from app.utils.auth_dependencies import admin_tenant_id, require_permission
 from app.utils.product_serialize import resolve_banner_images
 
+
+
+logger = logging.getLogger(__name__)
 
 def _serialize_banner(banner: dict) -> dict:
     data = dict(banner)
@@ -94,10 +98,7 @@ def create_banner(
     except HTTPException:
         raise
     except Exception as e:
-        print(
-            "CREATE BANNER ERROR:",
-            str(e),
-        )
+        logger.exception("CREATE BANNER ERROR")
         raise HTTPException(
             status_code=500,
             detail="Failed to create banner.",
@@ -149,10 +150,7 @@ def get_banners(
     except HTTPException:
         raise
     except Exception as e:
-        print(
-            "GET BANNERS ERROR:",
-            str(e),
-        )
+        logger.exception("GET BANNERS ERROR")
         raise HTTPException(
             status_code=500,
             detail="Failed to fetch banners.",
@@ -232,10 +230,7 @@ def get_active_banners(
     except HTTPException:
         raise
     except Exception as e:
-        print(
-            "GET ACTIVE BANNERS ERROR:",
-            str(e),
-        )
+        logger.exception("GET ACTIVE BANNERS ERROR")
         raise HTTPException(
             status_code=500,
             detail="Failed to fetch active banners.",
@@ -332,10 +327,7 @@ def update_banner(
     except HTTPException:
         raise
     except Exception as e:
-        print(
-            "UPDATE BANNER ERROR:",
-            str(e),
-        )
+        logger.exception("UPDATE BANNER ERROR")
         raise HTTPException(
             status_code=500,
             detail="Failed to update banner.",
@@ -401,10 +393,7 @@ def delete_banner(
     except HTTPException:
         raise
     except Exception as e:
-        print(
-            "DELETE BANNER ERROR:",
-            str(e),
-        )
+        logger.exception("DELETE BANNER ERROR")
         raise HTTPException(
             status_code=500,
             detail="Failed to delete banner.",

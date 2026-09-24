@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime, timezone
 from typing import Annotated
 from urllib.parse import unquote, urlparse
@@ -59,6 +60,9 @@ from app.utils.phone_normalization import (
 )
 from app.utils.jwt_handler import create_token
 from app.utils.product_serialize import _resolve_image_for_response
+
+
+logger = logging.getLogger(__name__)
 
 VALID_BUSINESS_TYPES = frozenset({"retail", "service", "menu"})
 
@@ -229,7 +233,7 @@ def create_tenant(
     except HTTPException:
         raise
     except Exception as e:
-        print("CREATE TENANT ERROR:", str(e))
+        logger.exception("CREATE TENANT ERROR")
         raise HTTPException(
             status_code=500,
             detail="Failed to create tenant.",
@@ -320,7 +324,7 @@ def register_store(payload: RegisterStore, request: Request):
     except HTTPException:
         raise
     except Exception as e:
-        print("REGISTER STORE ERROR:", str(e))
+        logger.exception("REGISTER STORE ERROR")
         raise HTTPException(
             status_code=500,
             detail="Failed to create store.",
@@ -480,7 +484,7 @@ def get_public_tenants():
             try:
                 data.append(_public_tenant_preview(tenant))
             except Exception as preview_error:
-                print("PUBLIC TENANT PREVIEW ERROR:", str(preview_error))
+                logger.exception("PUBLIC TENANT PREVIEW ERROR")
                 data.append(
                     {
                         "tenantId": str(tenant.get("tenantId") or ""),
@@ -505,7 +509,7 @@ def get_public_tenants():
             "data": data,
         }
     except Exception as e:
-        print("PUBLIC TENANTS ERROR:", str(e))
+        logger.exception("PUBLIC TENANTS ERROR")
         raise HTTPException(
             status_code=500,
             detail="Failed to load public tenants.",

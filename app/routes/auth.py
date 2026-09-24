@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime, timezone
 from fastapi import APIRouter, HTTPException, Request
 from pymongo.errors import DuplicateKeyError
@@ -44,6 +45,9 @@ from app.routes.detail_messages import (
     INVALID_CREDENTIALS,
     TENANT_NOT_FOUND_OR_INACTIVE,
 )
+
+logger = logging.getLogger(__name__)
+
 router = APIRouter(
     prefix="/auth",
     tags=["Authentication"],
@@ -596,7 +600,7 @@ def reset_password(
     except HTTPException:
         raise
     except Exception as error:
-        print("Reset password error:", str(error))
+        logger.exception("Reset password error")
         raise HTTPException(
             status_code=500,
             detail="Unable to reset password.",

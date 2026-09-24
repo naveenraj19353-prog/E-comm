@@ -15,6 +15,10 @@ interface CheckoutSidebarProps {
     items?: CheckoutItem[];
     subtotal?: number;
     deliveryCharge?: number;
+    /** Extra the delivery partner bills for COD on this order; shown as its
+     * own line so the customer can see why COD costs more than the delivery
+     * fee alone. */
+    codHandlingCharge?: number | null;
     shippingQuoted?: boolean;
     discount?: number;
     appliedCoupon?: string | null;
@@ -29,6 +33,7 @@ const CheckoutSidebar = ({
     items = [],
     subtotal = 0,
     deliveryCharge = 0,
+    codHandlingCharge = null,
     shippingQuoted = false,
     discount = 0,
     appliedCoupon = null,
@@ -100,13 +105,22 @@ const CheckoutSidebar = ({
                     <div className={styles.priceRow}>
                         <span className={styles.deliveryLabel}>
                             <Truck size={15} />
-                            {isCod ? "Cash on delivery" : "Delivery"}
+                            Delivery
                         </span>
                         {isPreviewLoading ? (
                             <strong>...</strong>
                         ) : (
                             <strong>{formatPrice(deliveryCharge)}</strong>
                         )}
+                    </div>
+                    )}
+                    {!isPreviewLoading && isCod && Boolean(codHandlingCharge && codHandlingCharge > 0) && (
+                    <div className={styles.priceRow}>
+                        <span className={styles.deliveryLabel}>
+                            <Truck size={15} />
+                            COD handling charge
+                        </span>
+                        <strong>{formatPrice(codHandlingCharge as number)}</strong>
                     </div>
                     )}
                     {discount > 0 && (

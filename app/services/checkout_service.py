@@ -308,6 +308,70 @@ def _rate_payment_mode(payment_method: str | None) -> str:
     return "COD" if str(payment_method or "").strip().lower() == "cod" else "Prepaid"
 
 
+SHIP_RATE_CACHE_SECONDS = 180
+
+
+def _cached_rate_options(
+    service,
+    tenant_id: str,
+    *,
+    origin_pin: str,
+    destination_pin: str,
+    payment_mode: str,
+) -> list[dict]:
+    """The partner's rate quote, short-cached: it changes rarely for a given
+    lane and this runs on every checkout preview, so we don't spend the
+    partner's request budget re-quoting the same route seconds apart."""
+    from app.services.cache import storefront_cache
+    from app.services.delhivery_service import DelhiveryError
+
+    key = (
+        str(tenant_id),
+        "shipping_rate",
+        service.provider,
+        origin_pin,
+        destination_pin,
+        payment_mode,
+    )
+
+    def build() -> list[dict]:
+        try:
+            return service.get_checkout_rate_options(
+                tenant_id,
+                origin_pin=origin_pin,
+                destination_pin=destination_pin,
+                payment_mode=payment_mode,
+            )
+        except DelhiveryError:
+            return []
+
+    return storefront_cache.get_or_set(key, build, SHIP_RATE_CACHE_SECONDS)
+
+
+def _cod_handling_charge(
+    options_by_mode: dict[str, list[dict]],
+    delivery_method: str,
+) -> float | None:
+    """Delhivery bills COD shipments more than prepaid ones for the same
+    lane and weight; the difference is what we show customers as the COD
+    handling charge. None when either quote is unavailable."""
+    normalized = delivery_method if delivery_method in {"standard", "express"} else "standard"
+
+    def _cost_for(mode: str) -> float | None:
+        options = options_by_mode.get(mode) or []
+        selected = next((opt for opt in options if opt.get("id") == normalized), None)
+        selected = selected or (options[0] if options else None)
+        if not selected or selected.get("shippingCost") is None:
+            return None
+        return float(selected["shippingCost"])
+
+    prepaid_cost = _cost_for("Prepaid")
+    cod_cost = _cost_for("COD")
+    if prepaid_cost is None or cod_cost is None:
+        return None
+    return round(max(cod_cost - prepaid_cost, 0.0), 2)
+
+
 def _partner_shipping(
     tenant_id: str,
     address: dict | None,
@@ -358,15 +422,25 @@ def _partner_shipping(
             detail=f"{display} does not deliver to this pincode.",
         )
 
-    try:
-        options = service.get_checkout_rate_options(
-            tenant_id,
-            origin_pin=ctx["originPin"],
-            destination_pin=dest_pin,
-            payment_mode=_rate_payment_mode(payment_method),
-        )
-    except DelhiveryError:
-        options = []
+    selected_mode = _rate_payment_mode(payment_method)
+    other_mode = "Prepaid" if selected_mode == "COD" else "COD"
+    options = _cached_rate_options(
+        service,
+        tenant_id,
+        origin_pin=ctx["originPin"],
+        destination_pin=dest_pin,
+        payment_mode=selected_mode,
+    )
+    # Also quote the other payment mode so we can tell the customer how much
+    # of a COD order's shipping fee is the COD-handling part of it, per
+    # Delhivery's own pricing for the same lane and weight.
+    other_options = _cached_rate_options(
+        service,
+        tenant_id,
+        origin_pin=ctx["originPin"],
+        destination_pin=dest_pin,
+        payment_mode=other_mode,
+    )
 
     if not options:
         if require_quote:
@@ -384,6 +458,11 @@ def _partner_shipping(
         delivery_method if delivery_method in {"standard", "express"} else "standard"
     )
     selected = next((opt for opt in options if opt.get("id") == normalized), options[0])
+    options_by_mode = {
+        selected_mode: options,
+        other_mode: other_options,
+    }
+    cod_handling_charge = _cod_handling_charge(options_by_mode, normalized)
     return (
         float(selected["shippingCost"]),
         options,
@@ -392,6 +471,7 @@ def _partner_shipping(
             "serviceable": True,
             "originPin": ctx["originPin"],
             "destinationPin": dest_pin,
+            "codHandlingCharge": cod_handling_charge,
         },
     )
 
@@ -469,6 +549,7 @@ def calculate_checkout(
         "shippingOptions": shipping_options,
         "shippingQuoted": shipping_override is not None,
         "shippingMeta": shipping_meta,
+        "codHandlingCharge": shipping_meta.get("codHandlingCharge"),
     }
 
 

@@ -1,3 +1,4 @@
+import logging
 import os
 import ssl
 import razorpay
@@ -6,6 +7,8 @@ from dotenv import load_dotenv
 from requests.adapters import HTTPAdapter
 
 load_dotenv()
+
+logger = logging.getLogger(__name__)
 
 RAZORPAY_KEY_ID = os.getenv("RAZORPAY_KEY_ID")
 RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET")
@@ -31,9 +34,9 @@ class SystemCertAdapter(HTTPAdapter):
 
 
 if not RAZORPAY_KEY_ID or not RAZORPAY_KEY_SECRET:
-    print("Razorpay Key: NOT SET")
+    logger.warning("Razorpay Key: NOT SET")
 else:
-    print("Razorpay Key: SET")
+    logger.info("Razorpay Key: SET")
 
 session = requests.Session()
 session.mount("https://", SystemCertAdapter())

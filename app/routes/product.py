@@ -1,3 +1,4 @@
+import logging
 import json
 import re
 from datetime import datetime, timezone
@@ -48,6 +49,8 @@ from app.services.whatsapp_notification_service import (
     ProductShareError,
     share_product_with_customer,
 )
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(
     prefix="/product",
@@ -519,7 +522,7 @@ def get_tenant_product_filters(
         )
     except Exception as error:
         # Not cached: the next request retries the aggregation.
-        print("ERROR building product filters:", repr(error))
+        logger.exception("ERROR building product filters")
         return _empty_product_filters()
 
 
@@ -821,7 +824,7 @@ def _count_all_products(query: dict) -> int:
     try:
         return products.count_documents(query)
     except Exception as error:
-        print("ERROR counting products:", repr(error))
+        logger.exception("ERROR counting products")
         raise HTTPException(
             status_code=500,
             detail="Failed to count products.",
@@ -847,7 +850,7 @@ def _fetch_all_products(
             for product in cursor
         ]
     except Exception as error:
-        print("ERROR fetching products:", repr(error))
+        logger.exception("ERROR fetching products")
         raise HTTPException(
             status_code=500,
             detail="Failed to fetch products.",
@@ -1075,7 +1078,7 @@ def _fetch_search_products(
             for product in cursor
         ]
     except Exception as error:
-        print("ERROR searching products:", repr(error))
+        logger.exception("ERROR searching products")
         raise HTTPException(
             status_code=500,
             detail="Failed to search products.",
@@ -1155,10 +1158,7 @@ def get_new_arrivals(
                 serialize_product(product)
             )
     except Exception as e:
-        print(
-            "ERROR fetching new arrivals:",
-            repr(e),
-        )
+        logger.exception("ERROR fetching new arrivals")
         raise HTTPException(
             status_code=500,
             detail="Failed to fetch new arrivals.",
@@ -1231,10 +1231,7 @@ def get_product(
             query
         )
     except Exception as e:
-        print(
-            "ERROR fetching product:",
-            repr(e),
-        )
+        logger.exception("ERROR fetching product")
         raise HTTPException(
             status_code=500,
             detail="Failed to fetch product.",
@@ -1359,7 +1356,7 @@ def _persist_product_update(
             {"$set": update_data},
         )
     except Exception as error:
-        print("ERROR updating product:", repr(error))
+        logger.exception("ERROR updating product")
         raise HTTPException(
             status_code=500,
             detail="Failed to update product.",
@@ -1491,10 +1488,7 @@ def delete_product(
     except HTTPException:
         raise
     except Exception as e:
-        print(
-            "ERROR deleting product:",
-            repr(e),
-        )
+        logger.exception("ERROR deleting product")
         raise HTTPException(
             status_code=500,
             detail="Failed to delete product.",
@@ -1548,10 +1542,7 @@ def get_product_inventory(
             },
         )
     except Exception as e:
-        print(
-            "ERROR fetching inventory:",
-            repr(e),
-        )
+        logger.exception("ERROR fetching inventory")
         raise HTTPException(
             status_code=500,
             detail="Failed to fetch inventory.",
@@ -1618,10 +1609,7 @@ def check_variant_stock(
             },
         )
     except Exception as e:
-        print(
-            "ERROR checking variant stock:",
-            repr(e),
-        )
+        logger.exception("ERROR checking variant stock")
         raise HTTPException(
             status_code=500,
             detail="Failed to check variant stock.",

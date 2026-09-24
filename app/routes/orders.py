@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime, timezone
 from typing import Annotated
 
@@ -44,6 +45,8 @@ from app.utils.auth_dependencies import (
     require_customer,
     require_permission,
 )
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/orders", tags=["Orders"])
 
@@ -104,7 +107,7 @@ def create_cod_order(
     except HTTPException:
         raise
     except Exception as error:
-        print("COD order error:", str(error))
+        logger.exception("COD order error")
         raise HTTPException(status_code=500, detail="Unable to place COD order.")
 
 
@@ -152,7 +155,7 @@ def create_menu_order(
     except HTTPException:
         raise
     except Exception as error:
-        print("Menu order error:", str(error))
+        logger.exception("Menu order error")
         raise HTTPException(status_code=500, detail="Unable to place menu order.")
 
 
@@ -208,7 +211,7 @@ def list_tenant_orders(
             "data": data,
         }
     except Exception as error:
-        print("List tenant orders error:", str(error))
+        logger.exception("List tenant orders error")
         raise HTTPException(status_code=500, detail="Unable to fetch orders.")
 
 
@@ -441,7 +444,7 @@ def get_order(
     except HTTPException:
         raise
     except Exception as error:
-        print("Get order error:", str(error))
+        logger.exception("Get order error")
         raise HTTPException(status_code=500, detail="Unable to fetch order.")
 
 
@@ -503,7 +506,7 @@ def get_user_orders(
         ]
         return {"success": True, "count": len(data), "data": data}
     except Exception as error:
-        print("Get orders error:", str(error))
+        logger.exception("Get orders error")
         raise HTTPException(status_code=500, detail="Unable to fetch orders.")
 
 
@@ -619,6 +622,7 @@ def _serialize_order(
         "subtotal": order.get("subtotal", 0),
         "discount": order.get("discount", 0),
         "shipping": order.get("shipping", 0),
+        "codHandlingCharge": order.get("codHandlingCharge", 0),
         "totalAmount": order.get("totalAmount", 0),
         "refundedAmount": order.get("refundedAmount", 0),
         "paymentStatus": order.get("paymentStatus"),

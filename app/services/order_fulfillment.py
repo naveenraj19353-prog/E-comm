@@ -155,8 +155,8 @@ def cancel_and_refund_order(order: dict, now: datetime) -> None:
 def _refund_payment(payment_id: str) -> None:
     try:
         client.payment.refund(payment_id)
-    except Exception as error:
-        print("PAYMENT REFUND ERROR", payment_id, str(error))
+    except Exception:
+        logger.exception("Payment refund error (paymentId=%s)", payment_id)
 
 
 def _build_order_items(checkout_data: dict) -> list[dict]:
@@ -342,6 +342,9 @@ def _build_order_document(
         order_document["razorpayOrderId"] = razorpay_order_id
     if not payment_ids_first and razorpay_payment_id:
         order_document["razorpayPaymentId"] = razorpay_payment_id
+    cod_handling_charge = checkout_data.get("codHandlingCharge")
+    if payment_method == "cod" and cod_handling_charge:
+        order_document["codHandlingCharge"] = cod_handling_charge
     return order_document
 
 

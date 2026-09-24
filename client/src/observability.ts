@@ -134,7 +134,7 @@ export function initObservability(store?: StoreLike): void {
     }
     void import("@sentry/react")
         .then((module) => {
-            module.init({
+            const options = {
                 dsn,
                 environment: String(env.VITE_SENTRY_ENVIRONMENT || env.MODE || "production"),
                 release: env.VITE_SENTRY_RELEASE ? String(env.VITE_SENTRY_RELEASE) : undefined,
@@ -144,8 +144,19 @@ export function initObservability(store?: StoreLike): void {
                     cookies: false,
                     httpBodies: [],
                 },
-                integrations: [module.browserTracingIntegration()],
                 tracesSampleRate: sampleRate(),
+            };
+            module.init({
+                ...options,
+                // A plain array here would *replace* Sentry's defaults, which
+                // include the handlers for uncaught errors and unhandled
+                // promise rejections outside React (event handlers, timers,
+                // network code) — the errors most worth catching in
+                // production. Keep those and add tracing on top.
+                integrations: [
+                    ...module.getDefaultIntegrations(options),
+                    module.browserTracingIntegration(),
+                ],
                 beforeSend(event) {
                     if (event.request) {
                         if (event.request.url) {

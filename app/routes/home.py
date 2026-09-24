@@ -1,9 +1,12 @@
+import logging
 from typing import Annotated
 
 from fastapi import APIRouter, HTTPException, Query
 
 from app.routes.response_metadata import INTERNAL_SERVER_ERROR_RESPONSE
 from app.services.home_service import get_home_data
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/home", tags=["Home"])
 
@@ -30,10 +33,6 @@ def get_home(
             "message": "Home data fetched successfully.",
             "data": data,
         }
-    except Exception as e:
-        print("====================================")
-        print("HOME API ERROR")
-        print(type(e).__name__)
-        print(str(e))
-        print("====================================")
+    except Exception:
+        logger.exception("Home API error (tenantId=%s)", tenant_id)
         raise HTTPException(status_code=500, detail="Unable to load home page.")
