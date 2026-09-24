@@ -3,13 +3,14 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import {
+    useAdminOrderActions,
     useAdminOrderDetail,
-    useAdminOrders,
 } from "../../orders/hooks/useOrders";
 import OrderDetailContent from "../../orders/components/OrderDetailContent";
 import {
     formatOrderAmount,
     formatOrderDate,
+    formatOrderRef,
     orderStatusLabel,
 } from "../../orders/api/order.api";
 import type { OrderStatus } from "../../orders/types/order.types";
@@ -87,7 +88,7 @@ export default function AdminOrderDetail() {
         markReturnReceived,
         issueRefund,
         isHandlingReturn,
-    } = useAdminOrders(tenantId);
+    } = useAdminOrderActions(tenantId);
 
     const status = order?.orderStatus || "confirmed";
 
@@ -131,9 +132,13 @@ export default function AdminOrderDetail() {
                 setReturnMessage("Return request rejected.");
             } else if (action === "received") {
                 await markReturnReceived(order.orderId);
-                setReturnMessage("Return marked received. Stock restored.");
+                setReturnMessage("Return marked received. Stock restored for the returned items.");
             } else {
-                if (!window.confirm("Issue the refund for this return?")) return;
+                const amount = order.returnRequest?.refundAmount;
+                const prompt = typeof amount === "number"
+                    ? `Refund ${formatOrderAmount(amount)} for this return?`
+                    : "Issue the refund for this return?";
+                if (!window.confirm(prompt)) return;
                 await issueRefund(order.orderId);
                 setReturnMessage("Refund recorded.");
             }
@@ -246,7 +251,9 @@ export default function AdminOrderDetail() {
         status !== "return_requested" &&
         status !== "return_approved" &&
         status !== "returned" &&
-        status !== "refunded";
+        status !== "refunded" &&
+        status !== "partially_returned" &&
+        status !== "partially_refunded";
 
     return (
         <div className={styles.page}>
@@ -261,7 +268,7 @@ export default function AdminOrderDetail() {
             <div className={styles.hero}>
                 <div className={styles.heroMain}>
                     <span className={styles.eyebrow}>ORDER DETAILS</span>
-                    <h1>Order #{order.orderId.slice(-8).toUpperCase()}</h1>
+                    <h1>Order {formatOrderRef(order)}</h1>
                     <div className={styles.heroMeta}>
                         <span className={`${styles.statusBadge} ${styles[`status_${status}`]}`}>
                             {orderStatusLabel[status]}
@@ -465,6 +472,45 @@ export default function AdminOrderDetail() {
                                     ? ` · customer: ${order.returnRequest.reason}`
                                     : ""}
                             </p>
+                            <p className={styles.courierMeta}>
+                                {order.returnRequest.partial ? "Partial return" : "Whole order"}
+                                {typeof order.returnRequest.refundAmount === "number" ? (
+                                    <>
+                                        {" · "}
+                                        {order.returnRequest.status === "refunded"
+                                            ? "Refunded "
+                                            : "Refund due "}
+                                        <strong>{formatOrderAmount(order.returnRequest.refundAmount)}</strong>
+                                    </>
+                                ) : null}
+                                {order.returnRequest.partial
+                                    ? " · item share after coupon discount; shipping not refunded"
+                                    : ""}
+                            </p>
+                            {order.returnRequest.items?.length ? (
+                                <ul className={styles.returnItems}>
+                                    {order.returnRequest.items.map((item, index) => {
+                                        const ordered = order.items.find(
+                                            (line) =>
+                                                line.productId === item.productId
+                                                && (line.variantId ?? null) === (item.variantId ?? null),
+                                        );
+                                        return (
+                                            <li key={`${item.productId}-${item.variantId ?? ""}-${index}`}>
+                                                <span>
+                                                    {item.name || ordered?.name || "Item"}
+                                                    {ordered?.size ? ` · Size ${ordered.size}` : ""}
+                                                    {ordered?.color ? ` · ${ordered.color}` : ""}
+                                                </span>
+                                                <strong>
+                                                    {item.quantity}
+                                                    {ordered ? ` of ${ordered.quantity}` : ""}
+                                                </strong>
+                                            </li>
+                                        );
+                                    })}
+                                </ul>
+                            ) : null}
                             {order.returnRequest.reverseAwb ? (
                                 <p className={styles.courierMeta}>
                                     Reverse AWB <strong>{order.returnRequest.reverseAwb}</strong>

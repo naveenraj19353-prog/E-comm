@@ -1,3 +1,4 @@
+import json
 import re
 from datetime import datetime, timezone
 from typing import Annotated
@@ -28,6 +29,7 @@ from app.utils.auth_dependencies import (
     require_customer,
     require_permission,
 )
+from app.services.cache import cached_storefront, invalidate_tenant
 from app.services.store_permissions import user_has_permission
 from app.services.s3_service import (
     collect_image_keys,
@@ -394,6 +396,7 @@ def create_product(
     result = products.insert_one(
         payload
     )
+    invalidate_tenant(tenant_id)
     return {
         "success": True,
         "productId": str(
@@ -459,6 +462,7 @@ def bulk_import_products(
                 }
             )
 
+    invalidate_tenant(tenant_id)
     return {
         "success": len(errors) == 0,
         "created": created,
@@ -484,14 +488,8 @@ def _clean_filter_values(values) -> list[str]:
     return unique
 
 
-def get_tenant_product_filters(
-    tenant_id: str,
-    allow_inactive: bool = False,
-) -> dict:
-    match = {"tenantId": tenant_id}
-    if not allow_inactive:
-        match["isActive"] = True
-    empty = {
+def _empty_product_filters() -> dict:
+    return {
         "brand": [],
         "foodType": [],
         "color": [],
@@ -502,83 +500,110 @@ def get_tenant_product_filters(
             "max": 0,
         },
     }
+
+
+def get_tenant_product_filters(
+    tenant_id: str,
+    allow_inactive: bool = False,
+) -> dict:
+    """Filter facets for a tenant. The public variant (active products only)
+    is cached per tenant; the admin variant with inactive products never is."""
     try:
-        result = list(
-            products.aggregate(
-                [
-                    {MONGO_MATCH_STAGE: match},
-                    {
-                        "$facet": {
-                            "price": [
-                                {
-                                    MONGO_GROUP_STAGE: {
-                                        "_id": None,
-                                        "min": {"$min": "$finalPrice"},
-                                        "max": {"$max": "$finalPrice"},
-                                    }
-                                }
-                            ],
-                            "brands": [
-                                {
-                                    MONGO_MATCH_STAGE: {
-                                        "brand": {"$nin": [None, ""]},
-                                    }
-                                },
-                                {MONGO_GROUP_STAGE: {"_id": "$brand"}},
-                                {"$sort": {"_id": 1}},
-                            ],
-                            "foodTypes": [
-                                {
-                                    MONGO_MATCH_STAGE: {
-                                        "foodType": {"$nin": [None, ""]},
-                                    }
-                                },
-                                {MONGO_GROUP_STAGE: {"_id": "$foodType"}},
-                                {"$sort": {"_id": 1}},
-                            ],
-                            "categories": [
-                                {
-                                    MONGO_MATCH_STAGE: {
-                                        "categoryId": {"$nin": [None, ""]},
-                                    }
-                                },
-                                {
-                                    MONGO_GROUP_STAGE: {
-                                        "_id": "$categoryId",
-                                        "name": {
-                                            "$first": "$categoryName"
-                                        },
-                                    }
-                                },
-                                {"$sort": {"name": 1}},
-                            ],
-                            "variants": [
-                                {
-                                    "$unwind": {
-                                        "path": "$inventory",
-                                        "preserveNullAndEmptyArrays": False,
-                                    }
-                                },
-                                {
-                                    MONGO_GROUP_STAGE: {
-                                        "_id": None,
-                                        "colors": {
-                                            "$addToSet": "$inventory.color"
-                                        },
-                                        "sizes": {
-                                            "$addToSet": "$inventory.size"
-                                        },
-                                    }
-                                },
-                            ],
-                        }
-                    },
-                ]
-            )
+        if allow_inactive:
+            return _build_tenant_product_filters(tenant_id, True)
+        return cached_storefront(
+            tenant_id,
+            "filters",
+            (),
+            lambda: _build_tenant_product_filters(tenant_id, False),
         )
     except Exception as error:
+        # Not cached: the next request retries the aggregation.
         print("ERROR building product filters:", repr(error))
-        return empty
+        return _empty_product_filters()
+
+
+def _build_tenant_product_filters(
+    tenant_id: str,
+    allow_inactive: bool,
+) -> dict:
+    match = {"tenantId": tenant_id}
+    if not allow_inactive:
+        match["isActive"] = True
+    empty = _empty_product_filters()
+    result = list(
+        products.aggregate(
+            [
+                {MONGO_MATCH_STAGE: match},
+                {
+                    "$facet": {
+                        "price": [
+                            {
+                                MONGO_GROUP_STAGE: {
+                                    "_id": None,
+                                    "min": {"$min": "$finalPrice"},
+                                    "max": {"$max": "$finalPrice"},
+                                }
+                            }
+                        ],
+                        "brands": [
+                            {
+                                MONGO_MATCH_STAGE: {
+                                    "brand": {"$nin": [None, ""]},
+                                }
+                            },
+                            {MONGO_GROUP_STAGE: {"_id": "$brand"}},
+                            {"$sort": {"_id": 1}},
+                        ],
+                        "foodTypes": [
+                            {
+                                MONGO_MATCH_STAGE: {
+                                    "foodType": {"$nin": [None, ""]},
+                                }
+                            },
+                            {MONGO_GROUP_STAGE: {"_id": "$foodType"}},
+                            {"$sort": {"_id": 1}},
+                        ],
+                        "categories": [
+                            {
+                                MONGO_MATCH_STAGE: {
+                                    "categoryId": {"$nin": [None, ""]},
+                                }
+                            },
+                            {
+                                MONGO_GROUP_STAGE: {
+                                    "_id": "$categoryId",
+                                    "name": {
+                                        "$first": "$categoryName"
+                                    },
+                                }
+                            },
+                            {"$sort": {"name": 1}},
+                        ],
+                        "variants": [
+                            {
+                                "$unwind": {
+                                    "path": "$inventory",
+                                    "preserveNullAndEmptyArrays": False,
+                                }
+                            },
+                            {
+                                MONGO_GROUP_STAGE: {
+                                    "_id": None,
+                                    "colors": {
+                                        "$addToSet": "$inventory.color"
+                                    },
+                                    "sizes": {
+                                        "$addToSet": "$inventory.size"
+                                    },
+                                }
+                            },
+                        ],
+                    }
+                },
+            ]
+        )
+    )
     if not result:
         return empty
     facets = result[0]
@@ -943,25 +968,48 @@ def get_all_products(
         listing["sortBy"],
         listing["sortOrder"],
     )
-    total_count = _count_all_products(query)
-    data = _fetch_all_products(
-        query,
-        sort_field,
-        sort_order,
-        skip,
-        limit,
-    )
-    filter_data = get_tenant_product_filters(
-        tenant_id,
-        allow_inactive,
-    )
-    return _assemble_all_products_response(
-        data,
-        total_count,
+
+    def build() -> dict:
+        total_count = _count_all_products(query)
+        data = _fetch_all_products(
+            query,
+            sort_field,
+            sort_order,
+            skip,
+            limit,
+        )
+        filter_data = get_tenant_product_filters(
+            tenant_id,
+            allow_inactive,
+        )
+        return _assemble_all_products_response(
+            data,
+            total_count,
+            page,
+            limit,
+            filter_data,
+        )
+
+    if allow_inactive:
+        # Admin view including inactive products: never cached, so it can
+        # never be served to a shopper.
+        return build()
+    cache_parts = (
         page,
         limit,
-        filter_data,
+        sort_field,
+        sort_order,
+        tuple(category_ids),
+        tuple(brands),
+        tuple(food_types),
+        filters["minPrice"],
+        filters["maxPrice"],
+        tuple(sizes),
+        tuple(colors),
+        filters["rating"],
+        search,
     )
+    return cached_storefront(tenant_id, "products", cache_parts, build)
 
 
 def _add_search_inventory_filter(
@@ -1047,22 +1095,32 @@ def search_product(
         request.page,
         request.limit,
     )
-    total_count = _count_all_products(query)
-    data = _fetch_search_products(
-        query,
-        sort_field,
-        sort_direction,
-        skip,
-        limit,
+
+    def build() -> dict:
+        total_count = _count_all_products(query)
+        data = _fetch_search_products(
+            query,
+            sort_field,
+            sort_direction,
+            skip,
+            limit,
+        )
+        filter_data = get_tenant_product_filters(request.tenantId, False)
+        return _assemble_all_products_response(
+            data,
+            total_count,
+            page,
+            limit,
+            filter_data,
+        )
+
+    # Public (active products only, no auth): cached per tenant and request.
+    request_key = json.dumps(
+        request.model_dump(mode="json"),
+        sort_keys=True,
+        default=str,
     )
-    filter_data = get_tenant_product_filters(request.tenantId, False)
-    return _assemble_all_products_response(
-        data,
-        total_count,
-        page,
-        limit,
-        filter_data,
-    )
+    return cached_storefront(request.tenantId, "search", (request_key,), build)
 def get_new_arrivals(
     tenant_id: Annotated[str, Query(alias="tenantId")],
     limit: int = 10,
@@ -1130,6 +1188,7 @@ def share_product_on_whatsapp(
     product = products.find_one(
         {
             "_id": ObjectId(id),
+            "tenantId": tenant_id,
             "isActive": True,
         }
     )
@@ -1137,7 +1196,7 @@ def share_product_on_whatsapp(
         raise HTTPException(status_code=404, detail=PRODUCT_NOT_FOUND)
     try:
         return share_product_with_customer(
-            tenant_id=str(product.get("tenantId") or tenant_id),
+            tenant_id=tenant_id,
             user_id=user_id,
             product=product,
         )
@@ -1375,6 +1434,7 @@ def update_product(
 
     update_data = _prepare_product_update(product, db_product, tenant_id)
     _persist_product_update(object_id, tenant_id, update_data)
+    invalidate_tenant(tenant_id)
 
     # Mongo write succeeds first; then remove unused S3 objects.
     if "images" in update_data:
@@ -1444,6 +1504,7 @@ def delete_product(
             status_code=404,
             detail=PRODUCT_NOT_FOUND,
         )
+    invalidate_tenant(scoped_tenant)
 
     delete_tenant_image_keys(
         collect_image_keys(db_product.get("images")),

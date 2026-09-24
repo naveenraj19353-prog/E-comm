@@ -28,6 +28,7 @@ import type { PaymentMethodType } from "./CheckoutLayout/CheckoutMain/PaymentMet
 import { RAZORPAY_KEY_ID } from "../../constants/api";
 import { routes, storefrontNavigate } from "../../routes/routes";
 import { isRetailBusiness } from "../../features/tenant/businessMode";
+import PhoneOtpForm from "../../features/auth/components/PhoneOtpForm";
 
 const Checkout = () => {
     const navigate = useNavigate();
@@ -352,8 +353,61 @@ const Checkout = () => {
         return null;
     }
 
+    // Guest checkout: verify a phone inline (an account is created quietly
+    // for new numbers) instead of sending the shopper to the register form.
+    if (!isCustomer) {
+        return (
+            <div className={styles.page}>
+                <div className={styles.container}>
+                    <CheckoutHeader />
+                    <section className={`${styles.section} ${styles.guestCard}`}>
+                        <h2>Continue to checkout</h2>
+                        <p>
+                            Enter your mobile number and we'll send a code to WhatsApp.
+                            No password needed.
+                        </p>
+                        <div className={styles.guestForm}>
+                            {storeTenantId ? (
+                                <PhoneOtpForm
+                                    compact
+                                    tenantId={storeTenantId}
+                                    submitLabel="Verify and continue to checkout"
+                                    onSuccess={() => undefined}
+                                    onUseEmail={() => navigateToLogin()}
+                                />
+                            ) : (
+                                <p>Store details are still loading. Refresh the page and try again.</p>
+                            )}
+                        </div>
+                    </section>
+                </div>
+            </div>
+        );
+    }
+
     if (isLoading) {
         return <PageLoader message="Loading checkout..." />;
+    }
+
+    if (!cart.length && !isProcessing && tenantSlug) {
+        return (
+            <div className={styles.page}>
+                <div className={styles.container}>
+                    <CheckoutHeader />
+                    <section className={`${styles.section} ${styles.guestCard}`}>
+                        <h2>Your cart is empty</h2>
+                        <p>Add something to your cart to check out.</p>
+                        <button
+                            type="button"
+                            className={styles.placeOrder}
+                            onClick={() => storefrontNavigate(navigate, routes.products(tenantSlug))}
+                        >
+                            Browse products
+                        </button>
+                    </section>
+                </div>
+            </div>
+        );
     }
 
     return (

@@ -396,6 +396,25 @@ def _partner_shipping(
     )
 
 
+def _assert_store_open(tenant_id: str) -> None:
+    """Block new orders when the store is closed or offline for non-payment."""
+    from app.database.mongo import tenants
+    from app.services.billing_service import assert_store_operational
+    from app.services.store_schedule import resolve_store_hours
+
+    tenant = tenants.find_one(
+        {"tenantId": tenant_id_query(tenant_id)},
+        {"storeHours": 1, "billing": 1, "tenantId": 1, "isActive": 1},
+    )
+    if not tenant or tenant.get("isActive") is False:
+        raise HTTPException(status_code=404, detail="Store not found or inactive.")
+    assert_store_operational(tenant)
+    hours = resolve_store_hours((tenant or {}).get("storeHours"))
+    if not hours["isOpen"]:
+        message = hours.get("message") or "The store is currently closed."
+        raise HTTPException(status_code=409, detail=message)
+
+
 def calculate_checkout(
     tenant_id: str,
     user_id: str,
@@ -404,8 +423,11 @@ def calculate_checkout(
     require_address: bool = False,
     delivery_method: str = "standard",
     payment_method: str | None = None,
+    enforce_store_availability: bool = False,
 ):
     tenant_id = normalize_tenant_id(tenant_id)
+    if enforce_store_availability:
+        _assert_store_open(tenant_id)
     cart_items = _load_cart_items(tenant_id, user_id)
     items, subtotal = _price_cart_items(cart_items, tenant_id)
     discount, coupon_code_response = _apply_coupon(

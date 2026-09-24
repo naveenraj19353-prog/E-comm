@@ -28,11 +28,31 @@ export type AdminCustomer = {
     activity: CustomerActivity;
 };
 
+export type AdminCustomersPage = {
+    data: AdminCustomer[];
+    total: number;
+    page: number;
+    pageSize: number;
+};
+
 export async function getAdminCustomers(
     tenantId: string,
-): Promise<AdminCustomer[]> {
-    const response = await apiClient.get(API_ENDPOINTS.USERS.LIST, {
-        params: { tenantId },
-    });
-    return response.data.data;
+    page = 1,
+    pageSize = 25,
+    search = "",
+): Promise<AdminCustomersPage> {
+    const params: Record<string, string | number> = { tenantId, page, pageSize };
+    const term = search.trim();
+    if (term) {
+        params.search = term;
+    }
+    const response = await apiClient.get(API_ENDPOINTS.USERS.LIST, { params });
+    const body = response.data || {};
+    const data: AdminCustomer[] = body.data || [];
+    return {
+        data,
+        total: typeof body.total === "number" ? body.total : data.length,
+        page: typeof body.page === "number" ? body.page : page,
+        pageSize: typeof body.pageSize === "number" ? body.pageSize : pageSize,
+    };
 }

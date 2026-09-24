@@ -17,7 +17,8 @@ function staffContinueKey(tenantId?: string) {
 export default function StoreClosedOverlay() {
     const queryClient = useQueryClient();
     const { tenant, tenantSlug } = useStorefrontTenant();
-    const { user } = useAuth();
+    const { user: sessionUser, staffUser } = useAuth();
+    const user = staffUser ?? sessionUser;
     const [now, setNow] = useState(() => Date.now());
     const [imageIndex, setImageIndex] = useState(0);
     const [staffContinue, setStaffContinue] = useState(false);

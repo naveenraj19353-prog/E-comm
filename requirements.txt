@@ -13,3 +13,4 @@ pydantic
 razorpay
 requests
 boto3==1.43.89
+sentry-sdk[fastapi]>=2.20

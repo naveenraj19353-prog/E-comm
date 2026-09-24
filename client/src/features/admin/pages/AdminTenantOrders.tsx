@@ -11,12 +11,17 @@ import ProductImage from "../../../components/ProductImage";
 import { useAdminOrders } from "../../orders/hooks/useOrders";
 import { useTenantByTenantId } from "../hooks/useTenants";
 import {
+    ADMIN_ORDERS_PAGE_SIZE,
     formatOrderAmount,
     formatOrderDate,
+    formatOrderRef,
     orderStatusLabel,
 } from "../../orders/api/order.api";
 import type { Order, OrderStatus } from "../../orders/types/order.types";
 import styles from "../styles/AdminTenantOrders.module.css";
+import paymentStyles from "../styles/AdminTenantPayments.module.css";
+
+const PAGE_SIZE = ADMIN_ORDERS_PAGE_SIZE;
 
 const STATUS_FILTERS: Array<{ id: "all" | OrderStatus; label: string }> = [
     { id: "all", label: "All" },
@@ -29,6 +34,8 @@ const STATUS_FILTERS: Array<{ id: "all" | OrderStatus; label: string }> = [
         { id: "return_approved", label: "Return approved" },
         { id: "returned", label: "Returned" },
         { id: "refunded", label: "Refunded" },
+        { id: "partially_returned", label: "Partly returned" },
+        { id: "partially_refunded", label: "Partly refunded" },
 ];
 
 const nextActions: Partial<Record<OrderStatus, Array<{ status: OrderStatus; label: string; primary?: boolean }>>> = {
@@ -51,41 +58,34 @@ export default function AdminTenantOrders() {
     const { tenantId = "" } = useParams();
     const navigate = useNavigate();
     const [filter, setFilter] = useState<"all" | OrderStatus>("all");
+    const [page, setPage] = useState(1);
     const [updatingOrderId, setUpdatingOrderId] = useState<string | null>(null);
     const { data: tenant } = useTenantByTenantId(tenantId);
     const {
-        data: orders = [],
+        data: ordersPage,
         isLoading,
         isError,
+        isFetching,
         updateOrderStatus,
         isUpdatingStatus,
-    } = useAdminOrders(tenantId);
+    } = useAdminOrders(tenantId, { page, pageSize: PAGE_SIZE, status: filter });
 
-    const stats = useMemo(
-        () => ({
-            total: orders.length,
-            processing: orders.filter((order) => order.orderStatus === "processing").length,
-            shipped: orders.filter((order) => order.orderStatus === "shipped").length,
-            delivered: orders.filter((order) => order.orderStatus === "delivered").length,
-        }),
-        [orders],
-    );
+    const filteredOrders = useMemo(() => ordersPage?.orders ?? [], [ordersPage]);
+    const filterCounts = useMemo(() => ordersPage?.statusCounts ?? {}, [ordersPage]);
+    const totalInView = ordersPage?.total ?? 0;
+    const totalPages = Math.max(1, Math.ceil(totalInView / PAGE_SIZE));
 
-    const filterCounts = useMemo(() => {
-        const counts: Record<string, number> = { all: orders.length };
-        for (const order of orders) {
-            const status = order.orderStatus || "confirmed";
-            counts[status] = (counts[status] || 0) + 1;
-        }
-        return counts;
-    }, [orders]);
+    const stats = {
+        total: filterCounts.all ?? 0,
+        processing: filterCounts.processing ?? 0,
+        shipped: filterCounts.shipped ?? 0,
+        delivered: filterCounts.delivered ?? 0,
+    };
 
-    const filteredOrders = useMemo(() => {
-        if (filter === "all") {
-            return orders;
-        }
-        return orders.filter((order) => order.orderStatus === filter);
-    }, [filter, orders]);
+    const changeFilter = (next: "all" | OrderStatus) => {
+        setFilter(next);
+        setPage(1);
+    };
 
     const handleStatusUpdate = async (
         event: React.MouseEvent,
@@ -95,7 +95,7 @@ export default function AdminTenantOrders() {
         event.stopPropagation();
         if (orderStatus === "cancelled") {
             const confirmed = window.confirm(
-                `Cancel order #${order.orderId.slice(-8).toUpperCase()}? Stock will be restored.`,
+                `Cancel order ${formatOrderRef(order)}? Stock will be restored.`,
             );
             if (!confirmed) {
                 return;
@@ -104,6 +104,11 @@ export default function AdminTenantOrders() {
         setUpdatingOrderId(order.orderId);
         try {
             await updateOrderStatus({ orderId: order.orderId, orderStatus });
+            // The order just left this filtered view; if it was the only one
+            // on this page, step back instead of showing an empty page.
+            if (filter !== "all" && filteredOrders.length === 1 && page > 1) {
+                setPage(page - 1);
+            }
         } finally {
             setUpdatingOrderId(null);
         }
@@ -184,7 +189,7 @@ export default function AdminTenantOrders() {
                             key={item.id}
                             type="button"
                             className={`${styles.filterButton} ${filter === item.id ? styles.filterActive : ""}`}
-                            onClick={() => setFilter(item.id)}
+                            onClick={() => changeFilter(item.id)}
                         >
                             {item.label}
                             <span className={styles.filterCount}>
@@ -194,7 +199,7 @@ export default function AdminTenantOrders() {
                     ))}
                 </div>
                 <span className={styles.resultCount}>
-                    {filteredOrders.length} order{filteredOrders.length === 1 ? "" : "s"}
+                    {totalInView} order{totalInView === 1 ? "" : "s"}
                 </span>
             </div>
 
@@ -234,7 +239,7 @@ export default function AdminTenantOrders() {
                                     >
                                         <td className={styles.cellOrder}>
                                             <strong className={styles.orderId}>
-                                                #{order.orderId.slice(-8).toUpperCase()}
+                                                {formatOrderRef(order)}
                                             </strong>
                                             <span>{formatOrderDate(order.createdAt)}</span>
                                         </td>
@@ -339,6 +344,28 @@ export default function AdminTenantOrders() {
                             })}
                         </tbody>
                     </table>
+                    <div className={paymentStyles.pagination}>
+                        <span>
+                            Page {ordersPage?.page ?? page} of {totalPages}
+                            {isFetching ? " · Loading..." : ""}
+                        </span>
+                        <button
+                            type="button"
+                            className={paymentStyles.pageButton}
+                            disabled={page <= 1}
+                            onClick={() => setPage((current) => Math.max(1, current - 1))}
+                        >
+                            Previous
+                        </button>
+                        <button
+                            type="button"
+                            className={paymentStyles.pageButton}
+                            disabled={page >= totalPages}
+                            onClick={() => setPage((current) => current + 1)}
+                        >
+                            Next
+                        </button>
+                    </div>
                 </div>
             )}
         </div>

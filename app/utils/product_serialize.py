@@ -22,20 +22,21 @@ def sanitize_image_url(url: str | None) -> str:
 
 def _resolve_image_for_response(value: str) -> str:
     """
-    Convert stored S3 object keys to temporary presigned URLs.
+    Convert stored S3 object keys to response URLs: stable CDN URLs when
+    CDN_BASE_URL is set, otherwise (reused) presigned S3 URLs.
     Leave legacy http(s)/data URLs unchanged so existing catalog data still loads.
     """
     cleaned = sanitize_image_url(value)
     if not cleaned:
         return ""
 
-    from app.services.s3_service import generate_presigned_url, is_s3_object_key
+    from app.services.s3_service import is_s3_object_key, public_image_url
 
     if not is_s3_object_key(cleaned):
         return cleaned
 
     try:
-        return generate_presigned_url(cleaned)
+        return public_image_url(cleaned)
     except RuntimeError:
         return ""
 

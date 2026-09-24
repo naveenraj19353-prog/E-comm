@@ -19,3 +19,9 @@ class VerifyPayment(BaseModel):
     razorpayPaymentId: str = Field(..., min_length=1)
     razorpaySignature: str = Field(..., min_length=1)
     couponCode: Optional[str] = None
+
+
+class RefundPaymentRequest(BaseModel):
+    # Omit (or send null) for a full refund; otherwise a partial refund of
+    # this many rupees, which must not exceed what's left to refund.
+    amount: Optional[float] = Field(default=None, gt=0)

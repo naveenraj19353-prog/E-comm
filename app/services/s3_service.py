@@ -1,8 +1,12 @@
 from __future__ import annotations
 
+from collections import OrderedDict
 from pathlib import Path
+from urllib.parse import quote
 import logging
 import re
+import threading
+import time
 import uuid
 
 import boto3
@@ -11,6 +15,7 @@ from botocore.exceptions import BotoCoreError, ClientError, NoCredentialsError
 from app.config import (
     AWS_ACCESS_KEY_ID,
     AWS_SECRET_ACCESS_KEY,
+    CDN_BASE_URL,
     S3_BUCKET,
     S3_PRESIGNED_URL_EXPIRES,
     S3_REGION,
@@ -52,7 +57,11 @@ _S3_KEY_PATTERN = re.compile(
 )
 
 
-def _s3_client():
+_client = None
+_client_lock = threading.Lock()
+
+
+def _build_s3_client():
     if not S3_BUCKET or not S3_REGION:
         raise RuntimeError(
             "S3 is not configured. Set S3_BUCKET and S3_REGION in .env."
@@ -74,6 +83,19 @@ def _s3_client():
         )
 
     return boto3.client("s3", **kwargs)
+
+
+def _s3_client():
+    """One shared client per process (boto3 clients are thread-safe and
+    expensive to build; building one per image URL was a major cost)."""
+    global _client
+    client = _client
+    if client is not None:
+        return client
+    with _client_lock:
+        if _client is None:
+            _client = _build_s3_client()
+        return _client
 
 
 def _credentials_error(error: Exception) -> RuntimeError:
@@ -215,21 +237,58 @@ def upload_image(
 
     return {
         "key": key,
-        "url": generate_presigned_url(key),
+        "url": public_image_url(key),
     }
 
 
-def generate_presigned_url(
-    s3_key: str,
-    expiration: int | None = None,
-) -> str:
-    key = (s3_key or "").strip()
-    if not key:
-        return ""
+# ---------------------------------------------------------------------------
+# Image URLs for responses
+#
+# CDN mode (CDN_BASE_URL set): stable {CDN_BASE_URL}/tenants/... URLs that
+# browsers and the CDN can cache indefinitely (keys are immutable uuids).
+#
+# Presigned mode (fallback): each key's presigned URL is reused until only
+# half of its lifetime is left, so the same image keeps the same URL for a
+# while (browser-cacheable) instead of getting a new signature per request.
+# Every URL handed out therefore stays valid for at least
+# presigned_url_min_lifetime() seconds; response caches must be shorter.
+# ---------------------------------------------------------------------------
+_PRESIGNED_CACHE_MAX = 20000
+_presigned_cache: OrderedDict[str, tuple[str, float]] = OrderedDict()
+_presigned_lock = threading.Lock()
 
-    expires_in = expiration or S3_PRESIGNED_URL_EXPIRES
+
+def presigned_url_min_lifetime() -> int:
+    """Seconds a presigned URL returned by the cache is still valid, at least."""
+    return max(S3_PRESIGNED_URL_EXPIRES // 2, 1)
+
+
+def image_url_min_lifetime() -> int | None:
+    """Minimum remaining validity of URLs from public_image_url (None = never expire)."""
+    if CDN_BASE_URL:
+        return None
+    return presigned_url_min_lifetime()
+
+
+def _credential_expiry(client) -> float | None:
+    """Presigned URLs die with temporary (IAM role) credentials; find when."""
     try:
-        return _s3_client().generate_presigned_url(
+        credentials = getattr(
+            getattr(client, "_request_signer", None), "_credentials", None
+        )
+        expiry = getattr(credentials, "_expiry_time", None)
+        if expiry is None:
+            return None
+        return float(expiry.timestamp())
+    except Exception:
+        return None
+
+
+def _sign_url(key: str, expires_in: int) -> tuple[str, float]:
+    client = _s3_client()
+    now = time.time()
+    try:
+        url = client.generate_presigned_url(
             "get_object",
             Params={
                 "Bucket": S3_BUCKET,
@@ -242,6 +301,60 @@ def generate_presigned_url(
     except (ClientError, BotoCoreError) as error:
         logger.exception("Failed to generate presigned URL for %s", key)
         raise RuntimeError("Failed to generate image URL.") from error
+    expires_at = now + expires_in
+    credential_expiry = _credential_expiry(client)
+    if credential_expiry is not None:
+        expires_at = min(expires_at, credential_expiry)
+    return url, expires_at
+
+
+def generate_presigned_url(
+    s3_key: str,
+    expiration: int | None = None,
+) -> str:
+    key = (s3_key or "").strip()
+    if not key:
+        return ""
+
+    if expiration and expiration != S3_PRESIGNED_URL_EXPIRES:
+        # Explicit custom lifetime: always a fresh signature.
+        return _sign_url(key, expiration)[0]
+
+    min_remaining = presigned_url_min_lifetime()
+    now = time.time()
+    with _presigned_lock:
+        cached = _presigned_cache.get(key)
+        if cached is not None and cached[1] - now >= min_remaining:
+            _presigned_cache.move_to_end(key)
+            return cached[0]
+
+    url, expires_at = _sign_url(key, S3_PRESIGNED_URL_EXPIRES)
+    if expires_at - now >= min_remaining:
+        with _presigned_lock:
+            _presigned_cache[key] = (url, expires_at)
+            _presigned_cache.move_to_end(key)
+            while len(_presigned_cache) > _PRESIGNED_CACHE_MAX:
+                _presigned_cache.popitem(last=False)
+    return url
+
+
+def cdn_url(s3_key: str) -> str:
+    return f"{CDN_BASE_URL}/{quote(s3_key, safe='/')}"
+
+
+def public_image_url(s3_key: str) -> str:
+    """URL for an image key in API responses: CDN if configured, else presigned."""
+    key = (s3_key or "").strip()
+    if not key:
+        return ""
+    if CDN_BASE_URL and is_s3_object_key(key):
+        return cdn_url(key)
+    return generate_presigned_url(key)
+
+
+def _forget_presigned_url(key: str) -> None:
+    with _presigned_lock:
+        _presigned_cache.pop(key, None)
 
 
 def get_object_bytes(s3_key: str) -> tuple[bytes, str]:
@@ -271,6 +384,7 @@ def delete_image(s3_key: str) -> None:
     if not key:
         return
 
+    _forget_presigned_url(key)
     try:
         _s3_client().delete_object(
             Bucket=S3_BUCKET,

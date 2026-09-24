@@ -2,13 +2,17 @@
 
 from __future__ import annotations
 
+import hmac
 import logging
 from datetime import datetime, timezone
 from typing import Annotated
 
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, Request
 from fastapi.responses import Response
 from pymongo.errors import PyMongoError
+from starlette.concurrency import run_in_threadpool
+
+from app.config import DELHIVERY_WEBHOOK_TOKEN
 
 from app.database.mongo import (
     addresses,
@@ -38,6 +42,7 @@ from app.services.shipping_context import (
     get_active_shipping_context,
 )
 from app.services.shipping_partner_config import partner_display_name
+from app.services import shipment_sync
 from app.services.whatsapp_notification_service import send_shipment_created
 from app.utils.auth_dependencies import admin_tenant_id, require_permission
 from app.utils.secret_crypto import encrypt_secret, mask_secret, decrypt_secret
@@ -646,6 +651,7 @@ def create_shipment(
         "trackingNumber": result["waybill"],
         "trackingUrl": result["trackingUrl"],
         "trackingStatus": None,
+        "weightGrams": weight,
         "createdAt": now,
         "updatedAt": now,
     }
@@ -710,6 +716,7 @@ def create_shipment(
 @router.get("/track/{awb}")
 def track_awb(
     awb: str,
+    background_tasks: BackgroundTasks,
     current_user: Annotated[dict, Depends(require_permission("shipping"))],
     tenant_id: Annotated[str | None, Query(alias="tenantId")] = None,
 ):
@@ -728,16 +735,114 @@ def track_awb(
     except DelhiveryError as error:
         raise _provider_error(error) from error
     if owned:
-        shipments.update_one(
-            {"_id": owned["_id"]},
-            {
-                "$set": {
-                    "trackingStatus": data.get("status"),
-                    "updatedAt": _now(),
-                }
-            },
-        )
+        # Same forward-only order mapping as the background sync.
+        try:
+            data["sync"] = shipment_sync.apply_tracking_update(
+                owned, data, background_tasks=background_tasks, source="admin-track"
+            )
+        except Exception:
+            logger.exception("Failed to apply tracking for AWB %s", awb)
+        try:
+            # A newly closed shipment already had its charge synced above;
+            # this retries it for shipments that closed earlier.
+            if owned.get("syncDone"):
+                from app.services.ledger_service import sync_delivery_charge_for_order
+
+                sync_delivery_charge_for_order(owned["orderId"], scoped)
+        except Exception:
+            # Delhivery may not have finalized a charge yet — never let this
+            # block a tracking refresh.
+            logger.exception(
+                "Failed to sync delivery charge for order %s", owned.get("orderId")
+            )
     return {"success": True, "data": data}
+
+
+@router.post("/orders/{order_id}/sync")
+def sync_order_shipment_now(
+    order_id: str,
+    background_tasks: BackgroundTasks,
+    current_user: Annotated[dict, Depends(require_permission("shipping"))],
+    tenant_id: Annotated[str | None, Query(alias="tenantId")] = None,
+):
+    """Pull Delhivery tracking for one order now and apply it to the order."""
+    scoped = admin_tenant_id(current_user, tenant_id)
+    if not ObjectId.is_valid(order_id):
+        raise HTTPException(status_code=400, detail="Invalid order id.")
+    shipment = shipments.find_one(
+        {"tenantId": scoped, "orderId": str(ObjectId(order_id)), "provider": PROVIDER}
+    )
+    if not shipment or not shipment.get("awb"):
+        raise HTTPException(status_code=404, detail="No Delhivery shipment for this order.")
+    try:
+        summary = shipment_sync.sync_shipment(
+            shipment, background_tasks=background_tasks, source="admin"
+        )
+    except DelhiveryError as error:
+        raise _provider_error(error) from error
+    order = orders.find_one(
+        {"_id": ObjectId(order_id), "tenantId": scoped},
+        {"orderStatus": 1, "paymentStatus": 1, "courier": 1},
+    ) or {}
+    courier = order.get("courier") if isinstance(order.get("courier"), dict) else {}
+    return {
+        "success": True,
+        "data": {
+            "awb": shipment.get("awb"),
+            **summary,
+            "orderStatus": order.get("orderStatus"),
+            "changedTo": summary.get("orderStatus"),
+            "paymentStatus": order.get("paymentStatus"),
+            "courierException": courier.get("exception"),
+        },
+    }
+
+
+def _webhook_token(request: Request) -> str:
+    auth = str(request.headers.get("authorization") or "").strip()
+    for prefix in ("bearer ", "token "):
+        if auth.lower().startswith(prefix):
+            return auth[len(prefix):].strip()
+    return str(
+        request.headers.get("x-webhook-token")
+        or request.query_params.get("token")
+        or auth
+        or ""
+    ).strip()
+
+
+@router.post("/webhook")
+async def delhivery_status_webhook(request: Request, background_tasks: BackgroundTasks):
+    """Delhivery scan push ("Tracking via PUSH API"). Delhivery configures the
+    URL and the header per client account on request; send the shared
+    DELHIVERY_WEBHOOK_TOKEN as `Authorization: Bearer <token>` (or
+    `X-Webhook-Token`, or `?token=` if they can only take a URL)."""
+    expected = str(DELHIVERY_WEBHOOK_TOKEN or "")
+    if not expected:
+        raise HTTPException(status_code=503, detail="Webhook is not configured.")
+    provided = _webhook_token(request)
+    if not provided or not hmac.compare_digest(provided.encode(), expected.encode()):
+        raise HTTPException(status_code=401, detail="Invalid webhook token.")
+    try:
+        payload = await request.json()
+    except Exception as error:
+        raise HTTPException(status_code=400, detail="Body must be JSON.") from error
+    results = []
+    for raw_shipment in shipment_sync.extract_push_shipments(payload):
+        try:
+            result = await run_in_threadpool(
+                shipment_sync.apply_push_update,
+                raw_shipment,
+                background_tasks=background_tasks,
+            )
+        except Exception:
+            logger.exception("[DELHIVERY] webhook scan failed")
+            result = {"result": "error"}
+        results.append(
+            {key: result.get(key) for key in ("awb", "result", "outcome", "orderStatus")}
+        )
+    # Always 200 once authenticated so Delhivery doesn't retry scans we chose to skip.
+    return {"success": True, "processed": len(results), "results": results}
 
 
 def _packing_slip_fallback(order: dict | None, waybill: str) -> dict:

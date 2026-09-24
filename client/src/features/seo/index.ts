@@ -13,3 +13,11 @@ export {
   buildOrganizationJsonLd,
   buildWebSiteJsonLd,
 } from "./jsonLd";
+export {
+  readStoreAnalytics,
+  normalizeGa4Id,
+  normalizeMetaPixelId,
+  GA4_ID_PATTERN,
+  META_PIXEL_ID_PATTERN,
+} from "./storeAnalytics";
+export type { StoreAnalyticsIds } from "./storeAnalytics";

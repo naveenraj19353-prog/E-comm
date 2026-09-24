@@ -9,6 +9,11 @@ import TenantStoreHoursField from "../components/TenantStoreHoursField";
 import { emptyStoreHours, payloadStoreHours, type StoreHours } from "../../tenant/storeHours";
 import { DISPLAY_CURRENCIES } from "../../../utils/currency";
 import styles from "../styles/EditTenant.module.css";
+import {
+    GA4_ID_PATTERN,
+    META_PIXEL_ID_PATTERN,
+    readStoreAnalytics,
+} from "../../seo/storeAnalytics";
 import type { SubmitEvent } from "react";
 import {
     BUSINESS_TYPE_OPTIONS,
@@ -43,6 +48,7 @@ interface EditTenantFormProps {
     tenant: NonNullable<ReturnType<typeof useTenantByTenantId>["data"]>;
 }
 function EditTenantForm({ tenant }: EditTenantFormProps) {
+    const { user } = useAuth();
     const navigate = useNavigate();
     const updateTenantMutation = useUpdateTenant();
     const [name, setName] = useState(tenant.name || "");
@@ -65,6 +71,12 @@ function EditTenantForm({ tenant }: EditTenantFormProps) {
     const [storeHours, setStoreHours] = useState<StoreHours>(
         tenant.storeHours || emptyStoreHours(),
     );
+    const [ga4MeasurementId, setGa4MeasurementId] = useState(
+        readStoreAnalytics(tenant).ga4MeasurementId || "",
+    );
+    const [metaPixelId, setMetaPixelId] = useState(
+        readStoreAnalytics(tenant).metaPixelId || "",
+    );
     const [error, setError] = useState("");
     const handleSubmit = async (event: SubmitEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -77,6 +89,20 @@ function EditTenantForm({ tenant }: EditTenantFormProps) {
             setError("Tenant slug is required.");
             return;
         }
+        const cleanGa4 = ga4MeasurementId.trim().toUpperCase();
+        const cleanPixel = metaPixelId.trim();
+        if (cleanGa4 && !GA4_ID_PATTERN.test(cleanGa4)) {
+            setError("GA4 measurement ID must look like G-XXXXXXXXXX.");
+            return;
+        }
+        if (cleanPixel && !META_PIXEL_ID_PATTERN.test(cleanPixel)) {
+            setError("Meta Pixel ID must be the numeric ID from Events Manager.");
+            return;
+        }
+        // Empty strings clear an id on the server.
+        const analyticsPayload = {
+            analytics: { ga4MeasurementId: cleanGa4, metaPixelId: cleanPixel },
+        };
         try {
             await updateTenantMutation.mutateAsync({
                 id: tenant._id,
@@ -91,6 +117,7 @@ function EditTenantForm({ tenant }: EditTenantFormProps) {
                     inrPerUnit: Number(inrPerUnit) || undefined,
                     isActive,
                     storeHours: payloadStoreHours(storeHours),
+                    ...analyticsPayload,
                 },
             });
             navigate(`/admin/tenants/${tenant.tenantId}`);
@@ -207,14 +234,53 @@ function EditTenantForm({ tenant }: EditTenantFormProps) {
             </select>
           </div>
           
+          {/* Only the platform can switch a store on or off (the API refuses
+              it from owners, who would lock themselves out). */}
+          {user?.role === "super_admin" && (
           <div className={styles.statusSection}>
             <div>
               <h3>Tenant Status</h3>
-              <p>Inactive tenants cannot be accessed from the storefront.</p>
+              <p>Inactive stores are hidden from shoppers, and their owner, staff and customers can't sign in.</p>
             </div>
             <button type="button" className={`${styles.toggle} ${isActive ? styles.toggleActive : ""}`} onClick={() => setIsActive((value) => !value)} aria-label={isActive ? "Deactivate tenant" : "Activate tenant"}>
               <span />
             </button>
+          </div>
+          )}
+
+          <div className={styles.field}>
+            <label htmlFor="tenant-ga4">Google Analytics 4 measurement ID</label>
+            <input
+              id="tenant-ga4"
+              type="text"
+              value={ga4MeasurementId}
+              onChange={(event) => setGa4MeasurementId(event.target.value)}
+              placeholder="G-XXXXXXXXXX"
+              autoComplete="off"
+              spellCheck={false}
+            />
+            <small>
+              Optional. Loaded on your storefront only. Page views are sent on every page change, so turn off
+              "Page changes based on browser history events" under Enhanced measurement in GA4 to avoid double counting.
+            </small>
+          </div>
+
+          <div className={styles.field}>
+            <label htmlFor="tenant-meta-pixel">Meta Pixel ID</label>
+            <input
+              id="tenant-meta-pixel"
+              type="text"
+              inputMode="numeric"
+              value={metaPixelId}
+              onChange={(event) => setMetaPixelId(event.target.value.replace(/\s+/g, ""))}
+              placeholder="123456789012345"
+              autoComplete="off"
+              spellCheck={false}
+            />
+            <small>
+              Optional. Sends PageView and Purchase events from your storefront. If you sell to visitors in the EU/UK,
+              you may need a cookie-consent banner before enabling tracking.
+            </small>
           </div>
 
           <TenantStoreHoursField

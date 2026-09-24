@@ -52,6 +52,9 @@ def resolve_reset_account(
             "tenant_slug": None,
         }
 
+    if not tenants.find_one({"tenantId": tenant_id, "isActive": True}, {"_id": 1}):
+        return None  # deactivated store: no one resets into it
+
     tenant_admin = tenants.find_one(
         {
             "tenantId": tenant_id,

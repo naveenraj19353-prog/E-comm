@@ -12,6 +12,7 @@ from bson import ObjectId
 from fastapi import BackgroundTasks
 from pymongo.errors import DuplicateKeyError, PyMongoError
 
+from app.observability import alert
 from app.database.mongo import (
     addresses,
     messaging_integrations,
@@ -23,9 +24,10 @@ from app.database.mongo import (
 )
 from app.services.checkout_service import as_object_id, tenant_id_query
 from app.services.periskope_service import PeriskopeError, PeriskopeService
-from app.services.s3_service import generate_presigned_url, is_s3_object_key
+from app.services.s3_service import is_s3_object_key, public_image_url
 from app.services.storefront_url import build_customer_storefront_url
 from app.utils.product_serialize import normalize_product_images
+from app.utils.order_ref import order_ref
 from app.utils.phone_normalization import (
     PhoneNormalizationError,
     mask_phone,
@@ -63,8 +65,7 @@ def _now() -> datetime:
 
 
 def _order_number(order: dict) -> str:
-    raw = str(order.get("orderNumber") or order.get("_id") or "")[-8:].upper()
-    return "".join(character for character in raw if character.isalnum())
+    return order_ref(order)
 
 
 def _clean_text(value: Any, fallback: str, max_length: int = 100) -> str:
@@ -331,7 +332,7 @@ def _public_image_url(order: dict, store: dict) -> str | None:
             continue
         if is_s3_object_key(value):
             try:
-                value = generate_presigned_url(value)
+                value = public_image_url(value)
             except RuntimeError:
                 continue
         parsed = urlparse(value)
@@ -409,6 +410,7 @@ def share_product_with_customer(
     user = users.find_one(
         {
             "_id": user_object_id,
+            "tenantId": tenant_filter,
             "role": "customer",
         }
     )
@@ -416,7 +418,10 @@ def share_product_with_customer(
         raise ProductShareError("Customer account is unavailable.")
 
     address = addresses.find_one(
-        {"userId": {"$in": [user_object_id, str(user_object_id)]}},
+        {
+            "userId": {"$in": [user_object_id, str(user_object_id)]},
+            "tenantId": tenant_filter,
+        },
         sort=[("isDefault", -1), ("createdAt", -1)],
     ) or {}
     raw_phone = user.get("phone") or address.get("phone")
@@ -510,6 +515,7 @@ def share_product_with_customer(
                     }
                 },
             )
+        alert("whatsapp.send_failed", provider="periskope", tenant_id=tenant_id, event_type="product.shared", audience="customer", error=error)
         raise ProductShareError("Unable to send the product on WhatsApp.") from error
 
     message_id = _message_id(response)
@@ -770,6 +776,7 @@ def _deliver_tenant_order_alert(
             tenant_id,
             event_type,
         )
+        alert("whatsapp.send_failed", provider="periskope", tenant_id=tenant_id, event_type=event_type, audience="tenant", error=error)
 
 
 def process_notification(notification_id: str) -> None:
@@ -927,6 +934,7 @@ def process_notification(notification_id: str) -> None:
             notification["orderId"],
             type(error).__name__,
         )
+        alert("whatsapp.send_failed", provider="periskope", tenant_id=tenant_id, event_type=notification["eventType"], audience="customer", order_id=str(notification["orderId"]), notification_id=notification_id, error=error)
     except Exception as error:
         notification_logs.update_one(
             {"_id": log_id},
@@ -945,6 +953,7 @@ def process_notification(notification_id: str) -> None:
             notification["eventType"],
             notification["orderId"],
         )
+        alert("whatsapp.send_failed", provider="periskope", tenant_id=tenant_id, event_type=notification["eventType"], audience="customer", order_id=str(notification["orderId"]), notification_id=notification_id, error=error)
 
 
 def retry_notification(

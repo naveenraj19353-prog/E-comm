@@ -1,40 +1,46 @@
-import { useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { getAdminCustomers } from "../api/customer.api";
+import { useAdminCustomers } from "../hooks/useCustomers";
 import { useTenantByTenantId } from "../hooks/useTenants";
 import { isMenuBusiness } from "../../tenant/businessMode";
 import styles from "../styles/AdminCustomers.module.css";
+import paymentStyles from "../styles/AdminTenantPayments.module.css";
+
+const PAGE_SIZE = 25;
+const SEARCH_DEBOUNCE_MS = 300;
 
 export default function AdminCustomers() {
     const { tenantId = "" } = useParams();
     const navigate = useNavigate();
     const [search, setSearch] = useState("");
+    const [debouncedSearch, setDebouncedSearch] = useState("");
+    const [page, setPage] = useState(1);
     const { data: tenant } = useTenantByTenantId(tenantId);
     const showTableNumber = isMenuBusiness(tenant?.businessType);
-    const customersQuery = useQuery({
-        queryKey: ["admin", "customers", tenantId],
-        queryFn: () => getAdminCustomers(tenantId),
-        enabled: Boolean(tenantId),
-        refetchInterval: 10000,
-    });
 
-    const customers = useMemo(() => {
-        const query = search.trim().toLowerCase();
-        if (!query) {
-            return customersQuery.data || [];
-        }
-        return (customersQuery.data || []).filter((customer) =>
-            [
-                customer.name,
-                customer.email,
-                customer.phone,
-                customer.counterNumber,
-                ...customer.activity.cart.map((item) => item.category),
-                ...customer.activity.wishlist.map((item) => item.category),
-            ].some((value) => String(value || "").toLowerCase().includes(query)),
-        );
-    }, [customersQuery.data, search]);
+    // Search runs on the server (all customers, not just this page).
+    useEffect(() => {
+        const timer = window.setTimeout(() => {
+            setDebouncedSearch(search.trim());
+        }, SEARCH_DEBOUNCE_MS);
+        return () => window.clearTimeout(timer);
+    }, [search]);
+
+    const customersQuery = useAdminCustomers(
+        tenantId,
+        page,
+        PAGE_SIZE,
+        debouncedSearch,
+    );
+    const customers = customersQuery.data?.data || [];
+    const total = customersQuery.data?.total ?? 0;
+    const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+    // Shown with any results, and also past the last page (customers
+    // removed elsewhere) so Previous stays reachable.
+    const showPagination =
+        !customersQuery.isLoading &&
+        !customersQuery.isError &&
+        (customers.length > 0 || page > 1);
 
     return (
         <div className={styles.page}>
@@ -55,7 +61,10 @@ export default function AdminCustomers() {
                     className={styles.search}
                     type="search"
                     value={search}
-                    onChange={(event) => setSearch(event.target.value)}
+                    onChange={(event) => {
+                        setSearch(event.target.value);
+                        setPage(1);
+                    }}
                     placeholder={
                         showTableNumber
                             ? "Search name, mobile, email or table"
@@ -200,6 +209,32 @@ export default function AdminCustomers() {
                     </table>
                 </div>
             )}
+
+            {showPagination ? (
+                <div className={paymentStyles.pagination}>
+                    <span>
+                        Page {customersQuery.data?.page ?? page} of {totalPages}
+                        {" · "}
+                        {total} customer{total === 1 ? "" : "s"}
+                    </span>
+                    <button
+                        type="button"
+                        className={paymentStyles.pageButton}
+                        disabled={page <= 1}
+                        onClick={() => setPage((current) => Math.max(1, current - 1))}
+                    >
+                        Previous
+                    </button>
+                    <button
+                        type="button"
+                        className={paymentStyles.pageButton}
+                        disabled={page >= totalPages}
+                        onClick={() => setPage((current) => current + 1)}
+                    >
+                        Next
+                    </button>
+                </div>
+            ) : null}
         </div>
     );
 }

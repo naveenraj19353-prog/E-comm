@@ -61,6 +61,13 @@ class FakeOrders:
     def update_one(self, query, update):
         self.order.update(update.get("$set") or {})
 
+    def find_one_and_update(self, query, update):
+        before = dict(self.order)
+        for key, value in (update.get("$set") or {}).items():
+            if key.startswith("returnRequest."):
+                self.order.setdefault("returnRequest", {})[key.split(".", 1)[1]] = value
+        return before
+
 
 class ReturnWindowTests(unittest.TestCase):
     def test_allows_delivered_order_within_two_days(self):
@@ -219,7 +226,10 @@ class ReturnFlowTests(unittest.TestCase):
         with (
             patch("app.services.return_service.orders", fake),
             patch("app.services.return_service.razorpay_client") as client,
+            patch("app.services.return_service.ledger_entries") as ledger,
+            patch("app.services.return_service.record_order_refund"),
         ):
+            ledger.find_one.return_value = None
             client.payment.refund = refund
             updated = issue_refund(order_id=str(order["_id"]), tenant_id="store-1")
         refund.assert_called_once_with("pay_test")

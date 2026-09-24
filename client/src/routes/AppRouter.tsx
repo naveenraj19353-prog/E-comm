@@ -4,16 +4,21 @@ import TenantLoader from "../features/tenant/TenantLoader";
 import { getTenantSlugFromHostname } from "../features/tenant/tenantHost";
 import RequireStorefrontAuth from "../features/auth/RequireStorefrontAuth";
 import RequireStoreAdminAuth from "../features/auth/RequireStoreAdminAuth";
+import { startAuthSessionSync } from "../features/auth/sessionSync";
 import AdminLayout from "../features/admin/components/AdminLayout";
 import RequireTenantBusinessType from "../features/admin/components/RequireTenantBusinessType";
 import RequireStorePermission from "../features/admin/components/RequireStorePermission";
 import {
+    AdminBillingOverview,
     AdminDashboard,
     AdminForgotPassword,
+    AdminLedgerOverview,
     AdminOrderDetail,
     AdminResetPassword,
     AdminTenant,
     AdminTenantOrders,
+    AdminTenantPayments,
+    AdminTenantBilling,
     AdminMenuDesk,
     AdminCustomers,
     AdminContactMessages,
@@ -91,7 +96,7 @@ const storefrontChildRoutes = [
             {
                 path: "checkout",
                 element: (
-                    <RequireStorefrontAuth>
+                    <RequireStorefrontAuth allowGuest>
                         <Checkout />
                     </RequireStorefrontAuth>
                 ),
@@ -190,6 +195,14 @@ const adminRoutes = [
                 element: <AdminDashboard />,
             },
             {
+                path: "payouts",
+                element: <AdminLedgerOverview />,
+            },
+            {
+                path: "billing",
+                element: <AdminBillingOverview />,
+            },
+            {
                 path: "tenants",
                 children: [
                     {
@@ -235,6 +248,14 @@ const adminRoutes = [
                     {
                         path: ":tenantId/team",
                         element: <AdminStoreManagers />,
+                    },
+                    {
+                        path: ":tenantId/payments",
+                        element: <AdminTenantPayments />,
+                    },
+                    {
+                        path: ":tenantId/billing",
+                        element: <AdminTenantBilling />,
                     },
                     {
                         path: ":tenantId/products/create",
@@ -380,3 +401,6 @@ export const router = createBrowserRouter([
         element: <NotFound />,
     },
 ]);
+
+// Swap the signed-in session when moving between stores / the admin panel.
+startAuthSessionSync(router);

@@ -72,7 +72,9 @@
 .status_return_requested,
 .status_return_approved,
 .status_returned,
-.status_refunded {
+.status_refunded,
+.status_partially_returned,
+.status_partially_refunded {
   background: color-mix(in srgb, var(--warning) 14%, var(--surface));
   color: var(--warning);
 }
@@ -286,7 +288,9 @@
 .admin .status_return_requested,
 .admin .status_return_approved,
 .admin .status_returned,
-.admin .status_refunded {
+.admin .status_refunded,
+.admin .status_partially_returned,
+.admin .status_partially_refunded {
   background: #fff7ed;
   color: #c2410c;
 }

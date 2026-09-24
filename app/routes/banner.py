@@ -17,6 +17,7 @@ from app.routes.response_metadata import (
     INTERNAL_SERVER_ERROR_RESPONSE,
     NOT_FOUND_RESPONSE,
 )
+from app.services.cache import invalidate_tenant
 from app.utils.auth_dependencies import admin_tenant_id, require_permission
 from app.utils.product_serialize import resolve_banner_images
 
@@ -82,6 +83,7 @@ def create_banner(
         result = banners.insert_one(
             banner_data
         )
+        invalidate_tenant(tenant_id)
         return {
             "success": True,
             "message": "Banner created successfully.",
@@ -312,6 +314,7 @@ def update_banner(
                 status_code=404,
                 detail=BANNER_NOT_FOUND,
             )
+        invalidate_tenant(existing_banner.get("tenantId"))
 
 
         updated_banner = banners.find_one(
@@ -390,6 +393,7 @@ def delete_banner(
                 status_code=404,
                 detail=BANNER_NOT_FOUND,
             )
+        invalidate_tenant(existing_banner.get("tenantId"))
         return {
             "success": True,
             "message": "Banner deleted successfully.",

@@ -5,6 +5,43 @@
       "destination": "https://e-comm-h13q.onrender.com/$1"
     },
     {
+      "source": "/:slug([a-z0-9][a-z0-9-]*)/sitemap.xml",
+      "destination": "https://e-comm-h13q.onrender.com/seo/sitemap.xml?slug=:slug"
+    },
+    {
+      "source": "/:slug([a-z0-9][a-z0-9-]*)/product-details/:productId([a-fA-F0-9]{24})",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": ".*(Googlebot|Google-InspectionTool|Storebot-Google|GoogleOther|AdsBot-Google|bingbot|BingPreview|msnbot|DuckDuckBot|Applebot|YandexBot|YandexMobileBot|YandexImages|Baiduspider|Slurp).*"
+        }
+      ],
+      "destination": "https://e-comm-h13q.onrender.com/seo/render/:slug/product/:productId"
+    },
+    {
+      "source": "/:slug([a-z0-9][a-z0-9-]*)/products",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": ".*(Googlebot|Google-InspectionTool|Storebot-Google|GoogleOther|AdsBot-Google|bingbot|BingPreview|msnbot|DuckDuckBot|Applebot|YandexBot|YandexMobileBot|YandexImages|Baiduspider|Slurp).*"
+        }
+      ],
+      "destination": "https://e-comm-h13q.onrender.com/seo/render/:slug/products"
+    },
+    {
+      "source": "/:slug((?!admin$|api$|app$|create-store$|legal$|welcome-alt$|login$|register$|logout$|images$|assets$|videos$)[a-z0-9][a-z0-9-]*)",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": ".*(Googlebot|Google-InspectionTool|Storebot-Google|GoogleOther|AdsBot-Google|bingbot|BingPreview|msnbot|DuckDuckBot|Applebot|YandexBot|YandexMobileBot|YandexImages|Baiduspider|Slurp).*"
+        }
+      ],
+      "destination": "https://e-comm-h13q.onrender.com/seo/render/:slug"
+    },
+    {
       "source": "/:path*",
       "destination": "/index.html"
     }

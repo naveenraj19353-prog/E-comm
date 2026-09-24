@@ -8,6 +8,7 @@ import { router } from "./routes/AppRouter";
 import ThemeProvider from "./theme/tenants/ThemeProvider";
 import ErrorBoundary from "./components/ErrorBoundary/ErrorBoundary";
 import PageLoader from "./components/PageLoader";
+import { initObservability, rootErrorHandlers } from "./observability";
 import "./styles/globals.css";
 import "./index.css";
 
@@ -22,7 +23,10 @@ const queryClient = new QueryClient({
     },
 });
 
-ReactDOM.createRoot(document.getElementById("root")!).render(<React.StrictMode>
+// Sentry (no-op without VITE_SENTRY_DSN); tags events with the current store.
+initObservability(store);
+
+ReactDOM.createRoot(document.getElementById("root")!, rootErrorHandlers()).render(<React.StrictMode>
     <ErrorBoundary>
       <Provider store={store}>
         <QueryClientProvider client={queryClient}>

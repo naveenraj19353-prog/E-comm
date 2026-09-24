@@ -2,6 +2,7 @@ from copy import deepcopy
 from typing import Any
 
 from app.services.about_content import merge_about_content
+from app.services.cache import cached_storefront
 from app.services.footer_links import normalize_footer_sections
 
 DEFAULT_THEME_COLORS: dict[str, str] = {
@@ -252,7 +253,33 @@ def _resolve_theme_colors(saved_theme: str, saved_colors: dict[str, Any] | None)
 
 
 def build_storefront_layout(tenant: dict[str, Any] | None) -> dict[str, Any]:
+    """Storefront layout for a tenant document, cached per tenant.
+
+    The cache key includes the tenant's ``updatedAt`` so a saved theme/layout
+    shows up at once even on server processes that did not handle the write;
+    tenant writes also invalidate this process's entries explicitly.
+    """
     tenant = tenant or {}
+    tenant_id = str(tenant.get("tenantId") or "").strip()
+    if not tenant_id:
+        return _build_storefront_layout(tenant)
+    updated_at = tenant.get("updatedAt")
+    version = (
+        updated_at.isoformat()
+        if hasattr(updated_at, "isoformat")
+        else str(updated_at or "")
+    )
+    layout = cached_storefront(
+        tenant_id,
+        "layout",
+        (version,),
+        lambda: _build_storefront_layout(tenant),
+    )
+    # Callers may add or change fields; never hand out the shared copy.
+    return deepcopy(layout)
+
+
+def _build_storefront_layout(tenant: dict[str, Any]) -> dict[str, Any]:
     saved_theme = tenant.get("theme") or "green"
     saved_colors = tenant.get("themeColors") or {}
     saved_layout = tenant.get("layoutSettings") or {}

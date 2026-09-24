@@ -5,11 +5,19 @@
 [build.environment]
   NODE_VERSION = "20"
 
+# Crawler routing (see netlify/edge-functions/product-og.ts):
+#   robots.txt + sitemaps -> API /seo/* for the requesting host (all agents)
+#   search crawlers       -> API /seo/render/* (indexable HTML)
+#   social preview bots   -> API /og/*        (noindex link previews)
+#   humans                -> SPA
+# Needs site env API_BASE_URL (and TENANT_BASE_DOMAIN if not retailcosmos.com).
 [[edge_functions]]
   function = "product-og"
   path = "/*"
+  excludedPath = ["/assets/*", "/images/*", "/videos/*", "/favicon.png", "/favicon.svg"]
 
-# Keep SPA fallback (also in public/_redirects)
+# Static robots.txt / sitemap.xml in public/ are the fallback when the API is
+# unreachable (the edge function runs first and proxies the dynamic ones).
 [[redirects]]
   from = "/robots.txt"
   to = "/robots.txt"
@@ -22,6 +30,7 @@
   status = 200
   force = true
 
+# Keep SPA fallback (also in public/_redirects)
 [[redirects]]
   from = "/*"
   to = "/index.html"

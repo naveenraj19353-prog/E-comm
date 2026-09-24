@@ -3,12 +3,14 @@ from typing import Annotated
 from urllib.parse import unquote, urlparse
 
 from bson import ObjectId
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
+from pymongo.errors import DuplicateKeyError
 
 from app.database.mongo import products, tenants
 from app.services.store_currency import currency_fields_for_tenant
 from app.services.store_schedule import normalize_store_hours, resolve_store_hours
 from app.services.storefront_layout import build_storefront_layout
+from app.services.cache import invalidate_tenant
 from app.models.tenant import (
     CreateTenant,
     RegisterStore,
@@ -31,7 +33,17 @@ from app.services.store_signup_otp_service import (
     consume_store_signup_otp,
     send_store_signup_otp,
 )
-from app.services.tenant_service import create_tenant_document
+from app.services import rate_limit
+from app.services.billing_service import is_store_operational
+from app.services.store_analytics import public_store_analytics
+from app.services.tenant_service import (
+    NOT_DELETED,
+    TENANT_SECRET_PROJECTION,
+    available_tenant_id,
+    create_tenant_document,
+    soft_delete_tenant,
+    strip_tenant_secrets,
+)
 from app.utils.auth_dependencies import (
     admin_tenant_id,
     require_admin,
@@ -40,6 +52,7 @@ from app.utils.auth_dependencies import (
     require_super_admin,
 )
 from app.utils.category_catalog import _first_product_image
+from app.utils.hash import hash_password
 from app.utils.phone_normalization import (
     PhoneNormalizationError,
     normalize_phone,
@@ -98,10 +111,9 @@ def _normalize_stored_logo(value: object) -> str:
 
 def _serialize_tenant(tenant: dict) -> dict:
     """Public tenant payload: strip secrets and always expose businessType."""
-    payload = dict(tenant)
+    payload = strip_tenant_secrets(tenant)
     if "_id" in payload:
         payload["_id"] = str(payload["_id"])
-    payload.pop("password", None)
     payload["businessType"] = _normalize_business_type(payload.get("businessType"))
     payload["phone"] = str(payload.get("phone") or "").strip()
     payload["email"] = str(payload.get("email") or "").strip()
@@ -115,6 +127,25 @@ def _serialize_tenant(tenant: dict) -> dict:
         if (resolved := _safe_resolve_image(item) or item)
     ]
     payload["storeHours"] = hours
+    return payload
+
+
+# Admin-only fields that `_serialize_tenant` includes but shoppers must never
+# see: what the store pays the platform, and its subscription standing.
+_STOREFRONT_PRIVATE_FIELDS = ("billing", "platformCommissionPercent")
+
+
+def _public_storefront_tenant(tenant: dict) -> dict:
+    """Tenant payload for the public storefront (no auth).
+
+    Shoppers only learn whether the store is currently available — not why
+    it isn't (a trial that ended, an unpaid subscription, etc.).
+    """
+    payload = _serialize_tenant(tenant)
+    for field in _STOREFRONT_PRIVATE_FIELDS:
+        payload.pop(field, None)
+    payload["storeAvailable"] = is_store_operational(tenant)
+    payload["analytics"] = public_store_analytics(tenant)
     return payload
 
 
@@ -212,8 +243,20 @@ def create_tenant(
         500: INTERNAL_SERVER_ERROR_RESPONSE[500],
     },
 )
-def send_store_register_otp(payload: SendStoreSignupOtpRequest):
+def send_store_register_otp(payload: SendStoreSignupOtpRequest, request: Request):
     """WhatsApp a one-time code before public store signup."""
+    rate_limit.hit(
+        "store_otp_ip",
+        rate_limit.client_ip(request),
+        limit=10,
+        window_seconds=rate_limit.HOUR,
+    )
+    rate_limit.hit(
+        "store_otp_email",
+        str(payload.email),
+        limit=5,
+        window_seconds=rate_limit.HOUR,
+    )
     return send_store_signup_otp(str(payload.email), payload.phone)
 
 
@@ -224,14 +267,21 @@ def send_store_register_otp(payload: SendStoreSignupOtpRequest):
         500: INTERNAL_SERVER_ERROR_RESPONSE[500],
     },
 )
-def register_store(payload: RegisterStore):
+def register_store(payload: RegisterStore, request: Request):
     """Public self-serve store creation (no super-admin required)."""
+    rate_limit.hit(
+        "store_register_ip",
+        rate_limit.client_ip(request),
+        limit=20,
+        window_seconds=rate_limit.HOUR,
+    )
     try:
         consume_store_signup_otp(str(payload.email), payload.otp, payload.phone)
         slug = payload.slug.strip().lower()
-        # Self-serve: tenantId matches slug for simple storefront URLs.
+        # Self-serve: tenantId matches slug for simple storefront URLs, unless a
+        # deleted store already used that tenantId.
         response_data = create_tenant_document(
-            tenant_id=slug,
+            tenant_id=available_tenant_id(slug),
             name=payload.name,
             slug=slug,
             email=str(payload.email),
@@ -284,7 +334,7 @@ def get_tenants(
 
 
     if current_user.get("role") == "super_admin":
-        query = {}
+        query = dict(NOT_DELETED)
 
 
     else:
@@ -366,7 +416,7 @@ def get_tenant_by_slug(
             status_code=404,
             detail=TENANT_NOT_FOUND,
         )
-    serialized = _serialize_tenant(tenant)
+    serialized = _public_storefront_tenant(tenant)
     storefront_layout = build_storefront_layout(tenant)
     return {
         "success": True,
@@ -394,8 +444,8 @@ def get_storefront_layout_by_slug(
             status_code=404,
             detail=TENANT_NOT_FOUND,
         )
+    tenant = strip_tenant_secrets(tenant)
     tenant["_id"] = str(tenant["_id"])
-    tenant.pop("password", None)
     layout = build_storefront_layout(tenant)
     return {
         "success": True,
@@ -417,7 +467,7 @@ def get_public_tenants():
         cursor = tenants.find(
             {"isActive": True},
             {
-                "password": 0,
+                **TENANT_SECRET_PROJECTION,
                 "email": 0,
                 "adminEmail": 0,
             },
@@ -425,6 +475,8 @@ def get_public_tenants():
 
         data = []
         for tenant in cursor:
+            if not is_store_operational(tenant):
+                continue
             try:
                 data.append(_public_tenant_preview(tenant))
             except Exception as preview_error:
@@ -480,7 +532,8 @@ def get_tenant_by_id(
             detail=INVALID_TENANT_ID,
         )
     tenant = tenants.find_one({
-        "_id": object_id
+        "_id": object_id,
+        **NOT_DELETED,
     })
     if not tenant:
         raise HTTPException(
@@ -522,7 +575,7 @@ def update_tenant(
             status_code=400,
             detail=INVALID_TENANT_ID,
         )
-    existing_tenant = tenants.find_one({"_id": object_id})
+    existing_tenant = tenants.find_one({"_id": object_id, **NOT_DELETED})
     if not existing_tenant:
         raise HTTPException(
             status_code=404,
@@ -539,6 +592,17 @@ def update_tenant(
     update_data = tenant.model_dump(
         exclude_unset=True
     )
+    if "isActive" in update_data and current_user.get("role") != "super_admin":
+        # Only the platform can switch a store on or off. An owner who
+        # deactivated their own store would be locked out of it (their
+        # login stops working), so the edit form's unchanged value is
+        # ignored and an actual change is refused.
+        if bool(update_data["isActive"]) != bool(existing_tenant.get("isActive", True)):
+            raise HTTPException(
+                status_code=403,
+                detail="Only the platform admin can activate or deactivate a store.",
+            )
+        update_data.pop("isActive")
     if not update_data:
         raise HTTPException(
             status_code=400,
@@ -573,6 +637,16 @@ def update_tenant(
         ]
         hours["images"] = [item for item in hours["images"] if item]
         update_data["storeHours"] = hours
+    if "analytics" in update_data:
+        # Merge so a partial update keeps the other id; values were
+        # already validated by the StoreAnalytics model.
+        current_analytics = existing_tenant.get("analytics")
+        current_analytics = current_analytics if isinstance(current_analytics, dict) else {}
+        update_data["analytics"] = {
+            "ga4MeasurementId": current_analytics.get("ga4MeasurementId"),
+            "metaPixelId": current_analytics.get("metaPixelId"),
+            **(update_data.get("analytics") or {}),
+        }
     if "displayCurrency" in update_data or "inrPerUnit" in update_data:
         merged = {**existing_tenant, **update_data}
         update_data.update(currency_fields_for_tenant(merged))
@@ -620,19 +694,26 @@ def update_tenant(
     update_data["updatedAt"] = datetime.now(timezone.utc)
 
 
-    result = tenants.update_one(
-        {
-            "_id": object_id
-        },
-        {
-            "$set": update_data
-        },
-    )
+    try:
+        result = tenants.update_one(
+            {
+                "_id": object_id
+            },
+            {
+                "$set": update_data
+            },
+        )
+    except DuplicateKeyError:
+        raise HTTPException(
+            status_code=400,
+            detail="That store URL or email is already taken.",
+        )
     if result.matched_count == 0:
         raise HTTPException(
             status_code=404,
             detail=TENANT_NOT_FOUND,
         )
+    invalidate_tenant(existing_tenant.get("tenantId"))
     updated = tenants.find_one({
         "_id": object_id
     })
@@ -664,7 +745,7 @@ def update_tenant_theme(
             detail=INVALID_TENANT_ID,
         )
 
-    tenant = tenants.find_one({"_id": object_id})
+    tenant = tenants.find_one({"_id": object_id, **NOT_DELETED})
     if not tenant:
         raise HTTPException(
             status_code=404,
@@ -699,6 +780,7 @@ def update_tenant_theme(
             detail=TENANT_NOT_FOUND,
         )
 
+    invalidate_tenant(tenant.get("tenantId"))
     updated = tenants.find_one({"_id": object_id})
     return {
         "success": True,
@@ -725,10 +807,7 @@ def delete_tenant(
             status_code=400,
             detail=INVALID_TENANT_ID,
         )
-    result = tenants.delete_one({
-        "_id": object_id
-    })
-    if result.deleted_count == 0:
+    if not soft_delete_tenant(object_id):
         raise HTTPException(
             status_code=404,
             detail=TENANT_NOT_FOUND,

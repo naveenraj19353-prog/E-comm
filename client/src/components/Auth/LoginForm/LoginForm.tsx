@@ -5,6 +5,8 @@ import styles from "../AuthModal/AuthModal.module.css";
 import { useAuth } from "../../../features/auth/hooks/useAuth";
 import { useStorefrontTenant } from "../../../features/tenant/useTenant";
 import axios from "axios";
+import PhoneOtpForm from "../../../features/auth/components/PhoneOtpForm";
+import otpStyles from "../../../features/auth/components/PhoneOtpForm.module.css";
 interface LoginFormProps {
     tenantId: string;
     tenantSlug?: string;
@@ -21,6 +23,7 @@ const LoginForm = ({ tenantId, tenantSlug, onSuccess, onSwitchToRegister, }: Log
     const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
+    const [usePhone, setUsePhone] = useState(false);
     const handleSubmit = async (event: React.FormEvent) => {
         event.preventDefault();
         setError("");
@@ -60,6 +63,9 @@ const LoginForm = ({ tenantId, tenantSlug, onSuccess, onSwitchToRegister, }: Log
             setLoading(false);
         }
     };
+    if (usePhone) {
+        return (<PhoneOtpForm tenantId={tenantId} onSuccess={onSuccess} onUseEmail={() => setUsePhone(false)}/>);
+    }
     return (<>
       <div className={styles.header}>
         <div className={styles.logo}>S</div>
@@ -100,6 +106,10 @@ const LoginForm = ({ tenantId, tenantSlug, onSuccess, onSwitchToRegister, }: Log
           {loading ? "Logging in..." : "Login"}
         </button>
       </form>
+      <div className={otpStyles.divider}>or</div>
+      <button type="button" className={otpStyles.secondaryButton} onClick={() => setUsePhone(true)}>
+        Continue with phone
+      </button>
       <div className={styles.switchText}>
         <span>Don't have an account?</span>
         <button type="button" onClick={onSwitchToRegister}>

@@ -111,3 +111,40 @@ class UpdateUser(BaseModel):
     phone: Optional[str] = None
     email: Optional[EmailStr] = None
     isActive: Optional[bool] = None
+
+
+class CustomerOtpSendRequest(BaseModel):
+    """Storefront phone sign-in: send a WhatsApp code for this store."""
+    tenantId: str = Field(
+        ...,
+        min_length=1,
+        max_length=100,
+    )
+    phone: str = Field(
+        ...,
+        min_length=6,
+        max_length=32,
+    )
+
+
+class CustomerOtpVerifyRequest(BaseModel):
+    """Check the WhatsApp code; signs the customer in (creating them if new)."""
+    tenantId: str = Field(
+        ...,
+        min_length=1,
+        max_length=100,
+    )
+    phone: str = Field(
+        ...,
+        min_length=6,
+        max_length=32,
+    )
+    otp: str = Field(
+        ...,
+        min_length=4,
+        max_length=12,
+    )
+    name: Optional[str] = Field(
+        default=None,
+        max_length=100,
+    )
