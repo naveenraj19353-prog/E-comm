@@ -20,6 +20,13 @@ class FakeOrders:
         self.order.update(update.get("$set", {}))
 
 
+class FakeShipments:
+    """No shipment on file for any of these orders (none carries a waybill)."""
+
+    def find_one(self, query):
+        return None
+
+
 class CodPaidOnDeliveryTests(unittest.TestCase):
     def _order(self, **overrides):
         order = {
@@ -43,6 +50,8 @@ class CodPaidOnDeliveryTests(unittest.TestCase):
     def _run(self, order):
         fake_orders = FakeOrders(order)
         with patch.object(orders_route, "orders", fake_orders), patch.object(
+            orders_route, "shipments", FakeShipments()
+        ), patch.object(
             orders_route, "send_order_status_update"
         ), patch.object(orders_route, "cancel_and_refund_order"):
             orders_route.update_order_status(
