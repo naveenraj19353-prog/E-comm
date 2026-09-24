@@ -18,6 +18,7 @@ from app.services.checkout_service import (
     calculate_checkout,
 )
 from app.services.ledger_service import record_order_ledger_entry, record_order_refund
+from app.observability.alerts import alert
 from app.utils.razorpay_client import client
 
 
@@ -125,13 +126,29 @@ def cancel_and_refund_order(order: dict, now: datetime) -> None:
             updates["paymentStatus"] = "refunded"
             try:
                 record_order_refund(order_id)
-            except Exception:
+            except Exception as error:
                 logger.exception(
                     "Failed to reverse ledger entry for cancelled order %s", order_id
                 )
-        except Exception:
+                alert(
+                    "ledger.write_failed",
+                    operation="cancel_refund",
+                    tenant_id=order.get("tenantId"),
+                    order_id=str(order_id),
+                    error=error,
+                )
+        except Exception as error:
             logger.exception("Failed to refund cancelled order %s", order_id)
             updates["refundStatus"] = "failed"
+            alert(
+                "razorpay.refund_failed",
+                provider="razorpay",
+                operation="cancel_refund",
+                tenant_id=order.get("tenantId"),
+                order_id=str(order_id),
+                payment_id=razorpay_payment_id,
+                error=error,
+            )
 
     courier = order.get("courier") if isinstance(order.get("courier"), dict) else None
     waybill = (courier or {}).get("waybill")
@@ -152,11 +169,22 @@ def cancel_and_refund_order(order: dict, now: datetime) -> None:
         orders.update_one({"_id": order_id}, {"$set": updates})
 
 
-def _refund_payment(payment_id: str) -> None:
+def _refund_payment(payment_id: str, *, tenant_id: str | None = None) -> bool:
+    """Refund a captured payment in full. Returns whether Razorpay accepted it."""
     try:
         client.payment.refund(payment_id)
-    except Exception:
+        return True
+    except Exception as error:
         logger.exception("Payment refund error (paymentId=%s)", payment_id)
+        alert(
+            "razorpay.refund_failed",
+            provider="razorpay",
+            operation="auto_refund",
+            tenant_id=tenant_id,
+            payment_id=payment_id,
+            error=error,
+        )
+        return False
 
 
 def _build_order_items(checkout_data: dict) -> list[dict]:
@@ -409,25 +437,34 @@ def _apply_order_side_effects(
     carts.delete_many(cart_owner_query(tenant_id, str(user_id)))
 
 
-def _mark_intent_refunded(claimed: dict, now: datetime) -> None:
+def _mark_intent_refunded(claimed: dict, now: datetime, *, refunded: bool = True) -> None:
+    # "refund_failed" is never re-claimed (only pending/processing are), so a
+    # failed refund stays visible for support instead of posing as refunded.
     payment_intents.update_one(
         {"_id": claimed["_id"]},
         {
             "$set": {
-                "status": "refunded",
+                "status": "refunded" if refunded else "refund_failed",
                 "updatedAt": now,
             }
         },
     )
 
 
+REFUND_PENDING_NOTE = (
+    "We couldn't refund it automatically; the store has been alerted and "
+    "will refund you."
+)
+
+
 def _refund_claimed_payment(
     claimed: dict,
     razorpay_payment_id: str,
     now: datetime | None = None,
-) -> None:
-    _refund_payment(razorpay_payment_id)
-    _mark_intent_refunded(claimed, now or datetime.now(timezone.utc))
+) -> bool:
+    refunded = _refund_payment(razorpay_payment_id, tenant_id=claimed.get("tenantId"))
+    _mark_intent_refunded(claimed, now or datetime.now(timezone.utc), refunded=refunded)
+    return refunded
 
 
 def _validate_payment_intent(
@@ -452,6 +489,11 @@ def _validate_payment_intent(
                 "went out of stock."
             ),
         )
+    if intent.get("status") == "refund_failed":
+        raise HTTPException(
+            status_code=409,
+            detail=f"This order couldn't be completed. {REFUND_PENDING_NOTE}",
+        )
 
 
 def _prepare_paid_order_items(
@@ -460,13 +502,16 @@ def _prepare_paid_order_items(
     razorpay_payment_id: str,
 ) -> list[dict]:
     if not checkout_data.get("address"):
-        _refund_claimed_payment(
+        refunded = _refund_claimed_payment(
             claimed,
             razorpay_payment_id,
         )
         raise HTTPException(
             status_code=400,
-            detail="A delivery address is required. Payment was refunded.",
+            detail=(
+                "A delivery address is required. "
+                + ("Payment was refunded." if refunded else REFUND_PENDING_NOTE)
+            ),
         )
     try:
         return _build_order_items(checkout_data)
@@ -487,12 +532,12 @@ def _reserve_paid_order_stock(
     if claimed.get("stockReserved"):
         return
     if not _reserve_stock(order_items, now):
-        _refund_claimed_payment(claimed, razorpay_payment_id, now)
+        refunded = _refund_claimed_payment(claimed, razorpay_payment_id, now)
         raise HTTPException(
             status_code=409,
             detail=(
                 "An item went out of stock. "
-                "The payment has been refunded."
+                + ("The payment has been refunded." if refunded else REFUND_PENDING_NOTE)
             ),
         )
     payment_intents.update_one(
@@ -661,11 +706,19 @@ def fulfill_captured_payment(
 
     try:
         record_order_ledger_entry(order_document)
-    except Exception:
+    except Exception as error:
         # Never block order fulfillment on the ledger — the customer must
         # still get their order confirmed even if this bookkeeping fails.
+        # But a missing entry means the store's payout is short, so alert.
         logger.exception(
             "Failed to record ledger entry for order %s", order_document.get("_id")
+        )
+        alert(
+            "ledger.write_failed",
+            operation="record_order",
+            tenant_id=order_document.get("tenantId"),
+            order_id=str(order_document.get("_id")),
+            error=error,
         )
 
     _apply_order_side_effects(

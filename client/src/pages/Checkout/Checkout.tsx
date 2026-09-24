@@ -29,6 +29,11 @@ import { RAZORPAY_KEY_ID } from "../../constants/api";
 import { routes, storefrontNavigate } from "../../routes/routes";
 import { isRetailBusiness } from "../../features/tenant/businessMode";
 import PhoneOtpForm from "../../features/auth/components/PhoneOtpForm";
+import { reportAlert } from "../../observability";
+
+/** HTTP status of a failed API call (axios-style error), for alert tags. */
+const httpStatusOf = (error: unknown): number | undefined =>
+    (error as { response?: { status?: number } })?.response?.status;
 
 const Checkout = () => {
     const navigate = useNavigate();
@@ -223,11 +228,13 @@ const Checkout = () => {
             }
 
             if (!Razorpay) {
+                reportAlert("checkout.razorpay_unavailable", { reason: "sdk_not_loaded" });
                 alert("Razorpay SDK is not loaded.");
                 setIsProcessing(false);
                 return;
             }
             if (!RAZORPAY_KEY_ID) {
+                reportAlert("checkout.razorpay_unavailable", { reason: "key_missing" });
                 alert("Payment is not configured. Please contact support.");
                 setIsProcessing(false);
                 return;
@@ -305,6 +312,11 @@ const Checkout = () => {
                             paymentMethod: "online",
                         });
                     } catch (error) {
+                        // The customer has paid; the webhook should still create
+                        // the order, but this is the first sign that it may not.
+                        reportAlert("checkout.verify_failed", {
+                            http_status: httpStatusOf(error),
+                        });
                         console.error("Payment verification error:", error);
                         alert(
                             error instanceof Error
@@ -336,6 +348,11 @@ const Checkout = () => {
                         response?.error?.description ||
                         response?.error?.reason ||
                         "Payment failed. Please try again.";
+                    reportAlert("checkout.payment_failed", {
+                        code: response?.error?.code,
+                        reason: response?.error?.reason,
+                        payment_method: paymentMethod,
+                    });
                     console.error("Razorpay payment.failed:", response);
                     alert(description);
                     setIsProcessing(false);
@@ -343,6 +360,10 @@ const Checkout = () => {
             );
             razorpay.open();
         } catch (error) {
+            reportAlert("checkout.order_failed", {
+                http_status: httpStatusOf(error),
+                payment_method: paymentMethod,
+            });
             console.error("Place order error:", error);
             alert(
                 error instanceof Error ? error.message : "Unable to process order.",
