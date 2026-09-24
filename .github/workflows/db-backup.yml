@@ -1,0 +1,92 @@
+name: Nightly database backup
+
+# Runs on GitHub's own servers, not yours or Atlas's — no paid Atlas tier
+# needed. A full mongodump of the production database, gzipped, uploaded to
+# the same S3 bucket already used for product images, under a private
+# `db-backups/` prefix that CloudFront's public bucket policy never exposes
+# (that policy only grants access under `tenants/*`).
+#
+# One-time setup: add these as repository secrets (Settings > Secrets and
+# variables > Actions > New repository secret):
+#   MONGO_URI              full connection string, e.g. mongodb+srv://user:pass@cluster.xxxxx.mongodb.net
+#   DATABASE_NAME          e.g. Multi_Tenant_E_Comm
+#   AWS_ACCESS_KEY_ID      same IAM user the app already uses for S3 is fine,
+#   AWS_SECRET_ACCESS_KEY  as long as its policy also allows PutObject on
+#                          arn:aws:s3:::<bucket>/db-backups/* (add that
+#                          statement if it's currently scoped to tenants/* only)
+#   S3_BUCKET              e.g. multi-tenant-ecomm-images-prod
+#   AWS_REGION             e.g. eu-north-1
+#
+# Also set an S3 lifecycle rule on the db-backups/ prefix (bucket > Management
+# > Lifecycle rules) to expire objects after ~30 days, so this doesn't grow
+# storage cost forever. See docs/data-operations.md for restore instructions.
+
+on:
+  schedule:
+    # 02:17 UTC daily — an off-peak, non-round minute (GitHub throttles jobs
+    # that all fire exactly on the hour).
+    - cron: "17 2 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  backup:
+    name: mongodump -> S3
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Install MongoDB Database Tools
+        run: |
+          curl -fsSL -o mongo-tools.tgz \
+            https://fastdl.mongodb.org/tools/db/mongodb-database-tools-ubuntu2204-x86_64-100.10.0.tgz
+          tar -xzf mongo-tools.tgz
+          sudo cp mongodb-database-tools-*/bin/mongodump /usr/local/bin/
+          mongodump --version
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Dump the database
+        env:
+          MONGO_URI: ${{ secrets.MONGO_URI }}
+          DATABASE_NAME: ${{ secrets.DATABASE_NAME }}
+        run: |
+          set -euo pipefail
+          stamp="$(date -u +%Y-%m-%dT%H-%M-%SZ)"
+          echo "STAMP=$stamp" >> "$GITHUB_ENV"
+          mongodump \
+            --uri "$MONGO_URI" \
+            --db "$DATABASE_NAME" \
+            --readPreference secondaryPreferred \
+            --gzip \
+            --archive="backup-$stamp.archive.gz"
+
+      - name: Upload to S3
+        env:
+          S3_BUCKET: ${{ secrets.S3_BUCKET }}
+        run: |
+          set -euo pipefail
+          aws s3 cp "backup-$STAMP.archive.gz" \
+            "s3://$S3_BUCKET/db-backups/backup-$STAMP.archive.gz" \
+            --only-show-errors
+
+      - name: Verify the upload landed and is a sane size
+        env:
+          S3_BUCKET: ${{ secrets.S3_BUCKET }}
+        run: |
+          set -euo pipefail
+          size="$(aws s3api head-object --bucket "$S3_BUCKET" --key "db-backups/backup-$STAMP.archive.gz" --query ContentLength --output text)"
+          echo "Uploaded backup-$STAMP.archive.gz — $size bytes"
+          # A near-empty archive almost always means the dump silently
+          # captured nothing (bad URI, wrong db name) rather than an empty DB.
+          if [ "$size" -lt 10000 ]; then
+            echo "::error::Backup is suspiciously small ($size bytes) — check MONGO_URI / DATABASE_NAME secrets."
+            exit 1
+          fi

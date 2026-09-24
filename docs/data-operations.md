@@ -157,6 +157,17 @@ and Flex has only limited automatic snapshots (check the cluster's *Backup*
 tab). On those tiers, use `mongodump` on a schedule (section 3) until you
 move to M10+.
 
+**On the free/shared tiers, that schedule is already running:**
+`.github/workflows/db-backup.yml` runs `mongodump` nightly on GitHub's
+infrastructure (no cost, no Atlas upgrade needed) and uploads the gzipped
+archive to `s3://<S3_BUCKET>/db-backups/`. It needs six repository secrets
+set once (`MONGO_URI`, `DATABASE_NAME`, `AWS_ACCESS_KEY_ID`,
+`AWS_SECRET_ACCESS_KEY`, `S3_BUCKET`, `AWS_REGION`) — see the comment at the
+top of that file. Set an S3 lifecycle rule on the `db-backups/` prefix to
+expire objects after ~30 days so storage cost doesn't grow forever. To
+restore one, download it (`aws s3 cp s3://<bucket>/db-backups/<file> .`)
+and follow the `mongorestore` steps in section 3 below.
+
 On M10+:
 
 1. **Enable Cloud Backup**: cluster → *Edit Configuration* → *Additional
