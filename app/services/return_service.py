@@ -9,6 +9,7 @@ from bson import ObjectId
 from fastapi import HTTPException
 
 from app.database.mongo import ledger_entries, orders
+from app.observability.alerts import alert
 from app.services.delhivery_service import DelhiveryError, DelhiveryService
 from app.services.ledger_service import record_order_refund, record_partial_refund
 from app.services.order_fulfillment import restore_variant_stock
@@ -588,8 +589,15 @@ def issue_refund(*, order_id: str, tenant_id: str) -> dict:
             record_order_refund(order["_id"])
         else:
             record_partial_refund(order["_id"], refund_amount)
-    except Exception:
+    except Exception as error:
         logger.exception("Failed to reverse ledger entry for order %s", order["_id"])
+        alert(
+            "ledger.write_failed",
+            operation="return_refund",
+            tenant_id=order.get("tenantId"),
+            order_id=str(order["_id"]),
+            error=error,
+        )
     orders.update_one(
         {"_id": order["_id"]},
         {

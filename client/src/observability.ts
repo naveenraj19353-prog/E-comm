@@ -197,10 +197,52 @@ export function initObservability(store?: StoreLike): void {
             for (const [error, info] of queuedReactErrors.splice(0)) {
                 module.captureReactException(error, info);
             }
+            for (const [event, context] of queuedAlerts.splice(0)) {
+                sendAlert(module, event, context);
+            }
         })
         .catch((error: unknown) => {
             console.warn("Sentry could not be loaded.", error);
         });
+}
+
+type AlertContext = Record<string, string | number | boolean | null | undefined>;
+const queuedAlerts: Array<[string, AlertContext]> = [];
+
+function sendAlert(module: SentryModule, event: string, context: AlertContext): void {
+    const safe = scrubData(context);
+    module.withScope((scope) => {
+        scope.setTag("alert", event);
+        for (const [key, value] of Object.entries(safe)) {
+            if (value !== undefined && value !== null && value !== "") {
+                scope.setTag(key, String(value).slice(0, 200));
+            }
+        }
+        scope.setContext("alert", safe);
+        // One Sentry issue per alert type, like the backend's alert().
+        scope.setFingerprint(["alert", event]);
+        module.captureMessage(`alert: ${event}`, "error");
+    });
+}
+
+/**
+ * Report an operational failure the user hit (checkout, payment), tagged
+ * `alert=<event>` so Sentry alert rules can match it exactly. Pass codes and
+ * statuses only — never names, phones or addresses. No-op when Sentry is off.
+ */
+export function reportAlert(event: string, context: AlertContext = {}): void {
+    if (!observabilityEnabled) {
+        return;
+    }
+    try {
+        if (sentry) {
+            sendAlert(sentry, event, context);
+        } else if (queuedAlerts.length < MAX_QUEUED_ERRORS) {
+            queuedAlerts.push([event, context]);
+        }
+    } catch {
+        // Monitoring must never break the page.
+    }
 }
 
 function reportReactError(error: unknown, info: ErrorInfo): void {

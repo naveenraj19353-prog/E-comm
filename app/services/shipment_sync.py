@@ -38,6 +38,8 @@ from pymongo import ReturnDocument
 from pymongo.errors import DuplicateKeyError, PyMongoError
 
 from app.config import SHIPMENT_SYNC_BATCH_SIZE, SHIPMENT_SYNC_MINUTES
+from app.observability import heartbeat
+from app.observability.alerts import alert
 from app.database.mongo import db, orders, shipments
 from app.services.delhivery_service import (
     PROVIDER,
@@ -60,6 +62,8 @@ TRACK_REQUEST_INTERVAL_SECONDS = 0.5
 CHARGE_REQUEST_INTERVAL_SECONDS = 2.0
 # A run gives up the remaining batch after this long; the lease outlives it.
 MAX_RUN_SECONDS = 8 * 60
+# Sentry Cron monitor for "the sync stopped running" (see observability/heartbeat).
+MONITOR_SLUG = "delhivery-shipment-sync"
 LEASE_SECONDS = 10 * 60
 
 SHIPPED_FROM = ("confirmed", "processing")
@@ -468,6 +472,15 @@ def run_sync_once(
         return {"ran": False, "reason": "lease held"}
 
     stats = {"ran": True, "checked": 0, "shipped": 0, "delivered": 0, "exceptions": 0, "errors": 0}
+    # Only the lease holder checks in, so the monitor sees one run per interval
+    # however many processes are up.
+    max_runtime_minutes = MAX_RUN_SECONDS // 60 + 2
+    check_in_id = heartbeat.job_started(
+        MONITOR_SLUG,
+        interval_minutes=minutes,
+        max_runtime_minutes=max_runtime_minutes,
+    )
+    run_ok = False
     client = service or DelhiveryService()
     track_pace = _Pacer(TRACK_REQUEST_INTERVAL_SECONDS, sleep)
     charge_pace = _Pacer(CHARGE_REQUEST_INTERVAL_SECONDS, sleep)
@@ -508,7 +521,17 @@ def run_sync_once(
                 stats["delivered"] += 1
             if summary.get("exception"):
                 stats["exceptions"] += 1
+        # Per-shipment errors don't fail the run; an exception escaping does.
+        run_ok = True
     finally:
+        heartbeat.job_finished(
+            MONITOR_SLUG,
+            check_in_id,
+            ok=run_ok,
+            duration_seconds=time.monotonic() - clock_start,
+            interval_minutes=minutes,
+            max_runtime_minutes=max_runtime_minutes,
+        )
         # Hold the lease until the next run is due, so several processes
         # still produce one run per interval (and a crash frees it later).
         next_run = max(_now(), started + timedelta(minutes=max(minutes, 1)) - timedelta(seconds=30))
@@ -531,8 +554,9 @@ async def _sync_loop(minutes: int, stop_event: threading.Event) -> None:
             await asyncio.to_thread(run_sync_once, interval_minutes=minutes, stop_event=stop_event)
         except asyncio.CancelledError:
             raise
-        except Exception:
+        except Exception as error:
             logger.exception("[SHIPMENT_SYNC] run crashed; will retry next interval")
+            alert("shipment_sync.run_crashed", provider="delhivery", error=error)
         await asyncio.sleep(wake + random.uniform(0, 15))
 
 
