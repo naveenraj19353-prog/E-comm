@@ -45,6 +45,10 @@ from app.services.product_duplicates import (
     duplicate_product_detail,
     find_duplicate_product,
 )
+from app.services.variant_sku import (
+    assign_variant_ids_for_inventory,
+    ensure_unique_variant_ids_for_tenant,
+)
 from app.services.whatsapp_notification_service import (
     ProductShareError,
     share_product_with_customer,
@@ -265,6 +269,43 @@ def validate_inventory(inventory: list) -> None:
         )
 
 
+def _prepare_inventory_for_product_creation(
+    tenant_id: str,
+    product_data: dict,
+    inventory: list,
+) -> list:
+    prepared = assign_variant_ids_for_inventory(
+        product_data,
+        inventory,
+    )
+    ensure_unique_variant_ids_for_tenant(
+        tenant_id,
+        prepared,
+        products_collection=products,
+    )
+    return prepared
+
+
+def _prepare_inventory_for_product_update(
+    tenant_id: str,
+    product_data: dict,
+    inventory: list,
+    existing_product: dict | None,
+) -> list:
+    prepared = assign_variant_ids_for_inventory(
+        product_data,
+        inventory,
+        existing_inventory=(existing_product or {}).get("inventory") or [],
+    )
+    ensure_unique_variant_ids_for_tenant(
+        tenant_id,
+        prepared,
+        products_collection=products,
+        ignore_product_id=str((existing_product or {}).get("_id") or ""),
+    )
+    return prepared
+
+
 def validate_color_images_against_inventory(
     inventory: list,
     images: dict,
@@ -330,6 +371,15 @@ def create_product(
         item.model_dump()
         for item in product.inventory
     ]
+    inventory = _prepare_inventory_for_product_creation(
+        tenant_id,
+        {
+            "brand": product.brand,
+            "categoryName": product.categoryName,
+            "categoryId": product.categoryId,
+        },
+        inventory,
+    )
     validate_inventory(
         inventory
     )
@@ -1273,10 +1323,21 @@ def _validate_product_update_values(update_data: dict) -> None:
             detail="Discount must be between 0 and 100.",
         )
 
-def _prepare_updated_inventory(update_data: dict) -> list | None:
+def _prepare_updated_inventory(update_data: dict, existing_product: dict | None = None, tenant_id: str | None = None) -> list | None:
     inventory = None
     if "inventory" in update_data:
         inventory = update_data["inventory"]
+        if existing_product is not None and tenant_id:
+            inventory = _prepare_inventory_for_product_update(
+                tenant_id,
+                {
+                    "brand": existing_product.get("brand"),
+                    "categoryName": existing_product.get("categoryName"),
+                    "categoryId": existing_product.get("categoryId"),
+                },
+                inventory,
+                existing_product,
+            )
         validate_inventory(inventory)
         for item in inventory:
             item["stock"] = int(item.get("stock", 0))
@@ -1335,7 +1396,11 @@ def _prepare_product_update(
     )
     update_data.pop("tenantId", None)
     _validate_product_update_values(update_data)
-    inventory = _prepare_updated_inventory(update_data)
+    inventory = _prepare_updated_inventory(
+        update_data,
+        existing_product=db_product,
+        tenant_id=tenant_id,
+    )
     _validate_updated_images(update_data, inventory, db_product, tenant_id)
     _update_final_price(update_data, db_product)
     update_data["updatedAt"] = datetime.now(timezone.utc)
