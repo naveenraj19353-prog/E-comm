@@ -3,165 +3,47 @@ from typing import Any
 
 from fastapi import HTTPException
 
-BRAND_ABBREVIATIONS = {
-    "nike": "NK",
-    "adidas": "AD",
-    "puma": "PM",
-    "reebok": "RB",
-    "levi": "LV",
-    "levis": "LV",
-    "zara": "ZR",
-    "h&m": "HM",
-    "h and m": "HM",
-    "generic": "GEN",
-    "unbranded": "GEN",
-}
-
-PRODUCT_TYPE_ABBREVIATIONS = {
-    "t-shirt": "TS",
-    "t shirt": "TS",
-    "shirt": "SHT",
-    "jeans": "JNS",
-    "dress": "DRS",
-    "shoes": "SHO",
-    "sneakers": "SNR",
-    "sandal": "SDL",
-    "sandals": "SDL",
-    "track-pant": "TPN",
-    "track pant": "TPN",
-    "pants": "PNT",
-    "trouser": "TRS",
-    "trousers": "TRS",
-    "kurta": "KRT",
-    "saree": "SRE",
-    "top": "TOP",
-    "blazer": "BLZ",
-    "coat": "COT",
-    "jacket": "JKT",
-    "hoodie": "HDI",
-    "sweater": "SWT",
-    "shorts": "SRT",
-    "cap": "CAP",
-    "hat": "HAT",
-    "watch": "WAT",
-    "bag": "BAG",
-    "wallet": "WLT",
-    "perfume": "PRF",
-    "belt": "BLT",
-    "slippers": "SLP",
-    "flip-flops": "FFP",
-    "flip flops": "FFP",
-    "one size": "OS",
-    "service": "SRV",
-    "menu item": "MNU",
-}
-
-COLOR_ABBREVIATIONS = {
-    "black": "BLK",
-    "white": "WHT",
-    "red": "RED",
-    "blue": "BLU",
-    "green": "GRN",
-    "yellow": "YEL",
-    "orange": "ORG",
-    "purple": "PUR",
-    "pink": "PNK",
-    "grey": "GRY",
-    "gray": "GRY",
-    "brown": "BRN",
-    "beige": "BEG",
-    "navy": "NVY",
-    "silver": "SLV",
-    "gold": "GLD",
-    "maroon": "MRN",
-    "olive": "OLV",
-    "teal": "TEL",
-    "cream": "CRM",
-    "peach": "PEC",
-    "indigo": "IND",
-    "wine": "WNE",
-    "charcoal": "CHL",
-    "tan": "TAN",
-}
-
-SIZE_ABBREVIATIONS = {
-    "xs": "XS",
-    "s": "S",
-    "m": "M",
-    "l": "L",
-    "xl": "XL",
-    "xxl": "XXL",
-    "xxxl": "XXXL",
-    "6": "6",
-    "7": "7",
-    "8": "8",
-    "9": "9",
-    "10": "10",
-    "11": "11",
-    "12": "12",
-    "one size": "OS",
-    "os": "OS",
-    "standard": "STD",
-    "default": "DEF",
-}
-
-
 def _clean_text(value: Any) -> str:
     if value is None:
         return ""
     return " ".join(str(value).strip().split())
 
 
-def _normalize_key(value: Any) -> str:
-    cleaned = _clean_text(value)
-    if not cleaned:
-        return ""
-    return cleaned.lower().replace("&", " and ").replace("_", " ")
-
-
-def _apply_mapping(value: Any, mapping: dict[str, str], fallback: str) -> str:
+def _dynamic_code(value: Any, *, length: int, fallback: str) -> str:
     cleaned = _clean_text(value)
     if not cleaned:
         return fallback
 
-    key = _normalize_key(cleaned)
-    direct = mapping.get(key)
-    if direct:
-        return direct
-
-    normalized_phrase = re.sub(r"[^a-z0-9]+", "-", key).strip("-")
-    if normalized_phrase and normalized_phrase in mapping:
-        return mapping[normalized_phrase]
-
-    parts = [part for part in re.split(r"[^a-z0-9]+", key) if part]
-    if not parts:
+    words = re.findall(r"[a-z0-9]+", cleaned.lower())
+    if not words:
         return fallback
-    derived = []
-    for part in parts:
-        if part in mapping:
-            derived.append(mapping[part])
-        else:
-            derived.append(part[:1].upper())
-    composed = "".join(derived)
-    if composed:
-        return composed[:6].upper() if len(composed) > 6 else composed.upper()
-    return fallback
+
+    compact = "".join(words)
+    if compact.isdigit():
+        return compact.upper()
+
+    return compact[:length].upper() or fallback
 
 
 def abbreviate_brand(value: Any) -> str:
-    return _apply_mapping(value, BRAND_ABBREVIATIONS, "GEN")
+    return _dynamic_code(value, length=2, fallback="GEN")
 
 
 def abbreviate_product_type(value: Any) -> str:
-    return _apply_mapping(value, PRODUCT_TYPE_ABBREVIATIONS, "GEN")
+    return _dynamic_code(value, length=4, fallback="GEN")
 
 
 def abbreviate_color(value: Any) -> str:
-    return _apply_mapping(value, COLOR_ABBREVIATIONS, "UNK")
+    return _dynamic_code(value, length=3, fallback="UNK")
 
 
 def abbreviate_size(value: Any) -> str:
-    return _apply_mapping(value, SIZE_ABBREVIATIONS, "OS")
+    cleaned = _clean_text(value)
+    if not cleaned:
+        return "OS"
+    if cleaned.lower() == "one size":
+        return "OS"
+    return re.sub(r"[^a-zA-Z0-9]+", "", cleaned).upper() or "OS"
 
 
 def generate_variant_sku(brand: Any, product_type: Any, color: Any, size: Any) -> str:

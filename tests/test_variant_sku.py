@@ -12,16 +12,16 @@ from app.services.variant_sku import (
 class VariantSkuTests(unittest.TestCase):
     def test_generates_business_readable_sku(self):
         self.assertEqual(
-            generate_variant_sku("Nike", "T-Shirt", "Black", "M"),
-            "NK-TS-BLK-M",
+            generate_variant_sku("aa", "test", "red", "xl"),
+            "AA-TEST-RED-XL",
         )
         self.assertEqual(
-            generate_variant_sku("Adidas", "Shoes", "Black", "9"),
-            "AD-SHO-BLK-9",
+            generate_variant_sku("brand", "shoes", "black", "9"),
+            "BR-SHOE-BLA-9",
         )
         self.assertEqual(
             generate_variant_sku("", "Shirt", "White", "XL"),
-            "GEN-SHT-WHT-XL",
+            "GEN-SHIR-WHI-XL",
         )
 
     def test_existing_variant_id_is_preserved_for_same_color_and_size(self):
