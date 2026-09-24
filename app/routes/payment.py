@@ -3,14 +3,16 @@ import logging
 from datetime import datetime, timezone
 from typing import Annotated
 
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, Request
 from requests.exceptions import ConnectionError as RequestsConnectionError
 from requests.exceptions import SSLError
 
 from app.config import RAZORPAY_WEBHOOK_SECRET
-from app.database.mongo import payment_intents
+from app.database.mongo import orders, payment_intents
+from app.observability import alert
 from app.models.payment import (
     CreatePaymentOrder,
+    RefundPaymentRequest,
     VerifyPayment,
 )
 from app.routes.response_metadata import (
@@ -22,17 +24,25 @@ from app.routes.response_metadata import (
     NOT_FOUND_RESPONSE,
     SERVICE_UNAVAILABLE_RESPONSE,
 )
+from app.services.billing_service import handle_subscription_event
 from app.services.checkout_service import calculate_checkout
-from app.services.order_fulfillment import fulfill_captured_payment
+from app.services.ledger_service import record_order_refund, record_partial_refund
+from app.services.order_fulfillment import (
+    expire_abandoned_payment_intents,
+    fulfill_captured_payment,
+    release_reserved_stock,
+    reserve_checkout_stock,
+)
 from app.services.payment_validation import validate_captured_payment
 from app.services.whatsapp_notification_service import (
     send_order_confirmation,
     send_payment_success,
 )
 from app.utils.auth_dependencies import (
+    admin_tenant_id,
     customer_scope,
-    require_admin,
     require_customer,
+    require_permission,
     require_super_admin,
 )
 from app.utils.razorpay_client import client
@@ -96,6 +106,7 @@ def create_order(
             address_id=request.addressId,
             require_address=True,
             delivery_method=request.deliveryMethod,
+            enforce_store_availability=True,
         )
         grand_total = checkout_data["grandTotal"]
         amount_in_paise = int(round(grand_total * 100))
@@ -104,32 +115,47 @@ def create_order(
                 status_code=400,
                 detail="Order amount must be at least ₹1.00 (100 paise).",
             )
-        razorpay_order = client.order.create(
-            {
-                "amount": amount_in_paise,
-                "currency": "INR",
-                "receipt": f"rcpt_{tenant_id[:12]}_{user_id[-8:]}",
-                "payment_capture": 1,
-                "notes": {
+
+        try:
+            expire_abandoned_payment_intents()
+        except Exception:
+            logger.exception("Abandoned payment intent sweep failed")
+
+        # Hold stock now, before the customer pays, so a second customer
+        # can't also pay for the last unit only to be auto-refunded later.
+        reserved_items = reserve_checkout_stock(checkout_data)
+        try:
+            razorpay_order = client.order.create(
+                {
+                    "amount": amount_in_paise,
+                    "currency": "INR",
+                    "receipt": f"rcpt_{tenant_id[:12]}_{user_id[-8:]}",
+                    "payment_capture": 1,
+                    "notes": {
+                        "tenantId": tenant_id,
+                        "userId": user_id,
+                    },
+                }
+            )
+            payment_intents.insert_one(
+                {
+                    "razorpayOrderId": razorpay_order["id"],
                     "tenantId": tenant_id,
                     "userId": user_id,
-                },
-            }
-        )
-        payment_intents.insert_one(
-            {
-                "razorpayOrderId": razorpay_order["id"],
-                "tenantId": tenant_id,
-                "userId": user_id,
-                "addressId": request.addressId,
-        "couponCode": checkout_data.get("couponCode"),
-        "deliveryMethod": checkout_data.get("deliveryMethod", "standard"),
-        "grandTotal": grand_total,
-                "checkout": checkout_data,
-                "status": "pending",
-                "createdAt": datetime.now(timezone.utc),
-            }
-        )
+                    "addressId": request.addressId,
+                    "couponCode": checkout_data.get("couponCode"),
+                    "deliveryMethod": checkout_data.get("deliveryMethod", "standard"),
+                    "grandTotal": grand_total,
+                    "checkout": checkout_data,
+                    "status": "pending",
+                    "stockReserved": True,
+                    "reservedItems": reserved_items,
+                    "createdAt": datetime.now(timezone.utc),
+                }
+            )
+        except Exception:
+            release_reserved_stock(reserved_items)
+            raise
         return {
             "success": True,
             "message": "Payment order created successfully.",
@@ -277,50 +303,114 @@ def get_payment_status(
         )
 
 
-@router.get(
-    "/payment/{payment_id}",
-    responses={400: BAD_REQUEST_RESPONSE[400]},
-)
-def get_payment(
+PAYMENT_NOT_FOUND = "Payment not found for this store."
+
+
+def _fetch_store_payment(
     payment_id: str,
-    current_user: Annotated[dict, Depends(require_admin)],
-):
+    current_user: dict,
+    requested_tenant_id: str | None,
+) -> dict:
+    """Fetch a Razorpay payment only if it was made to the caller's store.
+
+    All stores share one Razorpay account, so a payment id alone says nothing
+    about which store it belongs to. The store is taken from our own records:
+    the order that holds the payment id, or else the payment intent created for
+    the payment's Razorpay order.
+    """
+    tenant_id = admin_tenant_id(current_user, requested_tenant_id)
+    payment_id = str(payment_id or "").strip()
     try:
         payment_data = client.payment.fetch(payment_id)
-        return {
-            "success": True,
-            "payment": {
-                "id": payment_data.get("id"),
-                "status": payment_data.get("status"),
-                "amount": payment_data.get("amount", 0) / 100,
-                "method": payment_data.get("method"),
-            },
-        }
     except Exception:
         raise HTTPException(
             status_code=400,
             detail="Unable to fetch payment.",
         )
+    razorpay_order_id = str(payment_data.get("order_id") or "").strip()
+    owned = orders.find_one(
+        {"tenantId": tenant_id, "razorpayPaymentId": payment_id},
+        {"_id": 1},
+    )
+    if not owned and razorpay_order_id:
+        owned = payment_intents.find_one(
+            {"tenantId": tenant_id, "razorpayOrderId": razorpay_order_id},
+            {"_id": 1},
+        )
+    if not owned:
+        raise HTTPException(status_code=404, detail=PAYMENT_NOT_FOUND)
+    return payment_data
+
+
+@router.get(
+    "/payment/{payment_id}",
+    responses={
+        400: BAD_REQUEST_RESPONSE[400],
+        403: FORBIDDEN_RESPONSE[403],
+        404: NOT_FOUND_RESPONSE[404],
+    },
+)
+def get_payment(
+    payment_id: str,
+    current_user: Annotated[dict, Depends(require_permission("orders"))],
+    tenant_id: Annotated[str | None, Query(alias="tenantId")] = None,
+):
+    payment_data = _fetch_store_payment(payment_id, current_user, tenant_id)
+    return {
+        "success": True,
+        "payment": {
+            "id": payment_data.get("id"),
+            "status": payment_data.get("status"),
+            "amount": payment_data.get("amount", 0) / 100,
+            "method": payment_data.get("method"),
+        },
+    }
 
 
 @router.post(
     "/refund/{payment_id}",
-    responses={400: BAD_REQUEST_RESPONSE[400]},
+    responses={
+        400: BAD_REQUEST_RESPONSE[400],
+        403: FORBIDDEN_RESPONSE[403],
+        404: NOT_FOUND_RESPONSE[404],
+    },
 )
 def refund(
     payment_id: str,
-    current_user: Annotated[dict, Depends(require_admin)],
+    current_user: Annotated[dict, Depends(require_permission("orders"))],
+    payload: RefundPaymentRequest = RefundPaymentRequest(),
+    tenant_id: Annotated[str | None, Query(alias="tenantId")] = None,
 ):
+    _fetch_store_payment(payment_id, current_user, tenant_id)
+    razorpay_payload = None
+    if payload.amount is not None:
+        razorpay_payload = {"amount": int(round(payload.amount * 100))}
     try:
-        refund_data = client.payment.refund(payment_id)
-        return {
-            "success": True,
-            "message": "Refund initiated successfully.",
-            "refundId": refund_data.get("id"),
-            "status": refund_data.get("status"),
-        }
+        if razorpay_payload:
+            refund_data = client.payment.refund(payment_id, razorpay_payload)
+        else:
+            refund_data = client.payment.refund(payment_id)
     except Exception:
         raise HTTPException(status_code=400, detail="Refund failed.")
+    owning_order = orders.find_one(
+        {"razorpayPaymentId": payment_id}, {"_id": 1}
+    )
+    if owning_order:
+        try:
+            if payload.amount is not None:
+                record_partial_refund(owning_order["_id"], payload.amount)
+            else:
+                record_order_refund(owning_order["_id"])
+        except Exception:
+            logger.exception(
+                "Failed to reverse ledger entry for payment %s", payment_id
+            )
+    return {
+        "success": True,
+        "message": "Refund initiated successfully.",
+        "refundId": refund_data.get("id"),
+        "status": refund_data.get("status"),
+    }
 
 
 def _verify_webhook(body: bytes, signature: str) -> None:
@@ -332,6 +422,7 @@ def _verify_webhook(body: bytes, signature: str) -> None:
         )
     except Exception as error:
         logger.exception("Invalid Razorpay webhook signature")
+        alert("razorpay.webhook_signature_invalid", provider="razorpay", error_type=type(error).__name__)
         raise HTTPException(
             status_code=400,
             detail="Invalid webhook signature.",
@@ -389,6 +480,7 @@ def _fulfill_webhook_payment(
                 error.status_code,
                 detail,
             )
+            alert("razorpay.webhook_terminal_failure", provider="razorpay", http_status=error.status_code, detail=detail, razorpay_order_id=razorpay_order_id, razorpay_payment_id=razorpay_payment_id)
             return {
                 "success": True,
                 "status": "terminal",
@@ -397,6 +489,7 @@ def _fulfill_webhook_payment(
         raise
     except Exception as error:
         logger.exception("Webhook fulfillment failed")
+        alert("razorpay.webhook_failed", provider="razorpay", error=error, razorpay_order_id=razorpay_order_id, razorpay_payment_id=razorpay_payment_id)
         raise HTTPException(
             status_code=500,
             detail="Webhook processing failed.",
@@ -427,6 +520,9 @@ async def webhook(request: Request, background_tasks: BackgroundTasks):
     payload = _parse_webhook_payload(body)
 
     event = payload.get("event")
+    if isinstance(event, str) and event.startswith("subscription."):
+        # Store subscription billing events share this signed endpoint.
+        return handle_subscription_event(payload)
     if event != "payment.captured":
         return {"success": True, "status": "ignored", "event": event}
 

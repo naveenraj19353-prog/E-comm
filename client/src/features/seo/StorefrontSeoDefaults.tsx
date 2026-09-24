@@ -1,11 +1,13 @@
 import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
+import StorefrontAnalytics from "./StorefrontAnalytics";
 
 const PRIVATE_PATH =
   /\/(login|register|forgot-password|reset-password|cart|checkout|wishlist|profile|orders|thank-you|customize)(\/|$)/i;
 
 /**
  * Marks account / checkout surfaces as noindex without overriding public page titles.
+ * Also mounts the store's own analytics tags (storefront layout only).
  */
 export default function StorefrontSeoDefaults() {
   const { pathname } = useLocation();
@@ -27,5 +29,5 @@ export default function StorefrontSeoDefaults() {
     document.title = document.title || "Account | Retail Cosmos";
   }, [pathname]);
 
-  return null;
+  return <StorefrontAnalytics />;
 }

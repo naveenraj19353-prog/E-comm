@@ -33,6 +33,10 @@ export const AdminContactMessages = lazy(
 export const CreateProduct = lazy(() => import("../features/admin/pages/CreateProduct"));
 export const BulkProductImport = lazy(() => import("../features/admin/pages/BulkProductImport"));
 export const AdminTenantOrders = lazy(() => import("../features/admin/pages/AdminTenantOrders"));
+export const AdminTenantPayments = lazy(() => import("../features/admin/pages/AdminTenantPayments"));
+export const AdminLedgerOverview = lazy(() => import("../features/admin/pages/AdminLedgerOverview"));
+export const AdminTenantBilling = lazy(() => import("../features/admin/pages/AdminTenantBilling"));
+export const AdminBillingOverview = lazy(() => import("../features/admin/pages/AdminBillingOverview"));
 export const AdminMenuDesk = lazy(() => import("../features/admin/pages/AdminMenuDesk"));
 export const AdminOrderDetail = lazy(() => import("../features/admin/pages/AdminOrderDetail"));
 export const AdminTenantBanners = lazy(() => import("../features/admin/pages/AdminTenantBanners"));

@@ -1,12 +1,15 @@
 """Build storefront categories from live product catalog (same source as filters)."""
-
 from __future__ import annotations
+
+import logging
 
 from app.database.mongo import categories, products
 from app.utils.product_serialize import (
     _resolve_image_for_response,
     is_banner_video_src,
 )
+
+logger = logging.getLogger(__name__)
 
 
 def _catalog_pipeline(
@@ -51,7 +54,7 @@ def _category_metadata(
         for doc in categories.find(meta_query):
             _index_category_metadata(doc, meta_by_id, meta_by_name)
     except Exception as error:
-        print("ERROR loading category metadata:", repr(error))
+        logger.exception("ERROR loading category metadata")
     return meta_by_id, meta_by_name
 
 
@@ -133,7 +136,7 @@ def get_catalog_categories(
     try:
         rows = list(products.aggregate(pipeline))
     except Exception as error:
-        print("ERROR building catalog categories:", repr(error))
+        logger.exception("ERROR building catalog categories")
         return []
 
     meta_by_id, meta_by_name = _category_metadata(

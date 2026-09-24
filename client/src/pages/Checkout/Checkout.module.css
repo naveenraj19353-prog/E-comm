@@ -101,3 +101,13 @@
     font-size: 0.8125rem;
   }
 }
+.guestCard {
+  max-width: 30rem;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.guestForm {
+  margin-top: 0.25rem;
+}

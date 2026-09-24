@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime, timezone
 from typing import Annotated
 
@@ -10,6 +11,7 @@ from app.models.checkout import CreateCodOrder
 from app.models.menu import PlaceMenuOrderRequest
 from app.models.orders import RejectReturn, RequestReturn, UpdateOrderStatus
 from app.routes.detail_messages import ORDER_NOT_FOUND
+from app.utils.order_ref import order_ref
 from app.routes.response_metadata import (
     BAD_REQUEST_RESPONSE,
     CONFLICT_RESPONSE,
@@ -19,7 +21,11 @@ from app.routes.response_metadata import (
     NOT_FOUND_RESPONSE,
 )
 from app.services.menu_service import fulfill_menu_order, normalize_counter_number
-from app.services.order_fulfillment import fulfill_cod_order, restore_variant_stock
+from app.services.order_fulfillment import (
+    cancel_and_refund_order,
+    fulfill_cod_order,
+    restore_variant_stock,
+)
 from app.services.return_service import (
     approve_return,
     can_customer_request_return,
@@ -40,6 +46,8 @@ from app.utils.auth_dependencies import (
     require_permission,
 )
 
+logger = logging.getLogger(__name__)
+
 router = APIRouter(prefix="/orders", tags=["Orders"])
 
 ADMIN_STATUS_TRANSITIONS: dict[str, set[str]] = {
@@ -54,7 +62,12 @@ ADMIN_STATUS_TRANSITIONS: dict[str, set[str]] = {
     "return_approved": set(),
     "returned": set(),
     "refunded": set(),
+    "partially_returned": set(),
+    "partially_refunded": set(),
 }
+
+ADMIN_LIST_DEFAULT_PAGE_SIZE = 25
+ADMIN_LIST_MAX_PAGE_SIZE = 100
 
 
 @router.post("/", responses={410: GONE_RESPONSE[410]})
@@ -94,7 +107,7 @@ def create_cod_order(
     except HTTPException:
         raise
     except Exception as error:
-        print("COD order error:", str(error))
+        logger.exception("COD order error")
         raise HTTPException(status_code=500, detail="Unable to place COD order.")
 
 
@@ -109,6 +122,7 @@ def create_cod_order(
     },
 )
 def create_menu_order(
+    background_tasks: BackgroundTasks,
     current_user: Annotated[dict, Depends(require_customer)],
     request: PlaceMenuOrderRequest = PlaceMenuOrderRequest(),
 ):
@@ -141,7 +155,7 @@ def create_menu_order(
     except HTTPException:
         raise
     except Exception as error:
-        print("Menu order error:", str(error))
+        logger.exception("Menu order error")
         raise HTTPException(status_code=500, detail="Unable to place menu order.")
 
 
@@ -156,31 +170,48 @@ def create_menu_order(
 def list_tenant_orders(
     current_user: Annotated[dict, Depends(require_permission("orders"))],
     tenant_id: Annotated[str | None, Query(alias="tenantId")] = None,
+    page: Annotated[int, Query(ge=1)] = 1,
+    page_size: Annotated[int, Query(alias="pageSize", ge=1)] = ADMIN_LIST_DEFAULT_PAGE_SIZE,
+    status: Annotated[str | None, Query()] = None,
 ):
     scoped_tenant_id = admin_tenant_id(current_user, tenant_id)
-    try:
-        cursor = orders.find({"tenantId": scoped_tenant_id}).sort(
-            "createdAt", DESCENDING
+    page_size = min(page_size, ADMIN_LIST_MAX_PAGE_SIZE)
+    base_query = {"tenantId": scoped_tenant_id}
+    query = dict(base_query)
+    if status and status != "all":
+        # Orders stored without an orderStatus are shown as confirmed.
+        query["orderStatus"] = (
+            {"$in": ["confirmed", None]} if status == "confirmed" else status
         )
-        data = []
-        user_cache: dict[str, dict] = {}
-        for order in cursor:
-            user_key = str(order.get("userId", ""))
-            if user_key and user_key not in user_cache:
-                user = users.find_one({"_id": ObjectId(user_key)})
-                user_cache[user_key] = {
-                    "name": user.get("name") if user else "Customer",
-                    "email": user.get("email") if user else "",
-                }
-            data.append(
-                _serialize_order(
-                    order,
-                    customer=user_cache.get(user_key),
-                )
+    try:
+        total = orders.count_documents(query)
+        page_orders = list(
+            orders.find(query)
+            .sort("createdAt", DESCENDING)
+            .skip((page - 1) * page_size)
+            .limit(page_size)
+        )
+        customers = _customers_for_orders(page_orders)
+        couriers = _shipment_couriers_for_orders(scoped_tenant_id, page_orders)
+        data = [
+            _serialize_order(
+                order,
+                customer=customers.get(str(order.get("userId", ""))),
+                shipment_courier=couriers.get(str(order["_id"])),
             )
-        return {"success": True, "count": len(data), "data": data}
+            for order in page_orders
+        ]
+        return {
+            "success": True,
+            "count": len(data),
+            "total": total,
+            "page": page,
+            "pageSize": page_size,
+            "statusCounts": _status_counts(base_query),
+            "data": data,
+        }
     except Exception as error:
-        print("List tenant orders error:", str(error))
+        logger.exception("List tenant orders error")
         raise HTTPException(status_code=500, detail="Unable to fetch orders.")
 
 
@@ -237,6 +268,7 @@ def update_order_status(
                 int(item.get("quantity", 0)),
                 now,
             )
+        cancel_and_refund_order(order, now)
 
     status_fields = {
         "orderStatus": next_status,
@@ -244,6 +276,15 @@ def update_order_status(
     }
     if next_status == "delivered":
         status_fields["deliveredAt"] = now
+        # COD is collected by the courier at handoff, not through Razorpay —
+        # nothing else ever flips it from "pending" to "paid".
+        payment_method = str(order.get("paymentMethod") or "").lower()
+        if (
+            payment_method in {"cod", "cash_on_delivery"}
+            and order.get("paymentStatus") != "paid"
+        ):
+            status_fields["paymentStatus"] = "paid"
+            status_fields["paidAt"] = now
 
     orders.update_one(
         {"_id": object_id},
@@ -403,7 +444,7 @@ def get_order(
     except HTTPException:
         raise
     except Exception as error:
-        print("Get order error:", str(error))
+        logger.exception("Get order error")
         raise HTTPException(status_code=500, detail="Unable to fetch order.")
 
 
@@ -426,6 +467,11 @@ def customer_request_return(
         tenant_id=scoped_tenant_id,
         user_id=token_user_id,
         reason=payload.reason,
+        items=(
+            [item.model_dump() for item in payload.items]
+            if payload.items is not None
+            else None
+        ),
     )
     return {"success": True, "order": _serialize_order(order)}
 
@@ -452,10 +498,15 @@ def get_user_orders(
         cursor = orders.find(
             {"tenantId": scoped_tenant_id, "userId": ObjectId(token_user_id)}
         ).sort("createdAt", DESCENDING)
-        data = [_serialize_order(order) for order in cursor]
+        user_orders = list(cursor)
+        couriers = _shipment_couriers_for_orders(scoped_tenant_id, user_orders)
+        data = [
+            _serialize_order(order, shipment_courier=couriers.get(str(order["_id"])))
+            for order in user_orders
+        ]
         return {"success": True, "count": len(data), "data": data}
     except Exception as error:
-        print("Get orders error:", str(error))
+        logger.exception("Get orders error")
         raise HTTPException(status_code=500, detail="Unable to fetch orders.")
 
 
@@ -474,7 +525,72 @@ def _serialize_address(address: dict | None) -> dict | None:
     }
 
 
-def _serialize_order(order: dict, customer: dict | None = None) -> dict:
+def _customers_for_orders(order_docs: list[dict]) -> dict[str, dict]:
+    """Customer name/email for a page of orders, in one `users` query."""
+    user_ids = {
+        str(order["userId"])
+        for order in order_docs
+        if order.get("userId") and ObjectId.is_valid(str(order["userId"]))
+    }
+    found = {
+        str(user["_id"]): user
+        for user in users.find(
+            {"_id": {"$in": [ObjectId(user_id) for user_id in user_ids]}},
+            {"name": 1, "email": 1},
+        )
+    } if user_ids else {}
+    return {
+        user_id: {
+            "name": (found.get(user_id) or {}).get("name") or "Customer",
+            "email": (found.get(user_id) or {}).get("email") or "",
+        }
+        for user_id in user_ids
+    }
+
+
+def _order_waybill(order: dict) -> str:
+    courier = order.get("courier") if isinstance(order.get("courier"), dict) else {}
+    return str(courier.get("waybill") or "").strip()
+
+
+def _shipment_couriers_for_orders(tenant_id: str, order_docs: list[dict]) -> dict[str, dict]:
+    """Courier info from `shipments` for orders that carry no waybill
+    themselves, in one query instead of one per order."""
+    missing = [str(order["_id"]) for order in order_docs if not _order_waybill(order)]
+    if not missing:
+        return {}
+    couriers: dict[str, dict] = {}
+    for shipment in shipments.find({"tenantId": tenant_id, "orderId": {"$in": missing}}):
+        order_key = str(shipment.get("orderId"))
+        if shipment.get("awb") and order_key not in couriers:
+            couriers[order_key] = _courier_from_shipment(shipment)
+    return couriers
+
+
+def _status_counts(base_query: dict) -> dict[str, int]:
+    counts: dict[str, int] = {}
+    for row in orders.aggregate(
+        [
+            {"$match": base_query},
+            {"$group": {"_id": "$orderStatus", "count": {"$sum": 1}}},
+        ]
+    ):
+        key = row.get("_id") or "confirmed"
+        counts[key] = counts.get(key, 0) + int(row.get("count") or 0)
+    counts["all"] = sum(counts.values())
+    return counts
+
+
+_LOOKUP_SHIPMENT = object()
+
+
+def _serialize_order(
+    order: dict,
+    customer: dict | None = None,
+    shipment_courier=_LOOKUP_SHIPMENT,
+) -> dict:
+    """`shipment_courier` lets list callers pass pre-fetched shipment info
+    (or None); by default the shipment is looked up for this one order."""
     address = order.get("address")
     if isinstance(address, dict):
         address_payload = _serialize_address(address)
@@ -485,6 +601,8 @@ def _serialize_order(order: dict, customer: dict | None = None) -> dict:
 
     payload = {
         "orderId": str(order["_id"]),
+        "orderNumber": order.get("orderNumber"),
+        "orderRef": order_ref(order),
         "razorpayOrderId": order.get("razorpayOrderId"),
         "razorpayPaymentId": order.get("razorpayPaymentId"),
         "items": [
@@ -504,7 +622,9 @@ def _serialize_order(order: dict, customer: dict | None = None) -> dict:
         "subtotal": order.get("subtotal", 0),
         "discount": order.get("discount", 0),
         "shipping": order.get("shipping", 0),
+        "codHandlingCharge": order.get("codHandlingCharge", 0),
         "totalAmount": order.get("totalAmount", 0),
+        "refundedAmount": order.get("refundedAmount", 0),
         "paymentStatus": order.get("paymentStatus"),
         "orderStatus": order.get("orderStatus"),
         "deliveredAt": order.get("deliveredAt"),
@@ -518,7 +638,13 @@ def _serialize_order(order: dict, customer: dict | None = None) -> dict:
         "counterNumber": order.get("counterNumber"),
         "phone": order.get("phone"),
         "paidAt": order.get("paidAt"),
-        "courier": _resolve_courier(order),
+        "courier": (
+            _resolve_courier(order)
+            if shipment_courier is _LOOKUP_SHIPMENT
+            else _serialize_courier(
+                order.get("courier") if _order_waybill(order) else shipment_courier
+            )
+        ),
         "createdAt": order.get("createdAt"),
         "updatedAt": order.get("updatedAt"),
     }
@@ -541,17 +667,20 @@ def _resolve_courier(order: dict) -> dict | None:
             }
         )
         if shipment and shipment.get("awb"):
-            waybill = str(shipment.get("awb") or "").strip()
-            courier = {
-                "provider": shipment.get("provider") or "delhivery",
-                "waybill": waybill,
-                "trackingUrl": shipment.get("trackingUrl"),
-                "labelUrl": shipment.get("labelUrl"),
-                "pickupLocation": shipment.get("pickupLocation"),
-                "shippedAt": shipment.get("createdAt"),
-                "trackingStatus": shipment.get("trackingStatus"),
-            }
+            courier = _courier_from_shipment(shipment)
     return _serialize_courier(courier)
+
+
+def _courier_from_shipment(shipment: dict) -> dict:
+    return {
+        "provider": shipment.get("provider") or "delhivery",
+        "waybill": str(shipment.get("awb") or "").strip(),
+        "trackingUrl": shipment.get("trackingUrl"),
+        "labelUrl": shipment.get("labelUrl"),
+        "pickupLocation": shipment.get("pickupLocation"),
+        "shippedAt": shipment.get("createdAt"),
+        "trackingStatus": shipment.get("trackingStatus"),
+    }
 
 
 def _serialize_courier(courier) -> dict | None:

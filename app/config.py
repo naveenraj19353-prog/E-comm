@@ -123,6 +123,76 @@ except ValueError:
 if S3_PRESIGNED_URL_EXPIRES <= 0:
     S3_PRESIGNED_URL_EXPIRES = 3600
 
+# Optional CDN (e.g. CloudFront with Origin Access Control) in front of the
+# private image bucket. When set, image keys are returned as stable
+# {CDN_BASE_URL}/tenants/... URLs instead of presigned S3 URLs.
+CDN_BASE_URL = (_env("CDN_BASE_URL") or "").rstrip("/")
+
+# Seconds to cache public storefront data (layout, home page, product lists)
+# in each server process. 0 disables. Other processes see writes within this.
+try:
+    STOREFRONT_CACHE_SECONDS = max(0, int(_env("STOREFRONT_CACHE_SECONDS") or "60"))
+except ValueError:
+    STOREFRONT_CACHE_SECONDS = 60
+
+# Reverse proxies in front of the API that append to X-Forwarded-For
+# (Nginx on EC2 = 1). 0 trusts no header and uses the socket peer address.
+try:
+    TRUSTED_PROXY_HOPS = max(0, int(_env("TRUSTED_PROXY_HOPS") or "0"))
+except ValueError:
+    TRUSTED_PROXY_HOPS = 0
+
+# Requests one store may make per minute, per server process (0 disables).
+# A storefront page load is roughly 5-10 API calls, so 1200 is ~150 page
+# views a minute for a single store on a single process.
+try:
+    STORE_REQUESTS_PER_MINUTE = max(0, int(_env("STORE_REQUESTS_PER_MINUTE") or "1200"))
+except ValueError:
+    STORE_REQUESTS_PER_MINUTE = 1200
+
+# Platform commission on Razorpay-collected orders, used unless a store has its
+# own negotiated rate (tenants.platformCommissionPercent).
+try:
+    PLATFORM_DEFAULT_COMMISSION_PERCENT = float(
+        _env("PLATFORM_DEFAULT_COMMISSION_PERCENT") or "5"
+    )
+except ValueError:
+    PLATFORM_DEFAULT_COMMISSION_PERCENT = 5.0
+
+# Store subscription billing: new stores get TRIAL_MONTHS free, then are
+# charged through a Razorpay Subscription Plan (create the ₹499/month plan
+# once in the Razorpay dashboard and paste its plan_... id here). Stores that
+# existed before billing launched have no `billing` field and stay free.
+RAZORPAY_SUBSCRIPTION_PLAN_ID = _env("RAZORPAY_SUBSCRIPTION_PLAN_ID")
+try:
+    TRIAL_MONTHS = max(0, int(_env("TRIAL_MONTHS") or "3"))
+except ValueError:
+    TRIAL_MONTHS = 3
+try:
+    SUBSCRIPTION_GRACE_DAYS = max(0, int(_env("SUBSCRIPTION_GRACE_DAYS") or "7"))
+except ValueError:
+    SUBSCRIPTION_GRACE_DAYS = 7
+try:
+    # Display only — the amount actually charged is whatever the Razorpay Plan says.
+    SUBSCRIPTION_PRICE_INR = float(_env("SUBSCRIPTION_PRICE_INR") or "499")
+except ValueError:
+    SUBSCRIPTION_PRICE_INR = 499.0
+
+# Automatic Delhivery shipment status sync (app/services/shipment_sync.py).
+# Minutes between sync runs across all processes (0 disables the loop).
+try:
+    SHIPMENT_SYNC_MINUTES = max(0, int(_env("SHIPMENT_SYNC_MINUTES") or "30"))
+except ValueError:
+    SHIPMENT_SYNC_MINUTES = 30
+# Shipments tracked per run (oldest-checked first).
+try:
+    SHIPMENT_SYNC_BATCH_SIZE = max(1, min(int(_env("SHIPMENT_SYNC_BATCH_SIZE") or "100"), 1000))
+except ValueError:
+    SHIPMENT_SYNC_BATCH_SIZE = 100
+# Shared secret Delhivery must send to POST /shipping/delhivery/webhook
+# (empty = the webhook rejects everything).
+DELHIVERY_WEBHOOK_TOKEN = _env("DELHIVERY_WEBHOOK_TOKEN") or ""
+
 
 def validate_required_settings() -> None:
     missing = []

@@ -1,3 +1,4 @@
+import logging
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -11,6 +12,9 @@ from app.routes.response_metadata import (
 )
 from app.services.checkout_service import calculate_checkout
 from app.utils.auth_dependencies import customer_scope, require_customer
+
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(
     prefix="/checkout",
@@ -49,7 +53,7 @@ def checkout(
     except HTTPException:
         raise
     except Exception as e:
-        print("Checkout error:", str(e))
+        logger.exception("Checkout error")
         raise HTTPException(
             status_code=500,
             detail="Unable to generate checkout summary.",

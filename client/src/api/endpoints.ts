@@ -15,6 +15,8 @@ export const API_ENDPOINTS = {
         REGISTER: "/auth/register",
         FORGOT_PASSWORD: "/auth/forgot-password",
         RESET_PASSWORD: "/auth/reset-password",
+        OTP_SEND: "/auth/otp/send",
+        OTP_VERIFY: "/auth/otp/verify",
     },
 
     USERS: {
@@ -94,6 +96,22 @@ export const API_ENDPOINTS = {
         payment: (paymentId: string) => `/payments/payment/${paymentId}`,
         refund: (paymentId: string) => `/payments/refund/${paymentId}`,
         WEBHOOK: "/payments/webhook",
+    },
+
+    LEDGER: {
+        STATEMENT: "/ledger/statement",
+        PAYOUTS: "/ledger/payouts",
+        COMMISSION: "/ledger/commission",
+        OVERVIEW: "/ledger/overview",
+        syncDeliveryCharge: (orderId: string) =>
+            `/ledger/entries/${orderId}/sync-delivery-charge`,
+    },
+
+    BILLING: {
+        STATUS: "/billing/status",
+        SUBSCRIBE: "/billing/subscribe",
+        EXEMPT: "/billing/exempt",
+        OVERVIEW: "/billing/overview",
     },
 
     REVIEWS: {

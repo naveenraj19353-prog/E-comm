@@ -1,6 +1,10 @@
 import apiClient from "../../../api/client";
 import { API_ENDPOINTS } from "../../../api/endpoints";
 import type {
+    CustomerOtpSendRequest,
+    CustomerOtpSendResponse,
+    CustomerOtpVerifyRequest,
+    CustomerOtpVerifyResponse,
     LoginRequest,
     LoginResponse,
     MenuLoginRequest,
@@ -22,6 +26,18 @@ export const menuLoginApi = async (
     payload: MenuLoginRequest,
 ): Promise<LoginResponse> => {
     const response = await apiClient.post(API_ENDPOINTS.AUTH.MENU_LOGIN, payload);
+    return response.data;
+};
+export const sendCustomerOtpApi = async (
+    payload: CustomerOtpSendRequest,
+): Promise<CustomerOtpSendResponse> => {
+    const response = await apiClient.post(API_ENDPOINTS.AUTH.OTP_SEND, payload);
+    return response.data;
+};
+export const verifyCustomerOtpApi = async (
+    payload: CustomerOtpVerifyRequest,
+): Promise<CustomerOtpVerifyResponse> => {
+    const response = await apiClient.post(API_ENDPOINTS.AUTH.OTP_VERIFY, payload);
     return response.data;
 };
 export const registerApi = async (payload: RegisterRequest): Promise<RegisterResponse> => {

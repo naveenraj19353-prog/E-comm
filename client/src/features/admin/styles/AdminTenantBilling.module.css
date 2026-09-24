@@ -1,0 +1,143 @@
+.statusCard {
+  padding: 1.375rem 1.5rem;
+  border: 0.0625rem solid #e5ebe7;
+  border-radius: 1rem;
+  background: #fff;
+  box-shadow: 0 0.125rem 0.5rem rgba(31, 42, 38, 0.04);
+}
+
+.statusCard h2 {
+  margin: 0.75rem 0 0;
+  color: #17211d;
+  font-size: 1.125rem;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.detail {
+  margin: 0.5rem 0 0;
+  color: #536159;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
+
+.card_warning {
+  border-color: #fed7aa;
+  background: #fffaf5;
+}
+
+.card_danger {
+  border-color: #fecaca;
+  background: #fffafa;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.875rem;
+  margin-top: 1.125rem;
+}
+
+.autopayDone {
+  color: #047857;
+  font-size: 0.8125rem;
+  font-weight: 650;
+}
+
+.note {
+  margin: 0.75rem 0 0;
+  color: #89948e;
+  font-size: 0.75rem;
+}
+
+.exemptCard {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.875rem;
+  padding: 1.125rem 1.375rem;
+  border: 0.0625rem solid #e5ebe7;
+  border-radius: 1rem;
+  background: #fff;
+  box-shadow: 0 0.125rem 0.5rem rgba(31, 42, 38, 0.04);
+}
+
+.exemptCard p {
+  margin: 0;
+  color: #536159;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
+
+.exemptCard strong {
+  color: #17211d;
+}
+
+.secondaryButton {
+  height: 2.375rem;
+  padding: 0 1.125rem;
+  border: 0.0625rem solid #dfe5e1;
+  border-radius: 0.5rem;
+  background: #fff;
+  color: #33423b;
+  font-size: 0.8125rem;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.secondaryButton:hover:not(:disabled) {
+  border-color: #2f6b52;
+  color: #2f6b52;
+}
+
+.secondaryButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.status {
+  display: inline-flex;
+  padding: 0.375rem 0.6875rem;
+  border-radius: 999px;
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.status_exempt {
+  background: #f5f7f6;
+  color: #68736e;
+}
+
+.status_trialing {
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.status_active {
+  background: #ecfdf5;
+  color: #047857;
+}
+
+.status_past_due {
+  background: #fff7ed;
+  color: #c2410c;
+}
+
+.status_suspended {
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+.autopayYes {
+  color: #047857;
+  font-weight: 700;
+}
+
+.autopayNo {
+  color: #89948e;
+}

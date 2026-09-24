@@ -1,6 +1,11 @@
 from typing import Literal, Optional
 
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, field_validator
+
+from app.services.store_analytics import (
+    normalize_ga4_measurement_id,
+    normalize_meta_pixel_id,
+)
 
 BusinessType = Literal["retail", "service", "menu"]
 
@@ -90,6 +95,23 @@ class StoreHours(BaseModel):
     windows: Optional[list[StoreHoursWindow]] = None
 
 
+class StoreAnalytics(BaseModel):
+    """Optional per-store tracking ids. Empty string clears an id."""
+
+    ga4MeasurementId: Optional[str] = Field(default=None, max_length=32)
+    metaPixelId: Optional[str] = Field(default=None, max_length=32)
+
+    @field_validator("ga4MeasurementId", mode="before")
+    @classmethod
+    def _validate_ga4(cls, value):
+        return normalize_ga4_measurement_id(value)
+
+    @field_validator("metaPixelId", mode="before")
+    @classmethod
+    def _validate_pixel(cls, value):
+        return normalize_meta_pixel_id(value)
+
+
 class CreateTenant(BaseModel):
     tenantId: str = Field(
         ...,
@@ -164,6 +186,7 @@ class UpdateTenant(BaseModel):
     )
     isActive: Optional[bool] = None
     storeHours: Optional[StoreHours] = None
+    analytics: Optional[StoreAnalytics] = None
 
 
 class UpdateTenantTheme(BaseModel):

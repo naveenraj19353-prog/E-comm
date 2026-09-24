@@ -84,6 +84,8 @@ export interface Tenant {
     phone?: string;
     email?: string;
     isActive?: boolean;
+    /** From /tenants/slug/{slug}: false only when the storefront is offline. Missing = available. */
+    storeAvailable?: boolean;
 }
 
 export type StoreHoursKind = "on" | "off";

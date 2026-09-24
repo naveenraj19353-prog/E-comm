@@ -20,6 +20,9 @@ export interface Tenant {
     phone?: string;
     isActive: boolean;
     storeHours?: StoreHours;
+    platformCommissionPercent?: number | null;
+    /** From /tenants/slug/{slug}: false only when the storefront is offline. Missing = available. */
+    storeAvailable?: boolean;
     createdAt: string;
     updatedAt: string;
 }

@@ -3,6 +3,7 @@ from app.database.mongo import (
     orders,
     banners,
 )
+from app.services.cache import cached_storefront
 from app.services.coupon_service import active_festival_offers
 from app.utils.category_catalog import get_catalog_categories
 from app.utils.product_serialize import resolve_banner_images, serialize_product
@@ -15,6 +16,25 @@ def get_products_by_cursor(cursor):
         data.append(serialize_product(product))
     return data
 def get_home_data(
+    tenant_id: str,
+    product_limit: int = 10,
+    category_limit: int = 12,
+):
+    """
+    Home page sections, cached per tenant and limits (public data only:
+    active products/banners, festival offers). Product/banner/category writes
+    invalidate the tenant's entries; orders, reviews and coupons show up
+    within the cache TTL.
+    """
+    return cached_storefront(
+        tenant_id,
+        "home",
+        (int(product_limit), int(category_limit)),
+        lambda: _build_home_data(tenant_id, product_limit, category_limit),
+    )
+
+
+def _build_home_data(
     tenant_id: str,
     product_limit: int = 10,
     category_limit: int = 12,

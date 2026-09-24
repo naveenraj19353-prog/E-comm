@@ -1,4 +1,9 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+    keepPreviousData,
+    useMutation,
+    useQuery,
+    useQueryClient,
+} from "@tanstack/react-query";
 import {
     approveAdminReturn,
     getAdminOrderDetail,
@@ -11,7 +16,11 @@ import {
     requestOrderReturn,
     updateAdminOrderStatus,
 } from "../api/order.api";
-import type { OrderStatus } from "../types/order.types";
+import type {
+    AdminOrdersParams,
+    OrderStatus,
+    ReturnItemSelection,
+} from "../types/order.types";
 
 export const useUserOrders = (userId: string) => {
     return useQuery({
@@ -37,13 +46,18 @@ export const useAdminOrderDetail = (orderId: string, tenantId: string) => {
     });
 };
 
-export const useAdminOrders = (tenantId: string) => {
-    const queryClient = useQueryClient();
-    const ordersQuery = useQuery({
-        queryKey: ["orders", "admin", tenantId],
-        queryFn: () => getAdminOrders(tenantId),
+export const useAdminOrdersPage = (tenantId: string, params: AdminOrdersParams = {}) => {
+    return useQuery({
+        queryKey: ["orders", "admin", tenantId, "list", params],
+        queryFn: () => getAdminOrders(tenantId, params),
         enabled: Boolean(tenantId),
+        placeholderData: keepPreviousData,
     });
+};
+
+/** Status and return mutations for one store's orders (no list fetch). */
+export const useAdminOrderActions = (tenantId: string) => {
+    const queryClient = useQueryClient();
 
     const invalidate = () => {
         queryClient.invalidateQueries({
@@ -87,7 +101,6 @@ export const useAdminOrders = (tenantId: string) => {
     });
 
     return {
-        ...ordersQuery,
         updateOrderStatus: statusMutation.mutateAsync,
         isUpdatingStatus: statusMutation.isPending,
         approveReturn: approveMutation.mutateAsync,
@@ -102,10 +115,17 @@ export const useAdminOrders = (tenantId: string) => {
     };
 };
 
+export const useAdminOrders = (tenantId: string, params: AdminOrdersParams = {}) => {
+    const ordersQuery = useAdminOrdersPage(tenantId, params);
+    const actions = useAdminOrderActions(tenantId);
+    return { ...ordersQuery, ...actions };
+};
+
 export const useRequestReturn = (orderId: string) => {
     const queryClient = useQueryClient();
     return useMutation({
-        mutationFn: (reason: string) => requestOrderReturn(orderId, reason),
+        mutationFn: ({ reason, items }: { reason: string; items?: ReturnItemSelection[] }) =>
+            requestOrderReturn(orderId, reason, items),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["orders"] });
         },

@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, Header, HTTPException, status
 from fastapi.security import (
     HTTPAuthorizationCredentials,
     HTTPBearer,
@@ -68,6 +68,17 @@ def get_current_user(
             raise HTTPException(
                 status_code=401,
                 detail="User not found or inactive.",
+            )
+        # Customers and staff belong to a store: once a super admin
+        # deactivates (or deletes) that store, their sessions stop too.
+        user_tenant_id = user.get("tenantId")
+        if user_tenant_id and not tenants.find_one(
+            {"tenantId": user_tenant_id, "isActive": True},
+            {"_id": 1},
+        ):
+            raise HTTPException(
+                status_code=401,
+                detail="Tenant not found or inactive.",
             )
         return {
             "userId": str(
@@ -312,8 +323,28 @@ def require_tenant_admin(
     return current_user
 
 
+def ensure_tenant_header_matches(
+    current_user: dict,
+    header_tenant_id: str | None,
+) -> None:
+    """Reject a customer token used on a different store's storefront.
+
+    The storefront sends the store it's showing in `X-Tenant-Id`. Requests
+    without the header (older clients, scripts) are left alone.
+    """
+    if header_tenant_id is None or not str(header_tenant_id).strip():
+        return
+    expected = str(current_user.get("tenantId") or "").strip().lower()
+    if str(header_tenant_id).strip().lower() != expected:
+        raise HTTPException(
+            status_code=401,
+            detail="You're signed in to a different store.",
+        )
+
+
 def require_customer(
     current_user: Annotated[dict, Depends(get_current_user)],
+    x_tenant_id: Annotated[str | None, Header(alias="X-Tenant-Id")] = None,
 ):
     if current_user.get(
         "role"
@@ -329,4 +360,5 @@ def require_customer(
             status_code=403,
             detail="Customer must belong to a tenant.",
         )
+    ensure_tenant_header_matches(current_user, x_tenant_id)
     return current_user

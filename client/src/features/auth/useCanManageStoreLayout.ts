@@ -3,15 +3,15 @@ import { hasStorePermission } from "./permissions";
 import { isStoreStaff } from "./roles";
 import { useStorefrontTenant } from "../tenant/useTenant";
 
+/** Uses the admin-panel session, which stays separate from the storefront shopper session. */
 export const useCanManageStoreLayout = (): boolean => {
-    const { isAuthenticated, user } = useAuth();
+    const { staffUser } = useAuth();
     const { tenantId } = useStorefrontTenant();
     return Boolean(
-        isAuthenticated &&
-        user &&
-        (user?.role === "super_admin" ||
-            (isStoreStaff(user?.role) &&
-                user?.tenantId === tenantId &&
-                hasStorePermission(user, "layout"))),
+        staffUser &&
+        (staffUser.role === "super_admin" ||
+            (isStoreStaff(staffUser.role) &&
+                staffUser.tenantId === tenantId &&
+                hasStorePermission(staffUser, "layout"))),
     );
 };

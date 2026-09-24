@@ -267,6 +267,45 @@
   min-width: 0;
 }
 
+.billingBanner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+  padding: 0.625rem 1.875rem;
+  border-bottom: 0.0625rem solid transparent;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.billingBanner_info {
+  border-bottom-color: #dbeafe;
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.billingBanner_warning {
+  border-bottom-color: #fed7aa;
+  background: #fff7ed;
+  color: #c2410c;
+}
+
+.billingBanner_danger {
+  border-bottom-color: #fecaca;
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+.billingBannerLink {
+  flex-shrink: 0;
+  color: inherit;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 0.1875rem;
+}
+
 @media (max-width: 56.25rem) {
   .sidebar {
     width: 13.75rem;
@@ -318,5 +357,11 @@
   }
   .header h1 {
     font-size: 1.0625rem;
+  }
+}
+
+@media (max-width: 43.75rem) {
+  .billingBanner {
+    padding: 0.625rem 1rem;
   }
 }

@@ -16,6 +16,7 @@ from app.routes.response_metadata import (
     FORBIDDEN_RESPONSE,
     NOT_FOUND_RESPONSE,
 )
+from app.services.cache import cached_storefront, invalidate_tenant
 from app.utils.auth_dependencies import admin_tenant_id, require_permission
 from app.utils.category_catalog import get_catalog_categories
 
@@ -59,6 +60,7 @@ def create_category(
         "updatedAt": now
     }
     result = categories.insert_one(payload)
+    invalidate_tenant(tenant_id)
     return {
         "success": True,
         "message": "Category created successfully.",
@@ -75,7 +77,12 @@ def get_all_categories(
     Built from the product catalog (same source as product filters),
     so new/updated product categories appear without a separate seed.
     """
-    data = get_catalog_categories(tenant_id)
+    data = cached_storefront(
+        tenant_id,
+        "categories",
+        (),
+        lambda: get_catalog_categories(tenant_id),
+    )
     return {
         "success": True,
         "count": len(data),
@@ -163,6 +170,7 @@ def update_category(
             status_code=404,
             detail=CATEGORY_NOT_FOUND
         )
+    invalidate_tenant(tenant_id)
     updated = categories.find_one(
         {
             "_id": ObjectId(id),
@@ -210,6 +218,7 @@ def delete_category(
             status_code=404,
             detail=CATEGORY_NOT_FOUND
         )
+    invalidate_tenant(scoped_tenant_id)
     return {
         "success": True,
         "message": "Category deleted successfully."

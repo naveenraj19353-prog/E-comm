@@ -1,5 +1,6 @@
 export interface User {
     name: string;
+    /** Phone-only customers (WhatsApp sign-in) have no email. */
     email: string;
     role: string;
     tenantId?: string | null;
@@ -37,8 +38,36 @@ export interface RegisterResponse {
     success: boolean;
     message: string;
 }
+export type AuthSlotState =
+    | { kind: "admin" }
+    | { kind: "store"; slug: string };
 export interface AuthState {
+    /** Session of the context being viewed (current store's customer, or admin panel user). */
     user: User | null;
     accessToken: string | null;
     isAuthenticated: boolean;
+    /** Which stored session `user` comes from. */
+    slot: AuthSlotState;
+    /** Admin-panel session (staff / super admin), available on storefront pages too. */
+    staffUser: User | null;
+}
+export interface CustomerOtpSendRequest {
+    tenantId: string;
+    phone: string;
+}
+export interface CustomerOtpSendResponse {
+    success: boolean;
+    message: string;
+    expiresInSeconds: number;
+    resendInSeconds?: number;
+    phone?: string;
+}
+export interface CustomerOtpVerifyRequest {
+    tenantId: string;
+    phone: string;
+    otp: string;
+    name?: string;
+}
+export interface CustomerOtpVerifyResponse extends LoginResponse {
+    isNewCustomer?: boolean;
 }

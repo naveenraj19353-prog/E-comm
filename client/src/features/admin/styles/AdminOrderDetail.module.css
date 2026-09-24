@@ -100,7 +100,9 @@
 .status_return_requested,
 .status_return_approved,
 .status_returned,
-.status_refunded {
+.status_refunded,
+.status_partially_returned,
+.status_partially_refunded {
   background: #fff7ed;
   color: #c2410c;
 }
@@ -412,4 +414,24 @@
   .timeline {
     grid-template-columns: 1fr 1fr;
   }
+}
+
+.returnItems {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0.75rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.returnItems li {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.5rem 0.7rem;
+  border: 0.0625rem solid #e3e9e5;
+  border-radius: 0.55rem;
+  background: #f8faf9;
+  color: #33423b;
+  font-size: 0.85rem;
 }

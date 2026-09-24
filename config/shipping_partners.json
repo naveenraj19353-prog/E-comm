@@ -85,6 +85,16 @@
           "method": "GET",
           "path": "/api/v1/packages/json/"
         },
+        "invoiceCharges": {
+          "_comment": "Delhivery 'Invoice - Shipping Charge' calculator: md, cgm, o_pin, d_pin, ss (Delivered/RTO/DTO), pt. No waybill parameter; Delhivery documents the total as approximate. 40 req/min/IP. Used for the ledger's delivery charge once a shipment closes.",
+          "method": "GET",
+          "path": "/api/kinko/v1/invoice/charges/.json"
+        },
+        "cancelShipment": {
+          "_comment": "Delhivery Cancel Order API: JSON {\"waybill\": \"...\", \"cancellation\": \"true\"}; success {\"status\": true, \"remark\": ...}.",
+          "method": "POST",
+          "path": "/api/p/edit"
+        },
         "label": {
           "method": "GET",
           "path": "/api/p/packing_slip",

@@ -2,6 +2,8 @@ import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { CheckCircle2 } from "lucide-react";
 import { useStorefrontTenant } from "../../features/tenant/useTenant";
 import { useFormatStorePrice } from "../../features/tenant/useFormatStorePrice";
+import { useOrderDetail } from "../../features/orders/hooks/useOrders";
+import { formatOrderRef } from "../../features/orders/api/order.api";
 import { routes } from "../../routes/routes";
 import { storefrontNavigate } from "../../routes/routes";
 import styles from "./ThankYou.module.css";
@@ -20,7 +22,13 @@ const ThankYou = () => {
     const { formatPrice } = useFormatStorePrice();
     const state = (location.state || {}) as ThankYouLocationState;
 
-    const shortOrderId = orderId ? orderId.slice(-8).toUpperCase() : null;
+    // Checkout only passes the id; fetch the order for its readable reference.
+    const { data: order } = useOrderDetail(orderId || "");
+    const orderLabel = order
+        ? formatOrderRef(order)
+        : orderId
+          ? `#${orderId.slice(-8).toUpperCase()}`
+          : null;
     const amountLabel =
         typeof state.amount === "number" && Number.isFinite(state.amount)
             ? formatPrice(state.amount)
@@ -54,12 +62,12 @@ const ThankYou = () => {
                         We’ll keep you updated as it moves through fulfillment.
                     </p>
 
-                    {(shortOrderId || amountLabel || paymentLabel) && (
+                    {(orderLabel || amountLabel || paymentLabel) && (
                         <div className={styles.meta}>
-                            {shortOrderId && (
+                            {orderLabel && (
                                 <div className={styles.metaRow}>
-                                    <span className={styles.metaLabel}>Order ID</span>
-                                    <span className={styles.metaValue}>#{shortOrderId}</span>
+                                    <span className={styles.metaLabel}>Order</span>
+                                    <span className={styles.metaValue}>{orderLabel}</span>
                                 </div>
                             )}
                             {amountLabel && (

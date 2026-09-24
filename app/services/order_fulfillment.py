@@ -1,9 +1,12 @@
+import logging
 from datetime import datetime, timedelta, timezone
 from bson import ObjectId
 from fastapi import HTTPException
+from pymongo import ReturnDocument
 from pymongo.errors import DuplicateKeyError
 from app.database.mongo import (
     carts,
+    counters,
     products,
     orders,
     coupons,
@@ -14,10 +17,12 @@ from app.services.checkout_service import (
     tenant_id_query,
     calculate_checkout,
 )
+from app.services.ledger_service import record_order_ledger_entry, record_order_refund
 from app.utils.razorpay_client import client
 
 
 PROCESSING_STALE_MINUTES = 2
+logger = logging.getLogger(__name__)
 
 
 def _refresh_total_stock(product_id: ObjectId, now: datetime) -> None:
@@ -97,11 +102,61 @@ def _find_order(razorpay_order_id: str) -> dict | None:
     return orders.find_one({"razorpayOrderId": razorpay_order_id})
 
 
+def cancel_and_refund_order(order: dict, now: datetime) -> None:
+    """Refund the customer and cancel the courier shipment for a cancelled order.
+
+    Best-effort on both sides: a Razorpay/Delhivery outage shouldn't block an
+    admin from marking the order cancelled (stock is already restored by the
+    caller), but failures are recorded on the order rather than silently
+    swallowed, so support can follow up instead of assuming it went through.
+    """
+    order_id = order["_id"]
+    updates: dict = {}
+
+    payment_method = str(order.get("paymentMethod") or "").lower()
+    razorpay_payment_id = order.get("razorpayPaymentId")
+    if (
+        payment_method == "razorpay"
+        and order.get("paymentStatus") == "paid"
+        and razorpay_payment_id
+    ):
+        try:
+            client.payment.refund(razorpay_payment_id)
+            updates["paymentStatus"] = "refunded"
+            try:
+                record_order_refund(order_id)
+            except Exception:
+                logger.exception(
+                    "Failed to reverse ledger entry for cancelled order %s", order_id
+                )
+        except Exception:
+            logger.exception("Failed to refund cancelled order %s", order_id)
+            updates["refundStatus"] = "failed"
+
+    courier = order.get("courier") if isinstance(order.get("courier"), dict) else None
+    waybill = (courier or {}).get("waybill")
+    if waybill:
+        try:
+            from app.services.delhivery_service import DelhiveryService
+
+            DelhiveryService().cancel_shipment(order["tenantId"], waybill)
+            updates["courier.cancelledAt"] = now
+        except Exception:
+            logger.exception(
+                "Failed to cancel Delhivery shipment for order %s", order_id
+            )
+            updates["courier.cancelFailed"] = True
+
+    if updates:
+        updates["updatedAt"] = now
+        orders.update_one({"_id": order_id}, {"$set": updates})
+
+
 def _refund_payment(payment_id: str) -> None:
     try:
         client.payment.refund(payment_id)
-    except Exception as error:
-        print("PAYMENT REFUND ERROR", payment_id, str(error))
+    except Exception:
+        logger.exception("Payment refund error (paymentId=%s)", payment_id)
 
 
 def _build_order_items(checkout_data: dict) -> list[dict]:
@@ -176,6 +231,76 @@ def _reserve_stock(order_items: list[dict], now: datetime) -> bool:
     return True
 
 
+def reserve_checkout_stock(checkout_data: dict) -> list[dict]:
+    """Hold stock for a checkout's items *before* the customer pays.
+
+    Without this, two customers can both pass Razorpay's payment step for the
+    last unit of something — only one atomic decrement at fulfillment time can
+    win, so the other is auto-refunded after already paying. Reserving here
+    means the second customer is blocked before they ever get to pay.
+
+    Raises 409 immediately if anything is no longer available. Callers own
+    releasing this reservation (`release_reserved_stock`) if a later step
+    (e.g. creating the Razorpay order itself) fails.
+    """
+    order_items = _build_order_items(checkout_data)
+    now = datetime.now(timezone.utc)
+    if not _reserve_stock(order_items, now):
+        raise HTTPException(
+            status_code=409,
+            detail="An item in your cart just sold out. Please update your cart and try again.",
+        )
+    return order_items
+
+
+def release_reserved_stock(order_items: list[dict]) -> None:
+    now = datetime.now(timezone.utc)
+    for item in order_items:
+        restore_variant_stock(
+            item["productId"], item["variantId"], item["quantity"], now
+        )
+
+
+PAYMENT_INTENT_ABANDON_MINUTES = 30
+
+
+def expire_abandoned_payment_intents(limit: int = 25) -> int:
+    """Release stock reserved by checkouts that were started but never paid.
+
+    Runs opportunistically (called from the create-order endpoint) instead of
+    on a schedule — there's no task queue in this deployment, and sweeping a
+    small batch on every new checkout attempt is enough to keep this from
+    accumulating at this scale.
+    """
+    cutoff = datetime.now(timezone.utc) - timedelta(minutes=PAYMENT_INTENT_ABANDON_MINUTES)
+    stale = list(
+        payment_intents.find(
+            {
+                "status": "pending",
+                "stockReserved": True,
+                "createdAt": {"$lt": cutoff},
+            }
+        ).limit(limit)
+    )
+    now = datetime.now(timezone.utc)
+    expired_count = 0
+    for intent in stale:
+        # Atomic claim: if a real payment completes this instant, its own
+        # _claim_intent call and this one can't both win.
+        claimed = payment_intents.find_one_and_update(
+            {"_id": intent["_id"], "status": "pending"},
+            {"$set": {"status": "expired", "expiredAt": now}},
+        )
+        if not claimed:
+            continue
+        for item in claimed.get("reservedItems") or []:
+            restore_variant_stock(
+                item["productId"], item["variantId"], item["quantity"], now
+            )
+        expired_count += 1
+    return expired_count
+
+
 def _build_order_document(
     checkout_data: dict,
     tenant_id: str,
@@ -217,7 +342,25 @@ def _build_order_document(
         order_document["razorpayOrderId"] = razorpay_order_id
     if not payment_ids_first and razorpay_payment_id:
         order_document["razorpayPaymentId"] = razorpay_payment_id
+    cod_handling_charge = checkout_data.get("codHandlingCharge")
+    if payment_method == "cod" and cod_handling_charge:
+        order_document["codHandlingCharge"] = cod_handling_charge
     return order_document
+
+
+def next_order_number(tenant_id: str) -> int:
+    """A per-store, human-readable, strictly increasing order number.
+
+    Atomic across concurrent orders for the same store (single findAndModify
+    $inc), unlike reading-then-incrementing a counter field by hand.
+    """
+    result = counters.find_one_and_update(
+        {"_id": f"orders:{tenant_id}"},
+        {"$inc": {"seq": 1}},
+        upsert=True,
+        return_document=ReturnDocument.AFTER,
+    )
+    return int(result["seq"])
 
 
 def _insert_order(
@@ -226,6 +369,9 @@ def _insert_order(
     *,
     check_existing: bool = False,
 ) -> tuple[dict, bool]:
+    order_document.setdefault(
+        "orderNumber", next_order_number(order_document["tenantId"])
+    )
     try:
         result = orders.insert_one(order_document)
         order_document["_id"] = result.inserted_id
@@ -431,6 +577,7 @@ def fulfill_cod_order(
         require_address=True,
         delivery_method=delivery_method,
         payment_method="cod",
+        enforce_store_availability=True,
     )
     order = _finalize_order_from_checkout(
         checkout_data,
@@ -511,6 +658,15 @@ def fulfill_captured_payment(
     )
     if not inserted:
         return _order_response(order_document, razorpay_payment_id)
+
+    try:
+        record_order_ledger_entry(order_document)
+    except Exception:
+        # Never block order fulfillment on the ledger — the customer must
+        # still get their order confirmed even if this bookkeeping fails.
+        logger.exception(
+            "Failed to record ledger entry for order %s", order_document.get("_id")
+        )
 
     _apply_order_side_effects(
         checkout_data,

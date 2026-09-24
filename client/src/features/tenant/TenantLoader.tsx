@@ -7,6 +7,7 @@ import { clearTenant, setTenant, setTenantSlug } from "./tenantSlice";
 import { getTenantSlugFromHostname } from "./tenantHost";
 import { getTenantBySlug } from "../admin/api/tenant.api";
 import { StorefrontAuthModalProvider } from "./StorefrontAuthModal";
+import StoreUnavailable from "./StoreUnavailable";
 import type { Tenant } from "../../types/tenant";
 
 const TenantLoader = () => {
@@ -65,6 +66,12 @@ const TenantLoader = () => {
 
     if (tenantQuery.isError) {
         return <h1>Store not found</h1>;
+    }
+
+    // Offline stores get a neutral holding page instead of the storefront.
+    // `undefined` (older API responses) counts as available.
+    if (tenantQuery.data?.storeAvailable === false) {
+        return <StoreUnavailable name={tenantQuery.data.name} logo={tenantQuery.data.logo} />;
     }
 
     if (tenantQuery.isLoading || !currentTenant) {

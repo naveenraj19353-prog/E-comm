@@ -1,13 +1,18 @@
+import logging
 from datetime import datetime, timezone
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
+from pymongo.errors import DuplicateKeyError
 from app.database.mongo import users, tenants
 from app.models.user import (
     RegisterUser,
     LoginUser,
     ForgotPasswordRequest,
     ResetPasswordRequest,
+    CustomerOtpSendRequest,
+    CustomerOtpVerifyRequest,
 )
 from app.models.menu import MenuLoginRequest
+from app.services import customer_otp_service
 from app.utils.hash import (
     hash_password,
     verify_password,
@@ -28,6 +33,7 @@ from app.services.menu_service import (
     upsert_menu_guest,
     verify_daily_password,
 )
+from app.services import rate_limit
 from app.services.store_permissions import permissions_for_staff_doc
 from app.routes.response_metadata import (
     BAD_REQUEST_RESPONSE,
@@ -39,6 +45,9 @@ from app.routes.detail_messages import (
     INVALID_CREDENTIALS,
     TENANT_NOT_FOUND_OR_INACTIVE,
 )
+
+logger = logging.getLogger(__name__)
+
 router = APIRouter(
     prefix="/auth",
     tags=["Authentication"],
@@ -54,7 +63,14 @@ router = APIRouter(
 )
 def register(
     user: RegisterUser,
+    request: Request,
 ):
+    rate_limit.hit(
+        "register_ip",
+        rate_limit.client_ip(request),
+        limit=20,
+        window_seconds=rate_limit.HOUR,
+    )
     tenant_id = user.tenantId.strip().lower()
     email = str(
         user.email
@@ -97,9 +113,21 @@ def register(
         "createdAt": now,
         "updatedAt": now,
     }
-    result = users.insert_one(
-        payload
-    )
+    try:
+        result = users.insert_one(
+            payload
+        )
+    except DuplicateKeyError as exc:
+        duplicate_fields = (exc.details or {}).get("keyPattern") or {}
+        if "phone" in duplicate_fields:
+            raise HTTPException(
+                status_code=409,
+                detail="This phone number is already registered. Sign in with your phone instead.",
+            ) from exc
+        raise HTTPException(
+            status_code=400,
+            detail="Email already exists.",
+        ) from exc
     return {
         "success": True,
         "message": "Registration successful.",
@@ -109,15 +137,44 @@ def register(
     }
 
 
-@router.post("/login", responses={401: UNAUTHORIZED_RESPONSE[401]})
+LOGIN_WINDOW_SECONDS = 15 * rate_limit.MINUTE
+LOGIN_FAILURES_PER_ACCOUNT = 10
+LOGIN_FAILURES_PER_IP = 50
+
+
+@router.post(
+    "/login",
+    responses={401: UNAUTHORIZED_RESPONSE[401], 429: {"description": "Too many failed attempts."}},
+)
 def login(
     user: LoginUser,
+    request: Request,
 ):
-    email = str(
-        user.email
-    ).strip().lower()
+    """Only *failed* attempts count toward the limits.
+
+    Counting every attempt would let anyone who knows a store owner's email
+    lock them out by typing wrong passwords, and would also block a real
+    user who signs in often from several devices.
+    """
+    email = str(user.email).strip().lower()
+    ip_key = rate_limit.client_ip(request)
+    account_key = f"{str(user.tenantId or '').strip()}:{email}"
+    rate_limit.ensure_not_blocked(
+        "login_ip", ip_key, limit=LOGIN_FAILURES_PER_IP, window_seconds=LOGIN_WINDOW_SECONDS
+    )
+    rate_limit.ensure_not_blocked(
+        "login_account", account_key, limit=LOGIN_FAILURES_PER_ACCOUNT, window_seconds=LOGIN_WINDOW_SECONDS
+    )
+    try:
+        return _authenticate(user, email)
+    except HTTPException as error:
+        if error.status_code == 401:
+            rate_limit.record_failure("login_ip", ip_key, window_seconds=LOGIN_WINDOW_SECONDS)
+            rate_limit.record_failure("login_account", account_key, window_seconds=LOGIN_WINDOW_SECONDS)
+        raise
 
 
+def _authenticate(user: LoginUser, email: str) -> dict:
     if not user.tenantId:
         existing = users.find_one({
             "email": email,
@@ -168,6 +225,14 @@ def login(
 
 
     tenant_id = user.tenantId.strip().lower()
+    # Nobody signs in to a deactivated store — not the owner, staff or
+    # customers. Same message as a wrong password, so this can't be used to
+    # probe which stores exist.
+    if not tenants.find_one({"tenantId": tenant_id, "isActive": True}, {"_id": 1}):
+        raise HTTPException(
+            status_code=401,
+            detail=INVALID_CREDENTIALS,
+        )
     tenant = tenants.find_one({
         "tenantId": tenant_id,
         "email": email,
@@ -319,8 +384,20 @@ def login(
         404: NOT_FOUND_RESPONSE[404],
     },
 )
-def menu_login(payload: MenuLoginRequest):
+def menu_login(payload: MenuLoginRequest, request: Request):
     tenant_id = payload.tenantId.strip().lower()
+    rate_limit.hit(
+        "menu_login_ip",
+        f"{tenant_id}:{rate_limit.client_ip(request)}",
+        limit=15,
+        window_seconds=15 * rate_limit.MINUTE,
+    )
+    rate_limit.hit(
+        "menu_login_phone",
+        f"{tenant_id}:{payload.phone}",
+        limit=10,
+        window_seconds=15 * rate_limit.MINUTE,
+    )
     require_menu_tenant(tenant_id)
     phone = normalize_phone(payload.phone)
     counter_number = normalize_counter_number(payload.counterNumber)
@@ -353,10 +430,122 @@ def menu_login(payload: MenuLoginRequest):
     }
 
 
+OTP_SEND_PER_IP_PER_HOUR = 30
+OTP_SEND_PER_PHONE_PER_HOUR = 10
+OTP_VERIFY_WINDOW_SECONDS = 15 * rate_limit.MINUTE
+OTP_VERIFY_PER_IP = 40
+OTP_VERIFY_PER_PHONE = 15
+
+
+@router.post(
+    "/otp/send",
+    responses={
+        400: BAD_REQUEST_RESPONSE[400],
+        402: {"description": "Store unavailable."},
+        404: NOT_FOUND_RESPONSE[404],
+        429: {"description": "Too many requests."},
+    },
+)
+def send_customer_otp(payload: CustomerOtpSendRequest, request: Request):
+    """Send a 6-digit WhatsApp code for storefront phone sign-in / guest checkout."""
+    tenant_id = customer_otp_service.normalize_tenant(payload.tenantId)
+    phone = customer_otp_service.normalize_customer_phone(payload.phone)
+    rate_limit.hit(
+        "customer_otp_send_ip",
+        rate_limit.client_ip(request),
+        limit=OTP_SEND_PER_IP_PER_HOUR,
+        window_seconds=rate_limit.HOUR,
+    )
+    # Across every store, so one number can't be flooded via many storefronts.
+    rate_limit.hit(
+        "customer_otp_send_phone",
+        phone,
+        limit=OTP_SEND_PER_PHONE_PER_HOUR,
+        window_seconds=rate_limit.HOUR,
+    )
+    return customer_otp_service.send_customer_otp(tenant_id, phone)
+
+
+@router.post(
+    "/otp/verify",
+    responses={
+        400: BAD_REQUEST_RESPONSE[400],
+        402: {"description": "Store unavailable."},
+        403: {"description": "Account disabled."},
+        404: NOT_FOUND_RESPONSE[404],
+        409: {"description": "Number belongs to a non-customer account."},
+        429: {"description": "Too many requests."},
+    },
+)
+def verify_customer_otp(payload: CustomerOtpVerifyRequest, request: Request):
+    """Check the code and sign the customer in, creating their account if new.
+
+    Response matches a customer `/auth/login`, plus `isNewCustomer`.
+    """
+    tenant_id = customer_otp_service.normalize_tenant(payload.tenantId)
+    phone = customer_otp_service.normalize_customer_phone(payload.phone)
+    rate_limit.hit(
+        "customer_otp_verify_ip",
+        rate_limit.client_ip(request),
+        limit=OTP_VERIFY_PER_IP,
+        window_seconds=OTP_VERIFY_WINDOW_SECONDS,
+    )
+    rate_limit.hit(
+        "customer_otp_verify_phone",
+        f"{tenant_id}:{phone}",
+        limit=OTP_VERIFY_PER_PHONE,
+        window_seconds=OTP_VERIFY_WINDOW_SECONDS,
+    )
+    customer_otp_service.require_otp_tenant(tenant_id)
+    customer_otp_service.consume_customer_otp(tenant_id, phone, payload.otp)
+    customer, created = customer_otp_service.find_or_create_phone_customer(
+        tenant_id,
+        phone,
+        payload.name,
+    )
+    user_id = str(customer["_id"])
+    email = customer.get("email")
+    token = create_token({
+        "userId": user_id,
+        "tenantId": tenant_id,
+        "email": email,
+        "role": "customer",
+        "name": customer.get("name"),
+        "phone": phone,
+    })
+    return {
+        "success": True,
+        "access_token": token,
+        "token_type": "Bearer",
+        "isNewCustomer": created,
+        "user": {
+            "userId": user_id,
+            "name": customer.get("name"),
+            "email": email,
+            "tenantId": tenant_id,
+            "role": "customer",
+            "phone": phone,
+        },
+    }
+
+
 @router.post("/forgot-password", responses={404: NOT_FOUND_RESPONSE[404]})
 def forgot_password(
     user: ForgotPasswordRequest,
+    request: Request,
 ):
+    rate_limit.hit(
+        "forgot_password_ip",
+        rate_limit.client_ip(request),
+        limit=20,
+        window_seconds=rate_limit.HOUR,
+    )
+    rate_limit.hit(
+        "forgot_password_email",
+        str(user.email),
+        limit=5,
+        window_seconds=rate_limit.HOUR,
+    )
     account = resolve_reset_account(
         email=str(user.email),
         tenant_id=user.tenantId,
@@ -395,7 +584,14 @@ def forgot_password(
 )
 def reset_password(
     payload: ResetPasswordRequest,
+    request: Request,
 ):
+    rate_limit.hit(
+        "reset_password_ip",
+        rate_limit.client_ip(request),
+        limit=20,
+        window_seconds=15 * rate_limit.MINUTE,
+    )
     try:
         result = reset_password_with_token(
             payload.token.strip(),
@@ -404,7 +600,7 @@ def reset_password(
     except HTTPException:
         raise
     except Exception as error:
-        print("Reset password error:", str(error))
+        logger.exception("Reset password error")
         raise HTTPException(
             status_code=500,
             detail="Unable to reset password.",

@@ -16,6 +16,7 @@ import certifi
 
 from app.config import DELHIVERY_BASE_URL, ENVIRONMENT
 from app.database.mongo import shipping_integrations
+from app.observability import alert
 from app.services.shipping_partner_config import (
     ShippingConfigError,
     get_operation,
@@ -174,6 +175,7 @@ class DelhiveryService:
                         try:
                             return json.loads(raw)
                         except json.JSONDecodeError as decode_error:
+                            alert("delhivery.request_failed", provider="delhivery", tenant_id=tenant_id, operation=method, path=path, code="BAD_RESPONSE")
                             raise DelhiveryError(
                                 "Delhivery returned a malformed response.",
                                 code="BAD_RESPONSE",
@@ -200,6 +202,7 @@ class DelhiveryService:
                             status_code=400,
                         ) from exc
                     if exc.code == 429:
+                        alert("delhivery.request_failed", provider="delhivery", tenant_id=tenant_id, operation=method, path=path, http_status=exc.code, code="RATE_LIMIT")
                         raise DelhiveryError(
                             "Delhivery rate limit exceeded. Try again shortly.",
                             code="RATE_LIMIT",
@@ -213,6 +216,7 @@ class DelhiveryService:
                         exc.code,
                         path,
                     )
+                    alert("delhivery.request_failed" if exc.code >= 500 else "delhivery.request_rejected", provider="delhivery", tenant_id=tenant_id, operation=method, path=path, http_status=exc.code, code="PROVIDER_ERROR")
                     raise DelhiveryError(
                         detail or "Delhivery request failed.",
                         code="PROVIDER_ERROR",
@@ -238,6 +242,7 @@ class DelhiveryService:
                         method,
                         path,
                     )
+                    alert("delhivery.request_failed", provider="delhivery", tenant_id=tenant_id, operation=method, path=path, code="NETWORK", error_type=type(exc).__name__)
                     raise DelhiveryError(
                         "Could not reach Delhivery.",
                         code="NETWORK",
@@ -248,6 +253,7 @@ class DelhiveryService:
                     if attempt <= retries:
                         time.sleep(0.4 * attempt)
                         continue
+                    alert("delhivery.request_failed", provider="delhivery", tenant_id=tenant_id, operation=method, path=path, code="TIMEOUT")
                     raise DelhiveryError(
                         "Delhivery request timed out.",
                         code="TIMEOUT",
@@ -260,6 +266,7 @@ class DelhiveryService:
             method,
             path,
         )
+        alert("delhivery.request_failed", provider="delhivery", tenant_id=tenant_id, operation=method, path=path, code="SSL_ERROR")
         raise DelhiveryError(
             "Could not reach Delhivery (SSL certificate error on this machine).",
             code="SSL_ERROR",
@@ -468,6 +475,11 @@ class DelhiveryService:
         }
 
     def track_shipment(self, tenant_id: str, waybill: str) -> dict:
+        """Pull tracking (GET /api/v1/packages/json/?waybill=).
+
+        Delhivery allows 750 tracking requests per 5 minutes per IP. The
+        result is normalized by `normalize_tracking_shipment`.
+        """
         wbn = str(waybill or "").strip()
         if not wbn:
             raise DelhiveryError(
@@ -487,57 +499,178 @@ class DelhiveryService:
             if isinstance(shipment_data, list) and shipment_data:
                 first = shipment_data[0]
                 shipment = first.get("Shipment") if isinstance(first, dict) else None
-        status_label = None
-        status_type = None
-        status_date = None
+        return normalize_tracking_shipment(wbn, shipment)
+
+    def cancel_shipment(self, tenant_id: str, waybill: str) -> bool:
+        """Ask Delhivery to cancel a shipment (Cancel Order API).
+
+        Verified against Delhivery's Last-Mile docs: POST /api/p/edit with JSON
+        {"waybill": ..., "cancellation": "true"}; success is
+        {"status": true, "remark": "Shipment has been cancelled", ...}.
+        Delhivery accepts it while the package is Manifested / In Transit /
+        Pending / Open / Scheduled. A prepaid/COD package that was already
+        picked up is not stopped in place — Delhivery turns it into a return
+        (status "Returned"/RTO), which the shipment sync records. Rejections
+        surface as a DelhiveryError rather than silently pretending it worked.
+        """
+        wbn = str(waybill or "").strip()
+        if not wbn:
+            raise DelhiveryError(
+                "Waybill is required.", code="INVALID_AWB", status_code=400
+            )
+        raw = self._request(
+            "POST",
+            self._operation_path("cancelShipment", "/api/p/edit"),
+            tenant_id=tenant_id,
+            json_body={"waybill": wbn, "cancellation": "true"},
+        )
+        if not isinstance(raw, dict) or raw.get("status") is not True:
+            detail = (
+                (raw.get("error") or raw.get("remark") or raw.get("message"))
+                if isinstance(raw, dict)
+                else None
+            )
+            raise DelhiveryError(
+                str(detail or "Delhivery could not cancel this shipment."),
+                code="CANCEL_REJECTED",
+                status_code=400,
+            )
+        return True
+
+    def estimate_shipping_charges(
+        self,
+        tenant_id: str,
+        *,
+        origin_pin: str,
+        destination_pin: str,
+        weight_grams: int,
+        mode: str = "S",
+        payment_type: str = "Pre-paid",
+        shipment_status: str = "Delivered",
+    ) -> float | None:
+        """Delhivery's "Invoice - Shipping Charge" calculator (total incl. tax).
+
+        GET /api/kinko/v1/invoice/charges/.json?md=&cgm=&o_pin=&d_pin=&ss=&pt=
+        Delhivery documents the result as an *approximation* ("actual amount
+        charged by delhivery can be different"); it takes no waybill. It is
+        rate limited to 40 requests/minute per IP.
+        """
+        md = "E" if str(mode or "").upper().startswith("E") else "S"
+        pt = "COD" if str(payment_type or "").upper() == "COD" else "Pre-paid"
+        raw = self._request(
+            "GET",
+            self._operation_path("invoiceCharges", "/api/kinko/v1/invoice/charges/.json"),
+            tenant_id=tenant_id,
+            params={
+                "md": md,
+                "ss": shipment_status,
+                "d_pin": _validate_pincode(destination_pin),
+                "o_pin": _validate_pincode(origin_pin),
+                "cgm": max(int(weight_grams or DEFAULT_WEIGHT_GRAMS), 1),
+                "pt": pt,
+            },
+        )
+        items = raw if isinstance(raw, list) else [raw] if isinstance(raw, dict) else []
+        for item in items:
+            if not isinstance(item, dict) or item.get("total_amount") is None:
+                continue
+            try:
+                return round(float(item["total_amount"]), 2)
+            except (TypeError, ValueError):
+                continue
+        return None
+
+    def fetch_shipment_charges(self, tenant_id: str, waybill: str) -> float | None:
+        """Freight for this waybill, once the shipment has closed, in rupees.
+
+        Delhivery has no documented API that returns the amount actually
+        billed for a waybill (that lives only in Delhivery One → Finances →
+        Invoices, "AWB-wise backup data"). The closest documented call is the
+        shipping-charge calculator, which needs the lane, weight, mode,
+        payment type and final status (Delivered/RTO) — so this computes
+        that estimate from the shipment's own details and Delhivery's charged
+        weight. Returns None (not 0) until the shipment is delivered or
+        returned to origin, or when inputs are missing, so callers can tell
+        "not known yet" apart from "free".
+        """
+        wbn = str(waybill or "").strip()
+        scoped = str(tenant_id or "").strip().lower()
+        if not wbn or not scoped:
+            return None
+        try:
+            return self._closed_shipment_charge(scoped, wbn)
+        except DelhiveryError:
+            logger.exception(
+                "Failed to fetch Delhivery shipping charges for waybill %s", wbn
+            )
+            return None
+
+    def _closed_shipment_charge(self, tenant_id: str, waybill: str) -> float | None:
+        from app.database.mongo import orders, shipments, shipping_locations
+
+        shipment = shipments.find_one(
+            {"tenantId": tenant_id, "provider": self.provider, "awb": waybill}
+        ) or {}
+        snapshot = shipment.get("tracking") if isinstance(shipment.get("tracking"), dict) else {}
+        outcome = classify_tracking(snapshot.get("status"), snapshot.get("statusType"))
+        if outcome["outcome"] not in {"delivered", "rto_delivered"}:
+            snapshot = self.track_shipment(tenant_id, waybill)
+            outcome = classify_tracking(snapshot.get("status"), snapshot.get("statusType"))
+        if outcome["outcome"] == "delivered":
+            final_status = "Delivered"
+        elif outcome["outcome"] == "rto_delivered":
+            final_status = "RTO"
+        else:
+            return None
+
+        order = None
+        order_id = str(shipment.get("orderId") or "")
+        if order_id:
+            try:
+                from bson import ObjectId
+
+                order = orders.find_one(
+                    {"_id": ObjectId(order_id), "tenantId": tenant_id},
+                    {"address": 1, "paymentMethod": 1},
+                )
+            except Exception:
+                order = None
+        address = (order or {}).get("address") if isinstance((order or {}).get("address"), dict) else {}
+        destination = str(snapshot.get("destinationPin") or address.get("postalCode") or "")
+
         location = None
-        history: list[dict] = []
-        if isinstance(shipment, dict):
-            status = shipment.get("Status") if isinstance(shipment.get("Status"), dict) else {}
-            status_label = status.get("Status") or shipment.get("Status")
-            status_type = status.get("StatusType")
-            status_date = status.get("StatusDateTime") or status.get("StatusDate")
-            location = status.get("StatusLocation") or status.get("Instructions")
-            scans = shipment.get("Scans") or shipment.get("ScanDetail") or []
-            if isinstance(scans, list):
-                for item in scans[:30]:
-                    detail = (
-                        item.get("ScanDetail")
-                        if isinstance(item, dict) and isinstance(item.get("ScanDetail"), dict)
-                        else item
-                    )
-                    if not isinstance(detail, dict):
-                        continue
-                    history.append(
-                        {
-                            "status": str(
-                                detail.get("Scan")
-                                or detail.get("Status")
-                                or detail.get("Instructions")
-                                or ""
-                            ).strip(),
-                            "location": str(
-                                detail.get("ScannedLocation")
-                                or detail.get("StatusLocation")
-                                or detail.get("City")
-                                or ""
-                            ).strip(),
-                            "at": str(
-                                detail.get("ScanDateTime")
-                                or detail.get("StatusDateTime")
-                                or ""
-                            ).strip(),
-                        }
-                    )
-        return {
-            "awb": wbn,
-            "status": status_label,
-            "statusCode": status_type,
-            "location": location,
-            "estimatedDelivery": status_date,
-            "trackingUrl": TRACKING_URL_TEMPLATE.format(waybill=wbn),
-            "history": [event for event in history if event.get("status") or event.get("location")],
-        }
+        if shipment.get("pickupLocation"):
+            location = shipping_locations.find_one(
+                {"tenantId": tenant_id, "provider": self.provider, "name": shipment["pickupLocation"]},
+                {"pincode": 1},
+            )
+        if not location:
+            location = shipping_locations.find_one(
+                {"tenantId": tenant_id, "provider": self.provider, "active": True},
+                {"pincode": 1},
+            )
+        origin = str((location or {}).get("pincode") or "")
+        if not origin or not destination:
+            return None
+
+        weight = snapshot.get("chargedWeightGrams") or shipment.get("weightGrams")
+        payment_method = str((order or {}).get("paymentMethod") or "").lower()
+        order_type = str(snapshot.get("orderType") or "").upper()
+        is_cod = order_type == "COD" or payment_method in {"cod", "cash_on_delivery"}
+        try:
+            return self.estimate_shipping_charges(
+                tenant_id,
+                origin_pin=origin,
+                destination_pin=destination,
+                weight_grams=int(weight or DEFAULT_WEIGHT_GRAMS),
+                mode="E" if str(shipment.get("shippingMode") or "").lower() == "express" else "S",
+                payment_type="COD" if is_cod else "Pre-paid",
+                shipment_status=final_status,
+            )
+        except DelhiveryError as error:
+            if error.code == "INVALID_PINCODE":
+                return None
+            raise
 
     def packing_slip_url(self, waybill: str) -> str:
         wbn = str(waybill or "").strip()
@@ -946,6 +1079,150 @@ def _first_package(raw: Any) -> dict:
             packages = raw["data"].get("packages") or []
     package = packages[0] if isinstance(packages, list) and packages else {}
     return package if isinstance(package, dict) else {}
+
+
+def _text(value: Any) -> str:
+    return str(value).strip() if value is not None else ""
+
+
+def _charged_weight_grams(value: Any) -> int | None:
+    """Delhivery's ChargedWeight; docs don't state the unit (grams observed).
+
+    Values under 50 are read as kilograms (no Delhivery parcel is billed at
+    under 50 g), 0/missing → None.
+    """
+    try:
+        number = float(value)
+    except (TypeError, ValueError):
+        return None
+    if number <= 0:
+        return None
+    return int(round(number * 1000)) if number < 50 else int(round(number))
+
+
+def normalize_tracking_shipment(waybill: str, shipment: Any) -> dict:
+    """Flatten one Delhivery `Shipment` object (pull API or push webhook).
+
+    Documented fields: Shipment.AWB, ReferenceNo, OrderType, Origin,
+    Destination, Consignee.PinCode, ChargedWeight, Status.{Status,
+    StatusType, StatusDateTime, StatusLocation, Instructions}; push payloads
+    also carry NSLCode. Scans[].ScanDetail.{Scan, ScanType, ScanDateTime,
+    ScannedLocation, Instructions, StatusCode}.
+    """
+    wbn = _text(waybill)
+    shipment = shipment if isinstance(shipment, dict) else None
+    status_label = None
+    status_type = None
+    status_date = None
+    location = None
+    instructions = None
+    nsl_code = None
+    history: list[dict] = []
+    extra: dict[str, Any] = {}
+    if shipment is not None:
+        wbn = wbn or _text(shipment.get("AWB") or shipment.get("Waybill"))
+        status = shipment.get("Status") if isinstance(shipment.get("Status"), dict) else {}
+        raw_label = status.get("Status") if status else shipment.get("Status")
+        status_label = _text(raw_label) or None
+        status_type = _text(status.get("StatusType")).upper() or None
+        status_date = status.get("StatusDateTime") or status.get("StatusDate")
+        location = status.get("StatusLocation") or status.get("Instructions")
+        instructions = _text(status.get("Instructions")) or None
+        nsl_code = _text(
+            status.get("StatusCode") or shipment.get("NSLCode") or status.get("NSLCode")
+        ) or None
+        consignee = shipment.get("Consignee") if isinstance(shipment.get("Consignee"), dict) else {}
+        pin = "".join(ch for ch in _text(consignee.get("PinCode")) if ch.isdigit())
+        extra = {
+            "referenceNo": _text(shipment.get("ReferenceNo")) or None,
+            "orderType": _text(shipment.get("OrderType")) or None,
+            "destinationPin": pin if len(pin) == 6 else None,
+            "chargedWeightGrams": _charged_weight_grams(shipment.get("ChargedWeight")),
+        }
+        scans = shipment.get("Scans") or shipment.get("ScanDetail") or []
+        if isinstance(scans, list):
+            for item in scans[:30]:
+                detail = (
+                    item.get("ScanDetail")
+                    if isinstance(item, dict) and isinstance(item.get("ScanDetail"), dict)
+                    else item
+                )
+                if not isinstance(detail, dict):
+                    continue
+                history.append(
+                    {
+                        "status": _text(
+                            detail.get("Scan")
+                            or detail.get("Status")
+                            or detail.get("Instructions")
+                        ),
+                        "location": _text(
+                            detail.get("ScannedLocation")
+                            or detail.get("StatusLocation")
+                            or detail.get("City")
+                        ),
+                        "at": _text(detail.get("ScanDateTime") or detail.get("StatusDateTime")),
+                    }
+                )
+    return {
+        "awb": wbn,
+        "status": status_label,
+        # Kept for existing API consumers: this has always held StatusType.
+        "statusCode": status_type,
+        "statusType": status_type,
+        "nslCode": nsl_code,
+        "instructions": instructions,
+        "statusAt": _text(status_date) or None,
+        "location": location,
+        "estimatedDelivery": status_date,
+        "trackingUrl": TRACKING_URL_TEMPLATE.format(waybill=wbn),
+        **extra,
+        "history": [event for event in history if event.get("status") or event.get("location")],
+    }
+
+
+# Delhivery StatusType (Package Lifecycle doc): UD undelivered/forward in
+# progress, DL delivered (end state), RT returned (RTO leg), and for reverse
+# pickups PP pickup pending, PU picked up, CN cancelled.
+# Status values: Manifested → (Not Picked) → In Transit / Pending /
+# Dispatched → Delivered; closed states Delivered, Cancelled, RTO, DTO,
+# Collected; Delhivery One also lists Lost.
+_PRE_PICKUP = {"manifested", "not picked", "open", "scheduled", "pickup scheduled", "ready to ship"}
+_IN_TRANSIT = {"in transit", "pending", "dispatched", "picked up", "out for delivery", "reached destination"}
+
+
+def classify_tracking(status: Any, status_type: Any = None) -> dict:
+    """Map a Delhivery (Status, StatusType) pair onto what it means for us.
+
+    outcome is one of:
+      pre_pickup      – label made, courier hasn't picked it up
+      in_transit      – with Delhivery, moving towards the customer
+      delivered       – handed to the customer (DL + Delivered only)
+      rto             – coming back to the seller (RT leg)
+      rto_delivered   – back at the seller (closed RTO/DTO/Returned)
+      lost            – Delhivery marked it lost (closed)
+      cancelled       – cancelled at Delhivery (closed)
+      unknown         – anything else; callers must not act on it
+    """
+    label = " ".join(_text(status).lower().replace("_", " ").split())
+    kind = _text(status_type).upper()
+    if not label and not kind:
+        return {"outcome": "unknown", "closed": False}
+    if "lost" in label:
+        return {"outcome": "lost", "closed": True}
+    if label in {"cancelled", "canceled"} or kind == "CN":
+        return {"outcome": "cancelled", "closed": True}
+    if label in {"rto", "dto", "returned", "rto delivered", "rto received"}:
+        return {"outcome": "rto_delivered", "closed": True}
+    if kind == "RT" or label.startswith("rto"):
+        return {"outcome": "rto", "closed": False}
+    if label == "delivered" and kind in {"", "DL"}:
+        return {"outcome": "delivered", "closed": True}
+    if kind in {"", "UD"} and label in _PRE_PICKUP:
+        return {"outcome": "pre_pickup", "closed": False}
+    if kind in {"", "UD"} and label in _IN_TRANSIT:
+        return {"outcome": "in_transit", "closed": False}
+    return {"outcome": "unknown", "closed": False}
 
 
 def _safe_error_detail_text(body: str, status_code: int) -> str:

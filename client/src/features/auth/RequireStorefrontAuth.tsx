@@ -6,14 +6,18 @@ import { useStorefrontTenant } from "../tenant/useTenant";
 
 export default function RequireStorefrontAuth({
   children,
+  allowGuest = false,
 }: {
   children: ReactNode;
+  /** Render the page for signed-out shoppers too (it handles sign-in inline, e.g. checkout). */
+  allowGuest?: boolean;
 }) {
   const location = useLocation();
   const { isAuthenticated, user } = useAuth();
   const { tenantSlug } = useStorefrontTenant();
   const loginPath = getStorefrontLoginPath(tenantSlug);
-  if (!isAuthenticated || !user?._id || user?.role !== "customer") {
+  const isCustomer = isAuthenticated && Boolean(user?._id) && user?.role === "customer";
+  if (!isCustomer && !allowGuest) {
     if (/^https?:\/\//i.test(loginPath)) {
       window.location.assign(loginPath);
       return null;

@@ -6,6 +6,7 @@ import { useFormatStorePrice } from "../../features/tenant/useFormatStorePrice";
 import { useUserOrders } from "../../features/orders/hooks/useOrders";
 import {
     formatOrderDate,
+    formatOrderRef,
     orderStatusLabel,
 } from "../../features/orders/api/order.api";
 import PageLoader from "../../components/PageLoader";
@@ -93,7 +94,7 @@ const MyOrders = () => {
                                 <div className={styles.cardHeader}>
                                     <div>
                                         <span className={styles.orderId}>
-                                            Order #{order.orderId.slice(-8).toUpperCase()}
+                                            Order {formatOrderRef(order)}
                                         </span>
                                         <span className={styles.date}>
                                             {formatOrderDate(order.createdAt)}

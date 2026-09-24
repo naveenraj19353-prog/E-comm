@@ -177,6 +177,7 @@ def fulfill_menu_order(
         address_id=None,
         require_address=False,
         delivery_method="standard",
+        enforce_store_availability=True,
     )
     # Dine-in / hotel menu: no delivery charge.
     checkout_data["deliveryMethod"] = "dine_in"

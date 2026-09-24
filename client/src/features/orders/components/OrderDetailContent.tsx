@@ -2,6 +2,7 @@ import { MapPin, Package, Receipt, User } from "lucide-react";
 import type { Order } from "../types/order.types";
 import {
     formatOrderDate,
+    formatOrderRef,
     orderStatusLabel,
 } from "../api/order.api";
 import { useFormatStorePrice } from "../../tenant/useFormatStorePrice";
@@ -45,8 +46,8 @@ const OrderDetailContent = ({
         <div className={`${styles.content} ${isAdmin ? styles.admin : ""}`}>
             <div className={styles.summaryGrid}>
                 <div className={styles.summaryCard}>
-                    <span>Order ID</span>
-                    <strong>#{order.orderId.slice(-8).toUpperCase()}</strong>
+                    <span>Order</span>
+                    <strong>{formatOrderRef(order)}</strong>
                 </div>
                 <div className={styles.summaryCard}>
                     <span>Placed on</span>
@@ -200,6 +201,14 @@ const OrderDetailContent = ({
                             <span>Total paid</span>
                             <strong>{formatPrice(order.totalAmount)}</strong>
                         </div>
+                        {(order.refundedAmount ?? 0) > 0 && (
+                            <div className={styles.priceRow}>
+                                <span>Refunded</span>
+                                <strong className={styles.discount}>
+                                    -{formatPrice(order.refundedAmount ?? 0)}
+                                </strong>
+                            </div>
+                        )}
                     </div>
                 </section>
             </div>

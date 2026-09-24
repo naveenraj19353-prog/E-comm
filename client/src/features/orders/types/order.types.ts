@@ -9,7 +9,9 @@ export type OrderStatus =
     | "return_requested"
     | "return_approved"
     | "returned"
-    | "refunded";
+    | "refunded"
+    | "partially_returned"
+    | "partially_refunded";
 
 export type ReturnStatus =
     | "requested"
@@ -56,9 +58,26 @@ export interface OrderCourier {
     trackingStatus?: string;
 }
 
+export interface ReturnItem {
+    productId: string;
+    variantId?: string | null;
+    name?: string;
+    price?: number;
+    quantity: number;
+}
+
+export interface ReturnItemSelection {
+    productId: string;
+    variantId?: string | null;
+    quantity: number;
+}
+
 export interface OrderReturnRequest {
     status: ReturnStatus;
     reason?: string;
+    items?: ReturnItem[];
+    partial?: boolean;
+    refundAmount?: number;
     rejectReason?: string;
     requestedAt?: string;
     approvedAt?: string;
@@ -77,6 +96,8 @@ export interface OrderReturnRequest {
 
 export interface Order {
     orderId: string;
+    orderNumber?: number | null;
+    orderRef?: string;
     razorpayOrderId?: string;
     razorpayPaymentId?: string;
     items: OrderItem[];
@@ -84,6 +105,7 @@ export interface Order {
     discount?: number;
     shipping?: number;
     totalAmount: number;
+    refundedAmount?: number;
     paymentStatus?: string;
     paymentMethod?: string;
     deliveryMethod?: string;
@@ -106,6 +128,27 @@ export interface OrdersResponse {
     success: boolean;
     count: number;
     data: Order[];
+}
+
+export interface AdminOrdersResponse extends OrdersResponse {
+    total: number;
+    page: number;
+    pageSize: number;
+    statusCounts?: Record<string, number>;
+}
+
+export interface AdminOrdersPage {
+    orders: Order[];
+    total: number;
+    page: number;
+    pageSize: number;
+    statusCounts: Record<string, number>;
+}
+
+export interface AdminOrdersParams {
+    page?: number;
+    pageSize?: number;
+    status?: string;
 }
 
 export interface OrderResponse {

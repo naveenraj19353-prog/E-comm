@@ -45,7 +45,12 @@ export interface CheckoutPreviewData {
         provider?: string | null;
         serviceable?: boolean | null;
         message?: string;
+        codHandlingCharge?: number | null;
     };
+    /** Extra the delivery partner bills for COD vs. paying online, for the
+     * same route and weight. null when it isn't known yet (e.g. no address
+     * picked). */
+    codHandlingCharge?: number | null;
     address?: {
         _id: string;
         fullName?: string;

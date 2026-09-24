@@ -1,3 +1,4 @@
+import logging
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 
 from app.services.s3_service import upload_image
@@ -5,6 +6,8 @@ from app.utils.auth_dependencies import (
     admin_tenant_id,
     require_any_permission,
 )
+
+logger = logging.getLogger(__name__)
 
 
 router = APIRouter(
@@ -78,7 +81,7 @@ async def upload_image_file(
         )
 
     except RuntimeError as e:
-        print("S3 UPLOAD ERROR:", str(e))
+        logger.exception("S3 UPLOAD ERROR")
         raise HTTPException(
             status_code=500,
             detail=str(e) or "Failed to upload image.",

@@ -33,6 +33,31 @@ def _first_image_ref(images: object) -> str:
     return first_image_ref(images)
 
 
+def all_image_refs(images: object, limit: int = 12) -> list[str]:
+    """Every stored image (S3 key or http(s) URL) in display order, de-duplicated."""
+    if isinstance(images, dict):
+        values: list = []
+        for image_list in images.values():
+            if isinstance(image_list, list):
+                values.extend(image_list)
+            elif isinstance(image_list, str):
+                values.append(image_list)
+    elif isinstance(images, list):
+        values = images
+    elif isinstance(images, str):
+        values = [images]
+    else:
+        return []
+    refs: list[str] = []
+    for value in values:
+        ref = first_image_ref(value) if isinstance(value, str) else ""
+        if ref and ref not in refs:
+            refs.append(ref)
+        if len(refs) >= limit:
+            break
+    return refs
+
+
 def _load_tenant(tenant_slug: str) -> dict[str, Any]:
     slug = (tenant_slug or "").strip().lower()
     if not slug:
@@ -223,12 +248,20 @@ def product_open_graph(
 def product_open_graph_image(
     tenant_slug: str,
     product_id: str,
+    index: int = 0,
 ):
     """
     Stable image URL for og:image (avoids short-lived S3 presigned URLs).
+    `index` picks a later product image (used by crawler pages).
     """
     _tenant, product = _load_tenant_and_product(tenant_slug, product_id)
-    image_ref = _first_image_ref(product.get("images"))
+    image_ref = ""
+    if index > 0:
+        refs = all_image_refs(product.get("images"))
+        if index < len(refs):
+            image_ref = refs[index]
+    if not image_ref:
+        image_ref = _first_image_ref(product.get("images"))
     if not image_ref:
         image_ref = tenant_share_image_ref(_tenant)
     return _respond_image(image_ref)

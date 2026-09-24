@@ -1,13 +1,58 @@
-import { NavLink, Outlet, Navigate, useLocation, useNavigate } from "react-router-dom";
+import { Link, NavLink, Outlet, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../auth/hooks/useAuth";
 import { hasStorePermission } from "../../auth/permissions";
 import { isStoreStaff, storeRoleLabel } from "../../auth/roles";
 import { usePageSeo } from "../../seo";
 import { useTenantByTenantId } from "../hooks/useTenants";
+import { useBillingStatus } from "../hooks/useBilling";
+import { formatBillingPrice, formatTrialDaysLeft, type BillingStatus } from "../api/billing.api";
+import { formatOrderDate } from "../../orders/api/order.api";
 import { isMenuBusiness, isRetailBusiness } from "../../tenant/businessMode";
 import { routes, storefrontNavigate } from "../../../routes/routes";
 import styles from "../styles/AdminLayout.module.css";
 import BrandMark from "../../../components/BrandMark/BrandMark";
+
+const BILLING_BANNER_TRIAL_DAYS = 14;
+
+interface BillingBannerContent {
+    tone: "info" | "warning" | "danger";
+    message: string;
+    linkLabel: string;
+}
+
+function billingBannerContent(billing?: BillingStatus): BillingBannerContent | null {
+    if (!billing) {
+        return null;
+    }
+    const price = formatBillingPrice(billing.priceInr);
+    if (
+        billing.status === "trialing" &&
+        !billing.autopaySetUp &&
+        billing.trialDaysLeft !== null &&
+        billing.trialDaysLeft <= BILLING_BANNER_TRIAL_DAYS
+    ) {
+        return {
+            tone: "info",
+            message: `Free trial — ${formatTrialDaysLeft(billing.trialDaysLeft)} (ends ${formatOrderDate(billing.trialEndsAt || undefined)}). Set up auto-pay now; the first charge is on the day your trial ends.`,
+            linkLabel: `Set up auto-pay — ${price}`,
+        };
+    }
+    if (billing.status === "past_due") {
+        return {
+            tone: "warning",
+            message: `Payment due — your store goes offline on ${formatOrderDate(billing.graceEndsAt || undefined)} unless payment is set up.`,
+            linkLabel: `Pay ${price} now`,
+        };
+    }
+    if (billing.status === "suspended") {
+        return {
+            tone: "danger",
+            message: "Your store is offline. Customers can't see it or place orders.",
+            linkLabel: `Reactivate — ${price}`,
+        };
+    }
+    return null;
+}
 
 function tenantIdFromAdminPath(pathname: string) {
     const match = pathname.match(/^\/admin\/tenants\/([^/]+)/);
@@ -28,6 +73,10 @@ export default function AdminLayout() {
             ? user.tenantId || ""
             : tenantIdFromAdminPath(pathname);
     const { data: storeTenant } = useTenantByTenantId(storeTenantId);
+    const { data: billingStatus } = useBillingStatus(
+        storeTenantId,
+        user?.role === "admin" && Boolean(storeTenantId),
+    );
     const showMenuDesk = isMenuBusiness(storeTenant?.businessType);
     const showRetailExtras = isRetailBusiness(storeTenant?.businessType);
     const showBanners = !showMenuDesk;
@@ -74,6 +123,13 @@ export default function AdminLayout() {
         return (<Navigate to={`/admin/tenants/${user.tenantId}`} replace/>);
     }
     if (isAdmin &&
+        (pathname === "/admin/payouts" ||
+            pathname === "/admin/payouts/" ||
+            pathname === "/admin/billing" ||
+            pathname === "/admin/billing/")) {
+        return (<Navigate to={`/admin/tenants/${user.tenantId}`} replace/>);
+    }
+    if (isAdmin &&
         pathname === "/admin/tenants/create") {
         return (<Navigate to={`/admin/tenants/${user.tenantId}`} replace/>);
     }
@@ -89,6 +145,11 @@ export default function AdminLayout() {
             }
         }
     }
+    const billingPagePath = `/admin/tenants/${storeTenantId}/billing`;
+    const billingBanner =
+        isStoreOwner && pathname !== billingPagePath
+            ? billingBannerContent(billingStatus)
+            : null;
     return (<div className={styles.layout}>
       
       <aside className={styles.sidebar}>
@@ -210,6 +271,20 @@ export default function AdminLayout() {
           )}
 
           {showStoreNav && (isStoreOwner || isSuperAdmin) && (
+            <NavLink to={`/admin/tenants/${storeTenantId}/payments`} className={navClass}>
+              <span>₹</span>
+              Payments
+            </NavLink>
+          )}
+
+          {showStoreNav && (isStoreOwner || isSuperAdmin) && (
+            <NavLink to={`/admin/tenants/${storeTenantId}/billing`} className={navClass}>
+              <span>▭</span>
+              Billing
+            </NavLink>
+          )}
+
+          {showStoreNav && (isStoreOwner || isSuperAdmin) && (
             <NavLink to={`/admin/tenants/${storeTenantId}/edit`} className={navClass}>
               <span>✎</span>
               Edit Tenant
@@ -218,7 +293,21 @@ export default function AdminLayout() {
           <div className={styles.sectionTitle}>
             PLATFORM
           </div>
-          
+
+          {isSuperAdmin && (
+            <NavLink to="/admin/payouts" className={navClass}>
+              <span>₹</span>
+              Payouts
+            </NavLink>
+          )}
+
+          {isSuperAdmin && (
+            <NavLink to="/admin/billing" className={navClass}>
+              <span>▭</span>
+              Billing
+            </NavLink>
+          )}
+
           <button className={styles.navItem}>
             <span>◫</span>
             Analytics
@@ -279,6 +368,17 @@ export default function AdminLayout() {
             </div>
           </div>
         </header>
+        {billingBanner && (
+          <div
+            className={`${styles.billingBanner} ${styles[`billingBanner_${billingBanner.tone}`]}`}
+            role={billingBanner.tone === "info" ? "status" : "alert"}
+          >
+            <span>{billingBanner.message}</span>
+            <Link to={billingPagePath} className={styles.billingBannerLink}>
+              {billingBanner.linkLabel}
+            </Link>
+          </div>
+        )}
         <main className={styles.content}>
           <Outlet />
         </main>

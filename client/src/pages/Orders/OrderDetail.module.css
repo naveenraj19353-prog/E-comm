@@ -117,3 +117,71 @@
   font-size: 0.8125rem;
   font-weight: 600;
 }
+
+.returnItems {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0 0 0.75rem;
+  padding: 0;
+  border: none;
+}
+
+.returnItems legend {
+  margin-bottom: 0.5rem;
+  color: var(--text);
+  font-size: 0.8125rem;
+  font-weight: 700;
+}
+
+.returnItem {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.625rem 0.75rem;
+  border: 0.0625rem solid var(--border);
+  border-radius: 0.625rem;
+  background: var(--background);
+}
+
+.returnItem input[type="checkbox"] {
+  flex: none;
+  width: 1rem;
+  height: 1rem;
+  accent-color: var(--primary);
+}
+
+.returnItem label {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+  color: var(--text);
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+.returnItem label span {
+  opacity: 0.7;
+  font-size: 0.75rem;
+}
+
+.returnItem select {
+  flex: none;
+  padding: 0.35rem 0.5rem;
+  border: 0.0625rem solid var(--border);
+  border-radius: 0.5rem;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.8125rem;
+}
+
+.returnQty {
+  flex: none;
+  color: var(--text);
+  opacity: 0.7;
+  font-size: 0.8125rem;
+}
+
+.returnEstimate strong {
+  color: var(--text);
+}

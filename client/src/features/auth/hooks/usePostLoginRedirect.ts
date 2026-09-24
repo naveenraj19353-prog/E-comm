@@ -4,7 +4,7 @@ import {
     readLoginReturnPath,
     resolvePostLoginPath,
 } from "../loginRedirect";
-import { getStoredAccessToken, getUserFromAccessToken } from "../token";
+import { getLastIssuedAccessToken, getStoredAccessToken, getUserFromAccessToken } from "../token";
 import { useStorefrontTenant } from "../../tenant/useTenant";
 
 export function usePostLoginRedirect() {
@@ -14,7 +14,9 @@ export function usePostLoginRedirect() {
 
     return useCallback(() => {
         const from = readLoginReturnPath(location.state);
-        const token = getStoredAccessToken();
+        // A staff login on the storefront form is saved to the admin session,
+        // not this store's, so use the token that was just issued.
+        const token = getLastIssuedAccessToken() || getStoredAccessToken();
         const user = token ? getUserFromAccessToken(token) : null;
         navigate(resolvePostLoginPath(user, from, tenantSlug), { replace: true });
     }, [location.state, navigate, tenantSlug]);
