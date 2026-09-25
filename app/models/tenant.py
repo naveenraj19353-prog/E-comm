@@ -9,6 +9,7 @@ from app.services.store_analytics import (
 from app.services.store_profile import normalize_gstin, normalize_social_link
 
 BusinessType = Literal["retail", "service", "menu"]
+TenantApprovalStatus = Literal["pending", "approved", "suspended"]
 StoreFont = Literal[
     "default",
     "inter",
@@ -267,6 +268,10 @@ class UpdateTenant(BaseModel):
     seo: Optional[StoreSeo] = None
     # Order value (INR, after coupon) from which delivery is free; empty/0 = off. REQ-087.
     freeDeliveryThreshold: Optional[float] = Field(default=None, ge=0, le=10_000_000)
+
+
+class UpdateTenantApproval(BaseModel):
+    status: TenantApprovalStatus
 
 
 class UpdateTenantTheme(BaseModel):

@@ -228,7 +228,15 @@ def _authenticate(user: LoginUser, email: str) -> dict:
     # Nobody signs in to a deactivated store — not the owner, staff or
     # customers. Same message as a wrong password, so this can't be used to
     # probe which stores exist.
-    if not tenants.find_one({"tenantId": tenant_id, "isActive": True}, {"_id": 1}):
+    tenant_access = tenants.find_one(
+        {
+            "tenantId": tenant_id,
+            "isActive": True,
+            "approvalStatus": {"$ne": "suspended"},
+        },
+        {"_id": 1},
+    )
+    if not tenant_access:
         raise HTTPException(
             status_code=401,
             detail=INVALID_CREDENTIALS,
@@ -237,6 +245,7 @@ def _authenticate(user: LoginUser, email: str) -> dict:
         "tenantId": tenant_id,
         "email": email,
         "isActive": True,
+        "approvalStatus": {"$ne": "suspended"},
     })
     if tenant:
         if not verify_password(

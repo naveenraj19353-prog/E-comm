@@ -3,6 +3,7 @@ import logging
 from pymongo import ASCENDING, DESCENDING, IndexModel
 from pymongo.errors import OperationFailure
 from app.database.mongo import (
+    audit_logs,
     carts,
     contact_messages,
     customer_notes,
@@ -355,6 +356,22 @@ def _ensure_tenant_indexes() -> None:
             IndexModel(
                 [("tenantId", ASCENDING), ("createdAt", DESCENDING)],
                 name="inventory_receivings_tenant_created",
+            ),
+        ]
+    )
+    audit_logs.create_indexes(
+        [
+            IndexModel(
+                [("tenantId", ASCENDING), ("createdAt", DESCENDING)],
+                name="audit_logs_tenant_created",
+            ),
+            IndexModel(
+                [("actor.userId", ASCENDING), ("createdAt", DESCENDING)],
+                name="audit_logs_actor_created",
+            ),
+            IndexModel(
+                [("action", ASCENDING), ("createdAt", DESCENDING)],
+                name="audit_logs_action_created",
             ),
         ]
     )
