@@ -694,7 +694,7 @@ def create_shipment(
         },
         "updatedAt": now,
     }
-    if body.markShipped and status in {"confirmed", "processing"}:
+    if body.markShipped and status in {"confirmed", "processing", "packed"}:
         order_set["orderStatus"] = "shipped"
     orders.update_one({"_id": order["_id"]}, {"$set": order_set})
     send_shipment_created(background_tasks, str(order["_id"]))

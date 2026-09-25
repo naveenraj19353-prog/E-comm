@@ -66,10 +66,10 @@ MAX_RUN_SECONDS = 8 * 60
 MONITOR_SLUG = "delhivery-shipment-sync"
 LEASE_SECONDS = 10 * 60
 
-SHIPPED_FROM = ("confirmed", "processing")
-DELIVERED_FROM = ("confirmed", "processing", "shipped")
+SHIPPED_FROM = ("confirmed", "processing", "packed")
+DELIVERED_FROM = ("confirmed", "processing", "packed", "shipped")
 # Exceptions are flagged only on orders still on their way to the customer.
-EXCEPTION_ON = ("confirmed", "processing", "shipped")
+EXCEPTION_ON = ("confirmed", "processing", "packed", "shipped")
 
 SHIPMENT_STATUS_FOR = {
     "in_transit": "in_transit",

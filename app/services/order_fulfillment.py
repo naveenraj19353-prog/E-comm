@@ -19,6 +19,8 @@ from app.services.checkout_service import (
 )
 from app.services.ledger_service import record_order_ledger_entry, record_order_refund
 from app.observability.alerts import alert
+from app.services.low_stock import maybe_alert_low_stock
+from app.services.stock_movements import build_movement, record_movements, variant_stock
 from app.utils.razorpay_client import client
 
 
@@ -26,8 +28,11 @@ PROCESSING_STALE_MINUTES = 2
 logger = logging.getLogger(__name__)
 
 
-def _refresh_total_stock(product_id: ObjectId, now: datetime) -> None:
-    product = products.find_one({"_id": product_id}, {"inventory": 1})
+def _refresh_total_stock(product_id: ObjectId, now: datetime) -> dict | None:
+    """Recompute totalStock; returns the product (tenantId, name, inventory)."""
+    product = products.find_one(
+        {"_id": product_id}, {"inventory": 1, "tenantId": 1, "name": 1}
+    )
     total = 0
     for item in (product or {}).get("inventory") or []:
         try:
@@ -38,6 +43,54 @@ def _refresh_total_stock(product_id: ObjectId, now: datetime) -> None:
         {"_id": product_id},
         {"$set": {"totalStock": total, "updatedAt": now}},
     )
+    return product
+
+
+def _log_stock_movement(
+    product: dict | None,
+    variant_id: str,
+    change: int,
+    source: str | None,
+    now: datetime,
+    order_id=None,
+) -> None:
+    """Write one stock history row (REQ-036). Best-effort, never raises."""
+    if not source or not product or not product.get("tenantId"):
+        return
+    try:
+        doc = build_movement(
+            tenant_id=product["tenantId"],
+            product=product,
+            variant_id=variant_id,
+            change=change,
+            source=source,
+            stock_after=variant_stock(product, variant_id),
+            order_id=order_id,
+            now=now,
+        )
+        record_movements(products.database["stock_movements"], [doc])
+    except Exception:
+        logger.exception("Could not log stock movement for product %s", product.get("_id"))
+
+
+def _check_low_stock(product: dict | None, variant_id: str, change: int, source: str | None) -> None:
+    """WhatsApp the store when this sale takes a variant down to its alert level (REQ-035)."""
+    if not source or not product or not product.get("tenantId"):
+        return
+    try:
+        tenant = products.database["tenants"].find_one(
+            {"tenantId": product["tenantId"]}, {"lowStockThreshold": 1}
+        )
+        maybe_alert_low_stock(
+            product["tenantId"],
+            product,
+            variant_id,
+            variant_stock(product, variant_id),
+            change,
+            tenant or {},
+        )
+    except Exception:
+        logger.exception("Low-stock check failed for product %s", product.get("_id"))
 
 
 def decrement_variant_stock(
@@ -45,6 +98,9 @@ def decrement_variant_stock(
     variant_id: str,
     quantity: int,
     now: datetime,
+    *,
+    source: str | None = None,
+    order_id=None,
 ) -> bool:
     result = products.update_one(
         {
@@ -63,7 +119,9 @@ def decrement_variant_stock(
     )
     if result.modified_count == 0:
         return False
-    _refresh_total_stock(product_id, now)
+    product = _refresh_total_stock(product_id, now)
+    _log_stock_movement(product, variant_id, -quantity, source, now, order_id)
+    _check_low_stock(product, variant_id, -quantity, source)
     return True
 
 
@@ -72,6 +130,9 @@ def restore_variant_stock(
     variant_id: str,
     quantity: int,
     now: datetime,
+    *,
+    source: str | None = None,
+    order_id=None,
 ) -> None:
     products.update_one(
         {
@@ -83,7 +144,8 @@ def restore_variant_stock(
             "$set": {"updatedAt": now},
         },
     )
-    _refresh_total_stock(product_id, now)
+    product = _refresh_total_stock(product_id, now)
+    _log_stock_movement(product, variant_id, quantity, source, now, order_id)
 
 
 def _order_response(order: dict, payment_id: str) -> dict:
@@ -237,7 +299,11 @@ def _claim_intent(razorpay_order_id: str):
     )
 
 
-def _reserve_stock(order_items: list[dict], now: datetime) -> bool:
+def _reserve_stock(
+    order_items: list[dict],
+    now: datetime,
+    source: str = "order_placed",
+) -> bool:
     reserved = []
     for item in order_items:
         stock_ok = decrement_variant_stock(
@@ -245,6 +311,7 @@ def _reserve_stock(order_items: list[dict], now: datetime) -> bool:
             item["variantId"],
             item["quantity"],
             now,
+            source=source,
         )
         if not stock_ok:
             for reserved_item in reserved:
@@ -253,6 +320,7 @@ def _reserve_stock(order_items: list[dict], now: datetime) -> bool:
                     reserved_item["variantId"],
                     reserved_item["quantity"],
                     now,
+                    source="reservation_released",
                 )
             return False
         reserved.append(item)
@@ -273,7 +341,7 @@ def reserve_checkout_stock(checkout_data: dict) -> list[dict]:
     """
     order_items = _build_order_items(checkout_data)
     now = datetime.now(timezone.utc)
-    if not _reserve_stock(order_items, now):
+    if not _reserve_stock(order_items, now, source="checkout_reserved"):
         raise HTTPException(
             status_code=409,
             detail="An item in your cart just sold out. Please update your cart and try again.",
@@ -285,7 +353,11 @@ def release_reserved_stock(order_items: list[dict]) -> None:
     now = datetime.now(timezone.utc)
     for item in order_items:
         restore_variant_stock(
-            item["productId"], item["variantId"], item["quantity"], now
+            item["productId"],
+            item["variantId"],
+            item["quantity"],
+            now,
+            source="reservation_released",
         )
 
 
@@ -323,7 +395,11 @@ def expire_abandoned_payment_intents(limit: int = 25) -> int:
             continue
         for item in claimed.get("reservedItems") or []:
             restore_variant_stock(
-                item["productId"], item["variantId"], item["quantity"], now
+                item["productId"],
+                item["variantId"],
+                item["quantity"],
+                now,
+                source="reservation_released",
             )
         expired_count += 1
     return expired_count

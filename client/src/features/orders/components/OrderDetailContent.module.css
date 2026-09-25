@@ -54,6 +54,11 @@
   color: var(--primary);
 }
 
+.status_packed {
+  background: color-mix(in srgb, var(--primary) 12%, var(--surface));
+  color: var(--primary);
+}
+
 .status_shipped {
   background: color-mix(in srgb, var(--warning) 14%, var(--surface));
   color: var(--warning);
@@ -266,6 +271,11 @@
 
 .admin .status_confirmed,
 .admin .status_processing {
+  background: #edf7f0;
+  color: #2f6b52;
+}
+
+.admin .status_packed {
   background: #edf7f0;
   color: #2f6b52;
 }

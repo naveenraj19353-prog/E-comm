@@ -187,6 +187,8 @@ class UpdateTenant(BaseModel):
     isActive: Optional[bool] = None
     storeHours: Optional[StoreHours] = None
     analytics: Optional[StoreAnalytics] = None
+    # Stock at or below this counts as low (0 turns low-stock alerts off).
+    lowStockThreshold: Optional[int] = Field(default=None, ge=0, le=100000)
 
 
 class UpdateTenantTheme(BaseModel):

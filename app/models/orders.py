@@ -4,6 +4,7 @@ from typing import List, Literal, Optional
 OrderStatus = Literal[
     "confirmed",
     "processing",
+    "packed",
     "shipped",
     "delivered",
     "cancelled",

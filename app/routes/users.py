@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from pymongo import DESCENDING
 from pymongo.errors import DuplicateKeyError
 
-from app.database.mongo import carts, products, tenants, users, wishlists
+from app.database.mongo import carts, orders, products, tenants, users, wishlists
 from app.models.user import CreateAdminUser, UpdateStoreManager, UpdateUser
 from app.routes.detail_messages import (
     INVALID_USER_ID,
@@ -25,6 +25,11 @@ from app.utils.auth_dependencies import (
     require_store_owner,
 )
 from app.utils.hash import hash_password
+from app.services.customer_order_stats import (
+    empty_stats,
+    order_stats_pipeline,
+    stats_by_user,
+)
 from app.services.store_permissions import (
     normalize_permissions,
     permissions_for_staff_doc,
@@ -162,6 +167,7 @@ def get_users(
         .limit(page_size)
     )
     activity = _customer_activity(scoped_tenant_id, customer_docs)
+    order_stats = _customer_order_stats(scoped_tenant_id, customer_docs)
 
     result = []
     for user in customer_docs:
@@ -174,6 +180,7 @@ def get_users(
             "wishlist": wishlist_items,
             "wishlistCount": len(wishlist_items),
         }
+        user["orderStats"] = order_stats.get(str(user_id), empty_stats())
         user["_id"] = str(user["_id"])
         result.append(user)
     return {
@@ -184,6 +191,14 @@ def get_users(
         "pageSize": page_size,
         "data": result,
     }
+
+
+def _customer_order_stats(tenant_id: str, customer_docs: list[dict]) -> dict[str, dict]:
+    """Order count, spend and last order date for the customers on this page."""
+    if not customer_docs:
+        return {}
+    user_ids = [doc["_id"] for doc in customer_docs]
+    return stats_by_user(orders.aggregate(order_stats_pipeline(tenant_id, user_ids)))
 
 
 def _json_date(value):

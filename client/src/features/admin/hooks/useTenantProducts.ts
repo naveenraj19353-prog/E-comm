@@ -27,6 +27,8 @@ export interface CreateProductPayload {
     colors: string[];
     inventory: ProductInventoryPayload[];
     images: Record<string, string[]>;
+    /** Save without publishing (hidden from the storefront). */
+    isDraft?: boolean;
 }
 export interface UpdateProductPayload {
     tenantId: string;

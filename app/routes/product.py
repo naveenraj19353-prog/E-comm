@@ -5,6 +5,7 @@ from datetime import datetime, timezone
 from typing import Annotated
 
 from bson import ObjectId
+from pymongo import ReturnDocument
 from fastapi import APIRouter, Depends, HTTPException, Query
 
 from app.database.mongo import products, tenants
@@ -31,6 +32,26 @@ from app.utils.auth_dependencies import (
     require_permission,
 )
 from app.services.cache import cached_storefront, invalidate_tenant
+from app.services.low_stock import (
+    LOW_STOCK_LIST_LIMIT,
+    low_stock_items,
+    low_stock_query,
+    maybe_alert_low_stock,
+    tenant_threshold,
+)
+from app.services.stock_movements import (
+    ADJUSTMENT_REASONS,
+    DEFAULT_HISTORY_LIMIT,
+    MAX_HISTORY_LIMIT,
+    StockAdjustmentError,
+    build_movement,
+    inventory_changes,
+    record_movements,
+    serialize_movement,
+    validate_adjustment,
+    variant_stock,
+)
+from pydantic import BaseModel, Field as PydanticField
 from app.services.store_permissions import user_has_permission
 from app.services.s3_service import (
     collect_image_keys,
@@ -440,7 +461,9 @@ def create_product(
         "totalStock": total_stock,
         "stock": total_stock,
         "images": images,
-        "isActive": True,
+        # A draft is saved but hidden from the storefront until published.
+        "isActive": not bool(product.isDraft),
+        "isDraft": bool(product.isDraft),
         "createdAt": now,
         "updatedAt": now,
         "averageRating": 0,
@@ -1255,6 +1278,38 @@ def share_product_on_whatsapp(
 
 
 @router.get(
+    "/low-stock",
+    responses={
+        400: BAD_REQUEST_RESPONSE[400],
+        403: FORBIDDEN_RESPONSE[403],
+    },
+)
+def list_low_stock_products(
+    current_user: Annotated[dict, Depends(require_permission("read"))],
+    tenant_id: Annotated[str | None, Query(alias="tenantId")] = None,
+):
+    """Variants at or below the store's low-stock alert level (REQ-035).
+
+    Declared before GET /{id} so "low-stock" is not read as a product id.
+    """
+    scoped_tenant_id = admin_tenant_id(current_user, tenant_id)
+    tenant = tenants.find_one({"tenantId": scoped_tenant_id}, {"lowStockThreshold": 1}) or {}
+    threshold = tenant_threshold(tenant)
+    docs = products.find(
+        low_stock_query(scoped_tenant_id, threshold),
+        {"name": 1, "inventory": 1},
+    ).limit(LOW_STOCK_LIST_LIMIT)
+    items = low_stock_items(docs, threshold)
+    return {
+        "success": True,
+        "threshold": threshold,
+        "count": len(items),
+        "outOfStock": sum(1 for item in items if item["lowestStock"] <= 0),
+        "data": items,
+    }
+
+
+@router.get(
     "/{id}",
     responses={
         400: BAD_REQUEST_RESPONSE[400],
@@ -1395,6 +1450,11 @@ def _prepare_product_update(
         exclude_none=True,
     )
     update_data.pop("tenantId", None)
+    # Publishing (isActive=True) ends draft; marking draft hides it.
+    if update_data.get("isDraft") is True:
+        update_data["isActive"] = False
+    elif update_data.get("isActive") is True:
+        update_data["isDraft"] = False
     _validate_product_update_values(update_data)
     inventory = _prepare_updated_inventory(
         update_data,
@@ -1497,6 +1557,8 @@ def update_product(
     update_data = _prepare_product_update(product, db_product, tenant_id)
     _persist_product_update(object_id, tenant_id, update_data)
     invalidate_tenant(tenant_id)
+    if "inventory" in update_data:
+        _log_product_edit_stock(db_product, update_data, tenant_id, current_user)
 
     # Mongo write succeeds first; then remove unused S3 objects.
     if "images" in update_data:
@@ -1509,6 +1571,160 @@ def update_product(
     return {
         "success": True,
         "message": "Product updated successfully.",
+    }
+
+
+def _log_product_edit_stock(
+    db_product: dict,
+    update_data: dict,
+    tenant_id: str,
+    current_user: dict,
+) -> None:
+    """Stock history rows for stock typed into the product edit form."""
+    try:
+        changes = inventory_changes(db_product.get("inventory"), update_data.get("inventory"))
+        if not changes:
+            return
+        updated_product = {**db_product, "inventory": update_data.get("inventory") or []}
+        now = update_data.get("updatedAt") or datetime.now(timezone.utc)
+        docs = [
+            build_movement(
+                tenant_id=tenant_id,
+                product=updated_product,
+                variant_id=change["variantId"],
+                change=change["change"],
+                source="product_edit",
+                stock_after=change["stockAfter"],
+                user=current_user,
+                now=now,
+            )
+            for change in changes
+        ]
+        record_movements(products.database["stock_movements"], docs)
+    except Exception:
+        logger.exception("Could not log product edit stock changes")
+
+
+class StockAdjustmentRequest(BaseModel):
+    tenantId: str | None = None
+    variantId: str = PydanticField(min_length=1, max_length=120)
+    change: int
+    reason: str = PydanticField(min_length=1, max_length=40)
+    note: str | None = PydanticField(default=None, max_length=200)
+
+
+@router.post(
+    "/{id}/stock-adjustments",
+    responses={
+        400: BAD_REQUEST_RESPONSE[400],
+        403: FORBIDDEN_RESPONSE[403],
+        404: NOT_FOUND_RESPONSE[404],
+    },
+)
+def adjust_product_stock(
+    id: str,
+    payload: StockAdjustmentRequest,
+    current_user: Annotated[dict, Depends(require_permission("inventory"))],
+):
+    """Add or remove stock for one variant with a reason (REQ-034).
+
+    The change is applied atomically and never takes stock below 0.
+    """
+    if not ObjectId.is_valid(id):
+        raise HTTPException(status_code=400, detail=INVALID_PRODUCT_ID)
+    tenant_id = admin_tenant_id(current_user, payload.tenantId)
+    try:
+        change, reason, note = validate_adjustment(payload.change, payload.reason, payload.note)
+    except StockAdjustmentError as error:
+        raise HTTPException(status_code=400, detail=str(error))
+
+    object_id = ObjectId(id)
+    variant_match: dict = {"variantId": payload.variantId}
+    if change < 0:
+        variant_match["stock"] = {"$gte": -change}
+    now = datetime.now(timezone.utc)
+    updated = products.find_one_and_update(
+        {"_id": object_id, "tenantId": tenant_id, "inventory": {"$elemMatch": variant_match}},
+        {"$inc": {"inventory.$.stock": change}, "$set": {"updatedAt": now}},
+        return_document=ReturnDocument.AFTER,
+    )
+    if not updated:
+        product = products.find_one({"_id": object_id, "tenantId": tenant_id}, {"inventory": 1})
+        if not product:
+            raise HTTPException(status_code=404, detail=PRODUCT_NOT_FOUND)
+        current = variant_stock(product, payload.variantId)
+        if current is None:
+            raise HTTPException(status_code=404, detail="Variant not found on this product.")
+        raise HTTPException(
+            status_code=400,
+            detail=f"Only {current} in stock; you can remove at most {current}.",
+        )
+
+    total = sum(int(item.get("stock", 0) or 0) for item in updated.get("inventory") or [])
+    maybe_alert_low_stock(
+        tenant_id,
+        updated,
+        payload.variantId,
+        variant_stock(updated, payload.variantId),
+        change,
+        tenants.find_one({"tenantId": tenant_id}, {"lowStockThreshold": 1}) or {},
+    )
+    products.update_one({"_id": object_id}, {"$set": {"totalStock": total}})
+    invalidate_tenant(tenant_id)
+    stock_after = variant_stock(updated, payload.variantId)
+    record_movements(
+        products.database["stock_movements"],
+        [
+            build_movement(
+                tenant_id=tenant_id,
+                product=updated,
+                variant_id=payload.variantId,
+                change=change,
+                source="manual_adjustment",
+                stock_after=stock_after,
+                reason=reason,
+                note=note,
+                user=current_user,
+                now=now,
+            )
+        ],
+    )
+    return {
+        "success": True,
+        "message": "Stock updated.",
+        "variantId": payload.variantId,
+        "stock": stock_after,
+        "totalStock": total,
+    }
+
+
+@router.get(
+    "/{id}/stock-movements",
+    responses={
+        400: BAD_REQUEST_RESPONSE[400],
+        403: FORBIDDEN_RESPONSE[403],
+    },
+)
+def list_product_stock_movements(
+    id: str,
+    current_user: Annotated[dict, Depends(require_permission("inventory"))],
+    tenant_id: Annotated[str | None, Query(alias="tenantId")] = None,
+    limit: Annotated[int, Query(ge=1, le=MAX_HISTORY_LIMIT)] = DEFAULT_HISTORY_LIMIT,
+):
+    """Stock history for one product, newest first (REQ-036)."""
+    if not ObjectId.is_valid(id):
+        raise HTTPException(status_code=400, detail=INVALID_PRODUCT_ID)
+    scoped_tenant_id = admin_tenant_id(current_user, tenant_id)
+    rows = (
+        products.database["stock_movements"]
+        .find({"tenantId": scoped_tenant_id, "productId": ObjectId(id)})
+        .sort("createdAt", -1)
+        .limit(limit)
+    )
+    return {
+        "success": True,
+        "reasons": ADJUSTMENT_REASONS,
+        "data": [serialize_movement(row) for row in rows],
     }
 
 

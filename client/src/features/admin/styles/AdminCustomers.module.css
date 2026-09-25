@@ -161,6 +161,28 @@
   white-space: nowrap;
 }
 
+.cellOrders {
+  min-width: 10rem;
+}
+
+.viewOrders {
+  display: inline-flex;
+  align-items: center;
+  margin-top: 0.5rem;
+  padding: 0.3rem 0.65rem;
+  border: 0.0625rem solid #d8e2dc;
+  border-radius: 999px;
+  background: #fff;
+  color: #2f6b52;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.viewOrders:hover {
+  background: #edf7f0;
+}
+
 .emptyHint {
   color: #84918b;
   font-size: 0.78rem;

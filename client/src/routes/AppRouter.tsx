@@ -17,6 +17,7 @@ import {
     AdminResetPassword,
     AdminTenant,
     AdminTenantOrders,
+    AdminSalesDashboard,
     AdminTenantPayments,
     AdminTenantBilling,
     AdminMenuDesk,
@@ -279,6 +280,16 @@ const adminRoutes = [
                             <RequireTenantBusinessType allowed={["retail"]}>
                                 <RequireStorePermission permission="orders">
                                     <AdminTenantOrders />
+                                </RequireStorePermission>
+                            </RequireTenantBusinessType>
+                        ),
+                    },
+                    {
+                        path: ":tenantId/analytics",
+                        element: (
+                            <RequireTenantBusinessType allowed={["retail", "menu"]}>
+                                <RequireStorePermission permission="orders">
+                                    <AdminSalesDashboard />
                                 </RequireStorePermission>
                             </RequireTenantBusinessType>
                         ),

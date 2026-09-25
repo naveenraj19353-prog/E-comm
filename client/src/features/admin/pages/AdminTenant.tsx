@@ -4,6 +4,8 @@ import { hasStorePermission } from "../../auth/permissions";
 import { isStoreOwner, isStoreStaff } from "../../auth/roles";
 import { useTenantByTenantId } from "../hooks/useTenants";
 import { useProducts } from "../hooks/useTenantProducts";
+import LowStockPanel from "../components/LowStockPanel";
+import { lowStockThresholdOf } from "../api/stock.api";
 import styles from "../styles/AdminTenant.module.css";
 import { formatStorefrontHost } from "../../tenant/tenantHost";
 import { isRetailBusiness } from "../../tenant/businessMode";
@@ -86,6 +88,8 @@ export default function AdminTenant() {
           </span>
         </div>
       </div>
+
+      {hasStorePermission(user, "read") ? <LowStockPanel tenantId={tenant.tenantId}/> : null}
       
       <section className={styles.section}>
         <div className={styles.sectionHeader}>
@@ -130,6 +134,15 @@ export default function AdminTenant() {
           <div className={styles.infoCard}>
             <span>Storefront currency</span>
             <strong>{tenant.displayCurrency || "INR"}</strong>
+          </div>
+
+          <div className={styles.infoCard}>
+            <span>Low stock alert at</span>
+            <strong>
+              {lowStockThresholdOf(tenant) === 0
+            ? "Off"
+            : `${lowStockThresholdOf(tenant)} or fewer`}
+            </strong>
           </div>
           
           <div className={styles.infoCard}>
@@ -280,6 +293,17 @@ export default function AdminTenant() {
                   <div>
                     <strong>Manage Orders</strong>
                     <span>View, fulfill, and cancel customer orders.</span>
+                  </div>
+                  <b>→</b>
+                </button>
+              ) : null}
+
+              {isRetail && hasStorePermission(user, "orders") ? (
+                <button type="button" className={styles.actionCard} onClick={() => navigate(`/admin/tenants/${tenant.tenantId}/analytics`)}>
+                  <div className={styles.actionIcon}>▤</div>
+                  <div>
+                    <strong>Sales Dashboard</strong>
+                    <span>Net sales, orders, average order value and top products.</span>
                   </div>
                   <b>→</b>
                 </button>

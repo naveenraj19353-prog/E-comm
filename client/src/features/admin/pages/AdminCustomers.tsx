@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useAdminCustomers } from "../hooks/useCustomers";
 import { useTenantByTenantId } from "../hooks/useTenants";
 import { isMenuBusiness } from "../../tenant/businessMode";
+import { formatOrderAmount, formatOrderDate } from "../../orders/api/order.api";
 import styles from "../styles/AdminCustomers.module.css";
 import paymentStyles from "../styles/AdminTenantPayments.module.css";
 
@@ -55,7 +56,7 @@ export default function AdminCustomers() {
                     </button>
                     <span className={styles.eyebrow}>CUSTOMERS</span>
                     <h1>Customer Activity</h1>
-                    <p>Customer details with current cart and wishlist items.</p>
+                    <p>Customer details, order history, and current cart and wishlist items.</p>
                 </div>
                 <input
                     className={styles.search}
@@ -91,6 +92,7 @@ export default function AdminCustomers() {
                                         ? "Table / Room"
                                         : "Category"}
                                 </th>
+                                <th>Orders</th>
                                 <th>Cart & Wishlist</th>
                                 <th>Status</th>
                             </tr>
@@ -135,6 +137,41 @@ export default function AdminCustomers() {
                                                     ? "—"
                                                     : null}
                                             </div>
+                                        )}
+                                    </td>
+                                    <td className={styles.cellOrders}>
+                                        {customer.orderStats?.orderCount ? (
+                                            <>
+                                                <strong>
+                                                    {customer.orderStats.orderCount} order
+                                                    {customer.orderStats.orderCount === 1 ? "" : "s"}
+                                                    {" · "}
+                                                    {formatOrderAmount(customer.orderStats.totalSpent)}
+                                                </strong>
+                                                {customer.orderStats.lastOrderAt ? (
+                                                    <span>
+                                                        Last order{" "}
+                                                        {formatOrderDate(customer.orderStats.lastOrderAt)}
+                                                    </span>
+                                                ) : null}
+                                                <button
+                                                    type="button"
+                                                    className={styles.viewOrders}
+                                                    onClick={() => {
+                                                        const params = new URLSearchParams({
+                                                            customerId: customer._id,
+                                                            customerName: customer.name || "Customer",
+                                                        });
+                                                        navigate(
+                                                            `/admin/tenants/${tenantId}/orders?${params.toString()}`,
+                                                        );
+                                                    }}
+                                                >
+                                                    View orders
+                                                </button>
+                                            </>
+                                        ) : (
+                                            <span className={styles.emptyHint}>No orders yet</span>
                                         )}
                                     </td>
                                     <td className={styles.cellActivity}>

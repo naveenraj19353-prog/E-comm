@@ -104,6 +104,11 @@
   color: var(--primary);
 }
 
+.status_packed {
+  background: color-mix(in srgb, var(--primary) 12%, var(--surface));
+  color: var(--primary);
+}
+
 .status_shipped {
   background: color-mix(in srgb, var(--warning) 14%, var(--surface));
   color: var(--warning);
