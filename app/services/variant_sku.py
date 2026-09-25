@@ -1,7 +1,6 @@
 import re
 from typing import Any
 
-from fastapi import HTTPException
 
 def _clean_text(value: Any) -> str:
     if value is None:
@@ -95,44 +94,3 @@ def assign_variant_ids_for_inventory(
             )
         prepared.append(item)
     return prepared
-
-
-def ensure_unique_variant_ids_for_tenant(
-    tenant_id: str,
-    inventory: list[dict[str, Any]],
-    *,
-    products_collection,
-    ignore_product_id: str | None = None,
-) -> None:
-    if not tenant_id:
-        return
-
-    existing = list(
-        products_collection.find(
-            {"tenantId": tenant_id},
-            {"_id": 1, "inventory": 1},
-        )
-    )
-    current_variant_ids: set[str] = set()
-    for product in existing:
-        if ignore_product_id and str(product.get("_id")) == str(ignore_product_id):
-            continue
-        for item in product.get("inventory") or []:
-            if not isinstance(item, dict):
-                continue
-            variant_id = str(item.get("variantId") or "").strip()
-            if variant_id:
-                current_variant_ids.add(variant_id)
-
-    for item in inventory:
-        if not isinstance(item, dict):
-            continue
-        variant_id = str(item.get("variantId") or "").strip()
-        if not variant_id:
-            continue
-        if variant_id in current_variant_ids:
-            raise HTTPException(
-                status_code=409,
-                detail=f"Duplicate variantId: {variant_id}. This SKU already exists in this tenant.",
-            )
-        current_variant_ids.add(variant_id)
