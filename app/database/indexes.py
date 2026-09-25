@@ -6,6 +6,7 @@ from app.database.mongo import (
     carts,
     contact_messages,
     customer_otps,
+    inventory_receivings,
     ledger_entries,
     messaging_integrations,
     notification_logs,
@@ -335,6 +336,16 @@ def _ensure_tenant_indexes() -> None:
             IndexModel(
                 [("tenantId", ASCENDING), ("createdAt", DESCENDING)],
                 name="stock_movements_tenant_created",
+            ),
+        ]
+    )
+    # Receiving records use receivingId as _id (the idempotency key). Creating
+    # this index also creates the collection before any receiving transaction.
+    inventory_receivings.create_indexes(
+        [
+            IndexModel(
+                [("tenantId", ASCENDING), ("createdAt", DESCENDING)],
+                name="inventory_receivings_tenant_created",
             ),
         ]
     )
