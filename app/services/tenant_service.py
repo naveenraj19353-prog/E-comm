@@ -107,6 +107,7 @@ def create_tenant_document(
     phone: str = "",
     display_currency: str = "INR",
     inr_per_unit: float | None = None,
+    approval_status: str = "approved",
 ) -> dict:
     tenant_id = normalize_slug(tenant_id)
     slug = validate_slug(slug)
@@ -158,6 +159,7 @@ def create_tenant_document(
         "phone": str(phone or "").strip(),
         "password": hash_password(password),
         "isActive": True,
+        "approvalStatus": approval_status,
         # Only stores created from here on get a trial clock; older stores
         # have no `billing` field and stay free (see billing_service).
         "billing": new_trial_billing(now),
