@@ -583,6 +583,11 @@ class FakeProductNames:
         ]
 
 
+class FakeOrders:
+    def aggregate(self, pipeline):
+        return []
+
+
 class CustomerPaginationTests(unittest.TestCase):
     def setUp(self):
         self.product_id = ObjectId()
@@ -627,6 +632,7 @@ class CustomerPaginationTests(unittest.TestCase):
             patch.object(users_routes, "carts", self.carts),
             patch.object(users_routes, "wishlists", self.wishlists),
             patch.object(users_routes, "products", FakeProductNames()),
+            patch.object(users_routes, "orders", FakeOrders()),
         ):
             item.start()
             self.addCleanup(item.stop)
