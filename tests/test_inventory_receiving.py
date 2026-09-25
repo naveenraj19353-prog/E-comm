@@ -279,6 +279,27 @@ class ReceivingPreviewTests(unittest.TestCase):
         self.assertTrue(result["requiresConfirmation"])
         self.assertEqual(result["product"]["id"], str(NIKE_ID))
         self.assertEqual(result["variants"][0]["finalStock"], 30)
+        # A candidate can never be committed; the admin must choose the product first.
+        self.assertIsNone(result["previewToken"])
+        self.assertIsNone(result["expiresAt"])
+
+    def test_preview_returns_a_signed_token_with_the_previewed_amounts(self):
+        result = self.preview(
+            productId=str(NIKE_ID),
+            variants=[_line(10, "NK-TS-BLK-S"), _line(30, color="Yellow", size="XL")],
+        )
+
+        claims = inventory_receiving.verify_preview_token(result["previewToken"])
+        self.assertEqual(claims.tid, "store-a")
+        self.assertEqual(claims.pid, str(NIKE_ID))
+        self.assertEqual(
+            [(line.a, line.v, line.e, line.i, line.p) for line in claims.lines],
+            [
+                ("ADD_TO_EXISTING_VARIANT", "NK-TS-BLK-S", 20, 10, None),
+                ("CREATE_NEW_VARIANT", None, None, 30, "NI-TSHI-YEL-XL"),
+            ],
+        )
+        self.assertIsNotNone(result["expiresAt"])
 
     # K. no match -> new product
     def test_no_match_is_a_new_product(self):

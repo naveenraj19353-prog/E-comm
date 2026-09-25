@@ -98,3 +98,102 @@ class ReceivingPreviewResponse(BaseModel):
     variants: list[ReceivingVariantPreview]
     totals: ReceivingTotals
     warnings: list[str] = Field(default_factory=list)
+    # Signed, stateless reference for POST /inventory/receiving/commit.
+    # None for "candidate" matches: the admin must choose the product first.
+    previewToken: Optional[str] = None
+    expiresAt: Optional[str] = None
+
+
+class ReceivingTokenLine(BaseModel):
+    """One line inside a signed preview token (short keys keep the token small)."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    a: Literal["ADD_TO_EXISTING_VARIANT", "CREATE_NEW_VARIANT"]
+    v: Optional[str] = None  # existing variantId
+    c: str  # color
+    s: str  # size
+    e: Optional[StrictInt] = Field(default=None, ge=0)  # stock seen by the preview
+    i: StrictInt = Field(ge=0, le=MAX_ADJUSTMENT)  # incoming stock
+    p: Optional[str] = None  # proposed variantId for a new variant
+
+    @model_validator(mode="after")
+    def _complete_for_action(self):
+        if self.a == "ADD_TO_EXISTING_VARIANT" and (not self.v or self.e is None):
+            raise ValueError("Existing-variant lines need a variantId and the previewed stock.")
+        if self.a == "CREATE_NEW_VARIANT" and (self.v or not self.p):
+            raise ValueError("New-variant lines need a proposed variantId and no existing one.")
+        return self
+
+
+class ReceivingTokenNewProduct(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    name: str = Field(min_length=1)
+    categoryId: str = Field(min_length=1)
+    categoryName: str = Field(min_length=1)
+    brand: Optional[str] = None
+
+
+class ReceivingTokenClaims(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    typ: Literal["inventory_receiving_preview"]
+    rid: str = Field(min_length=16, max_length=64)  # receivingId (idempotency key)
+    tid: str = Field(min_length=1)
+    iat: int
+    exp: int
+    act: Literal["EXISTING_PRODUCT", "NEW_PRODUCT"]
+    pid: Optional[str] = None
+    new: Optional[ReceivingTokenNewProduct] = None
+    conf: bool
+    lines: list[ReceivingTokenLine] = Field(min_length=1, max_length=MAX_RECEIVING_LINES)
+
+    @model_validator(mode="after")
+    def _complete_for_action(self):
+        if self.act == "EXISTING_PRODUCT" and (not self.pid or self.new is not None):
+            raise ValueError("Existing-product tokens need a productId.")
+        if self.act == "NEW_PRODUCT":
+            if self.pid or self.new is None:
+                raise ValueError("New-product tokens need the new product's details.")
+            if any(line.a != "CREATE_NEW_VARIANT" for line in self.lines):
+                raise ValueError("A new product can only have new variants.")
+        return self
+
+
+class ReceivingCommitRequest(BaseModel):
+    """Only the signed token and the admin's confirmation. Stock amounts are
+    never accepted from the browser; they come from the signed token."""
+
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
+
+    previewToken: str = Field(min_length=1, max_length=65536)
+    confirm: bool = False
+    note: Optional[str] = Field(default=None, max_length=200)
+
+
+class ReceivingCommitVariant(BaseModel):
+    variantId: str
+    color: Optional[str] = None
+    size: Optional[str] = None
+    beforeStock: int
+    receivedStock: int
+    afterStock: int
+    action: Literal["STOCK_INCREASED", "VARIANT_CREATED", "UNCHANGED"]
+
+
+class ReceivingCommitTotals(BaseModel):
+    beforeStock: int
+    receivedStock: int
+    afterStock: int
+
+
+class ReceivingCommitResponse(BaseModel):
+    success: bool = True
+    receivingId: str
+    productId: str
+    action: Literal["EXISTING_PRODUCT", "PRODUCT_CREATED"]
+    # True when this receivingId was already committed and the original result is returned.
+    replayed: bool
+    variants: list[ReceivingCommitVariant]
+    totals: ReceivingCommitTotals

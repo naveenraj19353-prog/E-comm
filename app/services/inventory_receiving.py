@@ -3,10 +3,11 @@
 READ + CALCULATE ONLY. Nothing here writes to any collection or cache; the
 only database calls are `products.find` / `products.find_one`.
 
-The preview is a snapshot. A future save step must re-read the product and
-apply the incoming quantities atomically (`$inc`) instead of trusting the
-`finalStock` shown here, and must assign new variantIds itself
-(`proposedVariantId` is display-only).
+The preview is a snapshot. It returns a signed, stateless `previewToken`
+(nothing is stored) holding exactly what was previewed; the commit
+(`inventory_receiving_commit.py`) re-reads the product, applies the incoming
+quantities atomically (`$inc`) and never trusts `finalStock` from the
+browser. `proposedVariantId` is display-only; the commit re-validates it.
 
 Product match priority:
   1. explicit productId (same tenant only)
@@ -21,11 +22,23 @@ Variant match priority (within the matched product):
 
 from __future__ import annotations
 
+import hashlib
+import hmac
+import uuid
+from datetime import datetime, timedelta, timezone
+
 from bson import ObjectId
 from fastapi import HTTPException
+from jose import ExpiredSignatureError, JWTError, jwt
+from pydantic import ValidationError
 
+from app.config import SECRET_KEY
 from app.database.mongo import products
-from app.models.inventory_receiving import ReceivingPreviewRequest, ReceivingVariantInput
+from app.models.inventory_receiving import (
+    ReceivingPreviewRequest,
+    ReceivingTokenClaims,
+    ReceivingVariantInput,
+)
 from app.routes.detail_messages import INVALID_PRODUCT_ID, PRODUCT_NOT_FOUND
 from app.services.product_duplicates import categories_match, find_duplicate_product
 from app.services.variant_sku import _variant_key_for_lookup, generate_variant_sku
@@ -33,6 +46,12 @@ from app.services.variant_sku import _variant_key_for_lookup, generate_variant_s
 ADD_TO_EXISTING_VARIANT = "ADD_TO_EXISTING_VARIANT"
 CREATE_NEW_VARIANT = "CREATE_NEW_VARIANT"
 AMBIGUOUS_VARIANT_ID = "AMBIGUOUS_VARIANT_ID"
+
+PREVIEW_TOKEN_TYPE = "inventory_receiving_preview"
+PREVIEW_TOKEN_MINUTES = 30
+INVALID_PREVIEW_TOKEN = "INVALID_PREVIEW_TOKEN"
+RECEIVING_PREVIEW_EXPIRED = "RECEIVING_PREVIEW_EXPIRED"
+_TOKEN_ALGORITHM = "HS256"
 
 _PRODUCT_FIELDS = {
     "name": 1,
@@ -274,6 +293,82 @@ def _default_category_name(category_id: str) -> str:
     return category_id.replace("_", " ").replace("-", " ").title()
 
 
+def _preview_signing_key() -> str:
+    # Derived from SECRET_KEY so a preview token can never pass as a login
+    # token (or the other way round), even though both are HS256 JWTs.
+    return hmac.new(
+        (SECRET_KEY or "").encode("utf-8"), b"inventory-receiving-preview:v1", hashlib.sha256
+    ).hexdigest()
+
+
+def _token_line(row: dict) -> dict:
+    line = {"a": row["action"], "c": row["color"], "s": row["size"], "i": row["incomingStock"]}
+    if row["action"] == ADD_TO_EXISTING_VARIANT:
+        line.update(v=row["variantId"], e=row["existingStock"])
+    else:
+        line["p"] = row["proposedVariantId"]
+    return line
+
+
+def sign_preview_token(
+    tenant_id: str,
+    preview: dict,
+    *,
+    brand: str | None = None,
+    now: datetime | None = None,
+) -> tuple[str, datetime]:
+    """Everything the commit needs, signed so the browser cannot change it."""
+    now = now or datetime.now(timezone.utc)
+    expires_at = now + timedelta(minutes=PREVIEW_TOKEN_MINUTES)
+    product = preview["product"]
+    claims = {
+        "typ": PREVIEW_TOKEN_TYPE,
+        "rid": uuid.uuid4().hex,
+        "tid": tenant_id,
+        "iat": int(now.timestamp()),
+        "exp": int(expires_at.timestamp()),
+        "act": preview["action"],
+        "pid": product["id"],
+        "new": None,
+        "conf": preview["requiresConfirmation"],
+        "lines": [_token_line(row) for row in preview["variants"]],
+    }
+    if preview["action"] == "NEW_PRODUCT":
+        claims["new"] = {
+            "name": product["name"],
+            "categoryId": product["categoryId"],
+            "categoryName": product["categoryName"],
+            "brand": brand,
+        }
+    ReceivingTokenClaims.model_validate(claims)  # never sign something the commit would reject
+    return jwt.encode(claims, _preview_signing_key(), algorithm=_TOKEN_ALGORITHM), expires_at
+
+
+def verify_preview_token(token: str) -> ReceivingTokenClaims:
+    try:
+        raw = jwt.decode(token, _preview_signing_key(), algorithms=[_TOKEN_ALGORITHM])
+    except ExpiredSignatureError as error:
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "code": RECEIVING_PREVIEW_EXPIRED,
+                "message": "This preview has expired. Refresh the preview before saving.",
+            },
+        ) from error
+    except JWTError as error:
+        raise HTTPException(
+            status_code=400,
+            detail={"code": INVALID_PREVIEW_TOKEN, "message": "Invalid preview. Refresh the preview before saving."},
+        ) from error
+    try:
+        return ReceivingTokenClaims.model_validate(raw)
+    except ValidationError as error:
+        raise HTTPException(
+            status_code=400,
+            detail={"code": INVALID_PREVIEW_TOKEN, "message": "Invalid preview. Refresh the preview before saving."},
+        ) from error
+
+
 def build_receiving_preview(tenant_id: str, request: ReceivingPreviewRequest) -> dict:
     _check_request_lines(request.variants)
     product, match_type, match_reason = _match_product(tenant_id, request)
@@ -316,7 +411,7 @@ def build_receiving_preview(tenant_id: str, request: ReceivingPreviewRequest) ->
     totals = {
         key: sum(row[key] for row in rows) for key in ("existingStock", "incomingStock", "finalStock")
     }
-    return {
+    result = {
         "success": True,
         "action": "NEW_PRODUCT" if product is None else "EXISTING_PRODUCT",
         "matchType": match_type,
@@ -327,4 +422,12 @@ def build_receiving_preview(tenant_id: str, request: ReceivingPreviewRequest) ->
         "variants": rows,
         "totals": totals,
         "warnings": warnings,
+        "previewToken": None,
+        "expiresAt": None,
     }
+    # A candidate is never committed: the admin re-previews with its productId.
+    if match_type != "candidate":
+        token, expires_at = sign_preview_token(tenant_id, result, brand=request.brand)
+        result["previewToken"] = token
+        result["expiresAt"] = expires_at.isoformat()
+    return result

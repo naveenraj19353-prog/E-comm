@@ -10,6 +10,8 @@ where it came from:
     reservation_released   released because the checkout was never paid
     order_cancelled        put back when an admin cancels an order
     return_received        put back when a returned item arrives
+    receiving              added when an admin receives new stock (written
+                           inside the receiving transaction, not best-effort)
 
 Logging is best-effort: a failure to write the log never blocks an order or a
 stock change (it is logged as an error instead).
@@ -32,6 +34,7 @@ SOURCES = {
     "reservation_released",
     "order_cancelled",
     "return_received",
+    "receiving",
 }
 
 # Reasons offered in the admin "Adjust stock" form.
@@ -134,6 +137,8 @@ def build_movement(
     order_id=None,
     user: dict | None = None,
     now: datetime | None = None,
+    stock_before: int | None = None,
+    reference_id: str | None = None,
 ) -> dict:
     variant = next(
         (item for item in product.get("inventory") or [] if str(item.get("variantId")) == str(variant_id)),
@@ -154,6 +159,11 @@ def build_movement(
         "orderId": str(order_id) if order_id else None,
         "createdAt": now or datetime.now(timezone.utc),
     }
+    # Only set by callers that know them (receiving), so other rows keep their shape.
+    if stock_before is not None:
+        doc["stockBefore"] = int(stock_before)
+    if reference_id:
+        doc["referenceId"] = str(reference_id)
     if user:
         doc["userId"] = str(user.get("userId") or "") or None
         doc["userName"] = user.get("name") or user.get("email")
@@ -172,12 +182,14 @@ def serialize_movement(doc: dict) -> dict:
         "color": doc.get("color"),
         "size": doc.get("size"),
         "change": doc.get("change"),
+        "stockBefore": doc.get("stockBefore"),
         "stockAfter": doc.get("stockAfter"),
         "source": doc.get("source"),
         "reason": reason,
         "reasonLabel": ADJUSTMENT_REASONS.get(reason) if reason else None,
         "note": doc.get("note"),
         "orderId": doc.get("orderId"),
+        "referenceId": doc.get("referenceId"),
         "userName": doc.get("userName"),
         "createdAt": created.isoformat() if hasattr(created, "isoformat") else created,
     }
