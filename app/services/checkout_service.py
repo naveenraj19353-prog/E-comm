@@ -235,6 +235,8 @@ def _build_checkout_item(product: dict, variant: dict, quantity: int) -> dict:
         "color": color,
         "size": variant.get("size"),
         "image": get_variant_image(product, color),
+        # For category coupons (REQ-085); order lines are built without it.
+        "categoryId": product.get("categoryId"),
     }
 
 
@@ -372,6 +374,46 @@ def _cod_handling_charge(
     return round(max(cod_cost - prepaid_cost, 0.0), 2)
 
 
+def _free_delivery_threshold(tenant_id: str) -> float | None:
+    """The store's free-delivery order value (REQ-087); None when not set."""
+    from app.database.mongo import tenants
+
+    tenant = tenants.find_one(
+        {"tenantId": tenant_id_query(tenant_id)}, {"freeDeliveryThreshold": 1}
+    ) or {}
+    try:
+        value = float(tenant.get("freeDeliveryThreshold") or 0)
+    except (TypeError, ValueError):
+        return None
+    return value if value > 0 else None
+
+
+def _free_delivery_options(
+    options: list[dict],
+    prepaid_options: list[dict],
+    payment_mode: str,
+) -> list[dict]:
+    """Delivery is free above the store's threshold (REQ-087). A COD order still
+    pays the COD handling part: that option's COD quote minus its prepaid quote.
+    Returns new dicts (the quotes are cached and must not be changed)."""
+    prepaid_by_id = {opt.get("id"): opt for opt in prepaid_options}
+    free = []
+    for opt in options:
+        cost = 0.0
+        prepaid = prepaid_by_id.get(opt.get("id"))
+        if payment_mode == "COD" and prepaid and prepaid.get("shippingCost") is not None:
+            cost = max(float(opt.get("shippingCost") or 0) - float(prepaid["shippingCost"]), 0.0)
+        free.append(
+            {
+                **opt,
+                "shippingCost": round(cost, 2),
+                "originalShippingCost": opt.get("shippingCost"),
+                "freeDelivery": True,
+            }
+        )
+    return free
+
+
 def _partner_shipping(
     tenant_id: str,
     address: dict | None,
@@ -379,6 +421,7 @@ def _partner_shipping(
     *,
     require_quote: bool = False,
     payment_method: str | None = None,
+    free_delivery: bool = False,
 ) -> tuple[float | None, list[dict], dict]:
     """Return (selected_fee, options, meta). fee None => no partner quote yet."""
     from app.services.delhivery_service import DelhiveryError
@@ -457,12 +500,14 @@ def _partner_shipping(
     normalized = (
         delivery_method if delivery_method in {"standard", "express"} else "standard"
     )
-    selected = next((opt for opt in options if opt.get("id") == normalized), options[0])
     options_by_mode = {
         selected_mode: options,
         other_mode: other_options,
     }
     cod_handling_charge = _cod_handling_charge(options_by_mode, normalized)
+    if free_delivery:
+        options = _free_delivery_options(options, options_by_mode.get("Prepaid") or [], selected_mode)
+    selected = next((opt for opt in options if opt.get("id") == normalized), options[0])
     return (
         float(selected["shippingCost"]),
         options,
@@ -472,6 +517,7 @@ def _partner_shipping(
             "originPin": ctx["originPin"],
             "destinationPin": dest_pin,
             "codHandlingCharge": cod_handling_charge,
+            "freeDelivery": free_delivery,
         },
     )
 
@@ -523,12 +569,18 @@ def calculate_checkout(
         address_id=address_id,
         required=require_address,
     )
+    free_delivery_threshold = _free_delivery_threshold(tenant_id)
+    free_delivery = (
+        free_delivery_threshold is not None
+        and max(subtotal - discount, 0) >= free_delivery_threshold
+    )
     shipping_override, shipping_options, shipping_meta = _partner_shipping(
         tenant_id,
         address,
         delivery_method,
         require_quote=require_address,
         payment_method=payment_method,
+        free_delivery=free_delivery,
     )
     normalized_delivery, shipping, grand_total = _checkout_totals(
         subtotal,
@@ -550,6 +602,8 @@ def calculate_checkout(
         "shippingQuoted": shipping_override is not None,
         "shippingMeta": shipping_meta,
         "codHandlingCharge": shipping_meta.get("codHandlingCharge"),
+        "freeDelivery": free_delivery,
+        "freeDeliveryThreshold": free_delivery_threshold,
     }
 
 

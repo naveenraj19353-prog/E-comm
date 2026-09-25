@@ -24,6 +24,8 @@ export const API_ENDPOINTS = {
         byId: (id: string) => `/users/${id}`,
         STORE_MANAGERS: "/users/store-managers",
         storeManagerById: (id: string) => `/users/store-managers/${id}`,
+        customerNotes: (id: string) => `/users/${id}/notes`,
+        customerNoteById: (id: string, noteId: string) => `/users/${id}/notes/${noteId}`,
     },
 
     TENANTS: {

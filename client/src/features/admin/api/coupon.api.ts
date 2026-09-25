@@ -1,7 +1,7 @@
 import apiClient from "../../../api/client";
 import { API_ENDPOINTS } from "../../../api/endpoints";
 
-export type CouponOfferType = "general" | "first_order" | "product" | "festival";
+export type CouponOfferType = "general" | "first_order" | "product" | "category" | "festival";
 export type CouponDiscountType = "percentage" | "fixed";
 
 export type CouponRecord = {
@@ -14,9 +14,11 @@ export type CouponRecord = {
   minimumOrderAmount?: number;
   maximumDiscount?: number;
   usageLimit?: number;
+  perCustomerLimit?: number;
   usedCount?: number;
   offerType?: CouponOfferType;
   productId?: string | null;
+  categoryId?: string | null;
   festivalTitle?: string;
   festivalMessage?: string;
   startDate: string;
@@ -33,10 +35,12 @@ export type CouponPayload = {
   minimumOrderAmount: number;
   maximumDiscount: number;
   usageLimit: number;
+  perCustomerLimit: number;
   startDate: string;
   endDate: string;
   offerType: CouponOfferType;
   productId?: string | null;
+  categoryId?: string | null;
   festivalTitle?: string;
   festivalMessage?: string;
   isActive: boolean;

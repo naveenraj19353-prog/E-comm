@@ -5,6 +5,7 @@ from pymongo.errors import OperationFailure
 from app.database.mongo import (
     carts,
     contact_messages,
+    customer_notes,
     customer_otps,
     inventory_receivings,
     ledger_entries,
@@ -327,6 +328,14 @@ def _ensure_product_indexes() -> None:
 
 def _ensure_tenant_indexes() -> None:
     """Unique store identifiers. Deleted stores keep tenantId but drop slug and email."""
+    customer_notes.create_indexes(
+        [
+            IndexModel(
+                [("tenantId", ASCENDING), ("customerId", ASCENDING), ("createdAt", DESCENDING)],
+                name="customer_notes_tenant_customer_created",
+            ),
+        ]
+    )
     stock_movements.create_indexes(
         [
             IndexModel(

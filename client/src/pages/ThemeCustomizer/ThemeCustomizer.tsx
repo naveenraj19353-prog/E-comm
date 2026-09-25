@@ -8,6 +8,7 @@ import FooterContentEditor from "./FooterContentEditor";
 import AboutContentEditor from "./AboutContentEditor";
 import CustomizationOverview from "./CustomizationOverview";
 import styles from "./ThemeCustomizer.module.css";
+import { STORE_FONT_OPTIONS, type StoreFontKey } from "../../theme/storeFonts";
 import { routes, storefrontNavigate } from "../../routes/routes";
 import {
     HOME_SECTION_LABELS,
@@ -163,6 +164,7 @@ const ThemeCustomizer = () => {
                                 <Select label="Product detail layout" value={draft.layoutSettings.productDetailLayout} onChange={(v) => updateLayout("productDetailLayout", v as typeof draft.layoutSettings.productDetailLayout)} options={[["gallery-left", "Gallery left"], ["gallery-right", "Gallery right"], ["stacked", "Stacked"]]} />
                                 <Select label="Cart layout" value={draft.layoutSettings.cartLayout} onChange={(v) => updateLayout("cartLayout", v as typeof draft.layoutSettings.cartLayout)} options={[["split", "Split"], ["stacked", "Stacked"]]} />
                                 <Select label="Product card design" value={draft.layoutSettings.productCardDesign} onChange={(v) => updateLayout("productCardDesign", v as typeof draft.layoutSettings.productCardDesign)} options={[["classic", "Classic overlay"], ["studio", "Studio dark"], ["minimal", "Minimal light"]]} />
+                                <Select label="Font" value={draft.layoutSettings.fontFamily} onChange={(v) => updateLayout("fontFamily", v as StoreFontKey)} options={STORE_FONT_OPTIONS} />
                                 <Select label="Card corners" value={draft.layoutSettings.cardStyle} onChange={(v) => updateLayout("cardStyle", v as typeof draft.layoutSettings.cardStyle)} options={[["sharp", "Sharp"], ["rounded", "Rounded"], ["soft", "Soft"]]} />
                                 <Select label="Section spacing" value={draft.layoutSettings.sectionSpacing} onChange={(v) => updateLayout("sectionSpacing", v as typeof draft.layoutSettings.sectionSpacing)} options={[["compact", "Compact"], ["comfortable", "Comfortable"], ["spacious", "Spacious"]]} />
                             </div>

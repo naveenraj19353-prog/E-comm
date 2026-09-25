@@ -462,7 +462,9 @@ def _business_schema_type(tenant: dict) -> str:
 def render_store_home(request: Request, tenant: dict) -> str:
     slug = _tenant_slug(tenant)
     name = _clean_text(tenant.get("name")) or slug
-    description = _store_description(tenant)
+    # Merchant-set SEO title/description win when present (REQ-106, REQ-107).
+    seo = tenant.get("seo") if isinstance(tenant.get("seo"), dict) else {}
+    description = _clean_text(seo.get("description")) or _store_description(tenant)
     canonical = store_page_url(slug)
     image = _store_image_url(request, slug)
     categories = store_categories(tenant)
@@ -517,7 +519,7 @@ def render_store_home(request: Request, tenant: dict) -> str:
         },
     }
     return render_page(
-        title=name,
+        title=_clean_text(seo.get("title")) or name,
         description=_clean_text(description, 300),
         canonical=canonical,
         site_name=name,

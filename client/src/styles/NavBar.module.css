@@ -9,11 +9,7 @@
     color-mix(in srgb, var(--primary) 18%, var(--border));
   box-shadow: 0 0.25rem 1rem color-mix(in srgb, var(--primary) 7%, transparent);
   font-family:
-    "Segoe UI",
-    Roboto,
-    -apple-system,
-    BlinkMacSystemFont,
-    sans-serif;
+    var(--store-font, "Segoe UI", Roboto, -apple-system, BlinkMacSystemFont, sans-serif);
 }
 
 .navbarSticky {

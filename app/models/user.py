@@ -1,5 +1,5 @@
 from typing import Optional
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
 
 class RegisterUser(BaseModel):
@@ -111,6 +111,15 @@ class UpdateUser(BaseModel):
     phone: Optional[str] = None
     email: Optional[EmailStr] = None
     isActive: Optional[bool] = None
+
+
+class CustomerNoteRequest(BaseModel):
+    """An internal note about a customer (REQ-065)."""
+
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
+
+    tenantId: Optional[str] = None
+    text: str = Field(min_length=1, max_length=1000)
 
 
 class CustomerOtpSendRequest(BaseModel):

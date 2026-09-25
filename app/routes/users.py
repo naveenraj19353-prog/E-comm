@@ -7,8 +7,8 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from pymongo import DESCENDING
 from pymongo.errors import DuplicateKeyError
 
-from app.database.mongo import carts, orders, products, tenants, users, wishlists
-from app.models.user import CreateAdminUser, UpdateStoreManager, UpdateUser
+from app.database.mongo import carts, customer_notes, orders, products, tenants, users, wishlists
+from app.models.user import CreateAdminUser, CustomerNoteRequest, UpdateStoreManager, UpdateUser
 from app.routes.detail_messages import (
     INVALID_USER_ID,
     NO_UPDATE_FIELDS,
@@ -29,6 +29,12 @@ from app.services.customer_order_stats import (
     empty_stats,
     order_stats_pipeline,
     stats_by_user,
+)
+from app.services.customer_notes import (
+    NOTES_LIMIT,
+    build_note,
+    can_delete_note,
+    serialize_note,
 )
 from app.services.store_permissions import (
     normalize_permissions,
@@ -499,3 +505,91 @@ def delete_user(
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail=USER_NOT_FOUND)
     return {"success": True, "message": "User deleted successfully."}
+
+
+# ---------------------------------------------------------------------------
+# Internal customer notes (REQ-065). Admin-only; the customer never sees them.
+# ---------------------------------------------------------------------------
+
+
+def _store_customer_id(id: str, tenant_id: str) -> ObjectId:
+    """The customer's id if they belong to this store; 404 otherwise."""
+    if not ObjectId.is_valid(id):
+        raise HTTPException(status_code=400, detail=INVALID_USER_ID)
+    customer = users.find_one(
+        {"_id": ObjectId(id), "tenantId": tenant_id, "role": "customer"}, {"_id": 1}
+    )
+    if not customer:
+        raise HTTPException(status_code=404, detail=USER_NOT_FOUND)
+    return customer["_id"]
+
+
+@router.get(
+    "/{id}/notes",
+    responses={
+        400: BAD_REQUEST_RESPONSE[400],
+        403: FORBIDDEN_RESPONSE[403],
+        404: NOT_FOUND_RESPONSE[404],
+    },
+)
+def list_customer_notes(
+    id: str,
+    current_user: Annotated[dict, Depends(require_permission("customers"))],
+    tenant_id: Annotated[str | None, Query(alias="tenantId")] = None,
+):
+    scoped_tenant_id = admin_tenant_id(current_user, tenant_id)
+    customer_id = _store_customer_id(id, scoped_tenant_id)
+    rows = (
+        customer_notes.find({"tenantId": scoped_tenant_id, "customerId": customer_id})
+        .sort("createdAt", DESCENDING)
+        .limit(NOTES_LIMIT)
+    )
+    return {"success": True, "data": [serialize_note(row, current_user) for row in rows]}
+
+
+@router.post(
+    "/{id}/notes",
+    responses={
+        400: BAD_REQUEST_RESPONSE[400],
+        403: FORBIDDEN_RESPONSE[403],
+        404: NOT_FOUND_RESPONSE[404],
+    },
+)
+def add_customer_note(
+    id: str,
+    payload: CustomerNoteRequest,
+    current_user: Annotated[dict, Depends(require_permission("customers"))],
+):
+    scoped_tenant_id = admin_tenant_id(current_user, payload.tenantId)
+    customer_id = _store_customer_id(id, scoped_tenant_id)
+    note = build_note(scoped_tenant_id, customer_id, payload.text, current_user, datetime.now(timezone.utc))
+    note["_id"] = customer_notes.insert_one(note).inserted_id
+    return {"success": True, "data": serialize_note(note, current_user)}
+
+
+@router.delete(
+    "/{id}/notes/{note_id}",
+    responses={
+        400: BAD_REQUEST_RESPONSE[400],
+        403: FORBIDDEN_RESPONSE[403],
+        404: NOT_FOUND_RESPONSE[404],
+    },
+)
+def delete_customer_note(
+    id: str,
+    note_id: str,
+    current_user: Annotated[dict, Depends(require_permission("customers"))],
+    tenant_id: Annotated[str | None, Query(alias="tenantId")] = None,
+):
+    scoped_tenant_id = admin_tenant_id(current_user, tenant_id)
+    customer_id = _store_customer_id(id, scoped_tenant_id)
+    if not ObjectId.is_valid(note_id):
+        raise HTTPException(status_code=400, detail="Invalid note ID.")
+    scope = {"_id": ObjectId(note_id), "tenantId": scoped_tenant_id, "customerId": customer_id}
+    note = customer_notes.find_one(scope)
+    if not note:
+        raise HTTPException(status_code=404, detail="Note not found.")
+    if not can_delete_note(note, current_user):
+        raise HTTPException(status_code=403, detail="Only the author or the store owner can delete this note.")
+    customer_notes.delete_one(scope)
+    return {"success": True, "message": "Note deleted."}

@@ -7,7 +7,19 @@ import TenantLogoField from "../components/TenantLogoField";
 import TenantCurrencyField from "../components/TenantCurrencyField";
 import { lowStockThresholdOf } from "../api/stock.api";
 import TenantStoreHoursField from "../components/TenantStoreHoursField";
+import TenantBusinessDetailsField from "../components/TenantBusinessDetailsField";
+import TenantSocialLinksField from "../components/TenantSocialLinksField";
+import TenantSeoField from "../components/TenantSeoField";
 import { emptyStoreHours, payloadStoreHours, type StoreHours } from "../../tenant/storeHours";
+import {
+    SOCIAL_PLATFORMS,
+    gstinError,
+    normalizeGstin,
+    socialLinkError,
+    type BusinessDetails,
+    type SocialLinks,
+    type StoreSeo,
+} from "../../tenant/storeProfile";
 import { DISPLAY_CURRENCIES } from "../../../utils/currency";
 import styles from "../styles/EditTenant.module.css";
 import {
@@ -81,6 +93,12 @@ function EditTenantForm({ tenant }: EditTenantFormProps) {
     const [lowStockThreshold, setLowStockThreshold] = useState(
         String(lowStockThresholdOf(tenant)),
     );
+    const [businessDetails, setBusinessDetails] = useState<BusinessDetails>(tenant.businessDetails || {});
+    const [socialLinks, setSocialLinks] = useState<SocialLinks>(tenant.socialLinks || {});
+    const [seo, setSeo] = useState<StoreSeo>(tenant.seo || {});
+    const [freeDeliveryThreshold, setFreeDeliveryThreshold] = useState(
+        tenant.freeDeliveryThreshold ? String(tenant.freeDeliveryThreshold) : "",
+    );
     const [error, setError] = useState("");
     const handleSubmit = async (event: SubmitEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -103,6 +121,29 @@ function EditTenantForm({ tenant }: EditTenantFormProps) {
             setError("Meta Pixel ID must be the numeric ID from Events Manager.");
             return;
         }
+        const freeDeliveryValue = freeDeliveryThreshold.trim() ? Number(freeDeliveryThreshold) : null;
+        if (freeDeliveryValue !== null && (!Number.isFinite(freeDeliveryValue) || freeDeliveryValue < 0)) {
+            setError("Free delivery amount must be a positive number, or empty to turn it off.");
+            return;
+        }
+        const businessError = gstinError(businessDetails.gstin || "");
+        if (businessError) {
+            setError(businessError);
+            return;
+        }
+        const socialError = SOCIAL_PLATFORMS.map(({ key }) => socialLinkError(key, socialLinks[key] || "")).find(Boolean);
+        if (socialError) {
+            setError(socialError);
+            return;
+        }
+        // The whole block is sent; empty strings clear a field on the server.
+        const businessDetailsPayload: BusinessDetails = Object.fromEntries(
+            Object.entries(businessDetails).map(([key, value]) => [key, String(value || "").trim()]),
+        );
+        businessDetailsPayload.gstin = normalizeGstin(businessDetails.gstin || "");
+        const socialLinksPayload: SocialLinks = Object.fromEntries(
+            SOCIAL_PLATFORMS.map(({ key }) => [key, String(socialLinks[key] || "").trim()]),
+        );
         // Empty strings clear an id on the server.
         const analyticsPayload = {
             analytics: { ga4MeasurementId: cleanGa4, metaPixelId: cleanPixel },
@@ -122,6 +163,10 @@ function EditTenantForm({ tenant }: EditTenantFormProps) {
                     isActive,
                     storeHours: payloadStoreHours(storeHours),
                     lowStockThreshold: Math.max(0, Math.floor(Number(lowStockThreshold) || 0)),
+                    businessDetails: businessDetailsPayload,
+                    socialLinks: socialLinksPayload,
+                    freeDeliveryThreshold: freeDeliveryValue || null,
+                    seo: { title: (seo.title || "").trim(), description: (seo.description || "").trim() },
                     ...analyticsPayload,
                 },
             });
@@ -272,6 +317,24 @@ function EditTenantForm({ tenant }: EditTenantFormProps) {
           </div>
 
           <div className={styles.field}>
+            <label htmlFor="tenant-free-delivery">Free delivery from (₹)</label>
+            <input
+              id="tenant-free-delivery"
+              type="number"
+              min={0}
+              step="1"
+              inputMode="decimal"
+              value={freeDeliveryThreshold}
+              onChange={(event) => setFreeDeliveryThreshold(event.target.value)}
+              placeholder="e.g. 600"
+            />
+            <small>
+              Orders of this value or more (after coupon discount) get free delivery on every delivery option.
+              Cash-on-Delivery orders still pay the COD handling fee. Leave empty to charge delivery on all orders.
+            </small>
+          </div>
+
+          <div className={styles.field}>
             <label htmlFor="tenant-ga4">Google Analytics 4 measurement ID</label>
             <input
               id="tenant-ga4"
@@ -310,6 +373,25 @@ function EditTenantForm({ tenant }: EditTenantFormProps) {
             tenantId={tenant.tenantId}
             value={storeHours}
             onChange={setStoreHours}
+            disabled={updateTenantMutation.isPending}
+          />
+
+          <TenantBusinessDetailsField
+            value={businessDetails}
+            onChange={setBusinessDetails}
+            disabled={updateTenantMutation.isPending}
+          />
+
+          <TenantSocialLinksField
+            value={socialLinks}
+            onChange={setSocialLinks}
+            disabled={updateTenantMutation.isPending}
+          />
+
+          <TenantSeoField
+            value={seo}
+            storeName={name}
+            onChange={setSeo}
             disabled={updateTenantMutation.isPending}
           />
           

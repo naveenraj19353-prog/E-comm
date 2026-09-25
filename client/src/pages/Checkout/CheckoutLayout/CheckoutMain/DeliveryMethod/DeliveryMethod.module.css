@@ -95,6 +95,13 @@
   font-weight: 700;
   color: var(--primary);
 }
+/* Delivery price before the store's free-delivery threshold applied (REQ-087). */
+.originalPrice {
+  margin-right: 0.375rem;
+  color: var(--text);
+  font-weight: 500;
+  opacity: 0.55;
+}
 .content p {
   margin: 0.3125rem 0 0.5rem;
   font-size: 0.8125rem;

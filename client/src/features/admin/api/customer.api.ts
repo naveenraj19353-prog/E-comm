@@ -43,6 +43,29 @@ export type AdminCustomersPage = {
     pageSize: number;
 };
 
+/** Internal note about a customer (REQ-065); never shown to the customer. */
+export type CustomerNote = {
+    id: string;
+    text: string;
+    authorName: string;
+    createdAt: string;
+    canDelete: boolean;
+};
+
+export async function getCustomerNotes(tenantId: string, customerId: string): Promise<CustomerNote[]> {
+    const response = await apiClient.get(API_ENDPOINTS.USERS.customerNotes(customerId), { params: { tenantId } });
+    return response.data?.data ?? [];
+}
+
+export async function addCustomerNote(tenantId: string, customerId: string, text: string): Promise<CustomerNote> {
+    const response = await apiClient.post(API_ENDPOINTS.USERS.customerNotes(customerId), { tenantId, text });
+    return response.data?.data;
+}
+
+export async function deleteCustomerNote(tenantId: string, customerId: string, noteId: string): Promise<void> {
+    await apiClient.delete(API_ENDPOINTS.USERS.customerNoteById(customerId, noteId), { params: { tenantId } });
+}
+
 export async function getAdminCustomers(
     tenantId: string,
     page = 1,

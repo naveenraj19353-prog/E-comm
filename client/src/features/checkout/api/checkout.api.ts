@@ -39,8 +39,13 @@ export interface CheckoutPreviewData {
         mode: string;
         estimatedDays?: number | null;
         shippingCost: number;
+        /** Set when the store's free-delivery threshold is met. */
+        originalShippingCost?: number | null;
+        freeDelivery?: boolean;
     }>;
     shippingQuoted?: boolean;
+    freeDelivery?: boolean;
+    freeDeliveryThreshold?: number | null;
     shippingMeta?: {
         provider?: string | null;
         serviceable?: boolean | null;

@@ -47,6 +47,25 @@
   gap: 1rem;
   justify-content: center;
 }
+.socials a {
+  display: inline-flex;
+  color: inherit;
+}
+.socials a:focus-visible {
+  outline: 0.125rem solid var(--primary);
+  outline-offset: 0.1875rem;
+  border-radius: 0.25rem;
+}
+.business {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  margin: 0 0 1rem;
+  font-size: 0.8125rem;
+  font-style: normal;
+  line-height: 1.5;
+  opacity: 0.85;
+}
 .socials svg {
   color: var(--text-white);
   cursor: pointer;
