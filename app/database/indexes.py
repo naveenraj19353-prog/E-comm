@@ -18,6 +18,7 @@ from app.database.mongo import (
     shipping_integrations,
     shipping_locations,
     shipments,
+    stock_movements,
     store_signup_otps,
     tenants,
     users,
@@ -325,6 +326,18 @@ def _ensure_product_indexes() -> None:
 
 def _ensure_tenant_indexes() -> None:
     """Unique store identifiers. Deleted stores keep tenantId but drop slug and email."""
+    stock_movements.create_indexes(
+        [
+            IndexModel(
+                [("tenantId", ASCENDING), ("productId", ASCENDING), ("createdAt", DESCENDING)],
+                name="stock_movements_tenant_product_created",
+            ),
+            IndexModel(
+                [("tenantId", ASCENDING), ("createdAt", DESCENDING)],
+                name="stock_movements_tenant_created",
+            ),
+        ]
+    )
     try:
         tenants.create_indexes(
             [

@@ -17,6 +17,13 @@ export type CustomerActivity = {
     wishlistCount: number;
 };
 
+/** Non-cancelled orders; spend is order totals minus refunds. */
+export type CustomerOrderStats = {
+    orderCount: number;
+    totalSpent: number;
+    lastOrderAt: string | null;
+};
+
 export type AdminCustomer = {
     _id: string;
     name: string;
@@ -26,6 +33,7 @@ export type AdminCustomer = {
     isActive?: boolean;
     createdAt?: string;
     activity: CustomerActivity;
+    orderStats?: CustomerOrderStats;
 };
 
 export type AdminCustomersPage = {

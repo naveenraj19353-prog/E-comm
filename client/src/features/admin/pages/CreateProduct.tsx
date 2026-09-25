@@ -305,6 +305,9 @@ export default function CreateProduct() {
     };
     const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
+        // "Save as draft" submits with value="draft": saved but hidden until published.
+        const submitter = (event.nativeEvent as SubmitEvent).submitter as HTMLButtonElement | null;
+        const isDraft = submitter?.value === "draft";
         setError("");
         setDuplicateNotice(null);
         if (!tenantId) {
@@ -367,6 +370,7 @@ export default function CreateProduct() {
                     foodType: isMenuMode
                         ? foodType || undefined
                         : undefined,
+                    isDraft,
                     basePrice: Number(basePrice),
                     marginPercentage: Number(marginPercentage) || 0,
                     price: calculatedPrice,
@@ -450,6 +454,7 @@ export default function CreateProduct() {
                 categoryId: categoryId.trim(),
                 brand: isMenuMode ? undefined : brand.trim() || undefined,
                 foodType: isMenuMode ? foodType || undefined : undefined,
+                isDraft,
                 basePrice: Number(basePrice),
                 marginPercentage: Number(marginPercentage) || 0,
                 price: calculatedPrice,
@@ -984,7 +989,11 @@ export default function CreateProduct() {
             Cancel
           </button>
 
-          <button type="submit" className={styles.createButton} disabled={createProductMutation.isPending || isUploadingImages}>
+          <button type="submit" value="draft" className={styles.cancelButton} disabled={createProductMutation.isPending || isUploadingImages} title="Save now, publish later from the products list">
+            Save as draft
+          </button>
+
+          <button type="submit" value="publish" className={styles.createButton} disabled={createProductMutation.isPending || isUploadingImages}>
             {createProductMutation.isPending ? (<>
                 <span className={styles.spinner}/>
                 Creating...

@@ -26,6 +26,7 @@ import styles from "../styles/AdminOrderDetail.module.css";
 const STATUS_STEPS: OrderStatus[] = [
     "confirmed",
     "processing",
+    "packed",
     "shipped",
     "delivered",
 ];
@@ -35,10 +36,16 @@ const nextActions: Partial<
 > = {
     confirmed: [
         { status: "processing", label: "Mark processing", primary: true },
+        { status: "packed", label: "Mark packed" },
         { status: "shipped", label: "Mark shipped" },
         { status: "cancelled", label: "Cancel order" },
     ],
     processing: [
+        { status: "packed", label: "Mark packed", primary: true },
+        { status: "shipped", label: "Mark shipped" },
+        { status: "cancelled", label: "Cancel order" },
+    ],
+    packed: [
         { status: "shipped", label: "Mark shipped", primary: true },
         { status: "cancelled", label: "Cancel order" },
     ],
@@ -277,6 +284,15 @@ export default function AdminOrderDetail() {
                         <span className={styles.paidLabel}>{order.paymentStatus || "paid"}</span>
                         <span className={styles.metaDot}>·</span>
                         <span>{formatOrderDate(order.createdAt)}</span>
+                        {order.packedAt ? (
+                            <>
+                                <span className={styles.metaDot}>·</span>
+                                <span>
+                                    Packed {formatOrderDate(order.packedAt)}
+                                    {order.packedBy ? ` by ${order.packedBy}` : ""}
+                                </span>
+                            </>
+                        ) : null}
                     </div>
                 </div>
                 <div className={styles.heroAside}>

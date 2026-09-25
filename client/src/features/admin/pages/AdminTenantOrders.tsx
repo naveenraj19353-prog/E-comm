@@ -1,12 +1,15 @@
 import { useMemo, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import {
     ChevronRight,
     Eye,
     Package,
+    Search,
     ShoppingBag,
     Truck,
+    X,
 } from "lucide-react";
+import { useDebounce } from "../../../hooks/useDebounce";
 import ProductImage from "../../../components/ProductImage";
 import { useAdminOrders } from "../../orders/hooks/useOrders";
 import { useTenantByTenantId } from "../hooks/useTenants";
@@ -27,6 +30,7 @@ const STATUS_FILTERS: Array<{ id: "all" | OrderStatus; label: string }> = [
     { id: "all", label: "All" },
     { id: "confirmed", label: "Confirmed" },
     { id: "processing", label: "Processing" },
+    { id: "packed", label: "Packed" },
     { id: "shipped", label: "Shipped" },
     { id: "delivered", label: "Delivered" },
         { id: "cancelled", label: "Cancelled" },
@@ -41,10 +45,16 @@ const STATUS_FILTERS: Array<{ id: "all" | OrderStatus; label: string }> = [
 const nextActions: Partial<Record<OrderStatus, Array<{ status: OrderStatus; label: string; primary?: boolean }>>> = {
     confirmed: [
         { status: "processing", label: "Process", primary: true },
+        { status: "packed", label: "Packed" },
         { status: "shipped", label: "Ship" },
         { status: "cancelled", label: "Cancel" },
     ],
     processing: [
+        { status: "packed", label: "Mark packed", primary: true },
+        { status: "shipped", label: "Mark shipped" },
+        { status: "cancelled", label: "Cancel" },
+    ],
+    packed: [
         { status: "shipped", label: "Mark shipped", primary: true },
         { status: "cancelled", label: "Cancel" },
     ],
@@ -57,8 +67,17 @@ const nextActions: Partial<Record<OrderStatus, Array<{ status: OrderStatus; labe
 export default function AdminTenantOrders() {
     const { tenantId = "" } = useParams();
     const navigate = useNavigate();
+    const [searchParams, setSearchParams] = useSearchParams();
+    // Set when opened from "View orders" on the Customers page.
+    const customerId = searchParams.get("customerId") || "";
+    const customerName = searchParams.get("customerName") || "Customer";
     const [filter, setFilter] = useState<"all" | OrderStatus>("all");
     const [page, setPage] = useState(1);
+    const [searchInput, setSearchInput] = useState("");
+    const [dateFrom, setDateFrom] = useState("");
+    const [dateTo, setDateTo] = useState("");
+    const search = useDebounce(searchInput.trim(), 350);
+    const hasSearchOrDates = Boolean(search || dateFrom || dateTo);
     const [updatingOrderId, setUpdatingOrderId] = useState<string | null>(null);
     const { data: tenant } = useTenantByTenantId(tenantId);
     const {
@@ -68,7 +87,15 @@ export default function AdminTenantOrders() {
         isFetching,
         updateOrderStatus,
         isUpdatingStatus,
-    } = useAdminOrders(tenantId, { page, pageSize: PAGE_SIZE, status: filter });
+    } = useAdminOrders(tenantId, {
+        page,
+        pageSize: PAGE_SIZE,
+        status: filter,
+        search,
+        from: dateFrom,
+        to: dateTo,
+        customerId: customerId || undefined,
+    });
 
     const filteredOrders = useMemo(() => ordersPage?.orders ?? [], [ordersPage]);
     const filterCounts = useMemo(() => ordersPage?.statusCounts ?? {}, [ordersPage]);
@@ -85,6 +112,31 @@ export default function AdminTenantOrders() {
     const changeFilter = (next: "all" | OrderStatus) => {
         setFilter(next);
         setPage(1);
+    };
+
+    // Any change to search or dates starts again from page 1.
+    const [lastQuery, setLastQuery] = useState({ search, dateFrom, dateTo, customerId });
+    if (
+        lastQuery.search !== search ||
+        lastQuery.dateFrom !== dateFrom ||
+        lastQuery.dateTo !== dateTo ||
+        lastQuery.customerId !== customerId
+    ) {
+        setLastQuery({ search, dateFrom, dateTo, customerId });
+        setPage(1);
+    }
+
+    const clearCustomer = () => {
+        const next = new URLSearchParams(searchParams);
+        next.delete("customerId");
+        next.delete("customerName");
+        setSearchParams(next, { replace: true });
+    };
+
+    const clearSearch = () => {
+        setSearchInput("");
+        setDateFrom("");
+        setDateTo("");
     };
 
     const handleStatusUpdate = async (
@@ -182,6 +234,58 @@ export default function AdminTenantOrders() {
                 </div>
             </div>
 
+            <div className={styles.searchBar}>
+                <label className={styles.searchField}>
+                    <Search size={16} aria-hidden="true" />
+                    <input
+                        type="search"
+                        value={searchInput}
+                        onChange={(event) => setSearchInput(event.target.value)}
+                        placeholder="Search order no. (RC-10023), customer name, email or phone"
+                        aria-label="Search orders"
+                        maxLength={100}
+                    />
+                </label>
+                <label className={styles.dateField}>
+                    <span>From</span>
+                    <input
+                        type="date"
+                        value={dateFrom}
+                        max={dateTo || undefined}
+                        onChange={(event) => setDateFrom(event.target.value)}
+                        aria-label="Orders from date"
+                    />
+                </label>
+                <label className={styles.dateField}>
+                    <span>To</span>
+                    <input
+                        type="date"
+                        value={dateTo}
+                        min={dateFrom || undefined}
+                        onChange={(event) => setDateTo(event.target.value)}
+                        aria-label="Orders to date"
+                    />
+                </label>
+                {hasSearchOrDates || searchInput ? (
+                    <button type="button" className={styles.clearSearch} onClick={clearSearch}>
+                        <X size={14} aria-hidden="true" /> Clear
+                    </button>
+                ) : null}
+                {customerId ? (
+                    <span className={styles.customerChip}>
+                        Orders of {customerName}
+                        <button
+                            type="button"
+                            onClick={clearCustomer}
+                            aria-label="Show all customers' orders"
+                        >
+                            <X size={12} aria-hidden="true" />
+                        </button>
+                    </span>
+                ) : null}
+                {hasSearchOrDates && isFetching ? <span className={styles.searching}>Searching…</span> : null}
+            </div>
+
             <div className={styles.toolbar}>
                 <div className={styles.filters}>
                     {STATUS_FILTERS.map((item) => (
@@ -206,8 +310,12 @@ export default function AdminTenantOrders() {
             {filteredOrders.length === 0 ? (
                 <div className={styles.empty}>
                     <Package size={32} />
-                    <h3>No orders in this view</h3>
-                    <p>Orders will appear here once customers place them.</p>
+                    <h3>{hasSearchOrDates || customerId ? "No matching orders" : "No orders in this view"}</h3>
+                    <p>
+                        {hasSearchOrDates || customerId
+                            ? "Try a different order number, name, phone or date range."
+                            : "Orders will appear here once customers place them."}
+                    </p>
                 </div>
             ) : (
                 <div className={styles.tableCard}>

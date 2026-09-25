@@ -21,6 +21,8 @@ export interface Tenant {
     isActive: boolean;
     storeHours?: StoreHours;
     platformCommissionPercent?: number | null;
+    /** Stock at or below this is "low" (0 = alerts off). Missing = default 5. */
+    lowStockThreshold?: number | null;
     /** From /tenants/slug/{slug}: false only when the storefront is offline. Missing = available. */
     storeAvailable?: boolean;
     createdAt: string;
@@ -109,6 +111,7 @@ export interface UpdateTenantPayload {
     phone?: string;
     isActive?: boolean;
     storeHours?: StoreHours;
+    lowStockThreshold?: number;
 }
 
 export interface UpdateTenantThemePayload {

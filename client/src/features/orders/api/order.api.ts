@@ -14,6 +14,9 @@ import type {
 
 export const ADMIN_ORDERS_PAGE_SIZE = 25;
 
+/** Minutes east of UTC for this browser (India = 330), so order dates mean local days. */
+const browserTzOffsetMinutes = (): number => -new Date().getTimezoneOffset();
+
 export const getUserOrders = async (userId: string): Promise<Order[]> => {
     const response = await apiClient.get<OrdersResponse>(API_ENDPOINTS.ORDERS.byUserId(userId));
     return response.data?.data ?? [];
@@ -42,14 +45,28 @@ export const getAdminOrderDetail = async (
 
 export const getAdminOrders = async (
     tenantId: string,
-    { page = 1, pageSize = ADMIN_ORDERS_PAGE_SIZE, status }: AdminOrdersParams = {},
+    {
+        page = 1,
+        pageSize = ADMIN_ORDERS_PAGE_SIZE,
+        status,
+        search,
+        from,
+        to,
+        customerId,
+    }: AdminOrdersParams = {},
 ): Promise<AdminOrdersPage> => {
+    const trimmedSearch = search?.trim();
     const response = await apiClient.get<AdminOrdersResponse>(API_ENDPOINTS.ORDERS.ADMIN_LIST, {
         params: {
             tenantId,
             page,
             pageSize,
             ...(status && status !== "all" ? { status } : {}),
+            ...(trimmedSearch ? { search: trimmedSearch } : {}),
+            ...(from ? { from } : {}),
+            ...(to ? { to } : {}),
+            ...(from || to ? { tzOffset: browserTzOffsetMinutes() } : {}),
+            ...(customerId ? { customerId } : {}),
         },
     });
     const data = response.data?.data ?? [];
@@ -149,6 +166,7 @@ export const refundAdminReturn = async (
 export const orderStatusLabel: Record<OrderStatus, string> = {
     confirmed: "Confirmed",
     processing: "Processing",
+    packed: "Packed",
     shipped: "Shipped",
     delivered: "Delivered",
     cancelled: "Cancelled",

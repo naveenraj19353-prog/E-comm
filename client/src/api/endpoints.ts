@@ -41,6 +41,7 @@ export const API_ENDPOINTS = {
 
     PRODUCT: {
         GET_ALL: "/product/get-all-products",
+        LOW_STOCK: "/product/low-stock",
         CREATE: "/product/create-product",
         BULK_IMPORT: "/product/bulk-import",
         SEARCH: "/product/search",
@@ -48,6 +49,8 @@ export const API_ENDPOINTS = {
         shareWhatsApp: (id: string) => `/product/${id}/share-whatsapp`,
         inventory: (id: string) => `/product/${id}/inventory`,
         checkStock: (id: string) => `/product/${id}/check-stock`,
+        stockAdjustments: (id: string) => `/product/${id}/stock-adjustments`,
+        stockMovements: (id: string) => `/product/${id}/stock-movements`,
     },
 
     CATEGORIES: {
@@ -131,6 +134,7 @@ export const API_ENDPOINTS = {
         COD: "/orders/cod",
         MENU: "/orders/menu",
         ADMIN_LIST: "/orders/admin/list",
+        ADMIN_ANALYTICS: "/orders/admin/analytics",
         adminDetail: (orderId: string) => `/orders/admin/detail/${orderId}`,
         adminStatus: (orderId: string) => `/orders/admin/${orderId}/status`,
         adminReturnApprove: (orderId: string) =>

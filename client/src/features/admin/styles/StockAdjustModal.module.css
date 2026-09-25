@@ -1,0 +1,263 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  overflow: auto;
+  background: rgba(20, 31, 26, 0.48);
+  backdrop-filter: blur(0.1875rem);
+}
+
+.modal {
+  width: min(46rem, 100%);
+  max-height: calc(100dvh - 2rem);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 0.0625rem solid #e1e7e3;
+  border-radius: 1rem;
+  background: #ffffff;
+  box-shadow: 0 1.5rem 3rem rgba(20, 31, 26, 0.18);
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 0.0625rem solid #edf0ee;
+}
+
+.header h2 {
+  margin: 0.25rem 0 0;
+  color: #17211d;
+  font-size: 1.125rem;
+}
+
+.eyebrow {
+  color: #2f6b52;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.close {
+  width: 2rem;
+  height: 2rem;
+  border: none;
+  border-radius: 999px;
+  background: #f3f6f4;
+  color: #4b5751;
+  font-size: 1.25rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.body {
+  overflow: auto;
+  padding: 1.25rem 1.5rem 1.5rem;
+}
+
+.form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.875rem 1rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  min-width: 0;
+}
+
+.field > span {
+  color: #4b5751;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.field select,
+.field input {
+  height: 2.5rem;
+  padding: 0 0.75rem;
+  border: 0.0625rem solid #dce5df;
+  border-radius: 0.5rem;
+  background: #fff;
+  color: #17211d;
+  font: inherit;
+  font-size: 0.875rem;
+}
+
+.field select:focus,
+.field input:focus {
+  border-color: #2f6b52;
+  outline: none;
+}
+
+.changeRow {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.changeRow input {
+  flex: 1;
+  min-width: 0;
+}
+
+.toggle {
+  display: inline-flex;
+  overflow: hidden;
+  border: 0.0625rem solid #dce5df;
+  border-radius: 0.5rem;
+}
+
+.toggle button {
+  padding: 0 0.75rem;
+  border: none;
+  background: #fff;
+  color: #4b5751;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.toggle .toggleActive {
+  background: #2f6b52;
+  color: #fff;
+}
+
+.hint {
+  color: #77827d;
+  font-size: 0.75rem;
+}
+
+.actions {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.625rem;
+}
+
+.primary,
+.secondary {
+  height: 2.5rem;
+  padding: 0 1rem;
+  border-radius: 0.5rem;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.primary {
+  border: none;
+  background: #2f6b52;
+  color: #fff;
+}
+
+.primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.secondary {
+  border: 0.0625rem solid #dce5df;
+  background: #fff;
+  color: #4b5751;
+}
+
+.error {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: #bd4b4b;
+  font-size: 0.8125rem;
+}
+
+.success {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: #047857;
+  font-size: 0.8125rem;
+}
+
+.empty,
+.muted {
+  margin: 0;
+  color: #77827d;
+  font-size: 0.875rem;
+}
+
+.history {
+  margin-top: 1.5rem;
+  padding-top: 1.25rem;
+  border-top: 0.0625rem solid #edf0ee;
+}
+
+.history h3 {
+  margin: 0 0 0.75rem;
+  color: #17211d;
+  font-size: 0.9375rem;
+}
+
+.tableWrap {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  min-width: 36rem;
+  border-collapse: collapse;
+  font-size: 0.8125rem;
+}
+
+.table th,
+.table td {
+  padding: 0.5rem 0.625rem;
+  border-bottom: 0.0625rem solid #edf1ee;
+  text-align: left;
+  vertical-align: top;
+}
+
+.table th {
+  background: #f7faf8;
+  color: #64736c;
+  font-size: 0.6875rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.plus {
+  color: #047857;
+  font-weight: 700;
+}
+
+.minus {
+  color: #bd4b4b;
+  font-weight: 700;
+}
+
+.note {
+  display: block;
+  color: #77827d;
+  font-size: 0.75rem;
+}
+
+@media (max-width: 40rem) {
+  .overlay {
+    padding: 0.75rem;
+  }
+
+  .form {
+    grid-template-columns: 1fr;
+  }
+
+  .body {
+    padding: 1rem;
+  }
+}

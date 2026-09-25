@@ -5,6 +5,7 @@ import { isStoreOwner } from "../../auth/roles";
 import { useTenantByTenantId, useUpdateTenant } from "../hooks/useTenants";
 import TenantLogoField from "../components/TenantLogoField";
 import TenantCurrencyField from "../components/TenantCurrencyField";
+import { lowStockThresholdOf } from "../api/stock.api";
 import TenantStoreHoursField from "../components/TenantStoreHoursField";
 import { emptyStoreHours, payloadStoreHours, type StoreHours } from "../../tenant/storeHours";
 import { DISPLAY_CURRENCIES } from "../../../utils/currency";
@@ -77,6 +78,9 @@ function EditTenantForm({ tenant }: EditTenantFormProps) {
     const [metaPixelId, setMetaPixelId] = useState(
         readStoreAnalytics(tenant).metaPixelId || "",
     );
+    const [lowStockThreshold, setLowStockThreshold] = useState(
+        String(lowStockThresholdOf(tenant)),
+    );
     const [error, setError] = useState("");
     const handleSubmit = async (event: SubmitEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -117,6 +121,7 @@ function EditTenantForm({ tenant }: EditTenantFormProps) {
                     inrPerUnit: Number(inrPerUnit) || undefined,
                     isActive,
                     storeHours: payloadStoreHours(storeHours),
+                    lowStockThreshold: Math.max(0, Math.floor(Number(lowStockThreshold) || 0)),
                     ...analyticsPayload,
                 },
             });
@@ -247,6 +252,24 @@ function EditTenantForm({ tenant }: EditTenantFormProps) {
             </button>
           </div>
           )}
+
+          <div className={styles.field}>
+            <label htmlFor="tenant-low-stock">Low stock alert level</label>
+            <input
+              id="tenant-low-stock"
+              type="number"
+              min={0}
+              max={100000}
+              step={1}
+              inputMode="numeric"
+              value={lowStockThreshold}
+              onChange={(event) => setLowStockThreshold(event.target.value)}
+            />
+            <small>
+              When a size or colour drops to this many or fewer, it shows under Low stock and the store
+              WhatsApp number gets an alert. Set 0 to turn alerts off.
+            </small>
+          </div>
 
           <div className={styles.field}>
             <label htmlFor="tenant-ga4">Google Analytics 4 measurement ID</label>

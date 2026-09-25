@@ -5,6 +5,8 @@ import { getFirstProductImage } from "../../products/inventory";
 import { uploadImageToS3 } from "../api/upload.api";
 import { useDeleteProduct, useProducts, useUpdateProduct, } from "../hooks/useTenantProducts";
 import { useTenantByTenantId } from "../hooks/useTenants";
+import StockAdjustModal from "../components/StockAdjustModal";
+import { lowStockThresholdOf } from "../api/stock.api";
 import { useAuth } from "../../auth/hooks/useAuth";
 import { hasStorePermission } from "../../auth/permissions";
 import { isStoreStaff } from "../../auth/roles";
@@ -39,6 +41,7 @@ interface Product {
     inventory?: ProductInventory[];
     images?: Record<string, string[]> | string[];
     isActive?: boolean;
+    isDraft?: boolean;
     createdAt?: string;
     updatedAt?: string;
     totalStock?: number;
@@ -117,8 +120,12 @@ export default function AdminTenantProducts() {
         hasStorePermission(user, "products_update") ||
         hasStorePermission(user, "inventory");
     const canDeleteProduct = hasStorePermission(user, "products_update");
+    const canAdjustStock = hasStorePermission(user, "inventory");
+    const [stockProduct, setStockProduct] = useState<Product | null>(null);
     const imageInputRef = useRef<HTMLInputElement | null>(null);
     const { data: tenant, isLoading: tenantLoading, isError: tenantError, } = useTenantByTenantId(tenantId || "");
+    // Store's low-stock alert level (Edit store settings); 0 = only out-of-stock counts.
+    const lowStockLevel = lowStockThresholdOf(tenant);
     const { data: categoryResponse } = useCategory(tenantId || "");
     const categories = useMemo(() => {
         const list = categoryResponse?.data;
@@ -839,7 +846,7 @@ export default function AdminTenantProducts() {
             <strong>
               {products.filter((product) => {
             const stock = product.totalStock ?? product.stock ?? 0;
-            return stock > 0 && stock < 10;
+            return stock <= lowStockLevel;
         }).length}
             </strong>
           </div>
@@ -960,16 +967,16 @@ export default function AdminTenantProducts() {
                       <td>
                         <span className={(product.totalStock ?? product.stock ?? 0) <= 0
                         ? styles.lowStock
-                        : (product.totalStock ?? product.stock ?? 0) < 10
+                        : (product.totalStock ?? product.stock ?? 0) <= lowStockLevel
                             ? styles.lowStock
                             : styles.stock}>
                           {product.totalStock ?? product.stock ?? 0}
                         </span>
                       </td>
                       <td>
-                        <span className={product.isActive ? styles.active : styles.inactive}>
+                        <span className={product.isActive ? styles.active : styles.inactive} title={product.isDraft ? "Draft: not visible on the storefront. Edit and tick Active to publish." : undefined}>
                           <span className={styles.statusDot}/>
-                          {product.isActive ? "Active" : "Inactive"}
+                          {product.isActive ? "Active" : product.isDraft ? "Draft" : "Inactive"}
                         </span>
                       </td>
                       <td>
@@ -984,6 +991,11 @@ export default function AdminTenantProducts() {
                           {canEditProduct ? (
                           <button type="button" className={styles.editButton} onClick={() => handleEdit(product)}>
                             Edit
+                          </button>
+                          ) : null}
+                          {canAdjustStock ? (
+                          <button type="button" className={styles.editButton} onClick={() => setStockProduct(product)} title="Add or remove stock with a reason">
+                            Stock
                           </button>
                           ) : null}
                           {canDeleteProduct ? (
@@ -1353,5 +1365,6 @@ export default function AdminTenantProducts() {
             </div>
           </div>
         </div>)}
+      {stockProduct && tenantId ? (<StockAdjustModal tenantId={tenantId} productId={stockProduct._id || stockProduct.id || ""} productName={stockProduct.name} inventory={stockProduct.inventory || []} onClose={() => setStockProduct(null)}/>) : null}
     </div>);
 }

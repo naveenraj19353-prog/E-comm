@@ -1,6 +1,7 @@
 export type OrderStatus =
     | "confirmed"
     | "processing"
+    | "packed"
     | "shipped"
     | "delivered"
     | "cancelled"
@@ -119,6 +120,9 @@ export interface Order {
     customer?: OrderCustomer;
     courier?: OrderCourier | null;
     deliveredAt?: string;
+    packedAt?: string | null;
+    /** Admin order detail only: who marked it packed. */
+    packedBy?: string | null;
     returnRequest?: OrderReturnRequest | null;
     canRequestReturn?: boolean;
     createdAt?: string;
@@ -149,6 +153,13 @@ export interface AdminOrdersParams {
     page?: number;
     pageSize?: number;
     status?: string;
+    /** Order ref (RC-10023), customer name/email/phone or address name/phone. */
+    search?: string;
+    /** Inclusive dates, YYYY-MM-DD. */
+    from?: string;
+    to?: string;
+    /** Only this customer's orders (customer history). */
+    customerId?: string;
 }
 
 export interface OrderResponse {

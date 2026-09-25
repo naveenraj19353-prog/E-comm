@@ -110,6 +110,8 @@ class CreateProduct(BaseModel):
             '{"Green": ["tenants/your-store/products/uuid.jpg"]}'
         ),
     )
+    # Draft: saved but not shown on the storefront until published (REQ-026).
+    isDraft: Optional[bool] = False
 
 
 class UpdateProduct(BaseModel):
@@ -149,6 +151,7 @@ class UpdateProduct(BaseModel):
 
     images: Optional[dict[str, list[str]]] = None
     isActive: Optional[bool] = None
+    isDraft: Optional[bool] = None
 
 
 class ProductSearchRequest(BaseModel):

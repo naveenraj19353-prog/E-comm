@@ -1,4 +1,5 @@
 import logging
+import re
 from datetime import datetime, timezone
 from typing import Annotated
 
@@ -21,6 +22,13 @@ from app.routes.response_metadata import (
     NOT_FOUND_RESPONSE,
 )
 from app.services.menu_service import fulfill_menu_order, normalize_counter_number
+from app.services.customer_order_stats import user_id_values
+from app.services import sales_report
+from app.services.order_search import (
+    MAX_SEARCH_LENGTH,
+    InvalidOrderFilter,
+    build_order_filters,
+)
 from app.services.order_fulfillment import (
     cancel_and_refund_order,
     fulfill_cod_order,
@@ -51,8 +59,10 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/orders", tags=["Orders"])
 
 ADMIN_STATUS_TRANSITIONS: dict[str, set[str]] = {
-    "confirmed": {"processing", "shipped", "cancelled"},
-    "processing": {"shipped", "cancelled"},
+    "confirmed": {"processing", "packed", "shipped", "cancelled"},
+    "processing": {"packed", "shipped", "cancelled"},
+    # Packed: boxed and ready for the courier (REQ-046).
+    "packed": {"shipped", "cancelled"},
     "shipped": {"delivered", "cancelled"},
     "delivered": set(),
     "cancelled": set(),
@@ -173,10 +183,31 @@ def list_tenant_orders(
     page: Annotated[int, Query(ge=1)] = 1,
     page_size: Annotated[int, Query(alias="pageSize", ge=1)] = ADMIN_LIST_DEFAULT_PAGE_SIZE,
     status: Annotated[str | None, Query()] = None,
+    search: Annotated[str | None, Query(max_length=MAX_SEARCH_LENGTH)] = None,
+    date_from: Annotated[str | None, Query(alias="from")] = None,
+    date_to: Annotated[str | None, Query(alias="to")] = None,
+    tz_offset: Annotated[int, Query(alias="tzOffset")] = 0,
+    customer_id: Annotated[str | None, Query(alias="customerId", max_length=64)] = None,
 ):
     scoped_tenant_id = admin_tenant_id(current_user, tenant_id)
     page_size = min(page_size, ADMIN_LIST_MAX_PAGE_SIZE)
-    base_query = {"tenantId": scoped_tenant_id}
+    try:
+        extra_filters = build_order_filters(
+            scoped_tenant_id,
+            search,
+            date_from,
+            date_to,
+            _customer_ids_matching,
+            tz_offset_minutes=tz_offset,
+        )
+    except InvalidOrderFilter as error:
+        raise HTTPException(status_code=400, detail=str(error))
+    # Search and dates also apply to the status counts, so each filter chip
+    # shows how many matching orders it has.
+    base_query = {"tenantId": scoped_tenant_id, **extra_filters}
+    if customer_id:
+        # One customer's order history (from the Customers page).
+        base_query["userId"] = {"$in": user_id_values([customer_id])}
     query = dict(base_query)
     if status and status != "all":
         # Orders stored without an orderStatus are shown as confirmed.
@@ -213,6 +244,47 @@ def list_tenant_orders(
     except Exception as error:
         logger.exception("List tenant orders error")
         raise HTTPException(status_code=500, detail="Unable to fetch orders.")
+
+
+@router.get(
+    "/admin/analytics",
+    responses={
+        400: BAD_REQUEST_RESPONSE[400],
+        403: FORBIDDEN_RESPONSE[403],
+    },
+)
+def store_sales_report(
+    current_user: Annotated[dict, Depends(require_permission("orders"))],
+    tenant_id: Annotated[str | None, Query(alias="tenantId")] = None,
+    date_from: Annotated[str | None, Query(alias="from")] = None,
+    date_to: Annotated[str | None, Query(alias="to")] = None,
+    group_by: Annotated[str | None, Query(alias="groupBy")] = None,
+    tz_offset: Annotated[int, Query(alias="tzOffset")] = 330,
+):
+    """Sales dashboard: net sales, orders, AOV, trend, status mix, top products."""
+    scoped_tenant_id = admin_tenant_id(current_user, tenant_id)
+    try:
+        tz = sales_report.tz_string(tz_offset)
+        start, end, first, last = sales_report.resolve_range(date_from, date_to, tz_offset)
+        unit = group_by or sales_report.default_group(first, last)
+        if unit not in sales_report.GROUP_UNITS:
+            raise sales_report.ReportRangeError("groupBy must be day, week or month.")
+    except sales_report.ReportRangeError as error:
+        raise HTTPException(status_code=400, detail=str(error))
+    try:
+        report = sales_report.build_report(
+            summary_rows=list(orders.aggregate(sales_report.summary_pipeline(scoped_tenant_id, start, end))),
+            series_rows=list(orders.aggregate(sales_report.series_pipeline(scoped_tenant_id, start, end, unit, tz))),
+            status_rows=list(orders.aggregate(sales_report.status_pipeline(scoped_tenant_id, start, end))),
+            top_rows=list(orders.aggregate(sales_report.top_products_pipeline(scoped_tenant_id, start, end))),
+            first=first,
+            last=last,
+            unit=unit,
+        )
+    except Exception:
+        logger.exception("Sales report error")
+        raise HTTPException(status_code=500, detail="Unable to build the sales report.")
+    return {"success": True, "data": report}
 
 
 @router.patch(
@@ -267,6 +339,8 @@ def update_order_status(
                 str(variant_id),
                 int(item.get("quantity", 0)),
                 now,
+                source="order_cancelled",
+                order_id=order.get("_id"),
             )
         cancel_and_refund_order(order, now)
 
@@ -274,6 +348,12 @@ def update_order_status(
         "orderStatus": next_status,
         "updatedAt": now,
     }
+    if next_status == "packed":
+        status_fields["packedAt"] = now
+        status_fields["packedBy"] = {
+            "userId": str(current_user.get("userId") or "") or None,
+            "name": current_user.get("name") or current_user.get("email") or "Staff",
+        }
     if next_status == "delivered":
         status_fields["deliveredAt"] = now
         # COD is collected by the courier at handoff, not through Razorpay —
@@ -334,7 +414,11 @@ def get_admin_order_detail(
 
     return {
         "success": True,
-        "order": _serialize_order(order, customer=customer),
+        # packedBy is staff-only, so it is added here rather than in _serialize_order.
+        "order": {
+            **_serialize_order(order, customer=customer),
+            "packedBy": (order.get("packedBy") or {}).get("name"),
+        },
     }
 
 
@@ -525,6 +609,22 @@ def _serialize_address(address: dict | None) -> dict | None:
     }
 
 
+def _customer_ids_matching(tenant_id: str, text: str) -> list:
+    """Ids of this store's customers whose name, email or phone contains `text`."""
+    pattern = {"$regex": re.escape(text), "$options": "i"}
+    return [
+        user["_id"]
+        for user in users.find(
+            {
+                "tenantId": tenant_id,
+                "role": "customer",
+                "$or": [{"name": pattern}, {"email": pattern}, {"phone": pattern}],
+            },
+            {"_id": 1},
+        ).limit(500)
+    ]
+
+
 def _customers_for_orders(order_docs: list[dict]) -> dict[str, dict]:
     """Customer name/email for a page of orders, in one `users` query."""
     user_ids = {
@@ -627,6 +727,7 @@ def _serialize_order(
         "refundedAmount": order.get("refundedAmount", 0),
         "paymentStatus": order.get("paymentStatus"),
         "orderStatus": order.get("orderStatus"),
+        "packedAt": order.get("packedAt"),
         "deliveredAt": order.get("deliveredAt"),
         "returnRequest": serialize_return(order),
         "canRequestReturn": can_customer_request_return(order),

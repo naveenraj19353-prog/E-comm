@@ -472,6 +472,8 @@ def mark_return_received(*, order_id: str, tenant_id: str) -> dict:
                 str(variant_id),
                 int(item["quantity"]),
                 now,
+                source="return_received",
+                order_id=order.get("_id"),
             )
     payload = {
         **current,

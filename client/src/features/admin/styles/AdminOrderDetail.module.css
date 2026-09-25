@@ -82,6 +82,11 @@
   color: #2f6b52;
 }
 
+.status_packed {
+  background: #edf7f0;
+  color: #2f6b52;
+}
+
 .status_shipped {
   background: #fff7ed;
   color: #c2410c;
