@@ -1,0 +1,214 @@
+/* Receiving-only pieces. The modal shell, fields, buttons, table and messages
+   come from StockAdjustModal.module.css. */
+
+.wide {
+  width: min(58rem, 100%);
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.steps {
+  display: flex;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: #77827d;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.steps li::after {
+  content: "›";
+  margin-left: 0.5rem;
+  color: #c3ccc7;
+}
+
+.steps li:last-child::after {
+  content: "";
+}
+
+.stepActive {
+  color: #2f6b52;
+}
+
+.results {
+  display: flex;
+  flex-direction: column;
+  max-height: 16rem;
+  overflow: auto;
+  margin: 0;
+  padding: 0;
+  border: 0.0625rem solid #edf0ee;
+  border-radius: 0.5rem;
+  list-style: none;
+}
+
+.results button {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  width: 100%;
+  padding: 0.625rem 0.75rem;
+  border: none;
+  border-bottom: 0.0625rem solid #edf0ee;
+  background: #fff;
+  color: #17211d;
+  font: inherit;
+  font-size: 0.875rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.results button:hover {
+  background: #f7faf8;
+}
+
+.meta {
+  color: #77827d;
+  font-size: 0.75rem;
+}
+
+.badge {
+  display: inline-block;
+  margin-left: 0.375rem;
+  padding: 0.0625rem 0.375rem;
+  border-radius: 999px;
+  background: #fff4e5;
+  color: #9a5b00;
+  font-size: 0.6875rem;
+  font-weight: 700;
+}
+
+.selected {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  background: #f3f8f5;
+  color: #17211d;
+  font-size: 0.875rem;
+}
+
+.linkButton {
+  padding: 0;
+  border: none;
+  background: none;
+  color: #2f6b52;
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.qty {
+  width: 6.5rem;
+  height: 2.25rem;
+  padding: 0 0.625rem;
+  border: 0.0625rem solid #dce5df;
+  border-radius: 0.5rem;
+  font: inherit;
+  font-size: 0.875rem;
+}
+
+.textInput {
+  width: 100%;
+  min-width: 6rem;
+  height: 2.25rem;
+  padding: 0 0.625rem;
+  border: 0.0625rem solid #dce5df;
+  border-radius: 0.5rem;
+  font: inherit;
+  font-size: 0.875rem;
+}
+
+.num {
+  text-align: right !important;
+  font-variant-numeric: tabular-nums;
+}
+
+.sku {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.75rem;
+}
+
+.tagAdd,
+.tagNew,
+.tagSame {
+  display: inline-block;
+  padding: 0.125rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.tagAdd {
+  background: #e7f4ee;
+  color: #1f6b4a;
+}
+
+.tagNew {
+  background: #e8eefc;
+  color: #2e4f9e;
+}
+
+.tagSame {
+  background: #f1f3f2;
+  color: #64736c;
+}
+
+.totals td {
+  border-bottom: none;
+  font-weight: 700;
+}
+
+.warnings {
+  margin: 0;
+  padding: 0.75rem 0.75rem 0.75rem 2rem;
+  border-radius: 0.5rem;
+  background: #fff8ec;
+  color: #7a4a00;
+  font-size: 0.8125rem;
+}
+
+.confirm {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  border: 0.0625rem solid #f0d9ae;
+  border-radius: 0.5rem;
+  background: #fffaf0;
+  color: #17211d;
+  font-size: 0.875rem;
+}
+
+.confirmHighlight {
+  border-color: #bd4b4b;
+}
+
+.grid2 {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.875rem 1rem;
+}
+
+.footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.625rem;
+}
+
+@media (max-width: 40rem) {
+  .grid2 {
+    grid-template-columns: 1fr;
+  }
+}
