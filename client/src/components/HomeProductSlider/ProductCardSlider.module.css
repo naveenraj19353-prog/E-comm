@@ -1,10 +1,6 @@
 .section {
   font-family:
-    "Segoe UI",
-    Roboto,
-    -apple-system,
-    BlinkMacSystemFont,
-    sans-serif;
+    var(--store-font, "Segoe UI", Roboto, -apple-system, BlinkMacSystemFont, sans-serif);
   width: 100%;
   min-width: 0;
   overflow: hidden;

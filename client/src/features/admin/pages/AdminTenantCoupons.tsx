@@ -9,6 +9,7 @@ import {
   type CouponRecord,
 } from "../api/coupon.api";
 import { useProducts } from "../hooks/useTenantProducts";
+import { useCategory } from "../../products/hooks/useCategory";
 import PageLoader from "../../../components/PageLoader";
 import styles from "../styles/AdminTenantBanners.module.css";
 
@@ -20,10 +21,12 @@ type CouponForm = {
   minimumOrderAmount: string;
   maximumDiscount: string;
   usageLimit: string;
+  perCustomerLimit: string;
   startDate: string;
   endDate: string;
   offerType: CouponOfferType;
   productId: string;
+  categoryId: string;
   festivalTitle: string;
   festivalMessage: string;
   isActive: boolean;
@@ -33,6 +36,7 @@ const OFFER_OPTIONS: Array<{ id: CouponOfferType; label: string; help: string }>
   { id: "general", label: "General", help: "Anyone can use this while it is active." },
   { id: "first_order", label: "First order", help: "Only for a customer’s first order." },
   { id: "product", label: "Particular product", help: "Discount applies only to one product." },
+  { id: "category", label: "Category", help: "Discount applies only to products in one category." },
   { id: "festival", label: "Festival offer", help: "Show a message on the storefront template." },
 ];
 
@@ -62,10 +66,12 @@ const emptyForm = (): CouponForm => ({
   minimumOrderAmount: "0",
   maximumDiscount: "0",
   usageLimit: "0",
+  perCustomerLimit: "0",
   startDate: toLocalInput(),
   endDate: defaultEnd(),
   offerType: "general",
   productId: "",
+  categoryId: "",
   festivalTitle: "",
   festivalMessage: "",
   isActive: true,
@@ -80,10 +86,12 @@ function toForm(coupon: CouponRecord): CouponForm {
     minimumOrderAmount: String(coupon.minimumOrderAmount ?? 0),
     maximumDiscount: String(coupon.maximumDiscount ?? 0),
     usageLimit: String(coupon.usageLimit ?? 0),
+    perCustomerLimit: String(coupon.perCustomerLimit ?? 0),
     startDate: toLocalInput(coupon.startDate),
     endDate: toLocalInput(coupon.endDate),
     offerType: coupon.offerType || "general",
     productId: coupon.productId || "",
+    categoryId: coupon.categoryId || "",
     festivalTitle: coupon.festivalTitle || "",
     festivalMessage: coupon.festivalMessage || "",
     isActive: coupon.isActive !== false,
@@ -105,6 +113,19 @@ export default function AdminTenantCoupons() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const productsQuery = useProducts({ tenantId, limit: 100, includeInactive: false });
+  // Existing store categories only (categories are never created here).
+  const { data: categoryResponse } = useCategory(tenantId);
+  const categories = useMemo(() => {
+    const list = (categoryResponse as { data?: unknown } | undefined)?.data;
+    return Array.isArray(list)
+      ? list
+          .map((item: { categoryId?: string; _id?: string; name?: string }) => ({
+            id: String(item.categoryId || item._id || ""),
+            name: String(item.name || item.categoryId || item._id || ""),
+          }))
+          .filter((item) => item.id && item.name)
+      : [];
+  }, [categoryResponse]);
   const products = useMemo(
     () => productsQuery.data?.pages.flatMap((page) => page.data || []) ?? [],
     [productsQuery.data],
@@ -162,6 +183,10 @@ export default function AdminTenantCoupons() {
       setError("Select the product this coupon applies to.");
       return;
     }
+    if (form.offerType === "category" && !form.categoryId) {
+      setError("Select the category this coupon applies to.");
+      return;
+    }
     if (form.offerType === "festival" && !form.festivalMessage.trim()) {
       setError("Add a festival message to show on the storefront.");
       return;
@@ -175,10 +200,12 @@ export default function AdminTenantCoupons() {
       minimumOrderAmount: Number(form.minimumOrderAmount) || 0,
       maximumDiscount: Number(form.maximumDiscount) || 0,
       usageLimit: Number(form.usageLimit) || 0,
+      perCustomerLimit: Math.max(0, Math.floor(Number(form.perCustomerLimit) || 0)),
       startDate: new Date(form.startDate).toISOString(),
       endDate: new Date(form.endDate).toISOString(),
       offerType: form.offerType,
       productId: form.offerType === "product" ? form.productId : null,
+      categoryId: form.offerType === "category" ? form.categoryId : null,
       festivalTitle: form.offerType === "festival" ? form.festivalTitle.trim() : "",
       festivalMessage: form.offerType === "festival" ? form.festivalMessage.trim() : "",
       isActive: form.isActive,
@@ -356,6 +383,16 @@ export default function AdminTenantCoupons() {
               />
             </label>
             <label>
+              Uses per customer (0 = no limit)
+              <input
+                type="number"
+                min={0}
+                max={1000}
+                value={form.perCustomerLimit}
+                onChange={(event) => updateField("perCustomerLimit", event.target.value)}
+              />
+            </label>
+            <label>
               Starts
               <input
                 type="datetime-local"
@@ -386,6 +423,24 @@ export default function AdminTenantCoupons() {
                   {products.map((product) => (
                     <option key={product._id} value={product._id}>
                       {product.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            ) : null}
+
+            {form.offerType === "category" ? (
+              <label className={styles.full}>
+                Category
+                <select
+                  value={form.categoryId}
+                  onChange={(event) => updateField("categoryId", event.target.value)}
+                  required
+                >
+                  <option value="">Select a category</option>
+                  {categories.map((category) => (
+                    <option key={category.id} value={category.id}>
+                      {category.name}
                     </option>
                   ))}
                 </select>

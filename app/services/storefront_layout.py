@@ -97,6 +97,7 @@ DEFAULT_LAYOUT_SETTINGS: dict[str, Any] = {
     "productDetailLayout": "gallery-left",
     "cartLayout": "split",
     "productCardDesign": "classic",
+    "fontFamily": "default",
 }
 
 DEFAULT_FOOTER_SECTIONS: list[dict[str, Any]] = [

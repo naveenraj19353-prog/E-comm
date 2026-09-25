@@ -267,6 +267,15 @@ export default function AdminTenantProducts() {
     const slugifyVariantPart = (value: string) =>
         value.trim().toLowerCase().replace(/\s+/g, "-") || "default";
 
+    // SKU of a variant already saved on the product (REQ-022). New colour/size
+    // combinations get their SKU from the server when the product is saved.
+    const getSavedSku = (color: string, size: string) =>
+        editingProduct?.inventory?.find(
+            (item) =>
+                (item.color || "").trim().toLowerCase() === color.trim().toLowerCase()
+                && (item.size || "").trim().toLowerCase() === size.trim().toLowerCase(),
+        )?.variantId || "";
+
     const getInventoryStock = (color: string, size: string) => {
         const match = editForm.inventory.find(
             (item) =>
@@ -866,7 +875,7 @@ export default function AdminTenantProducts() {
       <div className={styles.toolbar}>
         <div className={styles.search}>
           <span className={styles.searchIcon}>⌕</span>
-          <input type="text" value={searchInput} onChange={(event) => setSearchInput(event.target.value)} placeholder="Search products..."/>
+          <input type="text" value={searchInput} onChange={(event) => setSearchInput(event.target.value)} placeholder="Search products or SKU..."/>
           {searchInput && (<button type="button" className={styles.clearSearch} onClick={() => {
                 setSearchInput("");
                 setSearch("");
@@ -1249,6 +1258,9 @@ export default function AdminTenantProducts() {
                                   }
                                   aria-label={`${color} ${size} stock`}
                                 />
+                                {getSavedSku(color, size) ? (
+                                  <small className={styles.skuHint}>{getSavedSku(color, size)}</small>
+                                ) : null}
                               </td>
                             ))}
                           </tr>

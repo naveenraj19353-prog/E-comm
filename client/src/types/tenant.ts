@@ -2,6 +2,7 @@ import type { BusinessType } from "../constants/businessTypes";
 import type { HomeSectionId } from "../theme/homeSections";
 import type { StorefrontLayout, ThemeColors } from "../theme/types";
 import type { AboutContent } from "../pages/Legal/aboutDefaults";
+import type { BusinessDetails, SocialLinks, StoreSeo } from "../features/tenant/storeProfile";
 
 export interface ThemeColorsPartial {
     primary?: string;
@@ -83,6 +84,11 @@ export interface Tenant {
     storeHours?: StoreHours;
     phone?: string;
     email?: string;
+    businessDetails?: BusinessDetails | null;
+    socialLinks?: SocialLinks | null;
+    seo?: StoreSeo | null;
+    /** Order value (INR, after coupon) from which delivery is free; null = off. */
+    freeDeliveryThreshold?: number | null;
     isActive?: boolean;
     /** From /tenants/slug/{slug}: false only when the storefront is offline. Missing = available. */
     storeAvailable?: boolean;

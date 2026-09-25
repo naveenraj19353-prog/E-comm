@@ -7,7 +7,7 @@ from typing import Any
 
 from fastapi import HTTPException
 
-from app.database.mongo import coupons, orders
+from app.database.mongo import coupons, orders, products
 from app.services.checkout_service import (
     as_object_id,
     cart_owner_query,
@@ -15,7 +15,7 @@ from app.services.checkout_service import (
     tenant_id_query,
 )
 
-OFFER_TYPES = {"general", "first_order", "product", "festival"}
+OFFER_TYPES = {"general", "first_order", "product", "category", "festival"}
 
 
 def offer_type_of(coupon: dict | None) -> str:
@@ -43,6 +43,7 @@ def serialize_coupon(coupon: dict) -> dict:
             data[key] = parsed.isoformat()
     data["offerType"] = offer_type_of(data)
     data["productId"] = str(data.get("productId") or "") or None
+    data["categoryId"] = str(data.get("categoryId") or "") or None
     data["festivalTitle"] = data.get("festivalTitle") or ""
     data["festivalMessage"] = data.get("festivalMessage") or ""
     return data
@@ -63,8 +64,56 @@ def _customer_has_prior_order(tenant_id: str, user_id: str) -> bool:
     return orders.count_documents(query) > 0
 
 
+def _customer_coupon_uses(tenant_id: str, user_id: str, code: str) -> int:
+    """Orders (not cancelled) in which this customer used the coupon."""
+    query = cart_owner_query(tenant_id, user_id)
+    query["couponCode"] = code
+    query["orderStatus"] = {"$nin": ["cancelled"]}
+    return orders.count_documents(query)
+
+
+def _enforce_per_customer_limit(coupon: dict, tenant_id: str, user_id: str | None) -> None:
+    limit = int(coupon.get("perCustomerLimit") or 0)
+    if limit <= 0:
+        return
+    if not user_id:
+        raise HTTPException(status_code=400, detail="Login is required to use this coupon.")
+    if _customer_coupon_uses(tenant_id, user_id, coupon.get("code")) >= limit:
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                "You have already used this coupon."
+                if limit == 1
+                else f"You have already used this coupon {limit} times."
+            ),
+        )
+
+
+def _category_amount(coupon: dict, items: list[dict] | None) -> float:
+    """Cart value from the coupon's category (REQ-085)."""
+    category_id = str(coupon.get("categoryId") or "").strip()
+    if not category_id:
+        raise HTTPException(
+            status_code=400,
+            detail="This category coupon is not configured correctly.",
+        )
+    eligible = sum(
+        float(item.get("subtotal") or 0)
+        for item in items or []
+        if str(item.get("categoryId") or "") == category_id
+    )
+    if eligible <= 0:
+        raise HTTPException(
+            status_code=400,
+            detail="Add a product from the offer category to use this coupon.",
+        )
+    return round(eligible, 2)
+
+
 def _eligible_amount(coupon: dict, subtotal: float, items: list[dict] | None) -> float:
     kind = offer_type_of(coupon)
+    if kind == "category":
+        return _category_amount(coupon, items)
     if kind != "product":
         return float(subtotal)
     product_id = str(coupon.get("productId") or "").strip()
@@ -138,6 +187,7 @@ def apply_coupon_discount(
                 status_code=400,
                 detail="This coupon is only valid on your first order.",
             )
+    _enforce_per_customer_limit(coupon, tenant_id, user_id)
     eligible = _eligible_amount(coupon, subtotal, items)
     minimum_order_amount = float(coupon.get("minimumOrderAmount", 0) or 0)
     if eligible < minimum_order_amount:
@@ -211,6 +261,17 @@ def build_coupon_document(
             )
     else:
         product_id = None
+    category_id = str(payload.get("categoryId") or "").strip() or None
+    if kind == "category":
+        if not category_id:
+            raise HTTPException(status_code=400, detail="Select a category for this coupon.")
+        # Only existing categories: some product in this store must use it.
+        if not products.find_one(
+            {"tenantId": tenant_id_query(tenant_id), "categoryId": category_id}, {"_id": 1}
+        ):
+            raise HTTPException(status_code=400, detail="Selected category was not found in this store.")
+    else:
+        category_id = None
     festival_title = str(payload.get("festivalTitle") or "").strip()
     festival_message = str(payload.get("festivalMessage") or "").strip()
     if kind == "festival" and not festival_message:
@@ -237,8 +298,10 @@ def build_coupon_document(
         "minimumOrderAmount": float(payload.get("minimumOrderAmount") or 0),
         "maximumDiscount": float(payload.get("maximumDiscount") or 0),
         "usageLimit": int(payload.get("usageLimit") or 0),
+        "perCustomerLimit": int(payload.get("perCustomerLimit") or 0),
         "offerType": kind,
         "productId": product_id,
+        "categoryId": category_id,
         "festivalTitle": festival_title,
         "festivalMessage": festival_message,
         "startDate": start,

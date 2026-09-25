@@ -68,7 +68,9 @@ const Cart = () => {
                 isClearing={isClearing}
                 showClearCart={!isMenu}
             />
-            {isRetail ? <FreeDeliveryBanner /> : null}
+            {isRetail && tenant?.freeDeliveryThreshold ? (
+                <FreeDeliveryBanner threshold={tenant.freeDeliveryThreshold} cartTotal={grandTotal} />
+            ) : null}
             <div
                 className={`${styles.layout} ${
                     showSummary && layoutSettings.cartLayout === "stacked"

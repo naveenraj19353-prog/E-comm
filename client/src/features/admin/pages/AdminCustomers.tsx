@@ -6,6 +6,7 @@ import { isMenuBusiness } from "../../tenant/businessMode";
 import { formatOrderAmount, formatOrderDate } from "../../orders/api/order.api";
 import styles from "../styles/AdminCustomers.module.css";
 import paymentStyles from "../styles/AdminTenantPayments.module.css";
+import CustomerNotesModal from "../components/CustomerNotesModal";
 
 const PAGE_SIZE = 25;
 const SEARCH_DEBOUNCE_MS = 300;
@@ -14,6 +15,7 @@ export default function AdminCustomers() {
     const { tenantId = "" } = useParams();
     const navigate = useNavigate();
     const [search, setSearch] = useState("");
+    const [notesFor, setNotesFor] = useState<{ id: string; name: string } | null>(null);
     const [debouncedSearch, setDebouncedSearch] = useState("");
     const [page, setPage] = useState(1);
     const { data: tenant } = useTenantByTenantId(tenantId);
@@ -105,6 +107,13 @@ export default function AdminCustomers() {
                                         <span className={styles.customerId}>
                                             {customer._id}
                                         </span>
+                                        <button
+                                            type="button"
+                                            className={styles.viewOrders}
+                                            onClick={() => setNotesFor({ id: customer._id, name: customer.name || "Customer" })}
+                                        >
+                                            Notes
+                                        </button>
                                     </td>
                                     <td className={styles.cellContact}>
                                         <strong>{customer.phone || "—"}</strong>
@@ -271,6 +280,14 @@ export default function AdminCustomers() {
                         Next
                     </button>
                 </div>
+            ) : null}
+            {notesFor ? (
+                <CustomerNotesModal
+                    tenantId={tenantId}
+                    customerId={notesFor.id}
+                    customerName={notesFor.name}
+                    onClose={() => setNotesFor(null)}
+                />
             ) : null}
         </div>
     );

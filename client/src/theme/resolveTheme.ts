@@ -1,5 +1,6 @@
 import type { FooterContent, LayoutSettings, StorefrontLayout, ThemeColors, ThemeDraft } from "./types";
 import { DEFAULT_LAYOUT_SETTINGS, buildDefaultStorefrontLayout } from "./types";
+import { applyStoreFont } from "./storeFonts";
 import { buildDefaultFooterContent, normalizeFooterSections } from "./footerDefaults";
 import { mergeAboutContent } from "../pages/Legal/aboutDefaults";
 import { getThemePreviewDraft, type ThemePreviewDraft } from "./themeStorage";
@@ -157,6 +158,7 @@ export const applyThemeToDocument = (draft: ThemeDraft): void => {
     root.style.setProperty("--success", themeColors.success);
     root.style.setProperty("--warning", themeColors.warning);
     root.style.setProperty("--danger", themeColors.danger);
+    applyStoreFont(layoutSettings.fontFamily);
 
     const cardRadius = layoutSettings.cardStyle === "sharp"
         ? "0.25rem"

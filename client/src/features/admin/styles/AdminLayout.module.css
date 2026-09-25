@@ -4,6 +4,8 @@
   display: flex;
   background: #f6f8f7;
   color: #1f2a26;
+  /* Admin keeps its own font even when the store picks one (REQ-070). */
+  font-family: Inter, "Segoe UI", sans-serif;
 }
 
 .sidebar {
@@ -47,6 +49,8 @@
 .logo h2 {
   margin: 0;
   color: #1f2a26;
+  /* Admin keeps its own font even when the store picks one (REQ-070). */
+  font-family: Inter, "Segoe UI", sans-serif;
   font-size: 1.0625rem;
   font-weight: 700;
   line-height: 1.2;
@@ -155,6 +159,8 @@
 .adminUser strong {
   overflow: hidden;
   color: #1f2a26;
+  /* Admin keeps its own font even when the store picks one (REQ-070). */
+  font-family: Inter, "Segoe UI", sans-serif;
   font-size: 0.75rem;
   font-weight: 600;
   white-space: nowrap;
@@ -218,6 +224,8 @@
 .header h1 {
   margin: 0;
   color: #1f2a26;
+  /* Admin keeps its own font even when the store picks one (REQ-070). */
+  font-family: Inter, "Segoe UI", sans-serif;
   font-size: 1.1875rem;
   font-weight: 700;
 }

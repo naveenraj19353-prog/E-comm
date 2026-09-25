@@ -10,6 +10,8 @@ export interface DeliveryOption {
     description: string;
     estimatedTime: string;
     price: number;
+    originalPrice?: number | null;
+    freeDelivery?: boolean;
 }
 
 interface DeliveryMethodProps {
@@ -19,6 +21,8 @@ interface DeliveryMethodProps {
         mode: string;
         estimatedDays?: number | null;
         shippingCost: number;
+        originalShippingCost?: number | null;
+        freeDelivery?: boolean;
     }>;
     shippingProvider?: string | null;
     shippingMessage?: string | null;
@@ -54,6 +58,8 @@ const DeliveryMethod = ({
                 ? `${opt.estimatedDays} business days`
                 : "Time as quoted by the delivery partner",
             price: opt.shippingCost,
+            originalPrice: opt.originalShippingCost,
+            freeDelivery: opt.freeDelivery,
         }));
     }, [shippingOptions]);
 
@@ -98,10 +104,20 @@ const DeliveryMethod = ({
                                     <div className={styles.titleRow}>
                                         <strong>{option.name}</strong>
                                         <span className={styles.price}>
-                                            {formatPrice(option.price)}
+                                            {option.freeDelivery && option.originalPrice ? (
+                                                <s className={styles.originalPrice}>{formatPrice(option.originalPrice)}</s>
+                                            ) : null}
+                                            {option.freeDelivery && option.price === 0
+                                                ? "Free"
+                                                : formatPrice(option.price)}
                                         </span>
                                     </div>
-                                    <p>{option.description}</p>
+                                    <p>
+                                        {option.description}
+                                        {option.freeDelivery && option.price > 0
+                                            ? " Free delivery applied; the COD handling fee still applies."
+                                            : ""}
+                                    </p>
                                     <span className={styles.estimated}>
                                         <Check size={14} /> {option.estimatedTime}
                                     </span>

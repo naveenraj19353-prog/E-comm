@@ -1,3 +1,4 @@
+import type { StoreFontKey } from "./storeFonts";
 import type { FooterContent } from "../components/Footer/types";
 import type { AboutContent } from "../pages/Legal/aboutDefaults";
 import { buildDefaultFooterContent } from "./footerDefaults";
@@ -56,6 +57,7 @@ export interface LayoutSettings {
     productDetailLayout: "gallery-left" | "gallery-right" | "stacked";
     cartLayout: "split" | "stacked";
     productCardDesign: "classic" | "studio" | "minimal";
+    fontFamily: StoreFontKey;
 }
 
 export interface StorefrontLayout {
@@ -108,6 +110,7 @@ export const DEFAULT_LAYOUT_SETTINGS: LayoutSettings = {
     productDetailLayout: "gallery-left",
     cartLayout: "split",
     productCardDesign: "classic",
+    fontFamily: "default",
 };
 
 export const DEFAULT_THEME_COLORS: ThemeColors = {

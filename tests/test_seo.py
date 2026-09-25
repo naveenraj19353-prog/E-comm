@@ -529,5 +529,33 @@ class StoreAnalyticsTests(unittest.TestCase):
         self.assertNotIn("platformCommissionPercent", payload)
 
 
+class StoreSeoOverrideTests(_SeoFixture):
+    """Merchant-set SEO title/description for the store home page (REQ-106, REQ-107)."""
+
+    def test_merchant_seo_title_and_description_are_used(self):
+        self.shop["seo"] = {"title": "Handmade Shoes in Mysuru", "description": "Leather shoes made to order."}
+        html = seo.crawler_store_home("shop", _request()).body.decode()
+        self.assertIn("<title>Handmade Shoes in Mysuru</title>", html)
+        self.assertIn('<meta name="description" content="Leather shoes made to order." />', html)
+        self.assertIn("<h1>Shop &amp; Co</h1>", html)  # the visible heading stays the store name
+
+    def test_without_seo_the_store_name_is_used(self):
+        self.shop["seo"] = {"title": None, "description": "  "}
+        html = seo.crawler_store_home("shop", _request()).body.decode()
+        self.assertIn("<title>Shop &amp; Co</title>", html)
+
+    def test_seo_text_is_escaped(self):
+        self.shop["seo"] = {"title": "</title><script>x</script>", "description": None}
+        html = seo.crawler_store_home("shop", _request()).body.decode()
+        self.assertNotIn("<script>x</script>", html)
+
+    def test_lengths_are_limited(self):
+        with self.assertRaises(ValidationError):
+            UpdateTenant(seo={"title": "t" * 71})
+        with self.assertRaises(ValidationError):
+            UpdateTenant(seo={"description": "d" * 161})
+        self.assertIsNone(UpdateTenant(seo={"title": "  "}).seo.title)
+
+
 if __name__ == "__main__":
     unittest.main()

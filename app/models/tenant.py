@@ -1,13 +1,27 @@
 from typing import Literal, Optional
 
-from pydantic import BaseModel, EmailStr, Field, field_validator
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, ValidationInfo, field_validator
 
 from app.services.store_analytics import (
     normalize_ga4_measurement_id,
     normalize_meta_pixel_id,
 )
+from app.services.store_profile import normalize_gstin, normalize_social_link
 
 BusinessType = Literal["retail", "service", "menu"]
+StoreFont = Literal[
+    "default",
+    "inter",
+    "poppins",
+    "roboto",
+    "lato",
+    "montserrat",
+    "nunito",
+    "open-sans",
+    "dm-sans",
+    "playfair-display",
+    "merriweather",
+]
 
 
 class ThemeColors(BaseModel):
@@ -54,6 +68,8 @@ class LayoutSettings(BaseModel):
     productDetailLayout: Optional[str] = None
     cartLayout: Optional[str] = None
     productCardDesign: Optional[str] = None
+    # Storefront font (REQ-070); "default" keeps the built-in fonts.
+    fontFamily: Optional[StoreFont] = None
 
 
 class FooterLink(BaseModel):
@@ -110,6 +126,63 @@ class StoreAnalytics(BaseModel):
     @classmethod
     def _validate_pixel(cls, value):
         return normalize_meta_pixel_id(value)
+
+
+class BusinessDetails(BaseModel):
+    """Business details shown on the storefront (REQ-011). Empty string clears a field."""
+
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
+
+    legalName: Optional[str] = Field(default=None, max_length=120)
+    addressLine1: Optional[str] = Field(default=None, max_length=120)
+    addressLine2: Optional[str] = Field(default=None, max_length=120)
+    city: Optional[str] = Field(default=None, max_length=60)
+    state: Optional[str] = Field(default=None, max_length=60)
+    postalCode: Optional[str] = Field(default=None, max_length=12)
+    country: Optional[str] = Field(default=None, max_length=60)
+    gstin: Optional[str] = Field(default=None, max_length=20)
+
+    @field_validator("legalName", "addressLine1", "addressLine2", "city", "state", "postalCode", "country")
+    @classmethod
+    def _blank_to_none(cls, value: Optional[str]) -> Optional[str]:
+        return value or None
+
+    @field_validator("gstin", mode="before")
+    @classmethod
+    def _validate_gstin(cls, value):
+        return normalize_gstin(value)
+
+
+class StoreSeo(BaseModel):
+    """Search-engine title and description for the store home page (REQ-106, REQ-107).
+    Empty clears it, and the store name / footer text is used instead."""
+
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
+
+    title: Optional[str] = Field(default=None, max_length=70)
+    description: Optional[str] = Field(default=None, max_length=160)
+
+    @field_validator("title", "description")
+    @classmethod
+    def _blank_to_none(cls, value: Optional[str]) -> Optional[str]:
+        return value or None
+
+
+class SocialLinks(BaseModel):
+    """Storefront footer social links (INT-013). Empty string removes a link."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    facebook: Optional[str] = None
+    instagram: Optional[str] = None
+    x: Optional[str] = None
+    linkedin: Optional[str] = None
+    youtube: Optional[str] = None
+
+    @field_validator("facebook", "instagram", "x", "linkedin", "youtube", mode="before")
+    @classmethod
+    def _validate_link(cls, value, info: ValidationInfo):
+        return normalize_social_link(info.field_name, value)
 
 
 class CreateTenant(BaseModel):
@@ -189,6 +262,11 @@ class UpdateTenant(BaseModel):
     analytics: Optional[StoreAnalytics] = None
     # Stock at or below this counts as low (0 turns low-stock alerts off).
     lowStockThreshold: Optional[int] = Field(default=None, ge=0, le=100000)
+    businessDetails: Optional[BusinessDetails] = None
+    socialLinks: Optional[SocialLinks] = None
+    seo: Optional[StoreSeo] = None
+    # Order value (INR, after coupon) from which delivery is free; empty/0 = off. REQ-087.
+    freeDeliveryThreshold: Optional[float] = Field(default=None, ge=0, le=10_000_000)
 
 
 class UpdateTenantTheme(BaseModel):

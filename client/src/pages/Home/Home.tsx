@@ -35,7 +35,10 @@ const Home = () => {
 
     const storeName = tenant?.name || tenantSlug || "Store";
     const storeUrl = buildCanonicalUrl("/", tenantSlug);
+    // Merchant-set SEO title/description win when present (REQ-106, REQ-107).
+    const seoTitle = tenant?.seo?.title?.trim() || storeName;
     const storeDescription =
+        tenant?.seo?.description?.trim() ||
         tenant?.footerContent?.description?.trim() ||
         `Shop ${storeName} on Retail Cosmos — products, deals, and more.`;
     const storeImage = storeShareImage(tenant);
@@ -196,7 +199,7 @@ const Home = () => {
     return (
         <main className={styles.home}>
             <SeoHead
-                title={storeName}
+                title={seoTitle}
                 description={storeDescription}
                 path="/"
                 tenantSlug={tenantSlug}

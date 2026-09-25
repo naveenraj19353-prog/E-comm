@@ -641,6 +641,15 @@ def update_tenant(
         ]
         hours["images"] = [item for item in hours["images"] if item]
         update_data["storeHours"] = hours
+    # The edit form sends the whole block, so a cleared field is removed
+    # (values were already validated by the models).
+    if "freeDeliveryThreshold" in update_data:
+        threshold = update_data["freeDeliveryThreshold"]
+        update_data["freeDeliveryThreshold"] = round(float(threshold), 2) if threshold else None
+    for block in ("businessDetails", "socialLinks", "seo"):
+        if block in update_data:
+            value = getattr(tenant, block)
+            update_data[block] = value.model_dump() if value is not None else None
     if "analytics" in update_data:
         # Merge so a partial update keeps the other id; values were
         # already validated by the StoreAnalytics model.

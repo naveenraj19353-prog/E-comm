@@ -827,7 +827,8 @@ def _add_search_filter(
                 MONGO_OPTIONS_OPERATOR: "i",
             }
         }
-        for field in ("name", "description", "brand")
+        # inventory.variantId: admins can find a product by its SKU (REQ-022).
+        for field in ("name", "description", "brand", "inventory.variantId")
     ]
     if "$or" in query:
         query["$and"] = [

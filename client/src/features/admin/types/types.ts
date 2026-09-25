@@ -2,6 +2,8 @@ import type { BusinessType } from "../../../constants/businessTypes";
 import type { StorefrontLayout } from "../../../theme/types";
 import type { HomeSectionId } from "../../../theme/homeSections";
 import type { StoreHours } from "../../tenant/storeHours";
+import type { BusinessDetails, SocialLinks, StoreSeo } from "../../tenant/storeProfile";
+import type { StoreFontKey } from "../../../theme/storeFonts";
 
 export type { StorefrontLayout, BusinessType };
 
@@ -23,6 +25,10 @@ export interface Tenant {
     platformCommissionPercent?: number | null;
     /** Stock at or below this is "low" (0 = alerts off). Missing = default 5. */
     lowStockThreshold?: number | null;
+    businessDetails?: BusinessDetails | null;
+    socialLinks?: SocialLinks | null;
+    seo?: StoreSeo | null;
+    freeDeliveryThreshold?: number | null;
     /** From /tenants/slug/{slug}: false only when the storefront is offline. Missing = available. */
     storeAvailable?: boolean;
     createdAt: string;
@@ -73,6 +79,7 @@ export interface LayoutSettings {
     productDetailLayout?: "gallery-left" | "gallery-right" | "stacked";
     cartLayout?: "split" | "stacked";
     productCardDesign?: "classic" | "studio" | "minimal";
+    fontFamily?: StoreFontKey;
 }
 export interface TenantResponse {
     success: boolean;
@@ -112,6 +119,10 @@ export interface UpdateTenantPayload {
     isActive?: boolean;
     storeHours?: StoreHours;
     lowStockThreshold?: number;
+    businessDetails?: BusinessDetails;
+    socialLinks?: SocialLinks;
+    seo?: StoreSeo;
+    freeDeliveryThreshold?: number | null;
 }
 
 export interface UpdateTenantThemePayload {
