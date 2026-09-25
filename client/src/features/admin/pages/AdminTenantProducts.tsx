@@ -6,6 +6,7 @@ import { uploadImageToS3 } from "../api/upload.api";
 import { useDeleteProduct, useProducts, useUpdateProduct, } from "../hooks/useTenantProducts";
 import { useTenantByTenantId } from "../hooks/useTenants";
 import StockAdjustModal from "../components/StockAdjustModal";
+import ReceiveStockModal from "../components/ReceiveStockModal";
 import { lowStockThresholdOf } from "../api/stock.api";
 import { useAuth } from "../../auth/hooks/useAuth";
 import { hasStorePermission } from "../../auth/permissions";
@@ -122,6 +123,8 @@ export default function AdminTenantProducts() {
     const canDeleteProduct = hasStorePermission(user, "products_update");
     const canAdjustStock = hasStorePermission(user, "inventory");
     const [stockProduct, setStockProduct] = useState<Product | null>(null);
+    // Receive Stock modal: open with no product (header) or a preselected one (row).
+    const [receiving, setReceiving] = useState<{ product: Product | null } | null>(null);
     const imageInputRef = useRef<HTMLInputElement | null>(null);
     const { data: tenant, isLoading: tenantLoading, isError: tenantError, } = useTenantByTenantId(tenantId || "");
     // Store's low-stock alert level (Edit store settings); 0 = only out-of-stock counts.
@@ -811,6 +814,11 @@ export default function AdminTenantProducts() {
           </p>
         </div>
         <div className={styles.headerActions}>
+          {canAdjustStock ? (
+          <button type="button" className={styles.secondaryButton} onClick={() => setReceiving({ product: null })}>
+            Receive Stock
+          </button>
+          ) : null}
           {canCreateProducts ? (
           <button type="button" className={styles.secondaryButton} onClick={handleBulkImport}>
             Bulk Import
@@ -996,6 +1004,11 @@ export default function AdminTenantProducts() {
                           {canAdjustStock ? (
                           <button type="button" className={styles.editButton} onClick={() => setStockProduct(product)} title="Add or remove stock with a reason">
                             Stock
+                          </button>
+                          ) : null}
+                          {canAdjustStock ? (
+                          <button type="button" className={styles.editButton} onClick={() => setReceiving({ product })} title="Receive new stock for this product">
+                            Receive
                           </button>
                           ) : null}
                           {canDeleteProduct ? (
@@ -1365,6 +1378,7 @@ export default function AdminTenantProducts() {
             </div>
           </div>
         </div>)}
+      {receiving && tenantId ? (<ReceiveStockModal tenantId={tenantId} initialProduct={receiving.product} onClose={() => setReceiving(null)}/>) : null}
       {stockProduct && tenantId ? (<StockAdjustModal tenantId={tenantId} productId={stockProduct._id || stockProduct.id || ""} productName={stockProduct.name} inventory={stockProduct.inventory || []} onClose={() => setStockProduct(null)}/>) : null}
     </div>);
 }
