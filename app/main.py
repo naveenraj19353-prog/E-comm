@@ -48,6 +48,7 @@ from app.routes.periskope_webhook import router as periskope_webhook_router
 from app.routes.contact import router as contact_router
 from app.routes.ledger import router as ledger_router
 from app.routes.billing import router as billing_router
+from app.routes.inventory import router as inventory_router
 
 logger = logging.getLogger(__name__)
 
@@ -182,6 +183,7 @@ app.include_router(periskope_webhook_router)
 app.include_router(contact_router)
 app.include_router(ledger_router)
 app.include_router(billing_router)
+app.include_router(inventory_router)
 app.include_router(observability.metrics_router)
 
 
