@@ -4,8 +4,9 @@ Reports, without writing anything:
 
 * products whose stored `stock` / `totalStock` differ from sum(inventory[].stock),
   with a reconciliation against order quantities;
-* variantIds shared by more than one product in a store, and how many products
-  would currently fail `PUT /product/{id}` with 409 "Duplicate variantId";
+* variantIds shared by more than one product in a store (allowed: variantId only
+  has to be unique within a product), and how many products would fail the
+  `PUT /product/{id}` inventory validation if saved unchanged;
 * stock movement history counts, checkout stock holds, and order/cart lines
   that point at variants that no longer exist.
 
@@ -26,10 +27,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from fastapi import HTTPException  # noqa: E402
 
 from app.database.mongo import client, db  # noqa: E402
-from app.services.variant_sku import (  # noqa: E402
-    assign_variant_ids_for_inventory,
-    ensure_unique_variant_ids_for_tenant,
-)
+from app.routes.product import validate_inventory  # noqa: E402
+from app.services.variant_sku import assign_variant_ids_for_inventory  # noqa: E402
 
 CLOSED_ORDER_STATUSES = {"cancelled", "delivered", "returned", "closed"}
 
@@ -104,14 +103,14 @@ def reconcile(products, orders, payment_intents, mismatched: list[dict]) -> None
 
 
 def audit_variant_ids(products, owners: dict) -> None:
-    section("variantIds shared by more than one product in the same store")
+    section("variantIds shared by more than one product in the same store (allowed)")
     shared = {key: ids for key, ids in owners.items() if len(ids) > 1}
     for (tenant_id, variant_id), ids in sorted(shared.items(), key=lambda row: -len(row[1])):
         print(f"  store={tenant_id} variantId={variant_id} products={len(ids)}")
     if not shared:
         print("  none")
 
-    section("Dry run of the PUT /product/{id} variantId check (same code the endpoint runs)")
+    section("Dry run of the PUT /product/{id} inventory validation (same code the endpoint runs)")
     ok = blocked = 0
     for product in products.find({}, {"tenantId": 1, "brand": 1, "categoryName": 1, "categoryId": 1, "inventory": 1}):
         prepared = assign_variant_ids_for_inventory(
@@ -121,14 +120,12 @@ def audit_variant_ids(products, owners: dict) -> None:
             existing_inventory=product.get("inventory") or [],
         )
         try:
-            ensure_unique_variant_ids_for_tenant(
-                product.get("tenantId"), prepared, products_collection=products,
-                ignore_product_id=str(product["_id"]),
-            )
+            validate_inventory(prepared)
             ok += 1
-        except HTTPException:
+        except HTTPException as error:
             blocked += 1
-    print(f"saving a product unchanged would succeed: {ok} | fail with 409: {blocked}")
+            print(f"  would fail: [{product.get('tenantId')}] {product['_id']}: {error.detail}")
+    print(f"saving a product unchanged would succeed: {ok} | fail validation: {blocked}")
 
 
 def audit_history_and_holds(db_, owners: dict) -> None:

@@ -66,10 +66,7 @@ from app.services.product_duplicates import (
     duplicate_product_detail,
     find_duplicate_product,
 )
-from app.services.variant_sku import (
-    assign_variant_ids_for_inventory,
-    ensure_unique_variant_ids_for_tenant,
-)
+from app.services.variant_sku import assign_variant_ids_for_inventory
 from app.services.whatsapp_notification_service import (
     ProductShareError,
     share_product_with_customer,
@@ -295,16 +292,10 @@ def _prepare_inventory_for_product_creation(
     product_data: dict,
     inventory: list,
 ) -> list:
-    prepared = assign_variant_ids_for_inventory(
+    return assign_variant_ids_for_inventory(
         product_data,
         inventory,
     )
-    ensure_unique_variant_ids_for_tenant(
-        tenant_id,
-        prepared,
-        products_collection=products,
-    )
-    return prepared
 
 
 def _prepare_inventory_for_product_update(
@@ -313,18 +304,14 @@ def _prepare_inventory_for_product_update(
     inventory: list,
     existing_product: dict | None,
 ) -> list:
-    prepared = assign_variant_ids_for_inventory(
+    # variantId only has to be unique within this product (validate_inventory
+    # checks that); stock is always looked up by productId + variantId, and
+    # different products may share a variantId such as "black-m".
+    return assign_variant_ids_for_inventory(
         product_data,
         inventory,
         existing_inventory=(existing_product or {}).get("inventory") or [],
     )
-    ensure_unique_variant_ids_for_tenant(
-        tenant_id,
-        prepared,
-        products_collection=products,
-        ignore_product_id=str((existing_product or {}).get("_id") or ""),
-    )
-    return prepared
 
 
 def validate_color_images_against_inventory(
