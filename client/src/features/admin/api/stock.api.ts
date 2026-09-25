@@ -10,6 +10,7 @@ export type StockMovementSource =
     | "reservation_released"
     | "order_cancelled"
     | "return_received"
+    | "receiving"
     | "other";
 
 export type StockMovement = {
@@ -57,6 +58,7 @@ export const STOCK_SOURCE_LABELS: Record<StockMovementSource, string> = {
     reservation_released: "Unpaid checkout released",
     order_cancelled: "Order cancelled",
     return_received: "Return received",
+    receiving: "Stock received",
     other: "Other",
 };
 

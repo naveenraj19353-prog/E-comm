@@ -53,6 +53,11 @@ export const API_ENDPOINTS = {
         stockMovements: (id: string) => `/product/${id}/stock-movements`,
     },
 
+    INVENTORY: {
+        RECEIVING_PREVIEW: "/inventory/receiving/preview",
+        RECEIVING_COMMIT: "/inventory/receiving/commit",
+    },
+
     CATEGORIES: {
         LIST: "/categories/",
         CREATE: "/categories/",
