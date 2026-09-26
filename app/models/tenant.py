@@ -7,6 +7,7 @@ from app.services.store_analytics import (
     normalize_meta_pixel_id,
 )
 from app.services.store_profile import normalize_gstin, normalize_social_link
+from app.services.tax_service import STATE_CODES
 
 BusinessType = Literal["retail", "service", "menu"]
 TenantApprovalStatus = Literal["pending", "approved", "suspended"]
@@ -154,6 +155,41 @@ class BusinessDetails(BaseModel):
         return normalize_gstin(value)
 
 
+class TaxSettings(BaseModel):
+    """How a store prices and charges GST.
+
+    Defaults are deliberately inert: with no rate set nothing is taxed, so
+    adding this section cannot change a live store's payable on its own.
+    """
+
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
+
+    # What the listed price means. Inclusive leaves the payable untouched and is
+    # the norm for Indian retail D2C; exclusive adds tax on top (wholesale/B2B).
+    pricesIncludeTax: bool = True
+    # A composition dealer neither collects GST nor passes on input credit.
+    compositionScheme: bool = False
+    # Rate used when neither the product nor its category defines one. 0 = untaxed.
+    defaultGstRate: float = Field(default=0.0, ge=0, le=28)
+    # Overrides the state derived from the GSTIN, for stores without one yet.
+    stateCode: Optional[str] = Field(default=None, max_length=2)
+    # Freight follows the principal supply rate unless switched off.
+    freightTaxable: bool = True
+    # Invoice-level round-off to the nearest rupee.
+    roundInvoiceToRupee: bool = True
+    invoicePrefix: Optional[str] = Field(default=None, max_length=8)
+
+    @field_validator("stateCode", mode="before")
+    @classmethod
+    def _normalise_state_code(cls, value):
+        if value in (None, ""):
+            return None
+        code = str(value).strip().zfill(2)
+        if code not in STATE_CODES:
+            raise ValueError("stateCode must be a two-digit GST state code")
+        return code
+
+
 class StoreSeo(BaseModel):
     """Search-engine title and description for the store home page (REQ-106, REQ-107).
     Empty clears it, and the store name / footer text is used instead."""
@@ -268,6 +304,7 @@ class UpdateTenant(BaseModel):
     seo: Optional[StoreSeo] = None
     # Order value (INR, after coupon) from which delivery is free; empty/0 = off. REQ-087.
     freeDeliveryThreshold: Optional[float] = Field(default=None, ge=0, le=10_000_000)
+    tax: Optional[TaxSettings] = None
 
 
 class UpdateTenantApproval(BaseModel):
