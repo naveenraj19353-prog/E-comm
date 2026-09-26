@@ -49,6 +49,7 @@ from app.routes.contact import router as contact_router
 from app.routes.ledger import router as ledger_router
 from app.routes.billing import router as billing_router
 from app.routes.inventory import router as inventory_router
+from app.routes.audit import router as audit_router
 
 logger = logging.getLogger(__name__)
 
@@ -100,9 +101,15 @@ if hasattr(app.router, "max_body_size"):
 
 def _tenant_is_inactive(tenant_id: str) -> bool:
     tenant = tenants.find_one(
-        {"tenantId": tenant_id.strip().lower()}, {"isActive": 1}
+        {"tenantId": tenant_id.strip().lower()},
+        {"isActive": 1, "approvalStatus": 1},
     )
-    return bool(tenant) and tenant.get("isActive") is False
+    if not tenant:
+        return False
+    return (
+        tenant.get("isActive") is False
+        or str(tenant.get("approvalStatus") or "approved").lower() != "approved"
+    )
 
 
 @app.middleware("http")
@@ -184,6 +191,7 @@ app.include_router(contact_router)
 app.include_router(ledger_router)
 app.include_router(billing_router)
 app.include_router(inventory_router)
+app.include_router(audit_router)
 app.include_router(observability.metrics_router)
 
 

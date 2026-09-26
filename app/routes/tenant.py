@@ -18,6 +18,7 @@ from app.models.tenant import (
     SendStoreSignupOtpRequest,
     UpdateTenant,
     UpdateTenantTheme,
+    UpdateTenantApproval,
 )
 from app.routes.detail_messages import (
     INVALID_TENANT_ID,
@@ -44,6 +45,14 @@ from app.services.tenant_service import (
     create_tenant_document,
     soft_delete_tenant,
     strip_tenant_secrets,
+)
+from app.services.audit_log import record_audit_event
+from app.services.tenant_approval import (
+    APPROVAL_APPROVED,
+    APPROVAL_SUSPENDED,
+    approval_status,
+    is_management_accessible,
+    is_storefront_approved,
 )
 from app.utils.auth_dependencies import (
     admin_tenant_id,
@@ -119,6 +128,7 @@ def _serialize_tenant(tenant: dict) -> dict:
     if "_id" in payload:
         payload["_id"] = str(payload["_id"])
     payload["businessType"] = _normalize_business_type(payload.get("businessType"))
+    payload["approvalStatus"] = approval_status(tenant)
     payload["phone"] = str(payload.get("phone") or "").strip()
     payload["email"] = str(payload.get("email") or "").strip()
     raw_logo = payload.get("logo") if isinstance(payload.get("logo"), str) else ""
@@ -148,7 +158,9 @@ def _public_storefront_tenant(tenant: dict) -> dict:
     payload = _serialize_tenant(tenant)
     for field in _STOREFRONT_PRIVATE_FIELDS:
         payload.pop(field, None)
-    payload["storeAvailable"] = is_store_operational(tenant)
+    payload["storeAvailable"] = (
+        is_storefront_approved(tenant) and is_store_operational(tenant)
+    )
     payload["analytics"] = public_store_analytics(tenant)
     return payload
 
@@ -294,6 +306,7 @@ def register_store(payload: RegisterStore, request: Request):
             logo="",
             theme="green",
             phone=payload.phone or "",
+            approval_status="pending",
         )
         token = create_token(
             {
@@ -393,17 +406,66 @@ def get_tenant_by_tenant_id(
         )
     tenant = tenants.find_one({
         "tenantId": normalized_tenant_id,
-        "isActive": True,
+        **NOT_DELETED,
     })
     if not tenant:
         raise HTTPException(
             status_code=404,
             detail=TENANT_NOT_FOUND,
         )
+    if (
+        current_user.get("role") != "super_admin"
+        and not is_management_accessible(tenant)
+    ):
+        raise HTTPException(status_code=403, detail="This store is suspended.")
     return {
         "success": True,
         "data": _serialize_tenant(tenant),
     }
+
+
+@router.patch(
+    "/{id}/approval",
+    responses={
+        400: BAD_REQUEST_RESPONSE[400],
+        403: FORBIDDEN_RESPONSE[403],
+        404: NOT_FOUND_RESPONSE[404],
+    },
+)
+def update_tenant_approval(
+    id: str,
+    payload: UpdateTenantApproval,
+    current_user: Annotated[dict, Depends(require_super_admin)],
+):
+    if not ObjectId.is_valid(id):
+        raise HTTPException(status_code=400, detail=INVALID_TENANT_ID)
+    existing = tenants.find_one({"_id": ObjectId(id), **NOT_DELETED})
+    if not existing:
+        raise HTTPException(status_code=404, detail=TENANT_NOT_FOUND)
+    if payload.status == APPROVAL_SUSPENDED and existing.get("isActive") is not False:
+        update = {"approvalStatus": payload.status, "updatedAt": datetime.now(timezone.utc)}
+    else:
+        update = {
+            "approvalStatus": payload.status,
+            "isActive": True,
+            "updatedAt": datetime.now(timezone.utc),
+        }
+    tenants.update_one({"_id": existing["_id"]}, {"$set": update})
+    updated = tenants.find_one({"_id": existing["_id"]})
+    record_audit_event(
+        action=f"tenant.approval_{payload.status}",
+        actor=current_user,
+        tenant_id=existing.get("tenantId"),
+        entity_type="tenant",
+        entity_id=str(existing["_id"]),
+        before={"approvalStatus": approval_status(existing), "isActive": existing.get("isActive")},
+        after={
+            "approvalStatus": approval_status(updated or update),
+            "isActive": (updated or update).get("isActive"),
+        },
+    )
+    invalidate_tenant(existing.get("tenantId"))
+    return {"success": True, "data": _serialize_tenant(updated or {**existing, **update})}
 
 
 @router.get("/slug/{slug}", responses={404: NOT_FOUND_RESPONSE[404]})
@@ -414,8 +476,9 @@ def get_tenant_by_slug(
     tenant = tenants.find_one({
         "slug": normalized_slug,
         "isActive": True,
+        **NOT_DELETED,
     })
-    if not tenant:
+    if not tenant or not is_storefront_approved(tenant):
         raise HTTPException(
             status_code=404,
             detail=TENANT_NOT_FOUND,
@@ -442,8 +505,9 @@ def get_storefront_layout_by_slug(
     tenant = tenants.find_one({
         "slug": normalized_slug,
         "isActive": True,
+        **NOT_DELETED,
     })
-    if not tenant:
+    if not tenant or not is_storefront_approved(tenant):
         raise HTTPException(
             status_code=404,
             detail=TENANT_NOT_FOUND,
@@ -469,7 +533,7 @@ def get_public_tenants():
     """Active tenants for marketing / welcome demos (no auth, no secrets)."""
     try:
         cursor = tenants.find(
-            {"isActive": True},
+            {"isActive": True, "approvalStatus": {"$in": [None, APPROVAL_APPROVED]}, **NOT_DELETED},
             {
                 **TENANT_SECRET_PROJECTION,
                 "email": 0,
@@ -730,6 +794,15 @@ def update_tenant(
     updated = tenants.find_one({
         "_id": object_id
     })
+    record_audit_event(
+        action="tenant.updated",
+        actor=current_user,
+        tenant_id=existing_tenant.get("tenantId"),
+        entity_type="tenant",
+        entity_id=str(object_id),
+        before=existing_tenant,
+        after=updated or update_data,
+    )
     return {
         "success": True,
         "message": "Tenant updated successfully.",
@@ -795,6 +868,15 @@ def update_tenant_theme(
 
     invalidate_tenant(tenant.get("tenantId"))
     updated = tenants.find_one({"_id": object_id})
+    record_audit_event(
+        action="tenant.theme_updated",
+        actor=current_user,
+        tenant_id=tenant.get("tenantId"),
+        entity_type="tenant",
+        entity_id=str(object_id),
+        before={key: tenant.get(key) for key in update_data if key != "updatedAt"},
+        after={key: (updated or {}).get(key) for key in update_data if key != "updatedAt"},
+    )
     return {
         "success": True,
         "message": "Theme updated successfully.",
@@ -825,7 +907,19 @@ def delete_tenant(
             status_code=404,
             detail=TENANT_NOT_FOUND,
         )
+    record_audit_event(
+        action="tenant.deleted",
+        actor=current_user,
+        tenant_id=None,
+        entity_type="tenant",
+        entity_id=str(object_id),
+    )
     return {
         "success": True,
         "message": "Tenant deleted successfully.",
     }
+    if (
+        current_user.get("role") != "super_admin"
+        and not is_management_accessible(tenant)
+    ):
+        raise HTTPException(status_code=403, detail="This store is suspended.")
