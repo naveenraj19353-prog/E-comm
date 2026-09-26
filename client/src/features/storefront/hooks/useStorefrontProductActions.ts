@@ -6,11 +6,15 @@ import { useStorefrontTenant } from "../../tenant/useTenant";
 import { useNavigateToLogin } from "../../auth/hooks/useNavigateToLogin";
 
 type UseStorefrontProductActionsOptions = {
+    /**
+     * Tracks which product is being added so its card can show a busy state.
+     * On by default — every surface that renders a card wants the feedback.
+     */
     trackAddingProductId?: boolean;
 };
 
 export function useStorefrontProductActions(options: UseStorefrontProductActionsOptions = {}) {
-    const { trackAddingProductId = false } = options;
+    const { trackAddingProductId = true } = options;
     const { tenantId: storeTenantId } = useStorefrontTenant();
     const user = useAppSelector((state) => state.auth.user);
     const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
@@ -26,6 +30,7 @@ export function useStorefrontProductActions(options: UseStorefrontProductActions
         { enabled: isCustomer },
     );
     const [addingProductId, setAddingProductId] = useState<string | null>(null);
+    const [wishlistPendingId, setWishlistPendingId] = useState<string | null>(null);
 
     const ensureAuthenticated = useCallback(() => {
         if (!userId || !tenantId) {
@@ -43,6 +48,7 @@ export function useStorefrontProductActions(options: UseStorefrontProductActions
         if (!ensureAuthenticated()) {
             return;
         }
+        setWishlistPendingId(productId);
         try {
             if (isAdding) {
                 await addToWishlist({ tenantId, userId, productId });
@@ -56,12 +62,16 @@ export function useStorefrontProductActions(options: UseStorefrontProductActions
         catch (error) {
             console.error("Wishlist operation failed:", error);
         }
+        finally {
+            setWishlistPendingId(null);
+        }
     }, [addToWishlist, ensureAuthenticated, removeFromWishlist, tenantId, userId]);
 
     const toggleWishlist = useCallback(async (productId: string) => {
         if (!ensureAuthenticated()) {
             return;
         }
+        setWishlistPendingId(productId);
         try {
             if (isProductWishlisted(productId)) {
                 await removeFromWishlist(productId);
@@ -75,7 +85,15 @@ export function useStorefrontProductActions(options: UseStorefrontProductActions
         catch (error) {
             console.error("Wishlist update failed:", error);
         }
+        finally {
+            setWishlistPendingId(null);
+        }
     }, [addToWishlist, ensureAuthenticated, isProductWishlisted, removeFromWishlist, tenantId, userId]);
+
+    const isWishlistPending = useCallback(
+        (productId: string) => wishlistPendingId === productId,
+        [wishlistPendingId],
+    );
 
     const handleAddToCart = useCallback(async (
         productId: string,
@@ -127,7 +145,9 @@ export function useStorefrontProductActions(options: UseStorefrontProductActions
     return {
         wishlist,
         addingProductId,
+        wishlistPendingId,
         isProductWishlisted,
+        isWishlistPending,
         handleWishlist,
         toggleWishlist,
         handleAddToCart,

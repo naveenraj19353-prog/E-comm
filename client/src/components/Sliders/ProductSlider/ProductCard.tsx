@@ -13,10 +13,13 @@ import {
     addToListLabel,
     isServiceBusiness,
 } from "../../../features/tenant/businessMode";
+import { BusyLabel, Spinner } from "../../Loading";
 
 interface ProductCardProps {
     product: Product;
     isWishlisted?: boolean;
+    /** True while this card's wishlist toggle is in flight. */
+    isWishlistPending?: boolean;
     onWishlist?: (id: string) => void;
     onAddToCart?: (
         productId: string,
@@ -30,6 +33,7 @@ interface ProductCardProps {
 const ProductCard = ({
     product,
     isWishlisted = false,
+    isWishlistPending = false,
     onWishlist,
     onAddToCart,
     isAdding = false,
@@ -85,11 +89,21 @@ const ProductCard = ({
                 type="button"
                 className={`${styles.wishlist} ${isWishlisted ? styles.wishlisted : ""}`}
                 onClick={handleWishlist}
+                disabled={isWishlistPending}
+                aria-busy={isWishlistPending}
                 aria-label={
-                    isWishlisted ? "Remove from wishlist" : "Add to wishlist"
+                    isWishlistPending
+                        ? "Updating wishlist"
+                        : isWishlisted
+                          ? "Remove from wishlist"
+                          : "Add to wishlist"
                 }
             >
-                <Heart size={18} fill={isWishlisted ? "currentColor" : "none"} />
+                {isWishlistPending ? (
+                    <Spinner size="sm" />
+                ) : (
+                    <Heart size={18} fill={isWishlisted ? "currentColor" : "none"} />
+                )}
             </button>
             <div className={styles.imageWrapper}>
                 <ProductCardMedia
@@ -133,15 +147,16 @@ const ProductCard = ({
                     className={styles.cartBtn}
                     onClick={handleAddToCart}
                     disabled={isAdding || outOfStock}
+                    aria-busy={isAdding}
                 >
-                    <ShoppingCart size={18} />
-                    {outOfStock
-                        ? isServiceMode
-                            ? "Unavailable"
-                            : "Out Of Stock"
-                        : isAdding
-                          ? "Adding..."
-                          : addToListLabel(isServiceMode)}
+                    {isAdding ? <Spinner size="sm" /> : <ShoppingCart size={18} />}
+                    <BusyLabel busy={isAdding} busyText="Adding...">
+                        {outOfStock
+                            ? isServiceMode
+                                ? "Unavailable"
+                                : "Out Of Stock"
+                            : addToListLabel(isServiceMode)}
+                    </BusyLabel>
                 </button>
             </div>
         </div>

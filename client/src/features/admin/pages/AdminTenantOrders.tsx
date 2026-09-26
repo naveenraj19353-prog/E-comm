@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { useDebounce } from "../../../hooks/useDebounce";
 import ProductImage from "../../../components/ProductImage";
+import { useAlert } from "../../../components/Modal";
 import { useAdminOrders } from "../../orders/hooks/useOrders";
 import { useTenantByTenantId } from "../hooks/useTenants";
 import {
@@ -67,6 +68,7 @@ const nextActions: Partial<Record<OrderStatus, Array<{ status: OrderStatus; labe
 export default function AdminTenantOrders() {
     const { tenantId = "" } = useParams();
     const navigate = useNavigate();
+    const { showConfirm } = useAlert();
     const [searchParams, setSearchParams] = useSearchParams();
     // Set when opened from "View orders" on the Customers page.
     const customerId = searchParams.get("customerId") || "";
@@ -146,8 +148,14 @@ export default function AdminTenantOrders() {
     ) => {
         event.stopPropagation();
         if (orderStatus === "cancelled") {
-            const confirmed = window.confirm(
+            const confirmed = await showConfirm(
                 `Cancel order ${formatOrderRef(order)}? Stock will be restored.`,
+                {
+                    tone: "danger",
+                    title: "Cancel this order?",
+                    confirmLabel: "Cancel order",
+                    cancelLabel: "Keep order",
+                },
             );
             if (!confirmed) {
                 return;

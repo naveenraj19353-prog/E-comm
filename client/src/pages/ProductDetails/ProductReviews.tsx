@@ -1,5 +1,6 @@
 import { Send, Star, UserRound } from "lucide-react";
 import type { Review } from "../../features/reviews/types";
+import { BusyLabel } from "../../components/Loading";
 import styles from "./ProductDetails.module.css";
 interface ProductReviewsProps {
     reviews: Review[];
@@ -57,8 +58,10 @@ const ProductReviews = ({ reviews, onWriteReview, showReviewForm, reviewRating, 
             <textarea id="review-comment" rows={5} value={reviewComment} onChange={(event) => onReviewCommentChange(event.target.value)} placeholder="What did you like about this product?"/>
           </div>
           
-          <button type="button" className={styles.submitReview} disabled={isSubmittingReview} onClick={onSubmitReview}>
-            {isSubmittingReview ? "Submitting..." : "Submit Review"}
+          <button type="button" className={styles.submitReview} disabled={isSubmittingReview} aria-busy={isSubmittingReview} onClick={onSubmitReview}>
+            <BusyLabel busy={isSubmittingReview} busyText="Submitting..." size="sm">
+              Submit Review
+            </BusyLabel>
           </button>
         </div>)}
       

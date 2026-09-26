@@ -11,6 +11,7 @@ import {
 } from "../api/billing.api";
 import { formatOrderDate } from "../../orders/api/order.api";
 import { getApiErrorMessage } from "../utils/tenantForm.utils";
+import { useAlert } from "../../../components/Modal";
 import styles from "../styles/AdminTenantPayments.module.css";
 import billingStyles from "../styles/AdminTenantBilling.module.css";
 
@@ -81,6 +82,7 @@ function statusCardContent(billing: BillingStatus, subject: string): StatusCardC
 export default function AdminTenantBilling() {
     const { tenantId = "" } = useParams();
     const navigate = useNavigate();
+    const { showConfirm } = useAlert();
     const { user } = useAuth();
     const isSuperAdmin = user?.role === "super_admin";
     const isStoreOwner = user?.role === "admin";
@@ -122,20 +124,26 @@ export default function AdminTenantBilling() {
         });
     };
 
-    const handleToggleExempt = () => {
+    const handleToggleExempt = async () => {
         if (!billing) {
             return;
         }
         const exempt = billing.status !== "exempt";
-        if (
-            !exempt &&
-            !window.confirm(
+        if (!exempt) {
+            const confirmed = await showConfirm(
                 `Remove the billing exemption for ${tenant?.name || "this store"}? ` +
                     "It will NOT get a new free trial — it moves straight to Payment due with a 7-day grace period, " +
                     "and the storefront goes offline after that unless the owner sets up payment.",
-            )
-        ) {
-            return;
+                {
+                    tone: "danger",
+                    title: "Remove billing exemption?",
+                    confirmLabel: "Remove exemption",
+                    cancelLabel: "Keep exemption",
+                },
+            );
+            if (!confirmed) {
+                return;
+            }
         }
         setExemptError("");
         setExemptSuccess("");

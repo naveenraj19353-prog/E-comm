@@ -13,6 +13,10 @@ interface ProductCardSliderProps {
     onToggleWishlist?: (productId: string, isAdding: boolean) => void;
     isWishlisted?: (productId: string) => boolean;
     onQuickAdd?: (productId: string, variantId: string, color: string, size: string) => void;
+    /** Product whose quick-add is in flight, so its card can show a spinner. */
+    addingProductId?: string | null;
+    /** Product whose wishlist toggle is in flight. */
+    wishlistPendingId?: string | null;
     slidesPerView?: number;
     mediaVariant?: "hover" | "swiper";
 }
@@ -21,7 +25,10 @@ export default function ProductCardSlider({
     title,
     products = [],
     onToggleWishlist,
+    isWishlisted,
     onQuickAdd,
+    addingProductId = null,
+    wishlistPendingId = null,
     slidesPerView,
     mediaVariant = "swiper",
 }: ProductCardSliderProps) {
@@ -104,6 +111,9 @@ export default function ProductCardSlider({
                         <ProductCard
                             product={product}
                             mediaVariant={mediaVariant}
+                            isWishlisted={isWishlisted?.(product._id)}
+                            isWishlistPending={wishlistPendingId === product._id}
+                            isAdding={addingProductId === product._id}
                             onWishlist={(productId, isAdding) => {
                                 onToggleWishlist?.(productId, isAdding);
                             }}

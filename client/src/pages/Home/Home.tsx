@@ -30,7 +30,13 @@ const Home = () => {
     const layoutSettings = useLayoutSettings();
     const navigate = useNavigate();
     const { data: homeData, isLoading, isError, refetch } = useHome(tenantId);
-    const { handleWishlist, handleAddToCart, isProductWishlisted } = useStorefrontProductActions();
+    const {
+        handleWishlist,
+        handleAddToCart,
+        isProductWishlisted,
+        addingProductId,
+        wishlistPendingId,
+    } = useStorefrontProductActions();
     const go = (to: string) => storefrontNavigate(navigate, to);
 
     const storeName = tenant?.name || tenantSlug || "Store";
@@ -129,7 +135,7 @@ const Home = () => {
     const productSlider = (title: string, products: typeof trendingProducts) =>
         products.length > 0 ? (
             <section className={styles.productSection}>
-                <ProductCardSlider title={title} products={products} onToggleWishlist={handleWishlist} onQuickAdd={handleAddToCart} />
+                <ProductCardSlider title={title} products={products} isWishlisted={isProductWishlisted} addingProductId={addingProductId} wishlistPendingId={wishlistPendingId} onToggleWishlist={handleWishlist} onQuickAdd={handleAddToCart} />
             </section>
         ) : null;
     const shownProductSets = new Set<string>();
@@ -184,6 +190,8 @@ const Home = () => {
                     products={dealOfTheDay}
                     festivalOffer={festivalOffer}
                     isWishlisted={isProductWishlisted}
+                    addingProductId={addingProductId}
+                    wishlistPendingId={wishlistPendingId}
                     onToggleWishlist={handleWishlist}
                     onQuickAdd={handleAddToCart}
                 />

@@ -16,6 +16,7 @@ import { getProductDetails } from "../../products/api/product.api";
 import type { ProductImageRef } from "../utils/s3Image";
 import { hasUnresolvedImageRefs, imageRefsToKeys, toProductImageRef } from "../utils/s3Image";
 import { PRODUCT_MEDIA_ACCEPT, isAllowedProductMediaFile, isVideoSrc } from "../../../utils/mediaSrc";
+import { useAlert } from "../../../components/Modal";
 import styles from "../styles/AdminTenantProducts.module.css";
 
 interface ProductInventory {
@@ -114,6 +115,7 @@ const getProductColors = (product: Product, images: Record<string, ProductImageR
 export default function AdminTenantProducts() {
     const { tenantId } = useParams();
     const navigate = useNavigate();
+    const { showAlert, showConfirm } = useAlert();
     const [searchParams, setSearchParams] = useSearchParams();
     const { user } = useAuth();
     const canCreateProducts = hasStorePermission(user, "products_update");
@@ -405,14 +407,16 @@ export default function AdminTenantProducts() {
             return;
         }
         if (!tenantId) {
-            alert("Tenant ID is missing.");
+            showAlert("Tenant ID is missing.", { tone: "warning" });
             event.target.value = "";
             return;
         }
         const selectedFiles = Array.from(files);
         const invalidFiles = selectedFiles.filter((file) => !isAllowedProductMediaFile(file));
         if (invalidFiles.length > 0) {
-            alert("Use images up to 10 MB or videos up to 50 MB (MP4/WebM).");
+            showAlert("Use images up to 10 MB or videos up to 50 MB (MP4/WebM).", {
+                tone: "warning",
+            });
             event.target.value = "";
             return;
         }
@@ -439,7 +443,7 @@ export default function AdminTenantProducts() {
         }
         catch (error) {
             console.error("Failed to upload image:", error);
-            alert("Failed to upload image to S3.");
+            showAlert("Failed to upload image to S3.", { tone: "danger" });
         }
         setIsUploadingMedia(false);
         event.target.value = "";
@@ -459,7 +463,7 @@ export default function AdminTenantProducts() {
             };
         });
     };
-    const handleRemoveColor = (colorToRemove: string) => {
+    const handleRemoveColor = async (colorToRemove: string) => {
         const normalized = colorToRemove.trim().toLowerCase();
         if (!normalized) {
             return;
@@ -468,11 +472,17 @@ export default function AdminTenantProducts() {
             (color) => color.trim().toLowerCase() !== normalized,
         );
         if (remainingColors.length === 0) {
-            alert("At least one color is required.");
+            showAlert("At least one color is required.", { tone: "warning" });
             return;
         }
-        const confirmed = window.confirm(
+        const confirmed = await showConfirm(
             `Remove color "${colorToRemove}"? This deletes its variants and images.`,
+            {
+                tone: "danger",
+                title: "Remove color?",
+                confirmLabel: "Remove",
+                cancelLabel: "Keep",
+            },
         );
         if (!confirmed) {
             return;
@@ -525,7 +535,7 @@ export default function AdminTenantProducts() {
         const oldColor = editingColorName.trim();
         const newColor = colorRenameValue.trim();
         if (!newColor) {
-            alert("Color name cannot be empty.");
+            showAlert("Color name cannot be empty.", { tone: "warning" });
             return;
         }
         if (oldColor.toLowerCase() === newColor.toLowerCase()) {
@@ -538,7 +548,7 @@ export default function AdminTenantProducts() {
                 && color.trim().toLowerCase() !== oldColor.toLowerCase(),
         );
         if (conflict) {
-            alert(`Color "${newColor}" already exists.`);
+            showAlert(`Color "${newColor}" already exists.`, { tone: "warning" });
             return;
         }
         const oldNormalized = oldColor.toLowerCase();
@@ -585,11 +595,11 @@ export default function AdminTenantProducts() {
     const handleAddColor = () => {
         const newColor = newColorInput.trim();
         if (!newColor) {
-            alert("Enter a color name.");
+            showAlert("Enter a color name.", { tone: "warning" });
             return;
         }
         if (editColors.some((color) => color.toLowerCase() === newColor.toLowerCase())) {
-            alert(`Color "${newColor}" already exists.`);
+            showAlert(`Color "${newColor}" already exists.`, { tone: "warning" });
             return;
         }
         const sizesToUse = editSizes;
@@ -629,11 +639,11 @@ export default function AdminTenantProducts() {
     const handleAddSize = () => {
         const newSize = newSizeInput.trim();
         if (!newSize) {
-            alert("Enter a size name.");
+            showAlert("Enter a size name.", { tone: "warning" });
             return;
         }
         if (editSizes.some((size) => size.toLowerCase() === newSize.toLowerCase())) {
-            alert(`Size "${newSize}" already exists.`);
+            showAlert(`Size "${newSize}" already exists.`, { tone: "warning" });
             return;
         }
         setEditForm((prev) => {
@@ -664,17 +674,23 @@ export default function AdminTenantProducts() {
         });
         setNewSizeInput("");
     };
-    const handleRemoveSize = (sizeToRemove: string) => {
+    const handleRemoveSize = async (sizeToRemove: string) => {
         const normalized = sizeToRemove.trim().toLowerCase();
         const remainingSizes = editSizes.filter(
             (size) => size.trim().toLowerCase() !== normalized,
         );
         if (remainingSizes.length === 0) {
-            alert("At least one size is required.");
+            showAlert("At least one size is required.", { tone: "warning" });
             return;
         }
-        const confirmed = window.confirm(
+        const confirmed = await showConfirm(
             `Remove size "${sizeToRemove}" from all colors?`,
+            {
+                tone: "danger",
+                title: "Remove size?",
+                confirmLabel: "Remove",
+                cancelLabel: "Keep",
+            },
         );
         if (!confirmed) {
             return;
@@ -715,14 +731,19 @@ export default function AdminTenantProducts() {
             }))
             .filter((item) => item.color && item.size && item.variantId);
         if (inventory.length === 0) {
-            alert("At least one color/size variant is required.");
+            showAlert("At least one color/size variant is required.", {
+                tone: "warning",
+            });
             return;
         }
         const inventoryColors = new Set(
             inventory.map((item) => item.color.trim().toLowerCase()),
         );
         if (hasUnresolvedImageRefs(editForm.images)) {
-            alert("Some images are still Base64/legacy URLs. Re-upload them so they save to S3.");
+            showAlert(
+                "Some images are still Base64/legacy URLs. Re-upload them so they save to S3.",
+                { tone: "warning" },
+            );
             return;
         }
         const images = Object.fromEntries(
@@ -767,7 +788,7 @@ export default function AdminTenantProducts() {
                   : error instanceof Error
                     ? error.message
                     : "Failed to update product.";
-            alert(message);
+            showAlert(message, { tone: "danger" });
         }
     };
     const handleDelete = async () => {
@@ -862,7 +883,10 @@ export default function AdminTenantProducts() {
             <span>Low Stock</span>
             <strong>
               {products.filter((product) => {
-            const stock = product.totalStock ?? product.stock ?? 0;
+            if (product.inventory && product.inventory.length > 0) {
+                return product.inventory.some(variant => (variant.stock ?? 0) <= lowStockLevel);
+            }
+            const stock = product.stock ?? 0;
             return stock <= lowStockLevel;
         }).length}
             </strong>

@@ -29,6 +29,7 @@ import { RAZORPAY_KEY_ID } from "../../constants/api";
 import { routes, storefrontNavigate } from "../../routes/routes";
 import { isRetailBusiness } from "../../features/tenant/businessMode";
 import PhoneOtpForm from "../../features/auth/components/PhoneOtpForm";
+import { useAlert } from "../../components/Modal";
 import { reportAlert } from "../../observability";
 
 /** HTTP status of a failed API call (axios-style error), for alert tags. */
@@ -38,6 +39,7 @@ const httpStatusOf = (error: unknown): number | undefined =>
 const Checkout = () => {
     const navigate = useNavigate();
     const queryClient = useQueryClient();
+    const { showAlert } = useAlert();
     const { Razorpay } = useRazorpay();
     const { user, isAuthenticated } = useAuth();
     const { tenantSlug, tenantId: storeTenantId, tenant } = useStorefrontTenant();
@@ -194,15 +196,17 @@ const Checkout = () => {
                 return;
             }
             if (!selectedAddress) {
-                alert("Please select a delivery address.");
+                showAlert("Please select a delivery address.", { tone: "warning" });
                 return;
             }
             if (!cart.length) {
-                alert("Your cart is empty.");
+                showAlert("Your cart is empty.", { tone: "warning" });
                 return;
             }
             if (appliedCoupon && couponError) {
-                alert("Please fix the coupon before placing your order.");
+                showAlert("Please fix the coupon before placing your order.", {
+                    tone: "warning",
+                });
                 return;
             }
 
@@ -229,13 +233,15 @@ const Checkout = () => {
 
             if (!Razorpay) {
                 reportAlert("checkout.razorpay_unavailable", { reason: "sdk_not_loaded" });
-                alert("Razorpay SDK is not loaded.");
+                showAlert("Razorpay SDK is not loaded.", { tone: "danger" });
                 setIsProcessing(false);
                 return;
             }
             if (!RAZORPAY_KEY_ID) {
                 reportAlert("checkout.razorpay_unavailable", { reason: "key_missing" });
-                alert("Payment is not configured. Please contact support.");
+                showAlert("Payment is not configured. Please contact support.", {
+                    tone: "danger",
+                });
                 setIsProcessing(false);
                 return;
             }
@@ -318,10 +324,11 @@ const Checkout = () => {
                             http_status: httpStatusOf(error),
                         });
                         console.error("Payment verification error:", error);
-                        alert(
+                        showAlert(
                             error instanceof Error
                                 ? error.message
                                 : "Payment verification failed.",
+                            { tone: "danger" },
                         );
                     } finally {
                         setIsProcessing(false);
@@ -354,7 +361,7 @@ const Checkout = () => {
                         payment_method: paymentMethod,
                     });
                     console.error("Razorpay payment.failed:", response);
-                    alert(description);
+                    showAlert(description, { tone: "danger" });
                     setIsProcessing(false);
                 },
             );
@@ -365,8 +372,9 @@ const Checkout = () => {
                 payment_method: paymentMethod,
             });
             console.error("Place order error:", error);
-            alert(
+            showAlert(
                 error instanceof Error ? error.message : "Unable to process order.",
+                { tone: "danger" },
             );
             setIsProcessing(false);
         }
