@@ -1,9 +1,12 @@
 from __future__ import annotations
 
+import logging
 from datetime import datetime, timezone
 from typing import Any
 
 from app.database.mongo import audit_logs
+
+logger = logging.getLogger(__name__)
 
 _SENSITIVE_KEYS = {
     "password",
@@ -54,18 +57,29 @@ def record_audit_event(
     after: dict | None = None,
     metadata: dict | None = None,
 ) -> None:
-    audit_logs.insert_one(
-        {
-            "tenantId": str(tenant_id or "").strip().lower() or None,
-            "action": action,
-            "actor": _actor(actor),
-            "entity": {
-                "type": entity_type,
-                "id": str(entity_id or "").strip() or None,
-            },
-            "before": _safe_value(before) if before is not None else None,
-            "after": _safe_value(after) if after is not None else None,
-            "metadata": _safe_value(metadata or {}),
-            "createdAt": datetime.now(timezone.utc),
-        }
-    )
+    """Insert one audit row; never raises (see record_movements)."""
+    try:
+        audit_logs.insert_one(
+            {
+                "tenantId": str(tenant_id or "").strip().lower() or None,
+                "action": action,
+                "actor": _actor(actor),
+                "entity": {
+                    "type": entity_type,
+                    "id": str(entity_id or "").strip() or None,
+                },
+                "before": _safe_value(before) if before is not None else None,
+                "after": _safe_value(after) if after is not None else None,
+                "metadata": _safe_value(metadata or {}),
+                "createdAt": datetime.now(timezone.utc),
+            }
+        )
+    except Exception:
+        # Auditing is a side effect: a write failure must not fail the request
+        # that triggered it (the caller 200s on a successful tenant update even
+        # if the audit store is unreachable). Same contract as stock movements.
+        logger.exception(
+            "Could not write audit event (action=%s entity=%s)",
+            action,
+            entity_type,
+        )

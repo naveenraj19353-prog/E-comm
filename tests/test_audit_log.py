@@ -60,6 +60,28 @@ class AuditLogTests(unittest.TestCase):
         self.assertIsNone(document["actor"]["userId"])
         self.assertIsNone(document["entity"]["id"])
 
+    def test_write_failure_is_logged_and_never_breaks_the_caller(self):
+        """The route must 200 even when the audit store is unreachable."""
+        collection = MagicMock()
+        collection.insert_one.side_effect = RuntimeError("mongo down")
+
+        with patch("app.services.audit_log.audit_logs", collection):
+            with self.assertLogs("app.services.audit_log", level="ERROR") as captured:
+                record_audit_event(
+                    action="tenant.updated",
+                    actor={"userId": "u1"},
+                    tenant_id="store-a",
+                    entity_type="tenant",
+                    entity_id="t1",
+                    after={"name": "New Name"},
+                )
+
+        collection.insert_one.assert_called_once()
+        self.assertTrue(
+            any("tenant.updated" in line for line in captured.output),
+            "the failed audit write should be logged with its action",
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
