@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useCart } from "../../features/cart/hooks/useCart";
 import CartHeader from "./CartHeader";
 import FreeDeliveryBanner from "./FreeDeliveryBanner";
@@ -33,14 +33,40 @@ const Cart = () => {
         grandTotal,
         cartCount,
         isLoading,
-        isUpdating,
-        isRemoving,
         isClearing,
         updateCart,
         removeFromCart,
         clearCart,
     } = useCart(cartUserId, cartTenantId);
     const layoutSettings = useLayoutSettings();
+    // Per-row busy state: only the row being acted on should show a spinner.
+    const [updatingItemId, setUpdatingItemId] = useState<string | null>(null);
+    const [removingItemId, setRemovingItemId] = useState<string | null>(null);
+
+    const handleUpdateQuantity = async (data: {
+        productId: string;
+        quantity: number;
+    }) => {
+        setUpdatingItemId(data.productId);
+        try {
+            await updateCart(data);
+        } catch (error) {
+            console.error("Cart update failed:", error);
+        } finally {
+            setUpdatingItemId(null);
+        }
+    };
+
+    const handleRemoveItem = async (productId: string) => {
+        setRemovingItemId(productId);
+        try {
+            await removeFromCart(productId);
+        } catch (error) {
+            console.error("Cart remove failed:", error);
+        } finally {
+            setRemovingItemId(null);
+        }
+    };
 
     useEffect(() => {
         if (!isCustomer) {
@@ -85,12 +111,12 @@ const Cart = () => {
                         <CartItem
                             key={item.productId}
                             item={item}
-                            isUpdating={isUpdating}
-                            isRemoving={isRemoving}
+                            isUpdating={updatingItemId === item.productId}
+                            isRemoving={removingItemId === item.productId}
                             allowQuantityUpdates={!isServiceMode && !isMenu}
                             allowRemove={!isMenu}
-                            onUpdateQuantity={updateCart}
-                            onRemove={removeFromCart}
+                            onUpdateQuantity={handleUpdateQuantity}
+                            onRemove={handleRemoveItem}
                         />
                     ))}
                 </div>

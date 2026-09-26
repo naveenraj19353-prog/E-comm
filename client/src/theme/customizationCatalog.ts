@@ -59,7 +59,8 @@ export const CUSTOMIZATION_GROUPS = [
     id: "colors",
     title: "Colors",
     lines: [
-      "Presets: Forest, Ocean, Purple, Sunset, Midnight",
+      "Themes library: Editorial Noir, Rosewood Boutique, Nordic Slate, Midnight Gold, Electric Pop",
+      "Quick colour presets: Forest, Ocean, Purple, Sunset, Midnight",
       "Primary, secondary, background, surface, border, text",
       "Live preview before save to database",
     ],

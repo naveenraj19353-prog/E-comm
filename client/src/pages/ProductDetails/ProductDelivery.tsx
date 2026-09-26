@@ -8,6 +8,7 @@ import {
     checkDeliveryPincode,
     type ShippingOptionQuote,
 } from "../../features/shipping/api/pincode.api";
+import { BusyLabel } from "../../components/Loading";
 
 const ProductDelivery = () => {
     const { tenantId } = useStorefrontTenant();
@@ -78,19 +79,23 @@ const ProductDelivery = () => {
         }
     };
 
-    const chargesDescription = shippingOptions.length
-        ? shippingOptions
-              .map((option) => `${formatPrice(option.shippingCost)} ${option.mode}`)
-              .join(" · ")
-        : pincodeOk
-          ? "Charges will be confirmed at checkout"
-          : "Enter a pincode to see Delhivery charges";
+    const chargesDescription = checking
+        ? "Checking delivery charges..."
+        : shippingOptions.length
+          ? shippingOptions
+                .map((option) => `${formatPrice(option.shippingCost)} ${option.mode}`)
+                .join(" · ")
+          : pincodeOk
+            ? "Charges will be confirmed at checkout"
+            : "Enter a pincode to see Delhivery charges";
 
-    const etaDescription = estimatedDays
-        ? `Delivery in ${estimatedDays} business days`
-        : pincodeOk
-          ? "Delivery time will be confirmed at checkout"
-          : "Enter a pincode to see partner delivery time";
+    const etaDescription = checking
+        ? "Checking delivery time..."
+        : estimatedDays
+          ? `Delivery in ${estimatedDays} business days`
+          : pincodeOk
+            ? "Delivery time will be confirmed at checkout"
+            : "Enter a pincode to see partner delivery time";
 
     return (
         <section className={styles.deliverySection}>
@@ -111,9 +116,17 @@ const ProductDelivery = () => {
                     maxLength={6}
                     inputMode="numeric"
                     aria-label="Delivery pincode"
+                    disabled={checking}
                 />
-                <button type="button" onClick={handlePincodeCheck} disabled={checking}>
-                    {checking ? "Checking..." : "Check"}
+                <button
+                    type="button"
+                    onClick={handlePincodeCheck}
+                    disabled={checking}
+                    aria-busy={checking}
+                >
+                    <BusyLabel busy={checking} busyText="Checking">
+                        Check
+                    </BusyLabel>
                 </button>
             </div>
             {pincodeMessage ? (
@@ -154,11 +167,13 @@ const ProductDelivery = () => {
                     icon={<CreditCard size={18} />}
                     title="Cash on Delivery"
                     description={
-                        codAvailable === null
-                            ? "Enter a pincode to check COD availability"
-                            : codAvailable
-                              ? "Available for this pincode"
-                              : "Not available for this pincode"
+                        checking
+                            ? "Checking COD availability..."
+                            : codAvailable === null
+                              ? "Enter a pincode to check COD availability"
+                              : codAvailable
+                                ? "Available for this pincode"
+                                : "Not available for this pincode"
                     }
                 />
             </div>

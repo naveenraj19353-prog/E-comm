@@ -14,10 +14,13 @@ import {
 } from "../../../features/tenant/businessMode";
 import type { Product, ProductInventory } from "../../../features/products/types";
 import { getColorValue } from "../../../utils/productColors";
+import { Spinner } from "../../Loading";
 
 interface ProductCardProps {
     product: Product;
     isWishlisted?: boolean;
+    /** True while this card's wishlist toggle is in flight. */
+    isWishlistPending?: boolean;
     onWishlist?: (productId: string) => void;
     onAddToCart?: (productId: string, variantId: string, color: string, size: string) => void;
     isAdding?: boolean;
@@ -26,6 +29,7 @@ interface ProductCardProps {
 const ProductCard = ({
     product,
     isWishlisted = false,
+    isWishlistPending = false,
     onWishlist,
     onAddToCart,
     isAdding = false,
@@ -164,11 +168,21 @@ const ProductCard = ({
                         : styles.wishlistRight
                 } ${isWishlisted ? styles.wishlisted : ""}`}
                 onClick={handleWishlist}
+                disabled={isWishlistPending}
+                aria-busy={isWishlistPending}
                 aria-label={
-                    isWishlisted ? "Remove from wishlist" : "Add to wishlist"
+                    isWishlistPending
+                        ? "Updating wishlist"
+                        : isWishlisted
+                          ? "Remove from wishlist"
+                          : "Add to wishlist"
                 }
             >
-                <Heart size={18} fill={isWishlisted ? "currentColor" : "none"} />
+                {isWishlistPending ? (
+                    <Spinner size="sm" />
+                ) : (
+                    <Heart size={18} fill={isWishlisted ? "currentColor" : "none"} />
+                )}
             </button>
 
             <div className={styles.imageWrapper}>
@@ -279,8 +293,13 @@ const ProductCard = ({
                         className={styles.cartBtn}
                         onClick={handleAddToCart}
                         disabled={isAdding || isOutOfStock}
+                        aria-busy={isAdding}
                     >
-                        <ShoppingCart size={18} />
+                        {isAdding ? (
+                            <Spinner size="sm" />
+                        ) : (
+                            <ShoppingCart size={18} />
+                        )}
                         {cartLabel}
                     </button>
                 )}

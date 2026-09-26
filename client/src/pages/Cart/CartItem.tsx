@@ -1,6 +1,7 @@
 import { Minus, Plus, Trash2 } from "lucide-react";
 import ProductImage from "../../components/ProductImage";
 import { useFormatStorePrice } from "../../features/tenant/useFormatStorePrice";
+import { BusyLabel, Spinner } from "../../components/Loading";
 import styles from "./Cart.module.css";
 
 interface CartItemProps {
@@ -63,7 +64,11 @@ const CartItem = ({
                             >
                                 <Minus size={15} />
                             </button>
-                            <span>{item.quantity}</span>
+                            {isUpdating ? (
+                                <Spinner size="xs" label="Updating quantity" />
+                            ) : (
+                                <span>{item.quantity}</span>
+                            )}
                             <button
                                 type="button"
                                 disabled={isUpdating}
@@ -84,10 +89,15 @@ const CartItem = ({
                             type="button"
                             className={styles.remove}
                             disabled={isRemoving}
+                            aria-busy={isRemoving}
                             onClick={() => onRemove(item.productId)}
                         >
-                            <Trash2 size={15} />
-                            {isRemoving ? "Removing..." : "Remove"}
+                            <BusyLabel busy={isRemoving} busyText="Removing...">
+                                <>
+                                    <Trash2 size={15} />
+                                    Remove
+                                </>
+                            </BusyLabel>
                         </button>
                     ) : null}
                 </div>

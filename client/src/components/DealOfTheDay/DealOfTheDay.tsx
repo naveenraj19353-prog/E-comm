@@ -17,8 +17,12 @@ interface DealOfTheDayProps {
     isWishlisted?: (productId: string) => boolean;
     onToggleWishlist?: (id: string, wishlisted: boolean) => void;
     onQuickAdd?: (productId: string, variantId: string, color: string, size: string) => void;
+    /** Product whose quick-add is in flight, so its card can show a spinner. */
+    addingProductId?: string | null;
+    /** Product whose wishlist toggle is in flight. */
+    wishlistPendingId?: string | null;
 }
-const DealOfTheDay = ({ products, festivalOffer, isWishlisted, onToggleWishlist, onQuickAdd, }: DealOfTheDayProps) => {
+const DealOfTheDay = ({ products, festivalOffer, isWishlisted, onToggleWishlist, onQuickAdd, addingProductId = null, wishlistPendingId = null, }: DealOfTheDayProps) => {
     const navigate = useNavigate();
     const { tenantSlug } = useStorefrontTenant();
     const prevRef = useRef<HTMLButtonElement | null>(null);
@@ -91,7 +95,7 @@ const DealOfTheDay = ({ products, festivalOffer, isWishlisted, onToggleWishlist,
             },
         }} className={styles.swiper}>
           {products.map((product) => (<SwiperSlide key={product._id}>
-              <ProductCard product={product} isWishlisted={isWishlisted?.(product._id)} onWishlist={onToggleWishlist
+              <ProductCard product={product} isWishlisted={isWishlisted?.(product._id)} isWishlistPending={wishlistPendingId === product._id} isAdding={addingProductId === product._id} onWishlist={onToggleWishlist
                 ? (id) => onToggleWishlist(id, !(isWishlisted?.(id) ?? false))
                 : undefined} onAddToCart={onQuickAdd}/>
             </SwiperSlide>))}

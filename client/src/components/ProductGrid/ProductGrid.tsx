@@ -17,7 +17,8 @@ const ProductGrid = ({ products }: ProductGridProps) => {
         toggleWishlist,
         handleAddToCart,
         isProductWishlisted,
-    } = useStorefrontProductActions({ trackAddingProductId: true });
+        isWishlistPending,
+    } = useStorefrontProductActions();
 
     if (products.length === 0) {
         return (
@@ -37,6 +38,7 @@ const ProductGrid = ({ products }: ProductGridProps) => {
                         key={product._id}
                         product={product}
                         isWishlisted={isProductWishlisted(product._id)}
+                        isWishlistPending={isWishlistPending(product._id)}
                         onWishlist={(productId) => toggleWishlist(productId)}
                         onAddToCart={handleAddToCart}
                         isAdding={addingProductId === product._id}
@@ -46,6 +48,7 @@ const ProductGrid = ({ products }: ProductGridProps) => {
                         key={product._id}
                         product={product}
                         isWishlisted={isProductWishlisted(product._id)}
+                        isWishlistPending={isWishlistPending(product._id)}
                         onWishlist={toggleWishlist}
                         onAddToCart={handleAddToCart}
                         isAdding={addingProductId === product._id}

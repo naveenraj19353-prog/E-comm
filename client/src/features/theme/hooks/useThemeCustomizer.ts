@@ -4,7 +4,8 @@ import { useAppDispatch, useAppSelector } from "../../../app/hooks";
 import { getStorefrontLayout, updateTenantTheme } from "../../admin/api/tenant.api";
 import { setTenant } from "../../tenant/tenantSlice";
 import { getStorefrontLayoutSource, resolveThemeDraft } from "../../../theme/resolveTheme";
-import { themePresets, THEME_PRESET_NAMES, type ThemePresetName } from "../../../theme/themePresets";
+import { themePresets, COLOR_PRESET_NAMES, type ThemePresetName } from "../../../theme/themePresets";
+import { THEME_LIBRARY, type ThemeTemplate } from "../../../theme/themeLibrary";
 import type { AboutContent } from "../../../pages/Legal/aboutDefaults";
 import type { FooterContent } from "../../../components/Footer/types";
 import type { LayoutSettings, ThemeColors, ThemeDraft } from "../../../theme/types";
@@ -69,6 +70,26 @@ export const useThemeCustomizer = () => {
                 ...themePresets[preset],
             },
         }));
+    }, []);
+
+    /**
+     * Applies a Themes-library template in one go: palette, layout deltas and
+     * font. Keys the template does not define keep the store's current value.
+     */
+    const applyThemeTemplate = useCallback((template: ThemeTemplate) => {
+        setDraft((current) => ({
+            ...current,
+            theme: template.id,
+            themeColors: {
+                ...current.themeColors,
+                ...template.colors,
+            },
+            layoutSettings: {
+                ...current.layoutSettings,
+                ...template.layout,
+            },
+        }));
+        setStatusMessage(`${template.label} applied to the draft. Save to publish it.`);
     }, []);
 
     const updateColor = useCallback((key: keyof ThemeColors, value: string) => {
@@ -205,7 +226,10 @@ export const useThemeCustomizer = () => {
         canSaveForStore,
         layoutSource,
         colorFields,
-        presetNames: THEME_PRESET_NAMES,
+        presetNames: COLOR_PRESET_NAMES,
+        themeTemplates: THEME_LIBRARY,
+        activeTemplateId: draft.theme,
+        applyThemeTemplate,
         applyPreset,
         updateColor,
         updateLayout,

@@ -8,7 +8,7 @@ import FooterContentEditor from "./FooterContentEditor";
 import AboutContentEditor from "./AboutContentEditor";
 import CustomizationOverview from "./CustomizationOverview";
 import styles from "./ThemeCustomizer.module.css";
-import { STORE_FONT_OPTIONS, type StoreFontKey } from "../../theme/storeFonts";
+import { STORE_FONTS, STORE_FONT_OPTIONS, type StoreFontKey } from "../../theme/storeFonts";
 import { routes, storefrontNavigate } from "../../routes/routes";
 import {
     HOME_SECTION_LABELS,
@@ -50,6 +50,9 @@ const ThemeCustomizer = () => {
         layoutSource,
         colorFields,
         presetNames,
+        themeTemplates,
+        activeTemplateId,
+        applyThemeTemplate,
         applyPreset,
         updateColor,
         updateLayout,
@@ -217,6 +220,59 @@ const ThemeCustomizer = () => {
 
                         {activeTab === "colors" && (
                             <>
+                                <section className={styles.library}>
+                                    <div className={styles.libraryHead}>
+                                        <h3>Themes library</h3>
+                                        <p>
+                                            Complete directions. Applying one sets the palette, the
+                                            layout and the font together — anything it does not
+                                            define keeps your current setting.
+                                        </p>
+                                    </div>
+                                    <div className={styles.libraryGrid}>
+                                        {themeTemplates.map((template) => {
+                                            const isActive = activeTemplateId === template.id;
+                                            const fontLabel =
+                                                STORE_FONTS[template.layout.fontFamily ?? "default"].label;
+                                            return (
+                                                <article
+                                                    key={template.id}
+                                                    className={`${styles.libraryCard} ${isActive ? styles.libraryCardActive : ""}`}
+                                                >
+                                                    <div className={styles.librarySwatches} aria-hidden="true">
+                                                        <span style={{ background: template.colors.primary }} />
+                                                        <span style={{ background: template.colors.secondary }} />
+                                                        <span style={{ background: template.colors.headerBackground }} />
+                                                        <span style={{ background: template.colors.textBlack }} />
+                                                    </div>
+                                                    <h4>{template.label}</h4>
+                                                    <p className={styles.libraryBestFor}>{template.bestFor}</p>
+                                                    <p className={styles.libraryDescription}>{template.description}</p>
+                                                    <ul className={styles.libraryTags}>
+                                                        {template.tags.map((tag) => (
+                                                            <li key={tag}>{tag}</li>
+                                                        ))}
+                                                    </ul>
+                                                    <div className={styles.libraryFooter}>
+                                                        <span className={styles.libraryMeta}>
+                                                            {Object.keys(template.layout).length} layout settings · {fontLabel}
+                                                        </span>
+                                                        <button
+                                                            type="button"
+                                                            className={isActive ? styles.libraryApplied : styles.libraryApply}
+                                                            disabled={isActive}
+                                                            onClick={() => applyThemeTemplate(template)}
+                                                        >
+                                                            {isActive ? "Applied" : "Apply"}
+                                                        </button>
+                                                    </div>
+                                                </article>
+                                            );
+                                        })}
+                                    </div>
+                                </section>
+
+                                <p className={styles.presetLabel}>Quick colour presets (colours only)</p>
                                 <div className={styles.presetRow}>
                                     {presetNames.map((preset: ThemePresetName) => (
                                         <button key={preset} type="button" className={`${styles.presetChip} ${draft.theme === preset ? styles.presetChipActive : ""}`} onClick={() => applyPreset(preset)}>

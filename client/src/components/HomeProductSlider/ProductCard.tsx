@@ -13,6 +13,7 @@ import { getColorValue } from "./ProductCard.utils";
 import { HeartIcon, StarIcon, BagIcon } from "./ProductCardIcons";
 import { useProductVariantSelection } from "./useProductVariantSelection";
 import { useLayoutSettings } from "../../theme/useThemeSettings";
+import { BusyLabel, Spinner } from "../Loading";
 
 export interface ProductInventory {
     variantId: string;
@@ -40,6 +41,8 @@ export interface Product {
 interface ProductCardProps {
     product: Product;
     isWishlisted?: boolean;
+    /** True while this card's wishlist toggle is in flight. */
+    isWishlistPending?: boolean;
     onWishlist?: (productId: string, isAdding: boolean) => void;
     onAddToCart?: (productId: string, variantId: string, color: string, size: string) => void;
     isAdding?: boolean;
@@ -49,6 +52,7 @@ interface ProductCardProps {
 export default function ProductCard({
     product,
     isWishlisted = false,
+    isWishlistPending = false,
     onWishlist,
     onAddToCart,
     isAdding = false,
@@ -199,9 +203,21 @@ export default function ProductCard({
                 type="button"
                 className={`${styles.wishlist} ${heartLeft ? styles.wishlistLeft : styles.wishlistRight} ${isWishlisted ? styles.wishlistActive : ""}`}
                 onClick={handleWishlist}
-                aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
+                disabled={isWishlistPending}
+                aria-busy={isWishlistPending}
+                aria-label={
+                    isWishlistPending
+                        ? "Updating wishlist"
+                        : isWishlisted
+                          ? "Remove from wishlist"
+                          : "Add to wishlist"
+                }
             >
-                <HeartIcon filled={isWishlisted} />
+                {isWishlistPending ? (
+                    <Spinner size="sm" />
+                ) : (
+                    <HeartIcon filled={isWishlisted} />
+                )}
             </button>
             {design === "studio" && (
                 <div className={styles.priceBadge}>
@@ -223,8 +239,9 @@ export default function ProductCard({
                         className={styles.cartButton}
                         onClick={handleAddToCart}
                         disabled={isAdding || isOutOfStock}
+                        aria-busy={isAdding}
                     >
-                        <BagIcon />
+                        {isAdding ? <Spinner size="sm" /> : <BagIcon />}
                         <span>{cartButtonLabel}</span>
                     </button>
                 </div>
@@ -330,8 +347,9 @@ export default function ProductCard({
                             className={styles.cartButton}
                             onClick={handleAddToCart}
                             disabled={isAdding || isOutOfStock}
+                            aria-busy={isAdding}
                         >
-                            {cartButtonLabel}
+                            <BusyLabel busy={isAdding}>{cartButtonLabel}</BusyLabel>
                         </button>
                     )}
                 </div>
@@ -368,8 +386,9 @@ export default function ProductCard({
                             className={styles.cartButton}
                             onClick={handleAddToCart}
                             disabled={isAdding || isOutOfStock}
+                            aria-busy={isAdding}
                         >
-                            {cartButtonLabel}
+                            <BusyLabel busy={isAdding}>{cartButtonLabel}</BusyLabel>
                         </button>
                     )}
                 </div>

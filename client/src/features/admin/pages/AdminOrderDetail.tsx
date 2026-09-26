@@ -21,6 +21,7 @@ import {
     trackDelhiveryAwb,
 } from "../api/delhivery.api";
 import PageLoader from "../../../components/PageLoader";
+import { useAlert } from "../../../components/Modal";
 import styles from "../styles/AdminOrderDetail.module.css";
 
 const STATUS_STEPS: OrderStatus[] = [
@@ -75,6 +76,7 @@ export default function AdminOrderDetail() {
     const { tenantId = "", orderId = "" } = useParams();
     const navigate = useNavigate();
     const queryClient = useQueryClient();
+    const { showConfirm } = useAlert();
     const [isUpdating, setIsUpdating] = useState(false);
     const [isShipping, setIsShipping] = useState(false);
     const [isPickup, setIsPickup] = useState(false);
@@ -112,7 +114,16 @@ export default function AdminOrderDetail() {
     const handleStatusUpdate = async (orderStatus: OrderStatus) => {
         if (!order) return;
         if (orderStatus === "cancelled") {
-            if (!window.confirm("Cancel this order? Stock will be restored.")) return;
+            const confirmed = await showConfirm(
+                "Cancel this order? Stock will be restored.",
+                {
+                    tone: "danger",
+                    title: "Cancel this order?",
+                    confirmLabel: "Cancel order",
+                    cancelLabel: "Keep order",
+                },
+            );
+            if (!confirmed) return;
         }
         setIsUpdating(true);
         try {
@@ -145,7 +156,13 @@ export default function AdminOrderDetail() {
                 const prompt = typeof amount === "number"
                     ? `Refund ${formatOrderAmount(amount)} for this return?`
                     : "Issue the refund for this return?";
-                if (!window.confirm(prompt)) return;
+                const refundConfirmed = await showConfirm(prompt, {
+                    tone: "danger",
+                    title: "Issue refund?",
+                    confirmLabel: "Issue refund",
+                    cancelLabel: "Cancel",
+                });
+                if (!refundConfirmed) return;
                 await issueRefund(order.orderId);
                 setReturnMessage("Refund recorded.");
             }

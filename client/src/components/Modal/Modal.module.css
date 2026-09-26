@@ -1,0 +1,365 @@
+/*
+ * Generic popup shell. Every colour is taken from the store theme variables
+ * applied by ThemeProvider (--primary / --secondary / --surface / --background
+ * / --border / --text / --text-white / --success / --warning / --danger), so a
+ * popup always matches the store the admin configured.
+ * Fallbacks mirror DEFAULT_THEME_COLORS in theme/types.ts.
+ *
+ * Each tone sets --popup-tone locally; everything below (badge, border, wash
+ * and shadow) tints itself from that single variable.
+ */
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  overflow-y: auto;
+  background: color-mix(in srgb, var(--text-black, #111827) 52%, transparent);
+  backdrop-filter: blur(0.375rem) saturate(115%);
+  -webkit-backdrop-filter: blur(0.375rem) saturate(115%);
+  animation: overlayIn 0.2s ease;
+}
+
+.modal {
+  position: relative;
+  width: min(28rem, 100%);
+  max-height: calc(100dvh - 3rem);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 0.0625rem solid
+    color-mix(in srgb, var(--popup-tone, var(--primary, #2f6b52)) 16%, var(--border, #e5e7eb));
+  border-radius: max(0.75rem, var(--layout-card-radius, 0.625rem));
+  background-color: var(--surface, #ffffff);
+  /* Faint tone wash so the popup reads as intentional, not a system dialog. */
+  background-image: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--popup-tone, var(--primary, #2f6b52)) 8%, transparent),
+    transparent 42%
+  );
+  color: var(--text, #111827);
+  box-shadow:
+    0 1.75rem 3.5rem color-mix(in srgb, var(--text-black, #111827) 22%, transparent),
+    0 0.625rem 1.5rem color-mix(in srgb, var(--text-black, #111827) 10%, transparent),
+    0 0.5rem 1.75rem color-mix(in srgb, var(--popup-tone, var(--primary, #2f6b52)) 10%, transparent);
+  animation: modalIn 0.26s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+.modal:focus {
+  outline: none;
+}
+
+.modal:focus-visible {
+  outline: 0.125rem solid var(--popup-tone, var(--primary, #2f6b52));
+  outline-offset: 0.125rem;
+}
+
+.sizeSm {
+  width: min(24rem, 100%);
+}
+
+.sizeMd {
+  width: min(32rem, 100%);
+}
+
+.sizeLg {
+  width: min(46rem, 100%);
+}
+
+/* --- tone accents ------------------------------------------------------ */
+.toneInfo {
+  --popup-tone: var(--primary, #2f6b52);
+}
+
+.toneSuccess {
+  --popup-tone: var(--success, #10b981);
+}
+
+.toneWarning {
+  --popup-tone: var(--warning, #f59e0b);
+}
+
+.toneDanger {
+  --popup-tone: var(--danger, #dc2626);
+}
+
+/* --- header ----------------------------------------------------------- */
+.header {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  padding: 1.375rem 1.5rem 0;
+}
+
+.icon {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border: 0.0625rem solid
+    color-mix(in srgb, var(--popup-tone, var(--primary, #2f6b52)) 22%, transparent);
+  border-radius: 0.875rem;
+  background: color-mix(
+    in srgb,
+    var(--popup-tone, var(--primary, #2f6b52)) 13%,
+    var(--surface, #ffffff)
+  );
+  color: var(--popup-tone, var(--primary, #2f6b52));
+  box-shadow: 0 0.375rem 0.875rem
+    color-mix(in srgb, var(--popup-tone, var(--primary, #2f6b52)) 16%, transparent);
+  animation: iconIn 0.34s cubic-bezier(0.22, 0.61, 0.36, 1) 0.04s backwards;
+}
+
+.titleGroup {
+  flex: 1;
+  min-width: 0;
+}
+
+.eyebrow {
+  display: block;
+  margin-bottom: 0.3125rem;
+  color: var(--popup-tone, var(--primary, #2f6b52));
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.title {
+  margin: 0;
+  color: var(--text, #111827);
+  font-size: 1.125rem;
+  font-weight: 750;
+  line-height: 1.3;
+  letter-spacing: -0.0175rem;
+  animation: contentIn 0.3s ease 0.04s backwards;
+}
+
+.closeButton {
+  flex: 0 0 auto;
+  align-self: flex-start;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: color-mix(in srgb, var(--text, #111827) 48%, var(--surface, #ffffff));
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.closeButton:hover {
+  background: color-mix(in srgb, var(--popup-tone, var(--primary, #2f6b52)) 10%, var(--surface, #ffffff));
+  color: var(--popup-tone, var(--primary, #2f6b52));
+  transform: scale(1.06);
+}
+
+.closeButton:focus-visible,
+.primaryButton:focus-visible,
+.secondaryButton:focus-visible {
+  outline: 0.125rem solid var(--popup-tone, var(--primary, #2f6b52));
+  outline-offset: 0.1875rem;
+}
+
+/* --- body ------------------------------------------------------------- */
+.body {
+  overflow-y: auto;
+  padding: 0.875rem 1.5rem 0;
+}
+
+.message {
+  margin: 0;
+  color: color-mix(in srgb, var(--text, #111827) 74%, var(--surface, #ffffff));
+  font-size: 0.875rem;
+  line-height: 1.65;
+  /* Server errors can arrive as multi-line detail strings. */
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+  animation: contentIn 0.3s ease 0.07s backwards;
+}
+
+/* Line the message up with the title when a badge is present. */
+.modal[data-has-icon="true"] .message {
+  margin-left: 3.625rem;
+}
+
+/* --- actions ---------------------------------------------------------- */
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.625rem;
+  padding: 1.375rem 1.5rem 1.5rem;
+  animation: contentIn 0.3s ease 0.1s backwards;
+}
+
+.primaryButton,
+.secondaryButton {
+  min-width: 6rem;
+  height: 2.625rem;
+  padding: 0 1.375rem;
+  border-radius: 0.6875rem;
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease,
+    transform 0.18s ease,
+    box-shadow 0.2s ease;
+}
+
+.primaryButton {
+  border: 0.0625rem solid transparent;
+  background: var(--primary, #2f6b52);
+  color: var(--text-white, #ffffff);
+  box-shadow:
+    inset 0 0.0625rem 0 color-mix(in srgb, var(--text-white, #ffffff) 22%, transparent),
+    0 0.5rem 1rem color-mix(in srgb, var(--primary, #2f6b52) 24%, transparent);
+}
+
+.primaryButton:hover {
+  background: var(--secondary, #4c8a6d);
+  transform: translateY(-0.0625rem);
+  box-shadow:
+    inset 0 0.0625rem 0 color-mix(in srgb, var(--text-white, #ffffff) 26%, transparent),
+    0 0.75rem 1.5rem color-mix(in srgb, var(--primary, #2f6b52) 30%, transparent);
+}
+
+.primaryButton:active {
+  transform: translateY(0.0625rem);
+  box-shadow: inset 0 0.125rem 0.25rem color-mix(in srgb, var(--text-black, #111827) 22%, transparent);
+}
+
+.primaryButton:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.dangerButton {
+  background: var(--danger, #dc2626);
+  box-shadow:
+    inset 0 0.0625rem 0 color-mix(in srgb, var(--text-white, #ffffff) 22%, transparent),
+    0 0.5rem 1rem color-mix(in srgb, var(--danger, #dc2626) 26%, transparent);
+}
+
+.dangerButton:hover {
+  background: color-mix(in srgb, var(--danger, #dc2626) 88%, var(--text-black, #111827));
+  box-shadow:
+    inset 0 0.0625rem 0 color-mix(in srgb, var(--text-white, #ffffff) 26%, transparent),
+    0 0.75rem 1.5rem color-mix(in srgb, var(--danger, #dc2626) 32%, transparent);
+}
+
+.secondaryButton {
+  border: 0.0625rem solid var(--border, #e5e7eb);
+  background: var(--surface, #ffffff);
+  color: color-mix(in srgb, var(--text, #111827) 78%, var(--surface, #ffffff));
+}
+
+.secondaryButton:hover {
+  border-color: color-mix(in srgb, var(--popup-tone, var(--primary, #2f6b52)) 40%, var(--border, #e5e7eb));
+  background: color-mix(in srgb, var(--background, #f9fafb) 55%, var(--surface, #ffffff));
+  color: var(--popup-tone, var(--primary, #2f6b52));
+  transform: translateY(-0.0625rem);
+}
+
+.secondaryButton:active {
+  transform: translateY(0.0625rem);
+}
+
+@keyframes overlayIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes modalIn {
+  from {
+    opacity: 0;
+    transform: translateY(0.875rem) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes iconIn {
+  from {
+    opacity: 0;
+    transform: scale(0.72);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes contentIn {
+  from {
+    opacity: 0;
+    transform: translateY(0.3125rem);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (max-width: 32.5rem) {
+  .overlay {
+    padding: 0.875rem;
+  }
+
+  .header {
+    padding: 1.25rem 1.25rem 0;
+  }
+
+  .body {
+    padding: 0.75rem 1.25rem 0;
+  }
+
+  .modal[data-has-icon="true"] .message {
+    margin-left: 0;
+  }
+
+  .actions {
+    padding: 1.25rem 1.25rem 1.375rem;
+  }
+
+  .actions .primaryButton,
+  .actions .secondaryButton {
+    flex: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .overlay,
+  .modal,
+  .icon,
+  .title,
+  .message,
+  .actions {
+    animation: none;
+  }
+}

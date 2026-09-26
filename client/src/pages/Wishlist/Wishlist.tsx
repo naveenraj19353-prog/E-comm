@@ -26,6 +26,7 @@ const Wishlist = () => {
     );
     const { addToCart } = useCart(wishlistUserId, wishlistTenantId);
     const [addingProductId, setAddingProductId] = useState<string | null>(null);
+    const [removingProductId, setRemovingProductId] = useState<string | null>(null);
     const layoutSettings = useLayoutSettings();
 
     useEffect(() => {
@@ -70,11 +71,15 @@ const Wishlist = () => {
         }
     };
     const handleWishlist = async (productId: string) => {
+        setRemovingProductId(productId);
         try {
             await removeFromWishlist(productId);
         }
         catch (error) {
             console.error("Remove from wishlist failed:", error);
+        }
+        finally {
+            setRemovingProductId(null);
         }
     };
     return (<div className={styles.container}>
@@ -111,7 +116,7 @@ const Wishlist = () => {
                 averageRating: item.averageRating ?? 0,
                 reviewCount: item.reviewCount ?? 0,
             };
-            return (<ProductCard key={item.productId} product={product} isWishlisted={true} onWishlist={handleWishlist} onAddToCart={(productId, variantId, color, size) => {
+            return (<ProductCard key={item.productId} product={product} isWishlisted={true} isWishlistPending={removingProductId === item.productId} onWishlist={handleWishlist} onAddToCart={(productId, variantId, color, size) => {
                     void handleAddToCart(productId, variantId, color, size);
                 }} isAdding={addingProductId === item.productId}/>);
         })}
