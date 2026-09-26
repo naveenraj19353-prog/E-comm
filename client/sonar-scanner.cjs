@@ -10,6 +10,7 @@ scan(
       "sonar.sources": "src",
       "sonar.exclusions":
         "**/node_modules/**,**/dist/**,**/build/**,**/*.test.ts,**/*.test.tsx,**/*.spec.ts,**/*.spec.tsx",
+      "sonar.coverage.exclusions": "**/*",
       "sonar.sourceEncoding": "UTF-8",
     },
   },

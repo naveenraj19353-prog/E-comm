@@ -197,6 +197,12 @@ const OrderDetailContent = ({
                                     : formatPrice(order.shipping ?? 0)}
                             </strong>
                         </div>
+                        {(order.codHandlingCharge ?? 0) > 0 && (
+                            <div className={styles.priceRow}>
+                                <span>COD Handling</span>
+                                <strong>{formatPrice(order.codHandlingCharge ?? 0)}</strong>
+                            </div>
+                        )}
                         <div className={`${styles.priceRow} ${styles.totalRow}`}>
                             <span>Total paid</span>
                             <strong>{formatPrice(order.totalAmount)}</strong>

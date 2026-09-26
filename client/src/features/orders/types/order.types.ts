@@ -127,6 +127,7 @@ export interface Order {
     canRequestReturn?: boolean;
     createdAt?: string;
     updatedAt?: string;
+    codHandlingCharge?: number;
 }
 export interface OrdersResponse {
     success: boolean;

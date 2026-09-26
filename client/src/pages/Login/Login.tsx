@@ -115,7 +115,7 @@ export default function Login() {
             <label htmlFor="tenantId">
               Tenant ID
             </label>
-            <input id="tenantId" type="text" placeholder="Leave empty for Super Admin" value={tenantId} onChange={(event) => setTenantId(event.target.value)} autoComplete="organization" disabled={loading}/>
+            <input id="tenantId" type="text" placeholder="Leave empty for Super Admin" value={tenantId} onChange={(event) => { setTenantId(event.target.value); setError(""); }} autoComplete="organization" disabled={loading}/>
             <small>
               Tenant Admin: enter your tenant ID.
               Super Admin: leave this empty.
@@ -126,7 +126,7 @@ export default function Login() {
             <label htmlFor="email">
               Email address
             </label>
-            <input id="email" type="email" placeholder="admin@example.com" value={email} onChange={(event) => setEmail(event.target.value)} autoComplete="email" disabled={loading}/>
+            <input id="email" type="email" placeholder="admin@example.com" value={email} onChange={(event) => { setEmail(event.target.value); setError(""); }} autoComplete="email" disabled={loading}/>
           </div>
           
           <div className={styles.field}>
@@ -141,7 +141,7 @@ export default function Login() {
             <div className={styles.passwordWrapper}>
               <input id="password" type={showPassword
             ? "text"
-            : "password"} placeholder="Enter your password" value={password} onChange={(event) => setPassword(event.target.value)} autoComplete="current-password" disabled={loading}/>
+            : "password"} placeholder="Enter your password" value={password} onChange={(event) => { setPassword(event.target.value); setError(""); }} autoComplete="current-password" disabled={loading}/>
               <button type="button" className={styles.passwordToggle} onClick={() => setShowPassword((current) => !current)}>
                 {showPassword
             ? "Hide"
