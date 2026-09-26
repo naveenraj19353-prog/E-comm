@@ -117,6 +117,13 @@ export const API_ENDPOINTS = {
             `/ledger/entries/${orderId}/sync-delivery-charge`,
     },
 
+    TAX: {
+        PROFILE: "/tax/profile",
+        issueInvoice: (orderId: string) => `/tax/invoices/${orderId}`,
+        adminInvoice: (orderId: string) => `/tax/invoices/${orderId}/admin`,
+        creditNotes: (orderId: string) => `/tax/invoices/${orderId}/credit-notes`,
+    },
+
     BILLING: {
         STATUS: "/billing/status",
         SUBSCRIBE: "/billing/subscribe",

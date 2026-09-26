@@ -45,6 +45,9 @@ export const AdminTenantCoupons = lazy(() => import("../features/admin/pages/Adm
 export const DelhiverySettingsPage = lazy(
     () => import("../features/admin/pages/DelhiverySettingsPage"),
 );
+export const TaxSettingsPage = lazy(
+    () => import("../features/admin/pages/TaxSettingsPage"),
+);
 export const PeriskopeSettingsPage = lazy(
     () => import("../features/admin/pages/PeriskopeSettingsPage"),
 );

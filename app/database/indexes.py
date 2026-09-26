@@ -6,9 +6,11 @@ from app.database.mongo import (
     audit_logs,
     carts,
     contact_messages,
+    credit_notes,
     customer_notes,
     customer_otps,
     inventory_receivings,
+    invoices,
     ledger_entries,
     messaging_integrations,
     notification_logs,
@@ -23,6 +25,7 @@ from app.database.mongo import (
     shipments,
     stock_movements,
     store_signup_otps,
+    tax_profiles,
     tenants,
     users,
     wishlists,
@@ -277,6 +280,57 @@ def ensure_indexes() -> None:
         ]
     )
     _ensure_tenant_indexes()
+    _ensure_tax_indexes()
+
+
+def _ensure_tax_indexes() -> None:
+    """GST profile, invoices and credit notes.
+
+    The unique indexes are the real guarantee of correctness, not just a
+    performance aid: invoices_tenant_order_unique is what makes invoice issuance
+    idempotent when two requests race, and the number indexes stop a counter
+    reset from ever reusing a number that is already on an issued document.
+    """
+    tax_profiles.create_indexes(
+        [
+            IndexModel(
+                [("tenantId", ASCENDING)],
+                unique=True,
+                name="tax_profiles_tenant_unique",
+            ),
+        ]
+    )
+    invoices.create_indexes(
+        [
+            IndexModel(
+                [("tenantId", ASCENDING), ("orderId", ASCENDING)],
+                unique=True,
+                name="invoices_tenant_order_unique",
+            ),
+            IndexModel(
+                [("tenantId", ASCENDING), ("invoiceNumber", ASCENDING)],
+                unique=True,
+                name="invoices_tenant_number_unique",
+            ),
+            IndexModel(
+                [("tenantId", ASCENDING), ("issuedAt", DESCENDING)],
+                name="invoices_tenant_issued",
+            ),
+        ]
+    )
+    credit_notes.create_indexes(
+        [
+            IndexModel(
+                [("tenantId", ASCENDING), ("creditNoteNumber", ASCENDING)],
+                unique=True,
+                name="credit_notes_tenant_number_unique",
+            ),
+            IndexModel(
+                [("tenantId", ASCENDING), ("orderId", ASCENDING), ("issuedAt", DESCENDING)],
+                name="credit_notes_tenant_order",
+            ),
+        ]
+    )
 
 
 def _ensure_product_indexes() -> None:

@@ -68,3 +68,7 @@ stock_movements = db["stock_movements"]
 customer_notes = db["customer_notes"]
 inventory_receivings = db["inventory_receivings"]
 audit_logs = db["audit_logs"]
+# GST: one profile per store, the issued invoices, and their credit notes.
+tax_profiles = db["tax_profiles"]
+invoices = db["invoices"]
+credit_notes = db["credit_notes"]

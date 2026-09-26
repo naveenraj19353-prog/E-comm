@@ -1,6 +1,8 @@
 from typing import Literal, Optional
 from pydantic import BaseModel, Field, ConfigDict
 
+from app.models.tax import ProductTaxConfig
+
 
 class InventoryItem(BaseModel):
     """
@@ -95,6 +97,8 @@ class CreateProduct(BaseModel):
         ge=0,
         le=100
     )
+    # GST classification: HSN/SAC, rate, cess and taxable/exempt status.
+    tax: ProductTaxConfig = Field(default_factory=ProductTaxConfig)
 
 
     inventory: list[InventoryItem] = Field(
@@ -144,6 +148,8 @@ class UpdateProduct(BaseModel):
         ge=0,
         le=100
     )
+    # Optional so an edit that doesn't touch tax leaves the stored config alone.
+    tax: Optional[ProductTaxConfig] = None
 
 
     inventory: Optional[list[InventoryItem]] = None

@@ -30,6 +30,7 @@ import {
     AdminTenants,
     DelhiverySettingsPage,
     PeriskopeSettingsPage,
+    TaxSettingsPage,
     BulkProductImport,
     Cart,
     Checkout,
@@ -336,6 +337,15 @@ const adminRoutes = [
                                     <AdminTenantCoupons />
                                 </RequireStorePermission>
                             </RequireTenantBusinessType>
+                        ),
+                    },
+                    {
+                        // GST profile belongs with the catalog settings it prices.
+                        path: ":tenantId/tax",
+                        element: (
+                            <RequireStorePermission permission="products_update">
+                                <TaxSettingsPage />
+                            </RequireStorePermission>
                         ),
                     },
                     {

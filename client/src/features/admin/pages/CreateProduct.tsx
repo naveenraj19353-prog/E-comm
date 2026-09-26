@@ -8,6 +8,7 @@ import { useTenantByTenantId } from "../hooks/useTenants";
 import type { ProductImageRef } from "../utils/s3Image";
 import { hasUnresolvedImageRefs, imageRefsToKeys } from "../utils/s3Image";
 import { PRODUCT_MEDIA_ACCEPT, isAllowedProductMediaFile, isVideoSrc } from "../../../utils/mediaSrc";
+import type { TaxStatus } from "../api/tax.api";
 import {
     SERVICE_DEFAULT_COLOR,
     SERVICE_DEFAULT_SIZE,
@@ -89,6 +90,10 @@ export default function CreateProduct() {
     const [basePrice, setBasePrice] = useState("");
     const [marginPercentage, setMarginPercentage] = useState("");
     const [discountPercentage, setDiscountPercentage] = useState("");
+    const [taxStatus, setTaxStatus] = useState<TaxStatus>("taxable");
+    const [hsnSac, setHsnSac] = useState("");
+    const [taxRate, setTaxRate] = useState("");
+    const [cessRate, setCessRate] = useState("0");
     const [serviceAvailable, setServiceAvailable] = useState(true);
     const [colors, setColors] = useState<string[]>([]);
     const [sizes, setSizes] = useState<string[]>([]);
@@ -348,6 +353,18 @@ export default function CreateProduct() {
             setError("Discount must be between 0 and 100.");
             return;
         }
+        // Caught before saving rather than at checkout: the server would reject
+        // an out-of-range rate anyway, and a silently wrong rate mis-states the
+        // tax on every future invoice for this product.
+        if (taxStatus === "taxable" && taxRate !== "" &&
+            (Number(taxRate) < 0 || Number(taxRate) > 100)) {
+            setError("GST rate must be between 0 and 100.");
+            return;
+        }
+        if (cessRate && (Number(cessRate) < 0 || Number(cessRate) > 100)) {
+            setError("Cess rate must be between 0 and 100.");
+            return;
+        }
         if (isSimpleListing) {
             if (!colorImages[defaultListingColor]?.length) {
                 setError("Please upload at least one image.");
@@ -375,6 +392,17 @@ export default function CreateProduct() {
                     marginPercentage: Number(marginPercentage) || 0,
                     price: calculatedPrice,
                     discountPercentage: discountNumber,
+                    tax: {
+                        taxStatus,
+                        hsnSac: hsnSac.trim() || undefined,
+                        // A non-taxable classification carries no rate at all,
+                        // rather than a misleading zero.
+                        taxRate:
+                            taxStatus === "taxable" && taxRate !== ""
+                                ? Number(taxRate)
+                                : undefined,
+                        cessRate: Number(cessRate) || 0,
+                    },
                     finalPrice,
                     stock,
                     sizes: [defaultListingSize],
@@ -459,6 +487,15 @@ export default function CreateProduct() {
                 marginPercentage: Number(marginPercentage) || 0,
                 price: calculatedPrice,
                 discountPercentage: Number(discountPercentage) || 0,
+                tax: {
+                    taxStatus,
+                    hsnSac: hsnSac.trim() || undefined,
+                    taxRate:
+                        taxStatus === "taxable" && taxRate !== ""
+                            ? Number(taxRate)
+                            : undefined,
+                    cessRate: Number(cessRate) || 0,
+                },
                 finalPrice,
                 stock: inventoryPayload.reduce((total, item) => total + item.stock, 0),
                 sizes,
@@ -696,6 +733,89 @@ export default function CreateProduct() {
                   : "Optional customer discount."}
               </small>
             </div>
+
+            <div className={styles.field}>
+              <label htmlFor="taxStatus">Tax status</label>
+
+              <select
+                id="taxStatus"
+                value={taxStatus}
+                onChange={(event) =>
+                  setTaxStatus(event.target.value as TaxStatus)
+                }
+              >
+                <option value="taxable">Taxable</option>
+                <option value="exempt">Exempt</option>
+                <option value="nil_rated">Nil rated</option>
+                <option value="non_gst">Non-GST</option>
+              </select>
+
+              <small>
+                Exempt, nil rated and non-GST are reported separately on a GST
+                return, so they are listed apart rather than as a zero rate.
+              </small>
+            </div>
+
+            <div className={styles.field}>
+              <label htmlFor="hsnSac">
+                {isServiceMode ? "SAC code" : "HSN code"}
+              </label>
+
+              <input
+                id="hsnSac"
+                value={hsnSac}
+                onChange={(event) => setHsnSac(event.target.value)}
+                placeholder={isServiceMode ? "998314" : "9004"}
+              />
+
+              <small>Printed on the tax invoice. Confirm with your CA.</small>
+            </div>
+
+            {taxStatus === "taxable" && (
+              <>
+                <div className={styles.field}>
+                  <label htmlFor="taxRate">GST rate</label>
+
+                  <div className={styles.inputWithSuffix}>
+                    <input
+                      id="taxRate"
+                      type="number"
+                      min="0"
+                      max="100"
+                      step="0.01"
+                      value={taxRate}
+                      onChange={(event) => setTaxRate(event.target.value)}
+                      placeholder="18"
+                    />
+
+                    <span>%</span>
+                  </div>
+
+                  <small>Leave blank to use the store's default rate.</small>
+                </div>
+
+                <div className={styles.field}>
+                  <label htmlFor="cessRate">Cess rate</label>
+
+                  <div className={styles.inputWithSuffix}>
+                    <input
+                      id="cessRate"
+                      type="number"
+                      min="0"
+                      max="100"
+                      step="0.01"
+                      value={cessRate}
+                      onChange={(event) => setCessRate(event.target.value)}
+                      placeholder="0"
+                    />
+
+                    <span>%</span>
+                  </div>
+
+                  <small>Compensation cess, only on goods that attract it.</small>
+                </div>
+              </>
+            )}
 
             
 

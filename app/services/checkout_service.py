@@ -582,12 +582,33 @@ def calculate_checkout(
         payment_method=payment_method,
         free_delivery=free_delivery,
     )
-    normalized_delivery, shipping, grand_total = _checkout_totals(
+    # `_checkout_totals` still runs for its validation (it rejects a
+    # non-positive amount) and for the shipping figure. Its total is superseded
+    # by the tax-aware one below, since an exclusive store's payable includes
+    # GST that the legacy calculation knows nothing about.
+    normalized_delivery, shipping, _legacy_total = _checkout_totals(
         subtotal,
         discount,
         delivery_method,
         shipping_override=shipping_override,
     )
+    # GST is computed from the authoritative cart snapshot, never from client
+    # values. A store with GST off gets a zero block and the unchanged total.
+    from app.services.tax_service import calculate_order_tax, total_from_tax_snapshot
+
+    try:
+        tax = calculate_order_tax(
+            tenant_id,
+            items,
+            discount=discount,
+            shipping=shipping,
+            destination_state=(address or {}).get("state"),
+        )
+    except ValueError as error:
+        # Surfaced as a 400 rather than guessed at: an invoice split against the
+        # wrong place of supply collects the wrong tax.
+        raise HTTPException(status_code=400, detail=str(error)) from error
+    grand_total = total_from_tax_snapshot(subtotal, discount, shipping, tax)
     return {
         "items": items,
         "subtotal": subtotal,
@@ -595,6 +616,7 @@ def calculate_checkout(
         "discount": discount,
         "shipping": shipping,
         "grandTotal": grand_total,
+        "tax": tax,
         "deliveryMethod": normalized_delivery,
         "address": address,
         "shippingProvider": shipping_meta.get("provider"),
@@ -607,9 +629,27 @@ def calculate_checkout(
     }
 
 
-def apply_zero_shipping_totals(checkout_data: dict, _tenant_id: str) -> dict:
+def apply_zero_shipping_totals(checkout_data: dict, tenant_id: str) -> dict:
     discount = float(checkout_data.get("discount") or 0)
     subtotal = float(checkout_data.get("subtotal") or 0)
     checkout_data["shipping"] = 0.0
-    checkout_data["grandTotal"] = round(max(subtotal - discount, 0), 2)
+    # Freight is itself taxed, so zeroing it changes the tax. Re-run the engine
+    # against the snapshot rather than just dropping the delivery line.
+    from app.services.tax_service import calculate_order_tax, total_from_tax_snapshot
+
+    try:
+        tax = calculate_order_tax(
+            tenant_id,
+            checkout_data.get("items") or [],
+            discount=discount,
+            shipping=0,
+            destination_state=(checkout_data.get("address") or {}).get("state"),
+        )
+    except ValueError as error:
+        # Menu/pickup orders can legitimately have no delivery address. An
+        # unresolvable place of supply must surface as a clear 400 rather than
+        # an uncaught ValueError turning into a 500.
+        raise HTTPException(status_code=400, detail=str(error)) from error
+    checkout_data["tax"] = tax
+    checkout_data["grandTotal"] = total_from_tax_snapshot(subtotal, discount, 0, tax)
     return checkout_data

@@ -50,6 +50,7 @@ from app.routes.ledger import router as ledger_router
 from app.routes.billing import router as billing_router
 from app.routes.inventory import router as inventory_router
 from app.routes.audit import router as audit_router
+from app.routes.tax import router as tax_router
 
 logger = logging.getLogger(__name__)
 
@@ -192,6 +193,7 @@ app.include_router(ledger_router)
 app.include_router(billing_router)
 app.include_router(inventory_router)
 app.include_router(audit_router)
+app.include_router(tax_router)
 app.include_router(observability.metrics_router)
 
 

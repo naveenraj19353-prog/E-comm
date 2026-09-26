@@ -341,6 +341,18 @@ export default function AdminTenant() {
                   <b>→</b>
                 </button>
               ) : null}
+
+              {/* Not gated on isRetail: GST applies to menu businesses too. */}
+              {hasStorePermission(user, "products_update") ? (
+                <button type="button" className={styles.actionCard} onClick={() => navigate(`/admin/tenants/${tenant.tenantId}/tax`)}>
+                  <div className={styles.actionIcon}>₹</div>
+                  <div>
+                    <strong>Tax &amp; GST</strong>
+                    <span>GST registration, rates and invoice numbering.</span>
+                  </div>
+                  <b>→</b>
+                </button>
+              ) : null}
             </>
           )}
         </div>
