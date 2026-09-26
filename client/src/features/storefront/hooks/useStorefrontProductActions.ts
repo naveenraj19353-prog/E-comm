@@ -1,14 +1,14 @@
-import { useCallback, useState } from "react";
-import { useAppSelector } from "../../../app/hooks";
+﻿import { useCallback, useState } from "react";
 import { useCart } from "../../cart/hooks/useCart";
 import { useWishlist } from "../../wishlist/hooks/useWishlist";
 import { useStorefrontTenant } from "../../tenant/useTenant";
 import { useNavigateToLogin } from "../../auth/hooks/useNavigateToLogin";
+import { useShopperIdentity } from "../../auth/hooks/useShopperIdentity";
 
 type UseStorefrontProductActionsOptions = {
     /**
      * Tracks which product is being added so its card can show a busy state.
-     * On by default — every surface that renders a card wants the feedback.
+     * On by default â€” every surface that renders a card wants the feedback.
      */
     trackAddingProductId?: boolean;
 };
@@ -16,11 +16,8 @@ type UseStorefrontProductActionsOptions = {
 export function useStorefrontProductActions(options: UseStorefrontProductActionsOptions = {}) {
     const { trackAddingProductId = true } = options;
     const { tenantId: storeTenantId } = useStorefrontTenant();
-    const user = useAppSelector((state) => state.auth.user);
-    const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
+    const { user, isCustomer, isGuest, isStaff, canShop } = useShopperIdentity();
     const navigateToLogin = useNavigateToLogin();
-    const isCustomer =
-        isAuthenticated && user?.role === "customer" && Boolean(user._id);
     const tenantId = isCustomer ? (user!.tenantId || storeTenantId || "") : "";
     const userId = isCustomer ? user!._id : "";
     const { addToCart } = useCart(userId, tenantId, { enabled: isCustomer });
@@ -32,20 +29,25 @@ export function useStorefrontProductActions(options: UseStorefrontProductActions
     const [addingProductId, setAddingProductId] = useState<string | null>(null);
     const [wishlistPendingId, setWishlistPendingId] = useState<string | null>(null);
 
-    const ensureAuthenticated = useCallback(() => {
-        if (!userId || !tenantId) {
-            navigateToLogin();
-            return false;
+    const ensureShopper = useCallback(() => {
+        if (canShop) {
+            return true;
         }
-        return true;
-    }, [navigateToLogin, tenantId, userId]);
+        // A guest can still become a customer, so prompting them is right.
+        // Someone already signed in as staff must not be asked to "log in" â€”
+        // cart and wishlist simply do not apply to them.
+        if (isGuest) {
+            navigateToLogin();
+        }
+        return false;
+    }, [canShop, isGuest, navigateToLogin]);
 
     const isProductWishlisted = useCallback((productId: string) => {
         return wishlist.some((item) => item.productId === productId);
     }, [wishlist]);
 
     const handleWishlist = useCallback(async (productId: string, isAdding: boolean) => {
-        if (!ensureAuthenticated()) {
+        if (!ensureShopper()) {
             return;
         }
         setWishlistPendingId(productId);
@@ -65,10 +67,10 @@ export function useStorefrontProductActions(options: UseStorefrontProductActions
         finally {
             setWishlistPendingId(null);
         }
-    }, [addToWishlist, ensureAuthenticated, removeFromWishlist, tenantId, userId]);
+    }, [addToWishlist, ensureShopper, removeFromWishlist, tenantId, userId]);
 
     const toggleWishlist = useCallback(async (productId: string) => {
-        if (!ensureAuthenticated()) {
+        if (!ensureShopper()) {
             return;
         }
         setWishlistPendingId(productId);
@@ -88,7 +90,7 @@ export function useStorefrontProductActions(options: UseStorefrontProductActions
         finally {
             setWishlistPendingId(null);
         }
-    }, [addToWishlist, ensureAuthenticated, isProductWishlisted, removeFromWishlist, tenantId, userId]);
+    }, [addToWishlist, ensureShopper, isProductWishlisted, removeFromWishlist, tenantId, userId]);
 
     const isWishlistPending = useCallback(
         (productId: string) => wishlistPendingId === productId,
@@ -101,7 +103,7 @@ export function useStorefrontProductActions(options: UseStorefrontProductActions
         color: string,
         size: string,
     ) => {
-        if (!ensureAuthenticated()) {
+        if (!ensureShopper()) {
             return;
         }
         if (!variantId) {
@@ -140,10 +142,13 @@ export function useStorefrontProductActions(options: UseStorefrontProductActions
                 setAddingProductId(null);
             }
         }
-    }, [addToCart, ensureAuthenticated, tenantId, trackAddingProductId, userId]);
+    }, [addToCart, ensureShopper, tenantId, trackAddingProductId, userId]);
 
     return {
         wishlist,
+        // Surfaces use this to hide cart/wishlist controls for staff accounts.
+        canShop,
+        isStaff,
         addingProductId,
         wishlistPendingId,
         isProductWishlisted,

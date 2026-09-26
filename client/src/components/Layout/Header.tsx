@@ -4,7 +4,7 @@ import { ShoppingCart, Palette } from "lucide-react";
 import styles from "../../styles/NavBar.module.css";
 import { useCart } from "../../features/cart/hooks/useCart";
 import { useWishlist } from "../../features/wishlist/hooks/useWishlist";
-import { useAuth } from "../../features/auth/hooks/useAuth";
+import { useShopperIdentity } from "../../features/auth/hooks/useShopperIdentity";
 import { useNavigateToLogin } from "../../features/auth/hooks/useNavigateToLogin";
 import { useCategory } from "../../features/products/hooks/useCategory";
 import { useStorefrontTenant } from "../../features/tenant/useTenant";
@@ -28,12 +28,14 @@ export default function Navbar() {
     const navigate = useNavigate();
     const navigateToLogin = useNavigateToLogin();
     const { tenantSlug, tenantId: catalogTenantId, tenant } = useStorefrontTenant();
-    const { user, isAuthenticated } = useAuth();
+    // `isStaff` matters as much as `isCustomer`: a signed-in store admin is
+    // authenticated but must not be offered the shopper features, and must not
+    // be prompted to "log in" when they are already signed in.
+    const { user, isCustomer, isStaff } = useShopperIdentity();
     const go = (to: string) => storefrontNavigate(navigate, to);
     const layoutSettings = useLayoutSettings();
     const canManageLayout = useCanManageStoreLayout();
     const { data: categoryResponse, isLoading: categoriesLoading } = useCategory(catalogTenantId);
-    const isCustomer = isAuthenticated && user?.role === "customer" && Boolean(user._id);
     const cartUserId = isCustomer ? user!._id : "";
     const cartTenantId = isCustomer ? (user!.tenantId || catalogTenantId || "") : "";
     const { cartCount } = useCart(cartUserId, cartTenantId);
@@ -270,39 +272,49 @@ export default function Navbar() {
             <Palette size={20} />
           </button>)}
 
-          <button
-            type="button"
-            className={styles.iconButton}
-            onClick={() => {
-              if (!isCustomer) {
-                navigateToLogin(undefined, () => go(routes.wishlist(tenantSlug!)));
-                return;
-              }
-              go(routes.wishlist(tenantSlug!));
-            }}
-            aria-label="Wishlist"
-          >
-            <HeartIcon />
-            {wishlistCount > 0 && (<span className={styles.badge}>{wishlistCount}</span>)}
-          </button>
+          {/* Hidden for staff accounts: they cannot shop, and prompting someone
+              who is already signed in to log in was the confusing part. A guest
+              still sees these, because they can still become a customer. */}
+          {!isStaff && (
+            <button
+              type="button"
+              className={styles.iconButton}
+              onClick={() => {
+                if (!isCustomer) {
+                  navigateToLogin(undefined, () => go(routes.wishlist(tenantSlug!)));
+                  return;
+                }
+                go(routes.wishlist(tenantSlug!));
+              }}
+              aria-label="Wishlist"
+            >
+              <HeartIcon />
+              {wishlistCount > 0 && (<span className={styles.badge}>{wishlistCount}</span>)}
+            </button>
+          )}
           
-          <button
-            type="button"
-            className={styles.iconButton}
-            onClick={() => {
-              if (!isCustomer) {
-                navigateToLogin(undefined, () => go(routes.cart(tenantSlug!)));
-                return;
-              }
-              go(routes.cart(tenantSlug!));
-            }}
-            aria-label="Cart"
-          >
-            <ShoppingCart size={20}/>
-            {cartCount > 0 && <span className={styles.badge}>{cartCount}</span>}
-          </button>
+          {!isStaff && (
+            <button
+              type="button"
+              className={styles.iconButton}
+              onClick={() => {
+                if (!isCustomer) {
+                  navigateToLogin(undefined, () => go(routes.cart(tenantSlug!)));
+                  return;
+                }
+                go(routes.cart(tenantSlug!));
+              }}
+              aria-label="Cart"
+            >
+              <ShoppingCart size={20}/>
+              {cartCount > 0 && <span className={styles.badge}>{cartCount}</span>}
+            </button>
+          )}
           
-          {user ? (<button type="button" className={styles.avatar} onClick={() => go(routes.profile(tenantSlug!))} aria-label="Account">
+          {/* A staff account gets the sign-in prompt, not the shopper profile:
+              gating on `user` rather than `isCustomer` sent an admin to
+              /profile instead of the login popup. */}
+          {isCustomer ? (<button type="button" className={styles.avatar} onClick={() => go(routes.profile(tenantSlug!))} aria-label="Account">
               {getInitials(user?.name)}
             </button>) : (<button type="button" className={styles.avatar} onClick={() => navigateToLogin()} aria-label="Sign in">
               UK
@@ -362,28 +374,32 @@ export default function Navbar() {
         }}>
             Layout studio
           </button>)}
-          <button type="button" aria-label="Mobile wishlist" onClick={() => {
-            if (!isCustomer) {
-                navigateToLogin(undefined, () => go(routes.wishlist(tenantSlug!)));
-            }
-            else {
-                go(routes.wishlist(tenantSlug!));
-            }
-            setMenuOpen(false);
-        }}>
-            Wishlist
-          </button>
-          <button type="button" aria-label="Mobile cart" onClick={() => {
-            if (!isCustomer) {
-                navigateToLogin(undefined, () => go(routes.cart(tenantSlug!)));
-            }
-            else {
-                go(routes.cart(tenantSlug!));
-            }
-            setMenuOpen(false);
-        }}>
-            Cart
-          </button>
+          {!isStaff && (
+            <button type="button" aria-label="Mobile wishlist" onClick={() => {
+                if (!isCustomer) {
+                    navigateToLogin(undefined, () => go(routes.wishlist(tenantSlug!)));
+                }
+                else {
+                    go(routes.wishlist(tenantSlug!));
+                }
+                setMenuOpen(false);
+            }}>
+                Wishlist
+            </button>
+          )}
+          {!isStaff && (
+            <button type="button" aria-label="Mobile cart" onClick={() => {
+                if (!isCustomer) {
+                    navigateToLogin(undefined, () => go(routes.cart(tenantSlug!)));
+                }
+                else {
+                    go(routes.cart(tenantSlug!));
+                }
+                setMenuOpen(false);
+            }}>
+                Cart
+            </button>
+          )}
           <button type="button" aria-label={isCustomer ? "Mobile account" : "Mobile sign in"} onClick={() => {
             if (isCustomer) {
                 go(routes.profile(tenantSlug!));
