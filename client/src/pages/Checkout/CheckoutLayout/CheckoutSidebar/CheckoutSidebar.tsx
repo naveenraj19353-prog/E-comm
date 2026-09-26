@@ -2,6 +2,8 @@ import { Check, ChevronRight, Lock, Tag, Truck } from "lucide-react";
 import type { PaymentMethodType } from "../CheckoutMain/PaymentMethod/PaymentMethod";
 import { useFormatStorePrice } from "../../../../features/tenant/useFormatStorePrice";
 import { BusyLabel } from "../../../../components/Loading";
+import TaxBreakdown from "../../../../components/TaxBreakdown/TaxBreakdown";
+import type { StoreTax } from "../../../../types/tax";
 import styles from "./CheckoutSidebar.module.css";
 
 interface CheckoutItem {
@@ -24,6 +26,8 @@ interface CheckoutSidebarProps {
     discount?: number;
     appliedCoupon?: string | null;
     total?: number;
+    /** GST split for this order, from the checkout preview. */
+    tax?: StoreTax | null;
     paymentMethod?: PaymentMethodType;
     onPlaceOrder?: () => void;
     isPlacingOrder?: boolean;
@@ -39,6 +43,7 @@ const CheckoutSidebar = ({
     discount = 0,
     appliedCoupon = null,
     total = 0,
+    tax = null,
     paymentMethod = "upi",
     onPlaceOrder,
     isPlacingOrder = false,
@@ -136,6 +141,8 @@ const CheckoutSidebar = ({
                             </strong>
                         </div>
                     )}
+                    {/* Renders nothing for a store that charges no GST. */}
+                    {!isPreviewLoading && <TaxBreakdown tax={tax} />}
                 </div>
 
                 <div className={styles.divider} />

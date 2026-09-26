@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { useCart } from "../../features/cart/hooks/useCart";
 import CartHeader from "./CartHeader";
 import FreeDeliveryBanner from "./FreeDeliveryBanner";
@@ -32,6 +32,7 @@ const Cart = () => {
         cart,
         grandTotal,
         cartCount,
+        tax,
         isLoading,
         isClearing,
         updateCart,
@@ -124,6 +125,7 @@ const Cart = () => {
                     <CartSummary
                         cartCount={cartCount}
                         grandTotal={grandTotal}
+                        tax={tax}
                         tenantId={tenantSlug}
                         mode="checkout"
                     />
@@ -132,6 +134,7 @@ const Cart = () => {
                     <CartSummary
                         cartCount={cartCount}
                         grandTotal={grandTotal}
+                        tax={tax}
                         tenantId={tenantSlug}
                         mode="summary"
                     />

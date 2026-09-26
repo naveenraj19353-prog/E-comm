@@ -16,6 +16,14 @@ import { getProductDetails } from "../../products/api/product.api";
 import type { ProductImageRef } from "../utils/s3Image";
 import { hasUnresolvedImageRefs, imageRefsToKeys, toProductImageRef } from "../utils/s3Image";
 import { PRODUCT_MEDIA_ACCEPT, isAllowedProductMediaFile, isVideoSrc } from "../../../utils/mediaSrc";
+import {
+    GST_RATES,
+    GST_RATE_LABELS,
+    toGstRate,
+    toHsnCode,
+    validateGstRate,
+    validateHsnCode,
+} from "../../../utils/gst";
 import { useAlert } from "../../../components/Modal";
 import styles from "../styles/AdminTenantProducts.module.css";
 
@@ -36,6 +44,8 @@ interface Product {
     brand?: string;
     price?: number;
     discountPercentage?: number;
+    hsnCode?: string | null;
+    gstRate?: number | null;
     finalPrice?: number;
     stock?: number;
     sizes?: string[];
@@ -56,6 +66,8 @@ interface EditForm {
     brand: string;
     price: string;
     discountPercentage: string;
+    hsnCode: string;
+    gstRate: string;
     stock: string;
     sizes: string;
     colors: string;
@@ -169,6 +181,8 @@ export default function AdminTenantProducts() {
         brand: "",
         price: "",
         discountPercentage: "",
+        hsnCode: "",
+        gstRate: "",
         stock: "",
         sizes: "",
         colors: "",
@@ -351,6 +365,12 @@ export default function AdminTenantProducts() {
             brand: product.brand || "",
             price: String(product.price ?? ""),
             discountPercentage: String(product.discountPercentage ?? ""),
+            hsnCode: product.hsnCode ? String(product.hsnCode) : "",
+            // A stored 0 is exempt, not unset, so it must survive the round trip.
+            gstRate:
+                product.gstRate === null || product.gstRate === undefined
+                    ? ""
+                    : String(product.gstRate),
             stock: String(product.totalStock ?? product.stock ?? ""),
             sizes: sizes.length
                 ? sizes.join(", ")
@@ -736,6 +756,21 @@ export default function AdminTenantProducts() {
             });
             return;
         }
+        // Caught here so a bad HSN or an off-slab rate never reaches the API.
+        const hsnCheck = validateHsnCode(editForm.hsnCode);
+        if (!hsnCheck.ok) {
+            showAlert(hsnCheck.message || "Invalid HSN code.", {
+                tone: "warning",
+            });
+            return;
+        }
+        const rateCheck = validateGstRate(editForm.gstRate);
+        if (!rateCheck.ok) {
+            showAlert(rateCheck.message || "Invalid GST rate.", {
+                tone: "warning",
+            });
+            return;
+        }
         const inventoryColors = new Set(
             inventory.map((item) => item.color.trim().toLowerCase()),
         );
@@ -767,6 +802,8 @@ export default function AdminTenantProducts() {
                     brand: editForm.brand.trim() || undefined,
                     price: Number(editForm.price),
                     discountPercentage: Number(editForm.discountPercentage),
+                    hsnCode: toHsnCode(editForm.hsnCode),
+                    gstRate: toGstRate(editForm.gstRate),
                     inventory,
                     images,
                     isActive: editForm.isActive,
@@ -1140,6 +1177,27 @@ export default function AdminTenantProducts() {
                 ...editForm,
                 discountPercentage: event.target.value,
             })}/>
+              </div>
+              <div className={styles.formGroup}>
+                <label>GST rate</label>
+                <select value={editForm.gstRate} onChange={(event) => setEditForm({
+                ...editForm,
+                gstRate: event.target.value,
+            })}>
+                  <option value="">Use category / store default</option>
+                  {GST_RATES.map((rate) => (
+                    <option key={rate} value={String(rate)}>
+                      {GST_RATE_LABELS[String(rate)] ?? `${rate}%`}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className={styles.formGroup}>
+                <label>HSN code</label>
+                <input value={editForm.hsnCode} onChange={(event) => setEditForm({
+                ...editForm,
+                hsnCode: event.target.value,
+            })} placeholder="9004"/>
               </div>
               <div className={styles.formGroup}>
                 <label>Stock</label>

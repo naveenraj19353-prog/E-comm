@@ -464,7 +464,7 @@ def compute_tax(
             tax = round_money(net * _fraction(rate))
 
         cess = round_money(net * _fraction(cess_rate)) if cess_rate else 0.0
-        cgst, sgst, igst = _split(tax, breakdown.inter_state)
+        cgst, sgst, igst = split_tax(tax, breakdown.inter_state)
 
         breakdown.lines.append(
             TaxedLine(
@@ -510,7 +510,7 @@ def compute_tax(
                 breakdown.shipping_tax = round_money(
                     breakdown.shipping_amount * _fraction(rate)
                 )
-            cgst, sgst, igst = _split(breakdown.shipping_tax, breakdown.inter_state)
+            cgst, sgst, igst = split_tax(breakdown.shipping_tax, breakdown.inter_state)
             breakdown.cgst_total = round_money(breakdown.cgst_total + cgst)
             breakdown.sgst_total = round_money(breakdown.sgst_total + sgst)
             breakdown.igst_total = round_money(breakdown.igst_total + igst)
@@ -548,7 +548,7 @@ def _fraction(rate_percent: float) -> float:
     return float(rate_percent) / 100.0
 
 
-def _split(tax: float, inter_state: bool) -> tuple[float, float, float]:
+def split_tax(tax: float, inter_state: bool) -> tuple[float, float, float]:
     """Split a line's tax into CGST/SGST (intra) or IGST (inter).
 
     SGST takes the remainder so the two halves always re-add to ``tax`` exactly,

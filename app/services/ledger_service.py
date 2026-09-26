@@ -109,6 +109,15 @@ def record_order_ledger_entry(order: dict) -> None:
     net_amount = _round2(gross_amount - commission_amount - gateway_fee)
     now = datetime.now(timezone.utc)
 
+    # GST is reported, not deducted: the customer pays a tax-inclusive price, so
+    # grossAmount stays the basis for commission and payout. These two fields
+    # exist so revenue reports can exclude tax instead of counting it as sales.
+    tax = order.get("tax") or {}
+    tax_amount = _round2(tax.get("totalTax"))
+    taxable_value = _round2(tax.get("taxableValue")) if tax else gross_amount
+    if not taxable_value:
+        taxable_value = gross_amount
+
     try:
         ledger_entries.insert_one(
             {
@@ -117,6 +126,8 @@ def record_order_ledger_entry(order: dict) -> None:
                 "orderNumber": order.get("orderNumber"),
                 "razorpayPaymentId": razorpay_payment_id,
                 "grossAmount": gross_amount,
+                "taxableValue": taxable_value,
+                "taxAmount": tax_amount,
                 "refundedAmount": 0.0,
                 "commissionPercent": commission_percent,
                 "commissionAmount": commission_amount,

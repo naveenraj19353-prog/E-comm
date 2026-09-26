@@ -19,6 +19,7 @@ from app.services.checkout_service import (
     get_variant_image,
     product_id_query,
 )
+from app.services.checkout_tax import compute_checkout_tax, tax_summary
 from app.utils.auth_dependencies import customer_scope, require_customer
 
 router = APIRouter(
@@ -232,13 +233,27 @@ def get_cart(
                 "size": variant.get("size"),
                 "stock": stock,
                 "image": get_variant_image(product, variant.get("color")),
+                "gstRate": product.get("gstRate"),
+                "hsnCode": product.get("hsnCode"),
+                "categoryId": product.get("categoryId"),
             }
         )
+    # The delivery state isn't known until an address is chosen, so this split is
+    # provisional: it will firm up at checkout. Showing it here still beats
+    # showing nothing, which would hide the tax from the customer entirely.
+    tax_breakdown = compute_checkout_tax(
+        tenant_id=scoped_tenant_id,
+        items=data,
+    )
+    # Same rule as checkout: a store that charges no tax keeps the figure above.
+    if tax_breakdown.total_tax > 0:
+        grand_total = tax_breakdown.grand_total
     return {
         "success": True,
         "count": len(data),
         "totalQuantity": total_quantity,
         "grandTotal": grand_total,
+        "tax": tax_summary(tax_breakdown),
         "data": data,
     }
 

@@ -3,11 +3,15 @@ import styles from "./Cart.module.css";
 import { useNavigate } from "react-router-dom";
 import { routes, storefrontNavigate } from "../../routes/routes";
 import { useFormatStorePrice } from "../../features/tenant/useFormatStorePrice";
+import TaxBreakdown from "../../components/TaxBreakdown/TaxBreakdown";
+import type { StoreTax } from "../../types/tax";
 
 interface CartSummaryProps {
     cartCount: number;
     grandTotal: number;
     tenantId: string;
+    /** GST split for this cart. Renders nothing when the store charges no tax. */
+    tax?: StoreTax | null;
     mode?: "checkout" | "summary";
 }
 
@@ -15,6 +19,7 @@ const CartSummary = ({
     cartCount,
     grandTotal,
     tenantId,
+    tax,
     mode = "checkout",
 }: CartSummaryProps) => {
     const navigate = useNavigate();
@@ -35,6 +40,8 @@ const CartSummary = ({
                     <span>{formatPrice(grandTotal)}</span>
                 </div>
             </div>
+            {/* No delivery address yet, so the split is provisional here. */}
+            <TaxBreakdown tax={tax} provisional />
             <div className={styles.divider} />
             <div className={styles.total}>
                 <div>

@@ -7,6 +7,7 @@ from app.services.store_analytics import (
     normalize_meta_pixel_id,
 )
 from app.services.store_profile import normalize_gstin, normalize_social_link
+from app.models.tax_fields import GstRate
 from app.services.tax_service import STATE_CODES
 
 BusinessType = Literal["retail", "service", "menu"]
@@ -170,7 +171,9 @@ class TaxSettings(BaseModel):
     # A composition dealer neither collects GST nor passes on input credit.
     compositionScheme: bool = False
     # Rate used when neither the product nor its category defines one. 0 = untaxed.
-    defaultGstRate: float = Field(default=0.0, ge=0, le=28)
+    # Validated against the statutory slabs: a rate the engine would reject
+    # (and silently treat as 0) must not be storable in the first place.
+    defaultGstRate: GstRate = 0.0
     # Overrides the state derived from the GSTIN, for stores without one yet.
     stateCode: Optional[str] = Field(default=None, max_length=2)
     # Freight follows the principal supply rate unless switched off.

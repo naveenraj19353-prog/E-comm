@@ -14,6 +14,7 @@ from app.services.delhivery_service import DelhiveryError, DelhiveryService
 from app.services.ledger_service import record_order_refund, record_partial_refund
 from app.services.order_fulfillment import restore_variant_stock
 from app.services.shipping_context import get_active_delhivery_context
+from app.services.tax_reversal import reverse_tax
 from app.utils.razorpay_client import client as razorpay_client
 
 logger = logging.getLogger(__name__)
@@ -208,6 +209,25 @@ def calculate_refund_amount(
     )
     amount = max(returned_value - discount_share, Decimal("0"))
     return _to2(min(amount, remaining))
+
+
+def calculate_tax_reversal(
+    order: dict,
+    return_items: list[dict],
+    *,
+    already_refunded: float = 0.0,
+) -> dict:
+    """GST to reverse for this return — the credit-note figures.
+
+    The refund itself is gross (the customer paid a tax-inclusive price, so
+    returning it returns the tax too). This is the split the merchant files.
+    """
+    return reverse_tax(
+        order,
+        return_items,
+        whole_order=covers_whole_order(order, return_items),
+        already_refunded=already_refunded,
+    )
 
 
 def _order_refunded_amount(order: dict) -> float:

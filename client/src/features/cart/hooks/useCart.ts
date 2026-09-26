@@ -90,6 +90,7 @@ export const useCart = (
     return {
         cart: enabled ? (cartQuery.data?.data ?? []) : [],
         grandTotal: enabled ? (cartQuery.data?.grandTotal ?? 0) : 0,
+        tax: enabled ? (cartQuery.data?.tax ?? null) : null,
         cartCount: enabled ? (cartQuery.data?.count ?? 0) : 0,
         isLoading: enabled && cartQuery.isLoading,
         isError: cartQuery.isError,

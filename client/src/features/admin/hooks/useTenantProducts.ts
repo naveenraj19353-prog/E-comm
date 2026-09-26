@@ -23,6 +23,10 @@ export interface CreateProductPayload {
     discountPercentage: number;
     finalPrice?: number;
     stock?: number;
+    /** HSN/SAC code (4, 6 or 8 digits) and GST rate. Unset falls back to the
+     * category's rate, then the store's default. */
+    hsnCode?: string;
+    gstRate?: number | null;
     sizes: string[];
     colors: string[];
     inventory: ProductInventoryPayload[];
@@ -41,6 +45,9 @@ export interface UpdateProductPayload {
     price: number;
     discountPercentage: number;
     stock?: number;
+    /** HSN/SAC code and GST rate; see CreateProductPayload. */
+    hsnCode?: string;
+    gstRate?: number | null;
     sizes?: string[];
     colors?: string[];
     inventory?: ProductInventoryPayload[];

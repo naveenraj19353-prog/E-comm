@@ -77,7 +77,70 @@ class BuildReportTests(unittest.TestCase):
             first=date(2026, 9, 1), last=date(2026, 9, 1), unit="day",
         )
         self.assertEqual(report["totals"]["averageOrderValue"], 0.0)
-        self.assertEqual(report["series"], [{"period": "2026-09-01", "orders": 0, "netSales": 0.0}])
+        self.assertEqual(
+            report["series"],
+            [
+                {
+                    "period": "2026-09-01",
+                    "orders": 0,
+                    "netSales": 0.0,
+                    # Additive: a store with no tax block reports no tax.
+                    "taxCollected": 0.0,
+                }
+            ],
+        )
+
+    def test_tax_is_reported_separately_from_sales(self):
+        # netSales stays what customers paid; the tax split rides alongside so
+        # revenue can be read net of GST without moving the money figures.
+        report = build_report(
+            summary_rows=[
+                {
+                    "placed": 1,
+                    "cancelled": 0,
+                    "netSales": 39990.0,
+                    "refunded": 0,
+                    "taxCollected": 6100.17,
+                    "taxableSales": 33889.83,
+                }
+            ],
+            series_rows=[],
+            status_rows=[],
+            top_rows=[
+                {
+                    "_id": "p1",
+                    "name": "Frame",
+                    "units": 1,
+                    "sales": 39990.0,
+                    "tax": 6100.17,
+                }
+            ],
+            first=date(2026, 9, 1),
+            last=date(2026, 9, 1),
+            unit="day",
+        )
+
+        self.assertEqual(report["totals"]["netSales"], 39990.0)
+        self.assertEqual(report["totals"]["taxCollected"], 6100.17)
+        self.assertEqual(report["totals"]["taxableSales"], 33889.83)
+        self.assertEqual(report["topProducts"][0]["tax"], 6100.17)
+
+    def test_missing_tax_fields_default_to_zero(self):
+        # Orders placed before tax existed carry no tax block at all.
+        report = build_report(
+            summary_rows=[{"placed": 1, "cancelled": 0, "netSales": 500.0}],
+            series_rows=[{"_id": "2026-09-01", "orders": 1, "netSales": 500.0}],
+            status_rows=[],
+            top_rows=[{"_id": "p1", "name": "Tee", "units": 1, "sales": 500.0}],
+            first=date(2026, 9, 1),
+            last=date(2026, 9, 1),
+            unit="day",
+        )
+
+        self.assertEqual(report["totals"]["taxCollected"], 0.0)
+        self.assertEqual(report["totals"]["taxableSales"], 0.0)
+        self.assertEqual(report["series"][0]["taxCollected"], 0.0)
+        self.assertEqual(report["topProducts"][0]["tax"], 0.0)
 
 
 if __name__ == "__main__":

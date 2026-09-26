@@ -28,6 +28,7 @@ import {
     AdminTenantBanners,
     AdminTenantCoupons,
     AdminTenants,
+    AdminTenantTax,
     DelhiverySettingsPage,
     PeriskopeSettingsPage,
     BulkProductImport,
@@ -336,6 +337,14 @@ const adminRoutes = [
                                     <AdminTenantCoupons />
                                 </RequireStorePermission>
                             </RequireTenantBusinessType>
+                        ),
+                    },
+                    {
+                        path: ":tenantId/tax",
+                        element: (
+                            <RequireStorePermission permission="products_update">
+                                <AdminTenantTax />
+                            </RequireStorePermission>
                         ),
                     },
                     {

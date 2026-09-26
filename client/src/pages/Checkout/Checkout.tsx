@@ -509,6 +509,7 @@ const Checkout = () => {
                             discount={summary.discount}
                             appliedCoupon={checkoutPreview?.couponCode || appliedCoupon}
                             total={summary.total}
+                            tax={checkoutPreview?.tax}
                             paymentMethod={paymentMethod}
                             onPlaceOrder={handlePlaceOrder}
                             isPlacingOrder={

@@ -93,6 +93,28 @@ def summary_pipeline(tenant_id: str, start: datetime, end: datetime) -> list[dic
                     }
                 },
                 "refunded": {"$sum": {"$ifNull": ["$refundedAmount", 0]}},
+                # netSales above is what customers paid, which for a tax-inclusive
+                # store contains GST. These two split that out, so revenue can be
+                # read net of tax and the liability is visible. Orders placed
+                # before tax existed carry no tax block and correctly report 0.
+                "taxCollected": {
+                    "$sum": {
+                        "$cond": [
+                            {"$in": ["$orderStatus", EXCLUDED_STATUSES]},
+                            0,
+                            {"$ifNull": ["$tax.totalTax", 0]},
+                        ]
+                    }
+                },
+                "taxableSales": {
+                    "$sum": {
+                        "$cond": [
+                            {"$in": ["$orderStatus", EXCLUDED_STATUSES]},
+                            0,
+                            {"$ifNull": ["$tax.taxableValue", 0]},
+                        ]
+                    }
+                },
             }
         },
     ]
@@ -125,6 +147,7 @@ def series_pipeline(tenant_id: str, start: datetime, end: datetime, unit: str, t
                 },
                 "orders": {"$sum": 1},
                 "netSales": {"$sum": _net_amount()},
+                "taxCollected": {"$sum": {"$ifNull": ["$tax.totalTax", 0]}},
             }
         },
         {"$sort": {"_id": 1}},
@@ -154,6 +177,7 @@ def top_products_pipeline(tenant_id: str, start: datetime, end: datetime) -> lis
                 "name": {"$last": "$items.name"},
                 "units": {"$sum": {"$ifNull": ["$items.quantity", 0]}},
                 "sales": {"$sum": {"$ifNull": ["$items.subtotal", 0]}},
+                "tax": {"$sum": {"$ifNull": ["$items.taxAmount", 0]}},
             }
         },
         {"$sort": {"units": -1, "sales": -1}},
@@ -203,6 +227,9 @@ def build_report(
             "period": key,
             "orders": int((by_period.get(key) or {}).get("orders") or 0),
             "netSales": round(float((by_period.get(key) or {}).get("netSales") or 0), 2),
+            "taxCollected": round(
+                float((by_period.get(key) or {}).get("taxCollected") or 0), 2
+            ),
         }
         for key in period_keys(first, last, unit)
     ]
@@ -216,6 +243,9 @@ def build_report(
             "ordersPlaced": placed,
             "cancelled": cancelled,
             "netSales": net_sales,
+            # netSales is tax-inclusive for a GST store; these separate the two.
+            "taxCollected": round(float(summary.get("taxCollected") or 0), 2),
+            "taxableSales": round(float(summary.get("taxableSales") or 0), 2),
             "refunded": round(float(summary.get("refunded") or 0), 2),
             "averageOrderValue": round(net_sales / orders_count, 2) if orders_count else 0.0,
         },
@@ -227,6 +257,7 @@ def build_report(
                 "name": row.get("name") or "Product",
                 "units": int(row.get("units") or 0),
                 "sales": round(float(row.get("sales") or 0), 2),
+                "tax": round(float(row.get("tax") or 0), 2),
             }
             for row in top_rows
         ],

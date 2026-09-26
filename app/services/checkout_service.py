@@ -7,6 +7,7 @@ from app.database.mongo import (
     products,
     addresses,
 )
+from app.services.checkout_tax import compute_checkout_tax, tax_summary
 
 
 def normalize_tenant_id(value) -> str:
@@ -237,6 +238,10 @@ def _build_checkout_item(product: dict, variant: dict, quantity: int) -> dict:
         "image": get_variant_image(product, color),
         # For category coupons (REQ-085); order lines are built without it.
         "categoryId": product.get("categoryId"),
+        # Carried so the tax engine can resolve a rate per line, and so the
+        # order can snapshot what was charged.
+        "hsnCode": product.get("hsnCode"),
+        "gstRate": product.get("gstRate"),
     }
 
 
@@ -588,6 +593,20 @@ def calculate_checkout(
         delivery_method,
         shipping_override=shipping_override,
     )
+    tax_breakdown = compute_checkout_tax(
+        tenant_id=tenant_id,
+        items=items,
+        discount=discount,
+        shipping=shipping,
+        place_of_supply=(address or {}).get("state"),
+    )
+    # A store that charges no tax keeps the legacy arithmetic byte-for-byte, so
+    # shipping this cannot move an existing store's payable. Once tax applies
+    # the engine's figure wins: it alone knows about inclusive vs exclusive
+    # pricing and invoice round-off, and the gateway must be charged the same
+    # number the tax block reports.
+    if tax_breakdown.total_tax > 0:
+        grand_total = tax_breakdown.grand_total
     return {
         "items": items,
         "subtotal": subtotal,
@@ -595,6 +614,7 @@ def calculate_checkout(
         "discount": discount,
         "shipping": shipping,
         "grandTotal": grand_total,
+        "tax": tax_summary(tax_breakdown),
         "deliveryMethod": normalized_delivery,
         "address": address,
         "shippingProvider": shipping_meta.get("provider"),
@@ -607,9 +627,28 @@ def calculate_checkout(
     }
 
 
-def apply_zero_shipping_totals(checkout_data: dict, _tenant_id: str) -> dict:
+def apply_zero_shipping_totals(checkout_data: dict, tenant_id: str) -> dict:
     discount = float(checkout_data.get("discount") or 0)
     subtotal = float(checkout_data.get("subtotal") or 0)
     checkout_data["shipping"] = 0.0
+
+    # Freight is taxed too, so zeroing it changes the tax. Re-run the engine so
+    # the block and the payable stay in step, but only for a store that actually
+    # taxes: everyone else keeps the legacy shortcut exactly as it was.
+    tax = checkout_data.get("tax") or {}
+    charges_tax = any(entry.get("rate") for entry in tax.get("rateWise") or [])
+    items = checkout_data.get("items") or []
+    if charges_tax and items:
+        breakdown = compute_checkout_tax(
+            tenant_id=tenant_id,
+            items=items,
+            discount=discount,
+            shipping=0.0,
+            place_of_supply=(checkout_data.get("address") or {}).get("state"),
+        )
+        checkout_data["tax"] = tax_summary(breakdown)
+        checkout_data["grandTotal"] = breakdown.grand_total
+        return checkout_data
+
     checkout_data["grandTotal"] = round(max(subtotal - discount, 0), 2)
     return checkout_data

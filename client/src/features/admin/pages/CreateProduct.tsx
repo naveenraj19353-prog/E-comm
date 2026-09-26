@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+﻿import { useEffect, useRef, useState } from "react";
 import type { ChangeEvent, FormEvent } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
@@ -8,6 +8,14 @@ import { useTenantByTenantId } from "../hooks/useTenants";
 import type { ProductImageRef } from "../utils/s3Image";
 import { hasUnresolvedImageRefs, imageRefsToKeys } from "../utils/s3Image";
 import { PRODUCT_MEDIA_ACCEPT, isAllowedProductMediaFile, isVideoSrc } from "../../../utils/mediaSrc";
+import {
+    GST_RATES,
+    GST_RATE_LABELS,
+    toGstRate,
+    toHsnCode,
+    validateGstRate,
+    validateHsnCode,
+} from "../../../utils/gst";
 import {
     SERVICE_DEFAULT_COLOR,
     SERVICE_DEFAULT_SIZE,
@@ -89,6 +97,8 @@ export default function CreateProduct() {
     const [basePrice, setBasePrice] = useState("");
     const [marginPercentage, setMarginPercentage] = useState("");
     const [discountPercentage, setDiscountPercentage] = useState("");
+    const [hsnCode, setHsnCode] = useState("");
+    const [gstRate, setGstRate] = useState("");
     const [serviceAvailable, setServiceAvailable] = useState(true);
     const [colors, setColors] = useState<string[]>([]);
     const [sizes, setSizes] = useState<string[]>([]);
@@ -348,6 +358,19 @@ export default function CreateProduct() {
             setError("Discount must be between 0 and 100.");
             return;
         }
+        // Validated before saving rather than at checkout: a bad HSN or a rate
+        // outside the slabs would otherwise be rejected by the API, or worse,
+        // silently ignored by the tax engine.
+        const hsnCheck = validateHsnCode(hsnCode);
+        if (!hsnCheck.ok) {
+            setError(hsnCheck.message || "Invalid HSN code.");
+            return;
+        }
+        const rateCheck = validateGstRate(gstRate);
+        if (!rateCheck.ok) {
+            setError(rateCheck.message || "Invalid GST rate.");
+            return;
+        }
         if (isSimpleListing) {
             if (!colorImages[defaultListingColor]?.length) {
                 setError("Please upload at least one image.");
@@ -375,6 +398,8 @@ export default function CreateProduct() {
                     marginPercentage: Number(marginPercentage) || 0,
                     price: calculatedPrice,
                     discountPercentage: discountNumber,
+                    hsnCode: toHsnCode(hsnCode),
+                    gstRate: toGstRate(gstRate),
                     finalPrice,
                     stock,
                     sizes: [defaultListingSize],
@@ -459,6 +484,8 @@ export default function CreateProduct() {
                 marginPercentage: Number(marginPercentage) || 0,
                 price: calculatedPrice,
                 discountPercentage: Number(discountPercentage) || 0,
+                hsnCode: toHsnCode(hsnCode),
+                gstRate: toGstRate(gstRate),
                 finalPrice,
                 stock: inventoryPayload.reduce((total, item) => total + item.stock, 0),
                 sizes,
@@ -493,7 +520,7 @@ export default function CreateProduct() {
       <div className={styles.header}>
         <div>
           <button type="button" className={styles.backButton} onClick={handleBack}>
-            <span className={styles.backIcon}>←</span>
+            <span className={styles.backIcon}>â†</span>
             Back to Products
           </button>
 
@@ -640,7 +667,7 @@ export default function CreateProduct() {
               </label>
 
               <div className={styles.inputWithPrefix}>
-                <span>₹</span>
+                <span>â‚¹</span>
 
                 <input id="base-price" type="number" min="0" step="0.01" value={basePrice} onChange={(event) => setBasePrice(event.target.value)} placeholder="100.00"/>
               </div>
@@ -662,7 +689,7 @@ export default function CreateProduct() {
                 <span>%</span>
               </div>
 
-              <small>Example: ₹100 + 30% = ₹130.</small>
+              <small>Example: â‚¹100 + 30% = â‚¹130.</small>
             </div>
 
             
@@ -671,7 +698,7 @@ export default function CreateProduct() {
               <span>Calculated Price</span>
 
               <strong>
-                ₹
+                â‚¹
                 {calculatedPrice.toLocaleString("en-IN", {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2,
@@ -697,13 +724,51 @@ export default function CreateProduct() {
               </small>
             </div>
 
+            <div className={styles.field}>
+              <label htmlFor="gst">GST rate</label>
+
+              <select
+                id="gst"
+                value={gstRate}
+                onChange={(event) => setGstRate(event.target.value)}
+              >
+                <option value="">Use category / store default</option>
+                {GST_RATES.map((rate) => (
+                  <option key={rate} value={String(rate)}>
+                    {GST_RATE_LABELS[String(rate)] ?? `${rate}%`}
+                  </option>
+                ))}
+              </select>
+
+              <small>
+                A select, not a number box, so an invalid slab cannot be typed.
+              </small>
+            </div>
+
+            <div className={styles.field}>
+              <label htmlFor="hsn">
+                {isServiceMode ? "SAC code" : "HSN code"}
+              </label>
+
+              <input
+                id="hsn"
+                type="text"
+                inputMode="numeric"
+                value={hsnCode}
+                onChange={(event) => setHsnCode(event.target.value)}
+                placeholder={isServiceMode ? "998314" : "9004"}
+              />
+
+              <small>Optional. 4, 6 or 8 digits, printed on the tax invoice.</small>
+            </div>
+
             
 
             <div className={styles.pricePreview}>
               <span>Final Selling Price</span>
 
               <strong>
-                ₹
+                â‚¹
                 {finalPrice.toLocaleString("en-IN", {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2,
@@ -742,7 +807,7 @@ export default function CreateProduct() {
                 <option value="unavailable">Unavailable</option>
               </select>
               <small>
-                Customers see Available or Unavailable — no variants.
+                Customers see Available or Unavailable â€” no variants.
               </small>
             </div>
           ) : (
@@ -823,7 +888,7 @@ export default function CreateProduct() {
                     {color}
 
                     <button type="button" onClick={() => handleRemoveColor(color)} aria-label={`Remove ${color}`}>
-                      ×
+                      Ã—
                     </button>
                   </span>))}
               </div>
@@ -839,7 +904,7 @@ export default function CreateProduct() {
                     {size}
 
                     <button type="button" onClick={() => handleRemoveSize(size)} aria-label={`Remove ${size}`}>
-                      ×
+                      Ã—
                     </button>
                   </span>))}
               </div>
@@ -910,7 +975,7 @@ export default function CreateProduct() {
             {isUploadingImages && (
               <div className={styles.uploadOverlay} role="status" aria-live="polite">
                 <span className={styles.uploadSpinner} />
-                Uploading…
+                Uploadingâ€¦
               </div>
             )}
             <div className={styles.colorImageSections}>
@@ -949,7 +1014,7 @@ export default function CreateProduct() {
                                 </span>)}
 
                               <button type="button" className={styles.removeImageButton} onClick={() => handleRemoveColorImage(color, index)} aria-label={`Remove ${image.name || "image"}`}>
-                                ×
+                                Ã—
                               </button>
                             </div>
 

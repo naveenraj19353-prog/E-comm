@@ -1,5 +1,6 @@
 import apiClient from "../../../api/client";
 import { API_ENDPOINTS } from "../../../api/endpoints";
+import type { StoreTax } from "../../../types/tax";
 
 export type DeliveryMethodType = "standard" | "express";
 
@@ -23,7 +24,13 @@ export interface CheckoutPreviewItem {
     color?: string;
     size?: string;
     image?: string;
+    hsnCode?: string | null;
+    gstRate?: number | null;
 }
+
+// Re-exported so callers can import the tax shapes from here as before; the
+// canonical definitions live in types/tax.ts because the cart shares them.
+export type { StoreTax, TaxLine, TaxRateBucket } from "../../../types/tax";
 
 export interface CheckoutPreviewData {
     items: CheckoutPreviewItem[];
@@ -32,6 +39,8 @@ export interface CheckoutPreviewData {
     discount: number;
     shipping: number;
     grandTotal: number;
+    /** GST split for this cart. All zero when the store charges no tax. */
+    tax?: StoreTax;
     deliveryMethod: DeliveryMethodType;
     shippingProvider?: string | null;
     shippingOptions?: Array<{

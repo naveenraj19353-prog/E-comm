@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field, StrictStr
-from typing import List, Literal, Optional
+from typing import Any, Dict, List, Literal, Optional
 
 OrderStatus = Literal[
     "confirmed",
@@ -25,6 +25,33 @@ class OrderItem(BaseModel):
     price: float
     quantity: int = Field(gt=0)
     subtotal: float
+    # Tax as charged on this line, snapshotted at order time.
+    hsnCode: Optional[str] = None
+    gstRate: Optional[float] = None
+    taxableValue: Optional[float] = None
+    taxAmount: Optional[float] = None
+
+
+class OrderTax(BaseModel):
+    """The tax block stored on an order: a snapshot, never recomputed."""
+
+    taxInclusive: bool = True
+    compositionScheme: bool = False
+    interState: bool = False
+    placeOfSupply: Optional[str] = None
+    sellerStateCode: Optional[str] = None
+    shippingTaxable: bool = False
+    shippingTax: float = 0.0
+    taxableValue: float = 0.0
+    totalTax: float = 0.0
+    cgst: float = 0.0
+    sgst: float = 0.0
+    igst: float = 0.0
+    cess: float = 0.0
+    roundOff: float = 0.0
+    grandTotal: float = 0.0
+    rateWise: List[Dict[str, Any]] = Field(default_factory=list)
+    lines: List[Dict[str, Any]] = Field(default_factory=list)
 
 
 class CreateOrder(BaseModel):
@@ -38,6 +65,8 @@ class CreateOrder(BaseModel):
     addressId: Optional[str] = None
     paymentStatus: str = "paid"
     orderStatus: str = "confirmed"
+    # Optional so existing clients keep working; the store recomputes server-side.
+    tax: Optional[OrderTax] = None
 
 
 class UpdateOrderStatus(BaseModel):

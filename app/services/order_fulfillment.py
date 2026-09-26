@@ -250,27 +250,40 @@ def _refund_payment(payment_id: str, *, tenant_id: str | None = None) -> bool:
 
 
 def _build_order_items(checkout_data: dict) -> list[dict]:
+    # Tax lines come back in cart order, so line n lines up with item n.
+    tax_lines = (checkout_data.get("tax") or {}).get("lines") or []
     order_items = []
-    for item in checkout_data.get("items") or []:
+    for index, item in enumerate(checkout_data.get("items") or []):
         variant_id = item.get("variantId")
         if not variant_id:
             raise HTTPException(
                 status_code=409,
                 detail="Stock changed while processing the order.",
             )
-        order_items.append(
-            {
-                "productId": ObjectId(item["productId"]),
-                "variantId": str(variant_id),
-                "name": item["name"],
-                "price": item["price"],
-                "quantity": item["quantity"],
-                "subtotal": item["subtotal"],
-                "image": item.get("image"),
-                "color": item.get("color"),
-                "size": item.get("size"),
-            }
-        )
+        order_item = {
+            "productId": ObjectId(item["productId"]),
+            "variantId": str(variant_id),
+            "name": item["name"],
+            "price": item["price"],
+            "quantity": item["quantity"],
+            "subtotal": item["subtotal"],
+            "image": item.get("image"),
+            "color": item.get("color"),
+            "size": item.get("size"),
+        }
+        # Snapshot the rate and tax as charged: a later rate change must not
+        # rewrite what an already-placed order owed.
+        if index < len(tax_lines):
+            tax_line = tax_lines[index]
+            order_item.update(
+                {
+                    "hsnCode": tax_line.get("hsnCode"),
+                    "gstRate": tax_line.get("gstRate", 0.0),
+                    "taxableValue": tax_line.get("taxableValue", 0.0),
+                    "taxAmount": tax_line.get("taxAmount", 0.0),
+                }
+            )
+        order_items.append(order_item)
     return order_items
 
 
@@ -446,6 +459,12 @@ def _build_order_document(
         order_document["razorpayOrderId"] = razorpay_order_id
     if not payment_ids_first and razorpay_payment_id:
         order_document["razorpayPaymentId"] = razorpay_payment_id
+    # The tax block is the immutable record of what was charged. Stored whole so
+    # revenue reporting can read the net-of-tax split without recomputing it,
+    # and so a credit note can reverse the right amount.
+    tax = checkout_data.get("tax")
+    if tax:
+        order_document["tax"] = tax
     cod_handling_charge = checkout_data.get("codHandlingCharge")
     if payment_method == "cod" and cod_handling_charge:
         order_document["codHandlingCharge"] = cod_handling_charge
