@@ -59,7 +59,7 @@ export const CUSTOMIZATION_GROUPS = [
     id: "colors",
     title: "Colors",
     lines: [
-      "Themes library: Editorial Noir, Rosewood Boutique, Nordic Slate, Midnight Gold, Electric Pop",
+      "Themes library: 20 ready-made store templates, each carrying palette + layout + font",
       "Quick colour presets: Forest, Ocean, Purple, Sunset, Midnight",
       "Primary, secondary, background, surface, border, text",
       "Live preview before save to database",
