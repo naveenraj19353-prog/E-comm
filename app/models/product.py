@@ -1,6 +1,8 @@
 from typing import Literal, Optional
 from pydantic import BaseModel, Field, ConfigDict
 
+from app.models.tax_fields import GstRate, HsnCode
+
 
 class InventoryItem(BaseModel):
     """
@@ -95,6 +97,16 @@ class CreateProduct(BaseModel):
         ge=0,
         le=100
     )
+    # GST. Left unset, the rate falls back to the product's category and then to
+    # the store default, so a merchant can rate a whole category once.
+    hsnCode: HsnCode = Field(
+        default=None,
+        description="HSN/SAC code: 4, 6 or 8 digits."
+    )
+    gstRate: GstRate = Field(
+        default=None,
+        description="GST rate in percent. An explicit 0 marks exempt goods."
+    )
 
 
     inventory: list[InventoryItem] = Field(
@@ -144,6 +156,8 @@ class UpdateProduct(BaseModel):
         ge=0,
         le=100
     )
+    hsnCode: HsnCode = None
+    gstRate: GstRate = None
 
 
     inventory: Optional[list[InventoryItem]] = None
@@ -222,6 +236,9 @@ class BulkImportProductItem(BaseModel):
     foodType: Optional[Literal["veg", "non_veg"]] = None
     price: float = Field(ge=0)
     discountPercentage: float = Field(default=0, ge=0, le=100)
+    # Round-tripped by export so a bulk re-import does not wipe GST data.
+    hsnCode: HsnCode = None
+    gstRate: GstRate = None
     inventory: list[InventoryItem] = Field(default_factory=list)
     images: dict[str, list[str]] = Field(default_factory=dict)
     isActive: Optional[bool] = True

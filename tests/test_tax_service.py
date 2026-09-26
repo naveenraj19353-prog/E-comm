@@ -11,6 +11,9 @@ from app.services.tax_service import (
     TaxableLine,
     compute_tax,
     is_valid_gst_rate,
+    normalize_gst_rate,
+    normalize_hsn,
+    resolve_gst_rate,
     round_money,
     round_to_rupee,
     state_code_for,
@@ -302,13 +305,16 @@ class TenantPolicyTests(unittest.TestCase):
 
         self.assertEqual(policy.seller_state_code, "24")
 
-    def test_default_rate_applies_only_when_a_line_has_none(self):
+    def test_line_rate_is_taken_literally(self):
+        # 0 on a line means exempt. It must not silently pick up the store
+        # default, or nil-rated goods would start being taxed.
         policy = TaxPolicy.from_tenant({"tax": {"defaultGstRate": 12}})
         result = compute_tax(
             [line(112.0, rate=0.0), line(118.0, rate=18.0)], policy=policy
         )
 
-        self.assertEqual(result.lines[0].gst_rate, 12.0)
+        self.assertEqual(result.lines[0].gst_rate, 0.0)
+        self.assertEqual(result.lines[0].tax_amount, 0.0)
         self.assertEqual(result.lines[1].gst_rate, 18.0)
 
     def test_invalid_default_rate_is_ignored(self):
@@ -345,6 +351,115 @@ class SummaryTests(unittest.TestCase):
         self.assertEqual(document["igst"], 0.0)
         self.assertEqual(document["placeOfSupply"], "29")
         self.assertTrue(document["taxInclusive"])
+
+
+class HsnAndRateValidationTests(unittest.TestCase):
+    def test_hsn_accepts_four_six_and_eight_digits(self):
+        for value in ["1234", "123456", "12345678", " 1234 "]:
+            self.assertEqual(normalize_hsn(value), value.strip(), msg=repr(value))
+
+    def test_hsn_blank_becomes_none(self):
+        self.assertIsNone(normalize_hsn(None))
+        self.assertIsNone(normalize_hsn(""))
+        self.assertIsNone(normalize_hsn("   "))
+
+    def test_hsn_rejects_wrong_lengths_and_non_digits(self):
+        for value in ["123", "12345", "abcd", "1234A", "1234567890"]:
+            with self.assertRaises(ValueError, msg=repr(value)):
+                normalize_hsn(value)
+
+    def test_rate_accepts_statutory_slabs(self):
+        self.assertEqual(normalize_gst_rate(18), 18.0)
+        self.assertEqual(normalize_gst_rate("5"), 5.0)
+        self.assertEqual(normalize_gst_rate(0), 0.0)
+        self.assertEqual(normalize_gst_rate(0.5), 0.5)
+
+    def test_rate_blank_becomes_none(self):
+        self.assertIsNone(normalize_gst_rate(None))
+        self.assertIsNone(normalize_gst_rate(""))
+
+    def test_rate_outside_the_slabs_is_rejected_not_clamped(self):
+        # Clamping 7 to 5 or 12 would mis-state an invoice.
+        with self.assertRaises(ValueError):
+            normalize_gst_rate(7)
+        with self.assertRaises(ValueError):
+            normalize_gst_rate(100)
+        with self.assertRaises(ValueError):
+            normalize_gst_rate("abc")
+
+
+class RateResolutionTests(unittest.TestCase):
+    def policy(self, **overrides):
+        settings = {"defaultGstRate": 18.0}
+        settings.update(overrides)
+        return TaxPolicy.from_tenant({"tax": settings})
+
+    def test_product_rate_wins(self):
+        self.assertEqual(
+            resolve_gst_rate(
+                product_rate=5, category_rate=12, policy=self.policy()
+            ),
+            5.0,
+        )
+
+    def test_category_rate_applies_when_the_product_has_none(self):
+        self.assertEqual(
+            resolve_gst_rate(
+                product_rate=None, category_rate=12, policy=self.policy()
+            ),
+            12.0,
+        )
+
+    def test_store_default_applies_when_nothing_else_is_set(self):
+        self.assertEqual(resolve_gst_rate(policy=self.policy()), 18.0)
+
+    def test_explicit_zero_on_the_product_is_not_unset(self):
+        # The whole point: exempt goods must stay exempt even when the category
+        # and store both carry a rate.
+        self.assertEqual(
+            resolve_gst_rate(product_rate=0, category_rate=18, policy=self.policy()),
+            0.0,
+        )
+        self.assertEqual(
+            resolve_gst_rate(product_rate=0.0, category_rate=18, policy=self.policy()),
+            0.0,
+        )
+
+    def test_explicit_zero_on_the_category_is_not_unset(self):
+        self.assertEqual(
+            resolve_gst_rate(product_rate=None, category_rate=0, policy=self.policy()),
+            0.0,
+        )
+
+    def test_composition_store_ignores_every_configured_rate(self):
+        self.assertEqual(
+            resolve_gst_rate(
+                product_rate=18,
+                category_rate=18,
+                policy=self.policy(compositionScheme=True),
+            ),
+            0.0,
+        )
+
+    def test_invalid_configured_rate_falls_through_to_the_next_source(self):
+        self.assertEqual(
+            resolve_gst_rate(product_rate=7, category_rate=12, policy=self.policy()),
+            12.0,
+        )
+
+    def test_no_policy_at_all_yields_zero(self):
+        self.assertEqual(resolve_gst_rate(product_rate=None), 0.0)
+
+    def test_resolved_rate_flows_into_a_calculation(self):
+        policy = self.policy()
+        rate = resolve_gst_rate(product_rate=None, category_rate=12, policy=policy)
+        result = compute_tax(
+            [line(112.0, rate=rate)], policy=policy, place_of_supply="Karnataka"
+        )
+
+        self.assertEqual(result.lines[0].gst_rate, 12.0)
+        self.assertEqual(result.total_taxable_value, 100.0)
+        self.assertEqual(result.total_tax, 12.0)
 
 
 if __name__ == "__main__":

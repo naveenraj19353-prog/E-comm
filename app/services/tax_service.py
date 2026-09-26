@@ -19,6 +19,7 @@ CGST + SGST (half the rate each), a different state gives IGST at the full rate.
 from __future__ import annotations
 
 import math
+import re
 from dataclasses import dataclass, field
 from typing import Any, Iterable, Mapping, Optional, Sequence
 
@@ -219,6 +220,76 @@ def is_valid_gst_rate(rate: Any) -> bool:
         return False
 
 
+# HSN codes are 4, 6 or 8 digits. SAC codes (services) use the same shape.
+_HSN_PATTERN = re.compile(r"^\d{4}(\d{2})?(\d{2})?$")
+
+
+def normalize_hsn(value: Any) -> Optional[str]:
+    """Blank becomes None; anything that is not 4/6/8 digits is rejected."""
+    if value is None:
+        return None
+    code = str(value).strip()
+    if not code:
+        return None
+    if not _HSN_PATTERN.match(code):
+        raise ValueError("hsnCode must be 4, 6 or 8 digits")
+    return code
+
+
+def normalize_gst_rate(value: Any) -> Optional[float]:
+    """Blank becomes None; a rate outside the statutory slabs is rejected.
+
+    Rejecting rather than clamping matters: silently turning 7 into 5 or 12 would
+    mis-state a tax invoice.
+    """
+    if value is None:
+        return None
+    if isinstance(value, str) and not value.strip():
+        return None
+    try:
+        numeric = round_money(float(value))
+    except (TypeError, ValueError):
+        raise ValueError("gstRate must be a number") from None
+    if numeric not in GST_RATES:
+        slabs = ", ".join(f"{rate:g}" for rate in GST_RATES)
+        raise ValueError(f"gstRate must be one of: {slabs}")
+    return numeric
+
+
+def resolve_gst_rate(
+    *,
+    product_rate: Any = None,
+    category_rate: Any = None,
+    policy: Optional[TaxPolicy] = None,
+) -> float:
+    """Rate for a line: the product's own, else its category's, else the store default.
+
+    Only ``None`` counts as "unset". An explicit ``0`` on a product is a real
+    choice — exempt or nil-rated goods — and must NOT fall through to the
+    category or store default, or those goods would start being taxed.
+
+    A composition-scheme store charges nothing regardless of what is configured.
+    """
+    if policy is not None and policy.composition:
+        return 0.0
+
+    fallbacks = (
+        product_rate,
+        category_rate,
+        None if policy is None else policy.default_gst_rate,
+    )
+    for candidate in fallbacks:
+        if candidate is None or (isinstance(candidate, str) and not candidate.strip()):
+            continue
+        try:
+            value = round_money(float(candidate))
+        except (TypeError, ValueError):
+            continue
+        if value in GST_RATES:
+            return value
+    return 0.0
+
+
 @dataclass(frozen=True)
 class TaxPolicy:
     """How a given store prices and charges tax."""
@@ -375,7 +446,10 @@ def compute_tax(
     )
 
     for line in lines:
-        rate = 0.0 if policy.composition else _resolve_rate(line.gst_rate, policy)
+        # Taken literally: 0 means exempt, so callers resolve the rate first with
+        # resolve_gst_rate() (product -> category -> store default) rather than
+        # expecting this function to guess.
+        rate = 0.0 if policy.composition else _safe_rate(line.gst_rate)
         cess_rate = 0.0 if policy.composition else _safe_rate(line.cess_rate)
 
         gross = round_money(float(line.unit_price) * float(line.quantity))
@@ -486,11 +560,6 @@ def _split(tax: float, inter_state: bool) -> tuple[float, float, float]:
         return 0.0, 0.0, round_money(tax)
     cgst = round_money(tax / 2)
     return cgst, round_money(tax - cgst), 0.0
-
-
-def _resolve_rate(rate: Any, policy: TaxPolicy) -> float:
-    resolved = _safe_rate(rate)
-    return resolved if resolved else policy.default_gst_rate
 
 
 def _safe_rate(rate: Any) -> float:
