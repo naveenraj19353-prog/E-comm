@@ -26,6 +26,7 @@ export const THEME_TEMPLATE_NAMES = [
     "glowra",
     "vertex",
     "artisan",
+    "anaya",
 ] as const;
 
 /**
@@ -344,6 +345,21 @@ export const themePresets: Record<ThemePresetName, ThemeColors> = {
         warning: "#B45309",
         danger: "#B91C1C",
     },
+    /* Authored from the ELANZA reference layout: warm ivory paper, serif display,
+       restrained cards. Deep plum keeps it distinct from Elanza's brown ink. */
+    anaya: {
+        primary: "#4A2233",
+        secondary: "#6E3B4E",
+        headerBackground: "#FBF6F1",
+        background: "#FDFAF6",
+        surface: "#FFFFFF",
+        border: "#EADFD6",
+        textBlack: "#33222B",
+        textWhite: "#FFFFFF",
+        success: "#15803D",
+        warning: "#B45309",
+        danger: "#9F1239",
+    },
 };
 
 export const presetLabels: Record<ThemePresetName, string> = {
@@ -372,4 +388,5 @@ export const presetLabels: Record<ThemePresetName, string> = {
     glowra: "Glowra",
     vertex: "Vertex",
     artisan: "Artisan",
+    anaya: "Anaya",
 };

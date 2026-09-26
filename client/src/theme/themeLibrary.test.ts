@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { HOME_SECTION_IDS } from "./homeSections";
 import { STORE_FONTS } from "./storeFonts";
 import { THEME_LIBRARY } from "./themeLibrary";
 import { presetLabels, themePresets, THEME_TEMPLATE_NAMES } from "./themePresets";
@@ -84,6 +85,20 @@ describe("theme library", () => {
                 if (allowed) {
                     expect(allowed).toContain(String(value));
                 }
+            });
+        });
+    });
+
+    it("only orders real home sections", () => {
+        const templatesWithOrder = THEME_LIBRARY.filter(
+            (template) => template.layout.homeSectionOrder,
+        );
+        expect(templatesWithOrder.length).toBeGreaterThan(0);
+        templatesWithOrder.forEach((template) => {
+            template.layout.homeSectionOrder?.forEach((section) => {
+                // An unknown id is silently dropped at render time, so a typo
+                // would look like the section simply vanished from the home page.
+                expect(HOME_SECTION_IDS).toContain(section);
             });
         });
     });
