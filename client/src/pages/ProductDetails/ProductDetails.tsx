@@ -23,6 +23,7 @@ import {
 } from "../../features/products/inventory";
 import { isMenuBusiness, isServiceBusiness } from "../../features/tenant/businessMode";
 import { useFormatStorePrice } from "../../features/tenant/useFormatStorePrice";
+import { useAlert } from "../../components/Modal";
 const ProductDetails = () => {
     const { productId } = useParams<{
         tenantSlug: string;
@@ -34,6 +35,7 @@ const ProductDetails = () => {
     const isServiceMode = isServiceBusiness(tenant?.businessType);
     const isMenuMode = isMenuBusiness(tenant?.businessType);
     const navigateToLogin = useNavigateToLogin();
+    const { showAlert } = useAlert();
     const isCustomer =
         isAuthenticated && user?.role === "customer" && Boolean(user._id);
     const { data: productResponse, isLoading: productLoading, isError: productIsError, } = useProductDetails(productId || "", tenantId);
@@ -51,11 +53,16 @@ const ProductDetails = () => {
     const { addToCart, isAdding } = useCart(cartUserId, cartTenantId, {
         enabled: Boolean(cartUserId && cartTenantId),
     });
-    const { wishlist, addToWishlist, removeFromWishlist } = useWishlist(
-        cartUserId,
-        cartTenantId,
-        { enabled: Boolean(cartUserId && cartTenantId) },
-    );
+    const {
+        wishlist,
+        addToWishlist,
+        removeFromWishlist,
+        isAdding: isAddingToWishlist,
+        isRemoving: isRemovingFromWishlist,
+    } = useWishlist(cartUserId, cartTenantId, {
+        enabled: Boolean(cartUserId && cartTenantId),
+    });
+    const isWishlistPending = isAddingToWishlist || isRemovingFromWishlist;
     const isWishlisted = product
         ? wishlist.some((item) => item.productId === product._id)
         : false;
@@ -68,10 +75,11 @@ const ProductDetails = () => {
             return;
         }
         if (!variantId) {
-            alert(
+            showAlert(
                 isServiceMode
                     ? "This service is currently unavailable."
                     : "Please select an available color and size.",
+                { tone: "warning" },
             );
             return;
         }
@@ -125,15 +133,15 @@ const ProductDetails = () => {
             return;
         }
         if (reviewRating === 0) {
-            alert("Please select a rating.");
+            showAlert("Please select a rating.", { tone: "warning" });
             return;
         }
         if (!reviewTitle.trim()) {
-            alert("Please enter a review title.");
+            showAlert("Please enter a review title.", { tone: "warning" });
             return;
         }
         if (!reviewComment.trim()) {
-            alert("Please enter your review.");
+            showAlert("Please enter your review.", { tone: "warning" });
             return;
         }
         try {
@@ -151,13 +159,13 @@ const ProductDetails = () => {
             setReviewTitle("");
             setReviewComment("");
             setShowReviewForm(false);
-            alert("Review submitted successfully!");
+            showAlert("Review submitted successfully!", { tone: "success" });
         }
         catch (error) {
             console.error("Review submission failed:", error);
-            alert(error instanceof Error
+            showAlert(error instanceof Error
                 ? error.message
-                : "Unable to submit review.");
+                : "Unable to submit review.", { tone: "danger" });
         }
     };
     const sendProductToCustomerWhatsApp = async () => {
@@ -167,7 +175,9 @@ const ProductDetails = () => {
         setIsSharingToWhatsApp(true);
         try {
             const result = await shareProductToWhatsApp(product._id);
-            alert(result.message || "Product sent to your WhatsApp number.");
+            showAlert(result.message || "Product sent to your WhatsApp number.", {
+                tone: "success",
+            });
         }
         catch (error) {
             const message =
@@ -183,7 +193,7 @@ const ProductDetails = () => {
                               "Unable to send the product on WhatsApp.",
                       )
                     : "Unable to send the product on WhatsApp.";
-            alert(message);
+            showAlert(message, { tone: "danger" });
         }
         finally {
             setIsSharingToWhatsApp(false);
@@ -250,6 +260,7 @@ const ProductDetails = () => {
         isWishlisted={isWishlisted}
         isAddingToCart={isAdding}
         isSharingToWhatsApp={isSharingToWhatsApp}
+        isWishlistPending={isWishlistPending}
         onAddToCart={handleAddToCart}
         onWishlist={handleWishlist}
         onWhatsAppShare={handleWhatsAppShare}

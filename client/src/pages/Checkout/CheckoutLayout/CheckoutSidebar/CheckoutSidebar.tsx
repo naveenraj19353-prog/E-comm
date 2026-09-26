@@ -1,6 +1,7 @@
 import { Check, ChevronRight, Lock, Tag, Truck } from "lucide-react";
 import type { PaymentMethodType } from "../CheckoutMain/PaymentMethod/PaymentMethod";
 import { useFormatStorePrice } from "../../../../features/tenant/useFormatStorePrice";
+import { BusyLabel } from "../../../../components/Loading";
 import styles from "./CheckoutSidebar.module.css";
 
 interface CheckoutItem {
@@ -157,9 +158,12 @@ const CheckoutSidebar = ({
                     type="button"
                     className={styles.placeOrder}
                     disabled={isPlacingOrder || isPreviewLoading}
+                    aria-busy={isPlacingOrder}
                     onClick={onPlaceOrder}
                 >
-                    {placeOrderLabel}
+                    <BusyLabel busy={isPlacingOrder} size="sm">
+                        {placeOrderLabel}
+                    </BusyLabel>
                     {!isPlacingOrder && <ChevronRight size={18} />}
                 </button>
 

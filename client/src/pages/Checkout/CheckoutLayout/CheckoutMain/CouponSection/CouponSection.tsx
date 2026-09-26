@@ -1,4 +1,5 @@
 import { Tag, X } from "lucide-react";
+import { BusyLabel } from "../../../../../components/Loading";
 import styles from "./CouponSection.module.css";
 
 interface CouponSectionProps {
@@ -69,8 +70,11 @@ const CouponSection = ({
                         type="submit"
                         className={styles.applyButton}
                         disabled={!value.trim() || isApplying}
+                        aria-busy={isApplying}
                     >
-                        {isApplying ? "Applying..." : "Apply"}
+                        <BusyLabel busy={isApplying} busyText="Applying...">
+                            Apply
+                        </BusyLabel>
                     </button>
                 </form>
             )}

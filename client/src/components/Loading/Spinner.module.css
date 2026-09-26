@@ -1,0 +1,65 @@
+/*
+ * Themed loading indicator. The spinner inherits `currentColor`, so it always
+ * matches the button or panel it sits in — no per-area colour overrides.
+ */
+.wrapper {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  color: inherit;
+}
+
+.block {
+  display: flex;
+  width: 100%;
+}
+
+.spinner {
+  flex: 0 0 auto;
+  animation: spinnerRotate 0.7s linear infinite;
+}
+
+.xs {
+  width: 0.875rem;
+  height: 0.875rem;
+}
+
+.sm {
+  width: 1rem;
+  height: 1rem;
+}
+
+.md {
+  width: 1.125rem;
+  height: 1.125rem;
+}
+
+.lg {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.xl {
+  width: 2rem;
+  height: 2rem;
+}
+
+.label {
+  color: inherit;
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+/* A spinner that stops moving reads as a frozen UI, so slow it instead. */
+@media (prefers-reduced-motion: reduce) {
+  .spinner {
+    animation-duration: 2s;
+  }
+}
+
+@keyframes spinnerRotate {
+  to {
+    transform: rotate(360deg);
+  }
+}

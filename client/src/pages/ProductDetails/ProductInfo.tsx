@@ -6,6 +6,7 @@ import type { Product, ProductInventory } from "../../features/products/types";
 import { getColorValue } from "../../utils/productColors";
 import { addToListLabel } from "../../features/tenant/businessMode";
 import { useFormatStorePrice } from "../../features/tenant/useFormatStorePrice";
+import { Spinner } from "../../components/Loading";
 
 interface ProductInfoProps {
     product: Product;
@@ -18,6 +19,8 @@ interface ProductInfoProps {
     isWishlisted: boolean;
     isAddingToCart: boolean;
     isSharingToWhatsApp: boolean;
+    /** True while the wishlist add/remove request is in flight. */
+    isWishlistPending: boolean;
     onAddToCart: (productId: string, quantity: number, variantId?: string) => void | Promise<void>;
     onWishlist: (productId: string) => void | Promise<void>;
     onWhatsAppShare: () => void | Promise<void>;
@@ -36,6 +39,7 @@ const ProductInfo = ({
     isWishlisted,
     isAddingToCart,
     isSharingToWhatsApp,
+    isWishlistPending,
     onAddToCart,
     onWishlist,
     onWhatsAppShare,
@@ -229,6 +233,7 @@ const ProductInfo = ({
                     type="button"
                     className={styles.addToCart}
                     disabled={isAddingToCart}
+                    aria-busy={isAddingToCart}
                     onClick={() =>
                         onAddToCart(
                             product._id,
@@ -237,7 +242,11 @@ const ProductInfo = ({
                         )
                     }
                 >
-                    <ShoppingBag size={18} />
+                    {isAddingToCart ? (
+                        <Spinner size="sm" />
+                    ) : (
+                        <ShoppingBag size={18} />
+                    )}
                     {addToListLabel(isServiceMode, {
                         adding: isAddingToCart,
                         unavailable: Boolean(
@@ -252,30 +261,47 @@ const ProductInfo = ({
                         isWishlisted ? styles.wishlistActive : ""
                     }`}
                     onClick={() => onWishlist(product._id)}
+                    disabled={isWishlistPending}
+                    aria-busy={isWishlistPending}
                     aria-label={
-                        isWishlisted
-                            ? "Remove from wishlist"
-                            : "Add to wishlist"
+                        isWishlistPending
+                            ? "Updating wishlist"
+                            : isWishlisted
+                              ? "Remove from wishlist"
+                              : "Add to wishlist"
                     }
                 >
-                    <Heart
-                        size={20}
-                        fill={isWishlisted ? "currentColor" : "none"}
-                    />
+                    {isWishlistPending ? (
+                        <Spinner size="sm" />
+                    ) : (
+                        <Heart
+                            size={20}
+                            fill={isWishlisted ? "currentColor" : "none"}
+                        />
+                    )}
                 </button>
                 <button
                     type="button"
                     className={styles.whatsappShareButton}
                     onClick={onWhatsAppShare}
                     disabled={isSharingToWhatsApp}
-                    aria-label="Send product to my WhatsApp"
+                    aria-busy={isSharingToWhatsApp}
+                    aria-label={
+                        isSharingToWhatsApp
+                            ? "Sending to WhatsApp"
+                            : "Send product to my WhatsApp"
+                    }
                     title={
                         isSharingToWhatsApp
                             ? "Sending to WhatsApp..."
                             : "Send to my WhatsApp"
                     }
                 >
-                    <FaWhatsapp size={20} />
+                    {isSharingToWhatsApp ? (
+                        <Spinner size="sm" />
+                    ) : (
+                        <FaWhatsapp size={20} />
+                    )}
                 </button>
             </div>
         </div>

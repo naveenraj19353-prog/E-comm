@@ -8,6 +8,7 @@ import { router } from "./routes/AppRouter";
 import ThemeProvider from "./theme/tenants/ThemeProvider";
 import ErrorBoundary from "./components/ErrorBoundary/ErrorBoundary";
 import PageLoader from "./components/PageLoader";
+import AlertProvider from "./components/Modal/AlertProvider";
 import { initObservability, rootErrorHandlers } from "./observability";
 import "./styles/globals.css";
 import "./index.css";
@@ -23,7 +24,6 @@ const queryClient = new QueryClient({
     },
 });
 
-// Sentry (no-op without VITE_SENTRY_DSN); tags events with the current store.
 initObservability(store);
 
 ReactDOM.createRoot(document.getElementById("root")!, rootErrorHandlers()).render(<React.StrictMode>
@@ -31,9 +31,11 @@ ReactDOM.createRoot(document.getElementById("root")!, rootErrorHandlers()).rende
       <Provider store={store}>
         <QueryClientProvider client={queryClient}>
           <ThemeProvider>
-            <Suspense fallback={<PageLoader message="Loading page..." fullViewport />}>
-              <RouterProvider router={router}/>
-            </Suspense>
+            <AlertProvider>
+              <Suspense fallback={<PageLoader message="Loading page..." fullViewport />}>
+                <RouterProvider router={router}/>
+              </Suspense>
+            </AlertProvider>
           </ThemeProvider>
         </QueryClientProvider>
       </Provider>

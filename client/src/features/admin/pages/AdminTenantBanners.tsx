@@ -13,6 +13,7 @@ import { extractS3ObjectKey } from "../utils/s3Image";
 import { BANNER_MEDIA_ACCEPT, isBannerVideoSrc } from "../../../components/Banner/bannerMedia";
 import { isAllowedProductMediaFile } from "../../../utils/mediaSrc";
 import PageLoader from "../../../components/PageLoader";
+import { useAlert } from "../../../components/Modal";
 import styles from "../styles/AdminTenantBanners.module.css";
 
 type BannerForm = {
@@ -68,6 +69,7 @@ function toForm(banner: BannerRecord): BannerForm {
 export default function AdminTenantBanners() {
   const { tenantId = "" } = useParams();
   const navigate = useNavigate();
+  const { showConfirm } = useAlert();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState<"desktop" | "mobile" | null>(null);
@@ -217,7 +219,13 @@ export default function AdminTenantBanners() {
   };
 
   const handleDelete = async (bannerId: string) => {
-    if (!window.confirm("Delete this banner?")) return;
+    const confirmed = await showConfirm("Delete this banner?", {
+      tone: "danger",
+      title: "Delete banner?",
+      confirmLabel: "Delete",
+      cancelLabel: "Keep",
+    });
+    if (!confirmed) return;
     setError("");
     try {
       await deleteBanner(bannerId);

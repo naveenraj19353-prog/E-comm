@@ -3,6 +3,7 @@ import { MapPin, Plus } from "lucide-react";
 import styles from "./AddressSection.module.css";
 import type { Address } from "../../../../../features/address/types/address.types";
 import { useAddresses } from "../../../../../features/address/hooks/useAddresses";
+import { useAlert } from "../../../../../components/Modal";
 import type { AddressFormData } from "./AddressForm";
 import AddressForm from "./AddressForm";
 import AddressCard from "./AddressCard";
@@ -28,6 +29,7 @@ const AddressSection = ({
         editAddress,
         removeAddress,
     } = useAddresses(userId as string, tenantId as string);
+    const { showConfirm } = useAlert();
     const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
     const [showForm, setShowForm] = useState(false);
     const [editingAddress, setEditingAddress] = useState<Address | null>(null);
@@ -106,7 +108,15 @@ const AddressSection = ({
     };
 
     const handleDeleteAddress = async (id: string) => {
-        const confirmed = window.confirm("Are you sure you want to delete this address?");
+        const confirmed = await showConfirm(
+            "Are you sure you want to delete this address?",
+            {
+                tone: "danger",
+                title: "Delete address?",
+                confirmLabel: "Delete",
+                cancelLabel: "Keep",
+            },
+        );
         if (!confirmed) {
             return;
         }

@@ -16,6 +16,8 @@ interface ProductDetailsViewProps {
     isWishlisted: boolean;
     isAddingToCart: boolean;
     isSharingToWhatsApp: boolean;
+    /** True while the wishlist add/remove request is in flight. */
+    isWishlistPending: boolean;
     onAddToCart: (
         productId: string,
         quantity: number,
@@ -44,6 +46,7 @@ const ProductDetailsView = ({
     isWishlisted,
     isAddingToCart,
     isSharingToWhatsApp,
+    isWishlistPending,
     onAddToCart,
     onWishlist,
     onWhatsAppShare,
@@ -141,6 +144,7 @@ const ProductDetailsView = ({
                         isWishlisted={isWishlisted}
                         isAddingToCart={isAddingToCart}
                         isSharingToWhatsApp={isSharingToWhatsApp}
+                        isWishlistPending={isWishlistPending}
                         onAddToCart={onAddToCart}
                         onWishlist={onWishlist}
                         onWhatsAppShare={onWhatsAppShare}

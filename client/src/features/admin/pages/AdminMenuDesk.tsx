@@ -10,12 +10,14 @@ import { useTenantByTenantId } from "../hooks/useTenants";
 import type { MenuCart } from "../api/menu.api";
 import { isMenuBusiness } from "../../tenant/businessMode";
 import { formatOrderAmount } from "../../orders/api/order.api";
+import { useAlert } from "../../../components/Modal";
 import styles from "../styles/AdminMenuDesk.module.css";
 
 export default function AdminMenuDesk() {
     const { tenantId = "" } = useParams();
     const navigate = useNavigate();
     const queryClient = useQueryClient();
+    const { showAlert } = useAlert();
     const [tableFilter, setTableFilter] = useState("");
     const [busyUserId, setBusyUserId] = useState<string | null>(null);
 
@@ -66,7 +68,7 @@ export default function AdminMenuDesk() {
             });
         } catch (error) {
             console.error("Payment done failed:", error);
-            alert("Unable to mark payment done.");
+            showAlert("Unable to mark payment done.", { tone: "danger" });
         } finally {
             setBusyUserId(null);
         }

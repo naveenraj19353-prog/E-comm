@@ -1,4 +1,5 @@
 import ProductCardSlider from "../../components/HomeProductSlider/ProductCardSlider";
+import { Spinner } from "../../components/Loading";
 import { useStorefrontProductActions } from "../../features/storefront/hooks/useStorefrontProductActions";
 import { useSimilarProducts } from "../../features/products/hooks/useSimilarProducts";
 import type { Product } from "../../features/products/types";
@@ -20,7 +21,13 @@ const SimilarProducts = ({
         product._id,
         product.categoryId,
     );
-    const { handleWishlist, handleAddToCart } = useStorefrontProductActions();
+    const {
+        handleWishlist,
+        handleAddToCart,
+        isProductWishlisted,
+        addingProductId,
+        wishlistPendingId,
+    } = useStorefrontProductActions();
 
     const title = isServiceMode
         ? "Similar Services"
@@ -35,11 +42,16 @@ const SimilarProducts = ({
     return (
         <section className={styles.similarSection} aria-label={title}>
             {isLoading ? (
-                <p className={styles.similarLoading}>Loading similar products…</p>
+                <p className={styles.similarLoading}>
+                    <Spinner size="sm" /> Loading similar products…
+                </p>
             ) : (
                 <ProductCardSlider
                     title={title}
                     products={products}
+                    isWishlisted={isProductWishlisted}
+                    addingProductId={addingProductId}
+                    wishlistPendingId={wishlistPendingId}
                     onToggleWishlist={handleWishlist}
                     onQuickAdd={handleAddToCart}
                 />
