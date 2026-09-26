@@ -341,11 +341,14 @@ const adminRoutes = [
                     },
                     {
                         // GST profile belongs with the catalog settings it prices.
+                        // Retail only for now, matching the nav entry.
                         path: ":tenantId/tax",
                         element: (
-                            <RequireStorePermission permission="products_update">
-                                <TaxSettingsPage />
-                            </RequireStorePermission>
+                            <RequireTenantBusinessType allowed={["retail"]}>
+                                <RequireStorePermission permission="products_update">
+                                    <TaxSettingsPage />
+                                </RequireStorePermission>
+                            </RequireTenantBusinessType>
                         ),
                     },
                     {

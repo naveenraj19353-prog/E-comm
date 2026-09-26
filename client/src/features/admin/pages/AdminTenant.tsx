@@ -342,8 +342,8 @@ export default function AdminTenant() {
                 </button>
               ) : null}
 
-              {/* Not gated on isRetail: GST applies to menu businesses too. */}
-              {hasStorePermission(user, "products_update") ? (
+              {/* Retail only for now, matching the route guard. */}
+              {isRetail && hasStorePermission(user, "products_update") ? (
                 <button type="button" className={styles.actionCard} onClick={() => navigate(`/admin/tenants/${tenant.tenantId}/tax`)}>
                   <div className={styles.actionIcon}>₹</div>
                   <div>

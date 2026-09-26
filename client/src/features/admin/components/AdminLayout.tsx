@@ -243,9 +243,9 @@ export default function AdminLayout() {
             </NavLink>
           )}
 
-          {/* Not gated on showRetailExtras: GST applies to menu businesses too.
-              Gated on products_update to match the route. */}
-          {showStoreNav && can("products_update") && (
+          {/* Retail only for now. Backend routes are not business-type gated,
+              so this and the route guard are what keep it off menu stores. */}
+          {showStoreNav && showRetailExtras && can("products_update") && (
             <NavLink to={`/admin/tenants/${storeTenantId}/tax`} className={navClass}>
               <span>₹</span>
               Tax &amp; GST
