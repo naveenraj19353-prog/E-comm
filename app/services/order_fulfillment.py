@@ -432,6 +432,10 @@ def _build_order_document(
             "discount": checkout_data["discount"],
             "shipping": checkout_data["shipping"],
             "totalAmount": checkout_data["grandTotal"],
+            # Immutable copy of what was charged. Later rate changes must never
+            # rewrite a historical order, so this is snapshotted, not recomputed.
+            "tax": checkout_data.get("tax")
+            or {"enabled": False, "taxTotal": 0.0},
             "couponCode": checkout_data.get("couponCode"),
             "deliveryMethod": checkout_data.get("deliveryMethod", "standard"),
             "address": checkout_data["address"],

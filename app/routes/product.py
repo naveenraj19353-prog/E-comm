@@ -443,6 +443,8 @@ def create_product(
         "discountPercentage": (
             product.discountPercentage
         ),
+        # GST classification, used by the tax engine at checkout.
+        "tax": product.tax.model_dump(),
         "finalPrice": final_price,
         "inventory": inventory,
         "totalStock": total_stock,
