@@ -61,7 +61,13 @@ export default function AdminTenant() {
             />
         );
     }
-    const storeHost = formatStorefrontHost(tenant.slug);
+    // The storefront link must never fall back to the apex domain: an empty
+    // slug makes getStorefrontOrigin() return window.location.origin, so
+    // "View Store" would land the admin on the marketing root instead of their
+    // own shop. tenantId is set to the slug server-side, and the route param is
+    // always present because this page only renders under /admin/tenants/:tenantId.
+    const storeSlug = (tenant.slug || tenant.tenantId || tenantId || "").trim();
+    const storeHost = formatStorefrontHost(storeSlug);
     const isRetail = isRetailBusiness(tenant.businessType);
     const openStore = (path: string) => storefrontNavigate(navigate, path);
     return (<div className={styles.page}>
@@ -182,7 +188,7 @@ export default function AdminTenant() {
             <p>{storeHost}</p>
             <span>Theme: {tenant.theme || "green"}</span>
           </div>
-          <button type="button" className={styles.viewStoreButton} onClick={() => openStore(routes.home(tenant.slug))}>
+          <button type="button" className={styles.viewStoreButton} onClick={() => openStore(routes.home(storeSlug))}>
             View Store →
           </button>
         </div>
@@ -198,7 +204,7 @@ export default function AdminTenant() {
         </div>
         <div className={styles.actionsGrid}>
           {hasStorePermission(user, "layout") ? (
-          <button type="button" className={styles.actionCard} onClick={() => openStore(routes.customize(tenant.slug))}>
+          <button type="button" className={styles.actionCard} onClick={() => openStore(routes.customize(storeSlug))}>
             <div className={styles.actionIcon}>▣</div>
             <div>
               <strong>Layout Studio</strong>

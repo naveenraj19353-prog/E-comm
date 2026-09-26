@@ -259,12 +259,17 @@ export default function AdminLayout() {
             </NavLink>
           )}
 
-          {showStoreNav && storeTenant?.slug && can("layout") && (
+          {/* Falls back to tenantId: an empty slug would otherwise hide this
+              entry entirely, or send the admin to the apex domain. */}
+          {showStoreNav && (storeTenant?.slug || storeTenant?.tenantId) && can("layout") && (
             <button
               type="button"
               className={styles.navItem}
               onClick={() =>
-                storefrontNavigate(navigate, routes.customize(storeTenant.slug))
+                storefrontNavigate(
+                  navigate,
+                  routes.customize(storeTenant?.slug || storeTenant?.tenantId || ""),
+                )
               }
             >
               <span>▧</span>
