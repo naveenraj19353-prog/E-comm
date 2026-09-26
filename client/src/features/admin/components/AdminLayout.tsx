@@ -243,6 +243,15 @@ export default function AdminLayout() {
             </NavLink>
           )}
 
+          {/* Not gated on showRetailExtras: GST applies to menu businesses too.
+              Gated on products_update to match the route. */}
+          {showStoreNav && can("products_update") && (
+            <NavLink to={`/admin/tenants/${storeTenantId}/tax`} className={navClass}>
+              <span>₹</span>
+              Tax &amp; GST
+            </NavLink>
+          )}
+
           {showStoreNav && can("whatsapp") && (
             <NavLink to={`/admin/tenants/${storeTenantId}/integrations/periskope`} className={navClass}>
               <span>◌</span>
