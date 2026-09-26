@@ -394,6 +394,71 @@ class TaxEngineTests(unittest.TestCase):
         self.assertEqual(line["name"], "Frame")
 
 
+class ZeroShippingTotalsTests(unittest.TestCase):
+    """The menu/pickup path, which can have no delivery address at all."""
+
+    def setUp(self):
+        from app.services import checkout_service
+
+        self.checkout_service = checkout_service
+        self.profiles = FakeCollection([profile_document()])
+        self._original_profiles = tax_service.tax_profiles
+        tax_service.tax_profiles = self.profiles
+
+    def tearDown(self):
+        tax_service.tax_profiles = self._original_profiles
+
+    def checkout_data(self, state=None):
+        product_id = ObjectId()
+        return {
+            "subtotal": 118.0,
+            "discount": 0.0,
+            "shipping": 25.0,
+            "grandTotal": 143.0,
+            "address": {"state": state} if state else None,
+            "items": [
+                {
+                    "productId": str(product_id),
+                    "name": "Thali",
+                    "subtotal": 118.0,
+                    "quantity": 1,
+                }
+            ],
+        }
+
+    def test_unresolvable_state_surfaces_as_a_400_not_a_500(self):
+        from fastapi import HTTPException
+
+        # Menu orders often have no address. An uncaught ValueError here would
+        # have been a 500 on a live checkout.
+        with self.assertRaises(HTTPException) as caught:
+            self.checkout_service.apply_zero_shipping_totals(
+                self.checkout_data(), "shop"
+            )
+        self.assertEqual(caught.exception.status_code, 400)
+
+    def test_valid_state_zeroes_shipping_and_retotals(self):
+        data = self.checkout_service.apply_zero_shipping_totals(
+            self.checkout_data("Karnataka"), "shop"
+        )
+
+        self.assertEqual(data["shipping"], 0.0)
+        # Inclusive: the payable is unchanged by removing an untaxed delivery fee.
+        self.assertEqual(data["grandTotal"], 118.0)
+        self.assertTrue(data["tax"]["enabled"])
+
+    def test_store_without_gst_is_untouched(self):
+        tax_service.tax_profiles = FakeCollection()
+
+        data = self.checkout_service.apply_zero_shipping_totals(
+            self.checkout_data(), "shop"
+        )
+
+        self.assertEqual(data["shipping"], 0.0)
+        self.assertEqual(data["grandTotal"], 118.0)
+        self.assertFalse(data["tax"]["enabled"])
+
+
 class TaxTotalTests(unittest.TestCase):
     def test_inclusive_total_is_unchanged(self):
         tax = {"enabled": True, "priceIncludesTax": True, "taxTotal": 18.0}

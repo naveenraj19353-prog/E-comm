@@ -582,6 +582,10 @@ def calculate_checkout(
         payment_method=payment_method,
         free_delivery=free_delivery,
     )
+    # `_checkout_totals` still runs for its validation (it rejects a
+    # non-positive amount) and for the shipping figure. Its total is superseded
+    # by the tax-aware one below, since an exclusive store's payable includes
+    # GST that the legacy calculation knows nothing about.
     normalized_delivery, shipping, _legacy_total = _checkout_totals(
         subtotal,
         discount,
@@ -633,13 +637,19 @@ def apply_zero_shipping_totals(checkout_data: dict, tenant_id: str) -> dict:
     # against the snapshot rather than just dropping the delivery line.
     from app.services.tax_service import calculate_order_tax, total_from_tax_snapshot
 
-    tax = calculate_order_tax(
-        tenant_id,
-        checkout_data.get("items") or [],
-        discount=discount,
-        shipping=0,
-        destination_state=(checkout_data.get("address") or {}).get("state"),
-    )
+    try:
+        tax = calculate_order_tax(
+            tenant_id,
+            checkout_data.get("items") or [],
+            discount=discount,
+            shipping=0,
+            destination_state=(checkout_data.get("address") or {}).get("state"),
+        )
+    except ValueError as error:
+        # Menu/pickup orders can legitimately have no delivery address. An
+        # unresolvable place of supply must surface as a clear 400 rather than
+        # an uncaught ValueError turning into a 500.
+        raise HTTPException(status_code=400, detail=str(error)) from error
     checkout_data["tax"] = tax
     checkout_data["grandTotal"] = total_from_tax_snapshot(subtotal, discount, 0, tax)
     return checkout_data
