@@ -3,6 +3,7 @@ import apiClient from "../../../api/client";
 import { API_ENDPOINTS } from "../../../api/endpoints";
 import { QUERY_KEYS } from "../../../constants/queryKeys";
 import type { ProductQueryParams, ProductsResponse } from "../types/types";
+import type { ProductTaxConfig } from "../api/tax.api";
 export interface ProductInventoryPayload {
     variantId: string;
     color: string;
@@ -21,6 +22,8 @@ export interface CreateProductPayload {
     marginPercentage?: number;
     price: number;
     discountPercentage: number;
+    /** GST classification consumed by the tax engine at checkout. */
+    tax?: ProductTaxConfig;
     finalPrice?: number;
     stock?: number;
     sizes: string[];
@@ -40,6 +43,8 @@ export interface UpdateProductPayload {
     foodType?: "veg" | "non_veg";
     price: number;
     discountPercentage: number;
+    /** Optional so an edit that doesn't touch tax leaves the stored config alone. */
+    tax?: ProductTaxConfig;
     stock?: number;
     sizes?: string[];
     colors?: string[];

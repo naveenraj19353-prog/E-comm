@@ -16,6 +16,7 @@ import { getProductDetails } from "../../products/api/product.api";
 import type { ProductImageRef } from "../utils/s3Image";
 import { hasUnresolvedImageRefs, imageRefsToKeys, toProductImageRef } from "../utils/s3Image";
 import { PRODUCT_MEDIA_ACCEPT, isAllowedProductMediaFile, isVideoSrc } from "../../../utils/mediaSrc";
+import type { ProductTaxConfig, TaxStatus } from "../api/tax.api";
 import { useAlert } from "../../../components/Modal";
 import styles from "../styles/AdminTenantProducts.module.css";
 
@@ -36,6 +37,7 @@ interface Product {
     brand?: string;
     price?: number;
     discountPercentage?: number;
+    tax?: ProductTaxConfig;
     finalPrice?: number;
     stock?: number;
     sizes?: string[];
@@ -56,6 +58,10 @@ interface EditForm {
     brand: string;
     price: string;
     discountPercentage: string;
+    taxStatus: TaxStatus;
+    hsnSac: string;
+    taxRate: string;
+    cessRate: string;
     stock: string;
     sizes: string;
     colors: string;
@@ -169,6 +175,10 @@ export default function AdminTenantProducts() {
         brand: "",
         price: "",
         discountPercentage: "",
+        taxStatus: "taxable",
+        hsnSac: "",
+        taxRate: "",
+        cessRate: "0",
         stock: "",
         sizes: "",
         colors: "",
@@ -351,6 +361,18 @@ export default function AdminTenantProducts() {
             brand: product.brand || "",
             price: String(product.price ?? ""),
             discountPercentage: String(product.discountPercentage ?? ""),
+            taxStatus: product.tax?.taxStatus || "taxable",
+            hsnSac: product.tax?.hsnSac ? String(product.tax.hsnSac) : "",
+            // An explicit 0 is a real rate (exempt/nil), so it must not be
+            // mistaken for "unset" and swapped back to the store default.
+            taxRate:
+                product.tax?.taxRate === null || product.tax?.taxRate === undefined
+                    ? ""
+                    : String(product.tax.taxRate),
+            cessRate:
+                product.tax?.cessRate === null || product.tax?.cessRate === undefined
+                    ? "0"
+                    : String(product.tax.cessRate),
             stock: String(product.totalStock ?? product.stock ?? ""),
             sizes: sizes.length
                 ? sizes.join(", ")
@@ -767,6 +789,16 @@ export default function AdminTenantProducts() {
                     brand: editForm.brand.trim() || undefined,
                     price: Number(editForm.price),
                     discountPercentage: Number(editForm.discountPercentage),
+                    tax: {
+                        taxStatus: editForm.taxStatus,
+                        hsnSac: editForm.hsnSac.trim() || undefined,
+                        taxRate:
+                            editForm.taxStatus === "taxable" &&
+                            editForm.taxRate !== ""
+                                ? Number(editForm.taxRate)
+                                : undefined,
+                        cessRate: Number(editForm.cessRate) || 0,
+                    },
                     inventory,
                     images,
                     isActive: editForm.isActive,
@@ -1144,6 +1176,39 @@ export default function AdminTenantProducts() {
               <div className={styles.formGroup}>
                 <label>Stock</label>
                 <input type="number" min="0" value={String(editTotalStock)} disabled/>
+              </div>
+              <div className={styles.formGroup}>
+                <label>Tax status</label>
+                <select value={editForm.taxStatus} onChange={(event) => setEditForm({
+                ...editForm,
+                taxStatus: event.target.value as TaxStatus,
+            })}>
+                  <option value="taxable">Taxable</option>
+                  <option value="exempt">Exempt</option>
+                  <option value="nil_rated">Nil rated</option>
+                  <option value="non_gst">Non-GST</option>
+                </select>
+              </div>
+              <div className={styles.formGroup}>
+                <label>HSN / SAC</label>
+                <input value={editForm.hsnSac} onChange={(event) => setEditForm({
+                ...editForm,
+                hsnSac: event.target.value,
+            })} placeholder="9004"/>
+              </div>
+              <div className={styles.formGroup}>
+                <label>GST rate %</label>
+                <input type="number" min="0" max="100" step="0.01" value={editForm.taxRate} onChange={(event) => setEditForm({
+                ...editForm,
+                taxRate: event.target.value,
+            })} placeholder="Blank = store default" disabled={editForm.taxStatus !== "taxable"}/>
+              </div>
+              <div className={styles.formGroup}>
+                <label>Cess rate %</label>
+                <input type="number" min="0" max="100" step="0.01" value={editForm.cessRate} onChange={(event) => setEditForm({
+                ...editForm,
+                cessRate: event.target.value,
+            })} placeholder="0" disabled={editForm.taxStatus !== "taxable"}/>
               </div>
               <div className={`${styles.formGroup} ${styles.fullWidth}`}>
                 <label>Colors & Inventory</label>
